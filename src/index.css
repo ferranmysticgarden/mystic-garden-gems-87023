@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Mystic Garden Pro - Design System */
+    --background: 270 60% 12%;
+    --foreground: 0 0% 100%;
+
+    --card: 270 50% 18%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 270 50% 18%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 270 60% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 50% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 270 30% 25%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 45 100% 50%;
+    --accent-foreground: 270 60% 12%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 30% 30%;
+    --input: 270 30% 30%;
+    --ring: 270 60% 50%;
+
+    --radius: 1rem;
+
+    /* Game-specific colors */
+    --game-purple: 270 60% 50%;
+    --game-green: 150 50% 50%;
+    --game-gold: 45 100% 50%;
+    --game-pink: 330 70% 60%;
+    --game-blue: 210 80% 60%;
+    --game-orange: 30 100% 50%;
+    
+    /* Gradients */
+    --gradient-main: linear-gradient(135deg, hsl(270 60% 50%), hsl(150 50% 50%));
+    --gradient-gold: linear-gradient(135deg, hsl(45 100% 50%), hsl(35 100% 45%));
+    --gradient-card: linear-gradient(180deg, hsl(270 50% 22%), hsl(270 50% 16%));
+    
+    /* Shadows */
+    --shadow-glow: 0 0 20px hsl(270 60% 50% / 0.5);
+    --shadow-gold: 0 4px 20px hsl(45 100% 50% / 0.4);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(135deg, hsl(270 60% 50%), hsl(150 50% 50%));
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .gradient-main {
+    background: linear-gradient(135deg, hsl(270 60% 50%), hsl(150 50% 50%));
+  }
+  
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(45 100% 50%), hsl(35 100% 45%));
+  }
+  
+  .gradient-card {
+    background: linear-gradient(180deg, hsl(270 50% 22%), hsl(270 50% 16%));
+  }
+  
+  .text-gold {
+    color: hsl(45 100% 50%);
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 20px hsl(270 60% 50% / 0.5);
+  }
+  
+  .shadow-gold {
+    box-shadow: 0 4px 20px hsl(45 100% 50% / 0.4);
+  }
+  
+  .shadow-card {
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

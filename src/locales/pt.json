@@ -1,0 +1,45 @@
+{
+  "game": {
+    "title": "Mystic Garden Pro",
+    "level": "Nível",
+    "moves": "Movimentos",
+    "score": "Pontuação",
+    "objective": "Objetivo",
+    "collect": "Coletar",
+    "points": "pontos",
+    "win": "Nível Completo!",
+    "lose": "Nível Falhado",
+    "continue": "Continuar",
+    "retry": "Tentar Novamente",
+    "watchAd": "Assistir Anúncio",
+    "play": "Jogar"
+  },
+  "resources": {
+    "lives": "Vidas",
+    "gems": "Gemas",
+    "leaves": "Folhas",
+    "unlimited": "Ilimitadas"
+  },
+  "shop": {
+    "title": "Loja",
+    "buy": "Comprar",
+    "gems100": "100 Gemas",
+    "gems550": "550 Gemas",
+    "gems1200": "1200 Gemas",
+    "unlimitedLives": "Vidas Ilimitadas (1h)",
+    "starterPack": "Pacote Inicial (60% OFF)",
+    "gardenPass": "Passe de Jardim Mensal",
+    "purchased": "Compra simulada com sucesso!"
+  },
+  "powerups": {
+    "hammer": "Martelo",
+    "bomb": "Bomba",
+    "hammerDesc": "Remove 1 peça",
+    "bombDesc": "Remove área 3x3"
+  },
+  "menu": {
+    "levels": "Níveis",
+    "shop": "Loja",
+    "settings": "Configurações"
+  }
+}
