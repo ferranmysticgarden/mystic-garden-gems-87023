@@ -1,25 +1,33 @@
 import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAuth } from '@/hooks/useAuth';
+import { usePurchases } from '@/hooks/usePurchases';
+import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
 import { LevelSelect } from '@/components/LevelSelect';
 import { Shop } from '@/components/Shop';
+import { NoLivesModal } from '@/components/NoLivesModal';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
+import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, Tv } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, LogOut, User } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
 const Index = () => {
   const { t } = useLanguage();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { hasAdsDisabled, hasAllLevelsAccess, addPurchase } = usePurchases(user);
   const {
     gameState,
     loseLife,
     addLives,
     addGems,
     addLeaves,
+    spendGems,
     completeLevel,
     selectLevel,
     activateUnlimitedLives,
@@ -28,6 +36,7 @@ const Index = () => {
   } = useGameState();
 
   const [screen, setScreen] = useState<Screen>('menu');
+  const [showNoLivesModal, setShowNoLivesModal] = useState(false);
 
   const currentLevel = LEVELS.find(l => l.id === gameState.currentLevel) || LEVELS[0];
 
@@ -36,7 +45,7 @@ const Index = () => {
       loseLife();
       setScreen('game');
     } else {
-      toast.error(t('resources.lives') + ' = 0');
+      setShowNoLivesModal(true);
     }
   };
 
@@ -52,45 +61,85 @@ const Index = () => {
   };
 
   const handleSelectLevel = (levelId: number) => {
+    // Check if level is accessible
+    if (!hasAllLevelsAccess() && levelId > gameState.unlockedLevels) {
+      toast.error('Nivel bloqueado. Completa niveles anteriores o compra el Pase de Jardín.');
+      return;
+    }
+
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       selectLevel(levelId);
       loseLife();
       setScreen('game');
     } else {
-      toast.error(t('resources.lives') + ' = 0');
+      setShowNoLivesModal(true);
     }
   };
 
-  const handlePurchase = (productId: string) => {
-    // Simulate purchases
-    switch (productId) {
-      case 'gems_100':
-        addGems(100);
-        break;
-      case 'gems_550':
-        addGems(550);
-        break;
-      case 'gems_1200':
-        addGems(1200);
-        break;
-      case 'unlimited_lives':
-        activateUnlimitedLives(1);
-        break;
-      case 'starter_pack':
-        addGems(200);
-        addLives(5);
-        break;
-      case 'garden_pass':
-        addGems(50);
-        break;
+  const handlePurchase = async (productId: string) => {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (!product) return;
+
+    // Add gems
+    if (product.amount) {
+      addGems(product.amount);
     }
+    if (product.instantGems) {
+      addGems(product.instantGems);
+    }
+
+    // Handle no-ads purchases
+    if (product.noAdsDays) {
+      await addPurchase(productId, product.noAdsDays);
+    }
+    if (product.noAdsForever) {
+      await addPurchase(productId);
+    }
+
+    // Handle garden pass (includes all features)
+    if (product.allLevelsAccess) {
+      await addPurchase(productId, 30);
+    }
+
     setScreen('menu');
   };
 
   const handleWatchAd = () => {
-    toast.success('Ad watched! +1 life');
+    if (hasAdsDisabled()) {
+      toast.error('No hay anuncios disponibles con tu compra activa');
+      return;
+    }
+    // Simulate AdMob ad watch
+    toast.success('¡Anuncio visto! +1 vida');
     addLives(1);
+    setShowNoLivesModal(false);
   };
+
+  const handleUseGemsForLife = () => {
+    if (gameState.gems >= 5) {
+      spendGems(5);
+      addLives(1);
+      toast.success('¡Usaste 5 gemas! +1 vida');
+      setShowNoLivesModal(false);
+    } else {
+      toast.error('No tienes suficientes gemas');
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🌸</div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage onAuthSuccess={() => {}} />;
+  }
 
   if (screen === 'game') {
     return (
@@ -116,6 +165,22 @@ const Index = () => {
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-md mx-auto">
+        {/* User Info */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+            <User className="w-4 h-4" />
+            <span className="text-sm">{user.email?.split('@')[0]}</span>
+          </div>
+          <Button
+            onClick={signOut}
+            variant="ghost"
+            size="sm"
+            id="logout-btn"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Header */}
         <GameHeader
           lives={gameState.lives}
@@ -150,23 +215,12 @@ const Index = () => {
 
           <Button
             onClick={handlePlayClick}
-            disabled={gameState.lives === 0 && !hasUnlimitedLives()}
             className="w-full gradient-gold shadow-gold text-xl py-6 hover:scale-105 transition-all mb-4"
+            id="play-game-btn"
           >
             <Play className="w-6 h-6 mr-2" />
             {t('game.play')}
           </Button>
-
-          {gameState.lives === 0 && !hasUnlimitedLives() && (
-            <Button
-              onClick={handleWatchAd}
-              variant="outline"
-              className="w-full mb-2"
-            >
-              <Tv className="w-5 h-5 mr-2" />
-              {t('game.watchAd')} (+1 ❤️)
-            </Button>
-          )}
 
           <div className="grid grid-cols-2 gap-3 mt-4">
             <Button
@@ -189,24 +243,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Progress */}
-        <div className="gradient-card shadow-card rounded-2xl p-4 text-center">
-          <div className="text-sm text-muted-foreground mb-2">
-            {t('menu.levels')} {t('game.objective')}
-          </div>
-          <div className="flex justify-center gap-2">
-            {[...Array(Math.min(5, gameState.unlockedLevels))].map((_, i) => (
-              <div key={i} className="w-8 h-8 gradient-gold rounded-full flex items-center justify-center font-bold">
-                {i + 1}
-              </div>
-            ))}
-            {gameState.unlockedLevels < 50 && (
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                🔒
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Shop Modal */}
@@ -214,6 +250,17 @@ const Index = () => {
         <Shop
           onClose={() => setScreen('menu')}
           onPurchase={handlePurchase}
+        />
+      )}
+
+      {/* No Lives Modal */}
+      {showNoLivesModal && (
+        <NoLivesModal
+          gems={gameState.gems}
+          hasAdsDisabled={hasAdsDisabled()}
+          onWatchAd={handleWatchAd}
+          onUseGems={handleUseGemsForLife}
+          onClose={() => setShowNoLivesModal(false)}
         />
       )}
     </div>

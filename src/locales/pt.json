@@ -24,12 +24,12 @@
     "title": "Loja",
     "buy": "Comprar",
     "gems100": "100 Gemas",
-    "gems550": "550 Gemas",
+    "gems300": "300 Gemas",
     "gems1200": "1200 Gemas",
-    "unlimitedLives": "Vidas Ilimitadas (1h)",
-    "starterPack": "Pacote Inicial (60% OFF)",
+    "noAdsMonth": "Remover Anúncios (1 Mês)",
+    "noAdsForever": "Remover Anúncios (Para Sempre)",
     "gardenPass": "Passe de Jardim Mensal",
-    "purchased": "Compra simulada com sucesso!"
+    "purchased": "Compra realizada com sucesso!"
   },
   "powerups": {
     "hammer": "Martelo",

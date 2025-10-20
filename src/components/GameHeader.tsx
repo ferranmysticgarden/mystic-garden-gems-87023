@@ -1,4 +1,4 @@
-import { Heart, Gem, Leaf } from 'lucide-react';
+import { Heart, Gem } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface GameHeaderProps {
@@ -46,11 +46,6 @@ export const GameHeader = ({ lives, gems, leaves, hasUnlimitedLives, timeUntilNe
           <span className="text-lg font-bold text-accent-foreground">{gems}</span>
         </button>
 
-        {/* Leaves */}
-        <div className="flex items-center gap-2 bg-secondary/20 rounded-xl px-4 py-2">
-          <Leaf className="w-5 h-5 text-secondary" />
-          <span className="text-lg font-bold">{leaves}</span>
-        </div>
       </div>
     </header>
   );

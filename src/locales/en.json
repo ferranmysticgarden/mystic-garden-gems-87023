@@ -24,12 +24,12 @@
     "title": "Shop",
     "buy": "Buy",
     "gems100": "100 Gems",
-    "gems550": "550 Gems",
+    "gems300": "300 Gems",
     "gems1200": "1200 Gems",
-    "unlimitedLives": "Unlimited Lives (1h)",
-    "starterPack": "Starter Pack (60% OFF)",
+    "noAdsMonth": "Remove Ads (1 Month)",
+    "noAdsForever": "Remove Ads (Forever)",
     "gardenPass": "Garden Pass Monthly",
-    "purchased": "Simulated purchase successful!"
+    "purchased": "Purchase successful!"
   },
   "powerups": {
     "hammer": "Hammer",

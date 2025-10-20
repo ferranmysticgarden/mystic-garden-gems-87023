@@ -9,57 +9,61 @@ export interface Product {
   gems?: number;
   powerups?: number;
   dailyGems?: number;
+  noAdsDays?: number;
+  noAdsForever?: boolean;
+  instantGems?: number;
+  allLevelsAccess?: boolean;
 }
 
 export const PRODUCTS: Product[] = [
   { 
     id: 'gems_100', 
     nameKey: 'shop.gems100',
-    name: '100 Gems', 
+    name: '100 Gemas', 
     price: 0.99, 
-    currency: 'USD',
+    currency: 'EUR',
     amount: 100 
   },
   { 
-    id: 'gems_550', 
-    nameKey: 'shop.gems550',
-    name: '550 Gems', 
-    price: 4.99, 
-    currency: 'USD',
-    amount: 550 
+    id: 'gems_300', 
+    nameKey: 'shop.gems300',
+    name: '300 Gemas', 
+    price: 3.99, 
+    currency: 'EUR',
+    amount: 300 
   },
   { 
     id: 'gems_1200', 
     nameKey: 'shop.gems1200',
-    name: '1200 Gems', 
+    name: '1200 Gemas', 
     price: 9.99, 
-    currency: 'USD',
+    currency: 'EUR',
     amount: 1200 
   },
   { 
-    id: 'unlimited_lives', 
-    nameKey: 'shop.unlimitedLives',
-    name: 'Unlimited Lives (1h)', 
-    price: 1.99, 
-    currency: 'USD',
-    lives: 'unlimited' 
+    id: 'no_ads_month', 
+    nameKey: 'shop.noAdsMonth',
+    name: 'Quitar Anuncios (1 Mes)', 
+    price: 4.99, 
+    currency: 'EUR',
+    noAdsDays: 30
   },
   { 
-    id: 'starter_pack', 
-    nameKey: 'shop.starterPack',
-    name: 'Starter Pack (60% OFF)', 
-    price: 2.99, 
-    currency: 'USD',
-    gems: 200, 
-    lives: 5, 
-    powerups: 3 
+    id: 'no_ads_forever', 
+    nameKey: 'shop.noAdsForever',
+    name: 'Quitar Anuncios (Para Siempre)', 
+    price: 9.99, 
+    currency: 'EUR',
+    noAdsForever: true
   },
   { 
     id: 'garden_pass', 
     nameKey: 'shop.gardenPass',
-    name: 'Garden Pass Monthly', 
+    name: 'Pase de Jardín Mensual', 
     price: 9.99, 
-    currency: 'USD',
-    dailyGems: 50 
+    currency: 'EUR',
+    instantGems: 500,
+    noAdsDays: 30,
+    allLevelsAccess: true
   }
 ];

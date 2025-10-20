@@ -13,7 +13,6 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
 
   const handlePurchase = (productId: string, productName: string) => {
-    // Simulate purchase
     toast.success(`${t('shop.purchased')} ${productName}`);
     onPurchase(productId);
   };
@@ -42,20 +41,20 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
             >
               <h3 className="font-bold text-lg mb-2">{t(product.nameKey)}</h3>
               
-              <div className="text-sm text-muted-foreground mb-3">
+              <div className="text-sm text-muted-foreground mb-3 space-y-1">
                 {product.amount && <p>💎 {product.amount} {t('resources.gems')}</p>}
-                {product.lives === 'unlimited' && <p>❤️ {t('resources.unlimited')} (1h)</p>}
-                {product.gems && <p>💎 {product.gems} {t('resources.gems')}</p>}
-                {product.lives && typeof product.lives === 'number' && <p>❤️ +{product.lives} {t('resources.lives')}</p>}
-                {product.powerups && <p>🔨 +{product.powerups} Power-ups</p>}
-                {product.dailyGems && <p>💎 {product.dailyGems} {t('resources.gems')}/día</p>}
+                {product.instantGems && <p>💎 {product.instantGems} {t('resources.gems')} (inmediatas)</p>}
+                {product.noAdsDays && <p>🚫 Sin anuncios ({product.noAdsDays} días)</p>}
+                {product.noAdsForever && <p>🚫 Sin anuncios (para siempre)</p>}
+                {product.allLevelsAccess && <p>🔓 Todos los niveles desbloqueados</p>}
               </div>
 
               <Button
                 onClick={() => handlePurchase(product.id, t(product.nameKey))}
                 className="w-full gradient-gold shadow-gold hover:scale-105 transition-transform"
+                id={`buy-${product.id}`}
               >
-                {t('shop.buy')} - {formatPrice(product.price)}
+                {t('shop.buy')} - €{product.price.toFixed(2)}
               </Button>
             </div>
           ))}
