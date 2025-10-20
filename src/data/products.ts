@@ -62,8 +62,7 @@ export const PRODUCTS: Product[] = [
     name: 'Pase de Jardín Mensual', 
     price: 9.99, 
     currency: 'EUR',
-    instantGems: 500,
-    noAdsDays: 30,
-    allLevelsAccess: true
+    instantGems: 1000,
+    noAdsDays: 30
   }
 ];

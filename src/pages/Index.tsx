@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuth } from '@/hooks/useAuth';
 import { usePurchases } from '@/hooks/usePurchases';
+import { useAudio } from '@/hooks/useAudio';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
@@ -13,14 +14,15 @@ import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, LogOut, User } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
 const Index = () => {
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { hasAdsDisabled, hasAllLevelsAccess, addPurchase } = usePurchases(user);
+  const { hasAdsDisabled, addPurchase } = usePurchases(user);
+  const { isPlaying, isMuted, play, toggleMute } = useAudio('/audio/background-music.mp3');
   const {
     gameState,
     loseLife,
@@ -37,6 +39,18 @@ const Index = () => {
 
   const [screen, setScreen] = useState<Screen>('menu');
   const [showNoLivesModal, setShowNoLivesModal] = useState(false);
+
+  useEffect(() => {
+    // Start music on first user interaction
+    const handleFirstInteraction = () => {
+      if (!isPlaying) {
+        play();
+      }
+    };
+
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    return () => document.removeEventListener('click', handleFirstInteraction);
+  }, [isPlaying, play]);
 
   const currentLevel = LEVELS.find(l => l.id === gameState.currentLevel) || LEVELS[0];
 
@@ -61,9 +75,9 @@ const Index = () => {
   };
 
   const handleSelectLevel = (levelId: number) => {
-    // Check if level is accessible
-    if (!hasAllLevelsAccess() && levelId > gameState.unlockedLevels) {
-      toast.error('Nivel bloqueado. Completa niveles anteriores o compra el Pase de Jardín.');
+    // Check if level is accessible (levels unlock by playing)
+    if (levelId > gameState.unlockedLevels) {
+      toast.error('Nivel bloqueado. Completa niveles anteriores.');
       return;
     }
 
@@ -96,8 +110,8 @@ const Index = () => {
       await addPurchase(productId);
     }
 
-    // Handle garden pass (includes all features)
-    if (product.allLevelsAccess) {
+    // Handle garden pass (no longer includes level unlocking)
+    if (productId === 'garden_pass') {
       await addPurchase(productId, 30);
     }
 
@@ -165,20 +179,30 @@ const Index = () => {
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-md mx-auto">
-        {/* User Info */}
+        {/* User Info & Music Control */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
             <User className="w-4 h-4" />
             <span className="text-sm">{user.email?.split('@')[0]}</span>
           </div>
-          <Button
-            onClick={signOut}
-            variant="ghost"
-            size="sm"
-            id="logout-btn"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={toggleMute}
+              variant="ghost"
+              size="sm"
+              id="toggle-music-btn"
+            >
+              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </Button>
+            <Button
+              onClick={signOut}
+              variant="ghost"
+              size="sm"
+              id="logout-btn"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Header */}

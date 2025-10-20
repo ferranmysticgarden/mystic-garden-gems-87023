@@ -80,16 +80,11 @@ export const usePurchases = (user: User | null) => {
            hasActiveProduct('garden_pass');
   };
 
-  const hasAllLevelsAccess = (): boolean => {
-    return hasActiveProduct('garden_pass');
-  };
-
   return {
     purchases,
     loading,
     addPurchase,
     hasActiveProduct,
     hasAdsDisabled,
-    hasAllLevelsAccess,
   };
 };

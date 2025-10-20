@@ -46,7 +46,6 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                 {product.instantGems && <p>💎 {product.instantGems} {t('resources.gems')} (inmediatas)</p>}
                 {product.noAdsDays && <p>🚫 Sin anuncios ({product.noAdsDays} días)</p>}
                 {product.noAdsForever && <p>🚫 Sin anuncios (para siempre)</p>}
-                {product.allLevelsAccess && <p>🔓 Todos los niveles desbloqueados</p>}
               </div>
 
               <Button
