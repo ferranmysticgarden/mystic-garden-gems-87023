@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 
 interface GameScreenProps {
   level: Level;
-  onWin: (stars: number, reward: { leaves: number; gems?: number }) => void;
+  onWin: (stars: number, reward: { gems?: number }) => void;
   onLose: () => void;
   onBack: () => void;
 }

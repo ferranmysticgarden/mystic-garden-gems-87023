@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 export interface GameState {
   lives: number;
   gems: number;
-  leaves: number;
   currentLevel: number;
-  unlockedLevels: number;
+  completedLevels: number[];
   hammers: number;
-  bombs: number;
+  undos: number;
+  shuffles: number;
   lastLifeRefill: number;
   unlimitedLivesUntil: number | null;
 }
@@ -15,11 +17,11 @@ export interface GameState {
 const INITIAL_STATE: GameState = {
   lives: 5,
   gems: 0,
-  leaves: 0,
   currentLevel: 1,
-  unlockedLevels: 1,
-  hammers: 0,
-  bombs: 0,
+  completedLevels: [],
+  hammers: 3,
+  undos: 0,
+  shuffles: 0,
   lastLifeRefill: Date.now(),
   unlimitedLivesUntil: null,
 };
@@ -27,15 +29,79 @@ const INITIAL_STATE: GameState = {
 const LIFE_REFILL_TIME = 25 * 60 * 1000; // 25 minutes in milliseconds
 
 export const useGameState = () => {
-  const [gameState, setGameState] = useState<GameState>(() => {
-    const saved = localStorage.getItem('mysticGardenState');
-    return saved ? JSON.parse(saved) : INITIAL_STATE;
-  });
+  const { user } = useAuth();
+  const [gameState, setGameState] = useState<GameState>(INITIAL_STATE);
+  const [loading, setLoading] = useState(true);
 
-  // Save to localStorage whenever state changes
+  // Load game progress from database
   useEffect(() => {
-    localStorage.setItem('mysticGardenState', JSON.stringify(gameState));
-  }, [gameState]);
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const loadProgress = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('game_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error;
+
+        if (data) {
+          setGameState({
+            lives: data.lives,
+            gems: data.gems,
+            currentLevel: data.current_level,
+            completedLevels: data.completed_levels || [],
+            hammers: data.hammer_count,
+            undos: data.undo_count,
+            shuffles: data.shuffle_count,
+            lastLifeRefill: new Date(data.last_life_refill).getTime(),
+            unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading game progress:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProgress();
+  }, [user]);
+
+  // Save to database whenever state changes
+  useEffect(() => {
+    if (!user || loading) return;
+
+    const saveProgress = async () => {
+      try {
+        const { error } = await supabase
+          .from('game_progress')
+          .upsert({
+            user_id: user.id,
+            lives: gameState.lives,
+            gems: gameState.gems,
+            current_level: gameState.currentLevel,
+            completed_levels: gameState.completedLevels,
+            hammer_count: gameState.hammers,
+            undo_count: gameState.undos,
+            shuffle_count: gameState.shuffles,
+            last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
+            unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
+          });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error saving game progress:', error);
+      }
+    };
+
+    saveProgress();
+  }, [gameState, user, loading]);
 
   // Life refill system
   useEffect(() => {
@@ -93,10 +159,6 @@ export const useGameState = () => {
     setGameState((prev) => ({ ...prev, gems: prev.gems + amount }));
   }, []);
 
-  const addLeaves = useCallback((amount: number) => {
-    setGameState((prev) => ({ ...prev, leaves: prev.leaves + amount }));
-  }, []);
-
   const spendGems = useCallback((amount: number) => {
     setGameState((prev) => {
       if (prev.gems >= amount) {
@@ -106,14 +168,19 @@ export const useGameState = () => {
     });
   }, []);
 
-  const completeLevel = useCallback((levelId: number, reward: { leaves: number; gems?: number }) => {
-    setGameState((prev) => ({
-      ...prev,
-      currentLevel: levelId + 1,
-      unlockedLevels: Math.max(prev.unlockedLevels, levelId + 1),
-      leaves: prev.leaves + reward.leaves,
-      gems: prev.gems + (reward.gems || 0),
-    }));
+  const completeLevel = useCallback((levelId: number, reward: { gems?: number }) => {
+    setGameState((prev) => {
+      const newCompletedLevels = prev.completedLevels.includes(levelId)
+        ? prev.completedLevels
+        : [...prev.completedLevels, levelId];
+      
+      return {
+        ...prev,
+        currentLevel: levelId + 1,
+        completedLevels: newCompletedLevels,
+        gems: prev.gems + (reward.gems || 0),
+      };
+    });
   }, []);
 
   const selectLevel = useCallback((levelId: number) => {
@@ -124,8 +191,12 @@ export const useGameState = () => {
     setGameState((prev) => ({ ...prev, hammers: prev.hammers + 1 }));
   }, []);
 
-  const addBomb = useCallback(() => {
-    setGameState((prev) => ({ ...prev, bombs: prev.bombs + 1 }));
+  const addUndo = useCallback(() => {
+    setGameState((prev) => ({ ...prev, undos: prev.undos + 1 }));
+  }, []);
+
+  const addShuffle = useCallback(() => {
+    setGameState((prev) => ({ ...prev, shuffles: prev.shuffles + 1 }));
   }, []);
 
   const useHammer = useCallback(() => {
@@ -137,10 +208,19 @@ export const useGameState = () => {
     });
   }, []);
 
-  const useBomb = useCallback(() => {
+  const useUndo = useCallback(() => {
     setGameState((prev) => {
-      if (prev.bombs > 0) {
-        return { ...prev, bombs: prev.bombs - 1 };
+      if (prev.undos > 0) {
+        return { ...prev, undos: prev.undos - 1 };
+      }
+      return prev;
+    });
+  }, []);
+
+  const useShuffle = useCallback(() => {
+    setGameState((prev) => {
+      if (prev.shuffles > 0) {
+        return { ...prev, shuffles: prev.shuffles - 1 };
       }
       return prev;
     });
@@ -166,17 +246,19 @@ export const useGameState = () => {
 
   return {
     gameState,
+    loading,
     loseLife,
     addLives,
     addGems,
-    addLeaves,
     spendGems,
     completeLevel,
     selectLevel,
     addHammer,
-    addBomb,
+    addUndo,
+    addShuffle,
     useHammer,
-    useBomb,
+    useUndo,
+    useShuffle,
     activateUnlimitedLives,
     hasUnlimitedLives,
     getTimeUntilNextLife,

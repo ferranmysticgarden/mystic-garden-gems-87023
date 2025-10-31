@@ -25,10 +25,10 @@ const Index = () => {
   const { isPlaying, isMuted, play, toggleMute } = useAudio('/audio/background-music.mp3');
   const {
     gameState,
+    loading: gameLoading,
     loseLife,
     addLives,
     addGems,
-    addLeaves,
     spendGems,
     completeLevel,
     selectLevel,
@@ -63,9 +63,9 @@ const Index = () => {
     }
   };
 
-  const handleWin = (stars: number, reward: { leaves: number; gems?: number }) => {
+  const handleWin = (stars: number, reward: { gems?: number }) => {
     completeLevel(currentLevel.id, reward);
-    toast.success(`${t('game.win')} +${reward.leaves} ${t('resources.leaves')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
+    toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
     setScreen('menu');
   };
 
@@ -75,8 +75,9 @@ const Index = () => {
   };
 
   const handleSelectLevel = (levelId: number) => {
-    // Check if level is accessible (levels unlock by playing)
-    if (levelId > gameState.unlockedLevels) {
+    // Check if level is accessible (need to complete previous level first)
+    const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
+    if (levelId > maxUnlockedLevel) {
       toast.error('Nivel bloqueado. Completa niveles anteriores.');
       return;
     }
@@ -140,7 +141,7 @@ const Index = () => {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || gameLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -167,9 +168,10 @@ const Index = () => {
   }
 
   if (screen === 'levels') {
+    const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
     return (
       <LevelSelect
-        unlockedLevels={gameState.unlockedLevels}
+        unlockedLevels={maxUnlockedLevel}
         onSelectLevel={handleSelectLevel}
         onBack={() => setScreen('menu')}
       />
@@ -209,7 +211,6 @@ const Index = () => {
         <GameHeader
           lives={gameState.lives}
           gems={gameState.gems}
-          leaves={gameState.leaves}
           hasUnlimitedLives={hasUnlimitedLives()}
           timeUntilNextLife={getTimeUntilNextLife()}
           onShopClick={() => setScreen('shop')}

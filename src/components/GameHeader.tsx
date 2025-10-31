@@ -4,13 +4,12 @@ import { useLanguage } from '@/hooks/useLanguage';
 interface GameHeaderProps {
   lives: number;
   gems: number;
-  leaves: number;
   hasUnlimitedLives: boolean;
   timeUntilNextLife: number;
   onShopClick: () => void;
 }
 
-export const GameHeader = ({ lives, gems, leaves, hasUnlimitedLives, timeUntilNextLife, onShopClick }: GameHeaderProps) => {
+export const GameHeader = ({ lives, gems, hasUnlimitedLives, timeUntilNextLife, onShopClick }: GameHeaderProps) => {
   const { t } = useLanguage();
 
   const formatTime = (seconds: number) => {

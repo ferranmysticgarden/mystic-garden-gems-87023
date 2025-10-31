@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_progress: {
+        Row: {
+          completed_levels: number[]
+          created_at: string
+          current_level: number
+          gems: number
+          hammer_count: number
+          id: string
+          last_life_refill: string
+          lives: number
+          shuffle_count: number
+          undo_count: number
+          unlimited_lives_until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_levels?: number[]
+          created_at?: string
+          current_level?: number
+          gems?: number
+          hammer_count?: number
+          id?: string
+          last_life_refill?: string
+          lives?: number
+          shuffle_count?: number
+          undo_count?: number
+          unlimited_lives_until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_levels?: number[]
+          created_at?: string
+          current_level?: number
+          gems?: number
+          hammer_count?: number
+          id?: string
+          last_life_refill?: string
+          lives?: number
+          shuffle_count?: number
+          undo_count?: number
+          unlimited_lives_until?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
