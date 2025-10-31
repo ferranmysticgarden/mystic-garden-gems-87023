@@ -1,29 +1,60 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 interface AuthPageProps {
   onAuthSuccess: () => void;
 }
 
+const emailSchema = z.string().trim().email({ message: "Email inválido" });
+const passwordSchema = z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" });
+
 export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleGoogleLogin = async () => {
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        },
-      });
+      // Validate inputs
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
 
-      if (error) throw error;
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+        
+        if (error) throw error;
+        toast.success('¡Cuenta creada! Ahora puedes iniciar sesión');
+        setIsSignUp(false);
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        toast.success('¡Bienvenido!');
+      }
     } catch (error: any) {
-      toast.error(error.message || 'Error al iniciar sesión con Google');
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || 'Error al iniciar sesión');
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -35,22 +66,54 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           <div className="text-6xl mb-4">🌸</div>
           <h1 className="text-3xl font-bold text-gold mb-2">Mystic Garden Pro</h1>
           <p className="text-muted-foreground">
-            Inicia sesión para continuar
+            {isSignUp ? 'Crea tu cuenta' : 'Inicia sesión para continuar'}
           </p>
         </div>
 
-        <Button
-          onClick={handleGoogleLogin}
-          className="w-full gradient-gold shadow-gold text-lg py-6"
-          disabled={loading}
-          id="google-login-btn"
-        >
-          {loading ? 'Cargando...' : '🔐 Entrar con Google'}
-        </Button>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+              className="w-full"
+            />
+          </div>
 
-        <p className="text-xs text-muted-foreground text-center mt-4">
-          Usa la misma cuenta de Google de tu dispositivo Android
-        </p>
+          <div>
+            <Input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              minLength={6}
+              className="w-full"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full gradient-gold shadow-gold text-lg py-6"
+            disabled={loading}
+          >
+            {loading ? 'Cargando...' : (isSignUp ? '📝 Crear cuenta' : '🔐 Entrar')}
+          </Button>
+        </form>
+
+        <div className="text-center mt-6">
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-gold hover:underline text-sm"
+            disabled={loading}
+          >
+            {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+          </button>
+        </div>
       </div>
     </div>
   );
