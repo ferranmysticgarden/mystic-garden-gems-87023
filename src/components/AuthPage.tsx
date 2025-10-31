@@ -45,7 +45,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           disabled={loading}
           id="google-login-btn"
         >
-          {loading ? 'Cargando...' : '🔐 Continuar con Google'}
+          {loading ? 'Cargando...' : '🔐 Entrar con Google'}
         </Button>
 
         <p className="text-xs text-muted-foreground text-center mt-4">
