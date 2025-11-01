@@ -28,15 +28,29 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
       passwordSchema.parse(password);
 
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              display_name: email.split('@')[0]
+            }
           }
         });
         
         if (error) throw error;
+        
+        // Enviar email de notificación (sin esperar respuesta)
+        if (data.user) {
+          supabase.functions.invoke('send-registration-email', {
+            body: {
+              email,
+              displayName: email.split('@')[0]
+            }
+          }).catch(err => console.error('Error sending registration email:', err));
+        }
+        
         toast.success('¡Cuenta creada! Ahora puedes iniciar sesión');
         setIsSignUp(false);
       } else {

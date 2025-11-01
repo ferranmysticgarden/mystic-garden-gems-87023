@@ -1,8 +1,9 @@
-import { ShoppingBag, X } from 'lucide-react';
+import { ShoppingBag, X, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/data/products';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import { useStripePayment } from '@/hooks/useStripePayment';
 
 interface ShopProps {
   onClose: () => void;
@@ -11,10 +12,12 @@ interface ShopProps {
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
+  const { createPayment, loading } = useStripePayment();
 
-  const handlePurchase = (productId: string, productName: string) => {
-    toast.success(`${t('shop.purchased')} ${productName}`);
-    onPurchase(productId);
+  const handlePurchase = async (productId: string, productName: string) => {
+    await createPayment(productId);
+    // La compra real se procesará cuando el webhook de Stripe notifique
+    // onPurchase se llamará después del pago exitoso
   };
 
   return (
@@ -52,8 +55,16 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                 onClick={() => handlePurchase(product.id, t(product.nameKey))}
                 className="w-full gradient-gold shadow-gold hover:scale-105 transition-transform"
                 id={`buy-${product.id}`}
+                disabled={loading}
               >
-                {t('shop.buy')} - €{product.price.toFixed(2)}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  `${t('shop.buy')} - €${product.price.toFixed(2)}`
+                )}
               </Button>
             </div>
           ))}

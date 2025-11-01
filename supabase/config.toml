@@ -1,1 +1,10 @@
 project_id = "faenacounjayntrjgqvy"
+
+[functions.send-registration-email]
+verify_jwt = false
+
+[functions.create-payment]
+verify_jwt = true
+
+[functions.handle-stripe-webhook]
+verify_jwt = false
