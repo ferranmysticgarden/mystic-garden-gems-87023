@@ -14,7 +14,7 @@ interface RegistrationEmailRequest {
   displayName: string;
 }
 
-const ADMIN_EMAIL = "tu-email@ejemplo.com"; // Cambiar por tu email
+const ADMIN_EMAIL = "fcanamases@gmail.com";
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {

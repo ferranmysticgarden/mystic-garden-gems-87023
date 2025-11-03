@@ -8,7 +8,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 });
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const ADMIN_EMAIL = "tu-email@ejemplo.com"; // Cambiar por tu email
+const ADMIN_EMAIL = "fcanamases@gmail.com";
 
 const PRODUCT_NAMES: Record<string, string> = {
   "gems_100": "100 Gemas",
