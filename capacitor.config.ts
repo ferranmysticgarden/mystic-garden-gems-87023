@@ -6,6 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   android: {
     backgroundColor: '#9b59b6'
+  },
+  server: {
+    url: 'https://mysticgardenpro.com',
+    cleartext: true
   }
 };
 
