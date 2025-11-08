@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.mysticgarden.pro2',
-  appName: 'Mystic Garden Pro 2',
+  appId: 'com.evoluxe.mysticgarden',
+  appName: 'Mystic Garden Pro',
   webDir: 'dist',
   android: {
     backgroundColor: '#9b59b6'
