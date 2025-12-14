@@ -179,7 +179,14 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="grid grid-cols-8 gap-1 bg-card/50 p-2 rounded-2xl shadow-card">
+      <div 
+        className="grid grid-cols-8 gap-1 p-3 rounded-2xl"
+        style={{
+          background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
+          boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+          border: '2px solid rgba(147, 51, 234, 0.3)',
+        }}
+      >
         {board.map((row, rowIndex) =>
           row.map((tile, colIndex) => (
             <Tile

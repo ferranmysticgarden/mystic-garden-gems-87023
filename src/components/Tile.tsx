@@ -11,14 +11,21 @@ export const Tile = ({ tile, isSelected, isAnimating, isTarget, onClick }: TileP
     <button
       onClick={onClick}
       className={`
-        aspect-square rounded-lg flex items-center justify-center text-2xl
-        transition-all duration-300 bg-card/80
-        ${isSelected ? 'scale-110 shadow-glow ring-2 ring-primary' : 'hover:scale-105'}
+        aspect-square rounded-lg flex items-center justify-center text-2xl sm:text-3xl
+        transition-all duration-300
+        ${isSelected ? 'scale-110 ring-2 ring-accent' : 'hover:scale-105'}
         ${isAnimating ? 'animate-pop' : 'animate-scale-in'}
         ${isTarget ? 'ring-2 ring-secondary animate-bounce-subtle' : ''}
       `}
+      style={{
+        background: 'linear-gradient(180deg, hsl(270 40% 28% / 0.9), hsl(270 50% 18% / 0.95))',
+        boxShadow: isSelected 
+          ? '0 0 15px rgba(255, 200, 50, 0.6), inset 0 1px 0 rgba(255,255,255,0.15)'
+          : 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)',
+        border: '1px solid rgba(147, 51, 234, 0.25)',
+      }}
     >
-      {tile}
+      <span className="drop-shadow-md">{tile}</span>
     </button>
   );
 };

@@ -91,8 +91,8 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="gradient-card shadow-card rounded-2xl p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
+      <div className="gradient-card shadow-card rounded-2xl p-8 max-w-md w-full border border-primary/20">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🌸</div>
           <h1 className="text-3xl font-bold text-gold mb-2">Mystic Garden Pro</h1>

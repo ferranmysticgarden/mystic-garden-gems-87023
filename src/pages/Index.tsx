@@ -179,7 +179,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4 relative z-10">
       <div className="max-w-md mx-auto">
         {/* User Info & Music Control */}
         <div className="flex justify-between items-center mb-4">
