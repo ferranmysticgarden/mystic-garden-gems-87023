@@ -84,7 +84,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   };
 
   return (
-    <div className="min-h-screen p-4 flex flex-col">
+    <div className="min-h-screen p-4 flex flex-col relative z-10">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
         <div className="gradient-card shadow-card rounded-2xl p-4 mb-4">

@@ -13,7 +13,7 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4 relative z-10">
       <div className="max-w-4xl mx-auto">
         <Button onClick={onBack} variant="outline" className="mb-6">
           ← {t('menu.levels')}
