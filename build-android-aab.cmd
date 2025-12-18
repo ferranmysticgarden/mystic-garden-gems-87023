@@ -1,0 +1,102 @@
+@echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
+REM Always run from the project root (where this .cmd is located)
+cd /d "%~dp0"
+
+echo ==== Mystic Garden: Android AAB build (Release) ====
+
+if not exist "package.json" (
+  echo ERROR: No estoy en la carpeta del proyecto (no veo package.json).
+  echo Ruta actual: %CD%
+  pause
+  exit /b 1
+)
+
+if not exist "android\key.properties" (
+  echo ERROR: No existe android\key.properties
+  pause
+  exit /b 1
+)
+
+echo [1/4] npm install
+call npm install
+if errorlevel 1 (
+  echo ERROR: npm install fallo.
+  pause
+  exit /b 1
+)
+
+echo [2/4] npm run build
+call npm run build
+if errorlevel 1 (
+  echo ERROR: npm run build fallo.
+  pause
+  exit /b 1
+)
+
+echo [3/4] npx cap sync android
+call npx cap sync android
+if errorlevel 1 (
+  echo ERROR: npx cap sync android fallo.
+  pause
+  exit /b 1
+)
+
+pushd android
+
+if not exist "gradlew.bat" (
+  echo ERROR: No existe android\gradlew.bat. (Te falta la carpeta Android nativa completa.)
+  echo Si acabas de exportar el proyecto, ejecuta primero: npx cap add android
+  popd
+  pause
+  exit /b 1
+)
+
+REM Read storeFile from key.properties and normalize slashes
+set "STORE_FILE="
+for /f "usebackq tokens=1,* delims==" %%A in ("key.properties") do (
+  if /I "%%A"=="storeFile" set "STORE_FILE=%%B"
+)
+
+if not defined STORE_FILE (
+  echo ERROR: key.properties no contiene storeFile=...
+  popd
+  pause
+  exit /b 1
+)
+
+set "STORE_FILE=!STORE_FILE:/=\!"
+
+if not exist "!STORE_FILE!" (
+  echo ERROR: No encuentro el keystore indicado en key.properties:
+  echo   storeFile=!STORE_FILE!
+  echo Archivos encontrados en android\app:
+  dir /b app\*.jks app\*.keystore 2>nul
+  popd
+  pause
+  exit /b 1
+)
+
+echo [4/4] Gradle: bundleRelease
+call gradlew.bat clean :app:bundleRelease --stacktrace
+if errorlevel 1 (
+  echo ERROR: Gradle fallo generando el AAB.
+  popd
+  pause
+  exit /b 1
+)
+
+echo ==== AAB generado(s) ====
+dir /s /b app\build\outputs\bundle\release\*.aab
+
+if exist "app\build\outputs\bundle\release" (
+  start "" "app\build\outputs\bundle\release"
+) else (
+  echo ERROR: No se creo la carpeta app\build\outputs\bundle\release
+)
+
+popd
+
+echo ==== FIN ====
+pause
