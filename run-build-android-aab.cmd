@@ -8,7 +8,12 @@ if not exist "build-android-aab.cmd" (
   echo ERROR: No existe build-android-aab.cmd en esta carpeta:
   echo   %CD%
   echo.
-  echo Crea/coloca build-android-aab.cmd en la raiz del proyecto.
+  echo TIP: Puede que se haya guardado como build-android-aab.cmd.txt por error.
+  echo Ejecuta:
+  echo   dir /b build-android-aab*
+  echo Si ves build-android-aab.cmd.txt, renombralo asi:
+  echo   ren build-android-aab.cmd.txt build-android-aab.cmd
+  echo.
   pause
   exit /b 1
 )
