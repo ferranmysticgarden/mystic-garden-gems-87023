@@ -53,32 +53,16 @@ if not exist "gradlew.bat" (
   exit /b 1
 )
 
-REM Read signing data from key.properties and normalize slashes
+REM Read signing data from key.properties (NO passwords here)
 set "STORE_FILE="
-set "STORE_PWD="
-set "KEY_PWD="
 set "KEY_ALIAS="
 for /f "usebackq tokens=1,* delims==" %%A in ("key.properties") do (
   if /I "%%A"=="storeFile" set "STORE_FILE=%%B"
-  if /I "%%A"=="storePassword" set "STORE_PWD=%%B"
-  if /I "%%A"=="keyPassword" set "KEY_PWD=%%B"
   if /I "%%A"=="keyAlias" set "KEY_ALIAS=%%B"
 )
 
 if not defined STORE_FILE (
   echo ERROR: key.properties no contiene storeFile=...
-  popd
-  pause
-  exit /b 1
-)
-if not defined STORE_PWD (
-  echo ERROR: key.properties no contiene storePassword=...
-  popd
-  pause
-  exit /b 1
-)
-if not defined KEY_PWD (
-  echo ERROR: key.properties no contiene keyPassword=...
   popd
   pause
   exit /b 1
@@ -89,6 +73,7 @@ if not defined KEY_ALIAS (
   pause
   exit /b 1
 )
+
 
 set "STORE_FILE=!STORE_FILE:/=\!"
 
@@ -112,23 +97,38 @@ if not exist "!STORE_PATH!" (
 )
 
 echo [4/4] Gradle: bundleRelease (signed)
-call gradlew.bat clean :app:bundleRelease --stacktrace ^
-  -Pandroid.injected.signing.store.file="!STORE_PATH!" ^
-  -Pandroid.injected.signing.store.password="!STORE_PWD!" ^
-  -Pandroid.injected.signing.key.alias="!KEY_ALIAS!" ^
-  -Pandroid.injected.signing.key.password="!KEY_PWD!"
-if errorlevel 1 (
+
+echo.
+echo (Se pediran contrasenas ahora; no se guardan en key.properties)
+setlocal DisableDelayedExpansion
+set /p STORE_PWD=Introduce la contraseña del keystore (storePassword): 
+if "%STORE_PWD%"=="" (
+  echo ERROR: storePassword vacio.
+  endlocal
+  popd
+  pause
+  exit /b 1
+)
+set /p KEY_PWD=Introduce la contraseña de la key (keyPassword): 
+if "%KEY_PWD%"=="" (
+  echo ERROR: keyPassword vacio.
+  endlocal
+  popd
+  pause
+  exit /b 1
+)
+
+call gradlew.bat clean :app:bundleRelease --stacktrace -Pandroid.injected.signing.store.file="%STORE_PATH%" -Pandroid.injected.signing.store.password="%STORE_PWD%" -Pandroid.injected.signing.key.alias="%KEY_ALIAS%" -Pandroid.injected.signing.key.password="%KEY_PWD%"
+set "GRADLE_ERR=%ERRORLEVEL%"
+endlocal
+
+if not "%GRADLE_ERR%"=="0" (
   echo ERROR: Gradle fallo generando el AAB.
   popd
   pause
   exit /b 1
 )
 
-  echo ERROR: Gradle fallo generando el AAB.
-  popd
-  pause
-  exit /b 1
-)
 
 echo ==== AAB generado(s) ====
 dir /s /b app\build\outputs\bundle\release\*.aab
