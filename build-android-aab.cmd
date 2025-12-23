@@ -7,7 +7,7 @@ cd /d "%~dp0"
 echo ==== Mystic Garden: Android AAB build (Release) ====
 
 if not exist "package.json" (
-  echo ERROR: No estoy en la carpeta del proyecto (no veo package.json).
+  echo ERROR: No estoy en la carpeta del proyecto - no veo package.json
   echo Ruta actual: %CD%
   pause
   exit /b 1
@@ -46,97 +46,93 @@ if errorlevel 1 (
 pushd android
 
 if not exist "gradlew.bat" (
-  echo ERROR: No existe android\gradlew.bat. (Te falta la carpeta Android nativa completa.)
+  echo ERROR: No existe android\gradlew.bat
   echo Si acabas de exportar el proyecto, ejecuta primero: npx cap add android
   popd
   pause
   exit /b 1
 )
 
-REM Read signing data from key.properties (NO passwords here)
+REM Read signing data from key.properties
 set "STORE_FILE="
 set "KEY_ALIAS="
 for /f "usebackq tokens=1,* delims==" %%A in ("key.properties") do (
-  if /I "%%A"=="storeFile" set "STORE_FILE=%%B"
-  if /I "%%A"=="keyAlias" set "KEY_ALIAS=%%B"
+  set "LINE=%%A"
+  if defined LINE (
+    if not "!LINE:~0,1!"=="#" (
+      if /I "%%A"=="storeFile" set "STORE_FILE=%%B"
+      if /I "%%A"=="keyAlias" set "KEY_ALIAS=%%B"
+    )
+  )
 )
 
 if not defined STORE_FILE (
-  echo ERROR: key.properties no contiene storeFile=...
+  echo ERROR: key.properties no contiene storeFile
   popd
   pause
   exit /b 1
 )
 if not defined KEY_ALIAS (
-  echo ERROR: key.properties no contiene keyAlias=...
+  echo ERROR: key.properties no contiene keyAlias
   popd
   pause
   exit /b 1
 )
 
-
 set "STORE_FILE=!STORE_FILE:/=\!"
 
-REM Resolve storeFile path (some templates expect it in android/app)
+REM Resolve storeFile path
 set "STORE_PATH=!STORE_FILE!"
 if not exist "!STORE_PATH!" (
   if exist "app\!STORE_FILE!" set "STORE_PATH=app\!STORE_FILE!"
 )
 
 if not exist "!STORE_PATH!" (
-  echo ERROR: No encuentro el keystore indicado en key.properties.
-  echo   storeFile=!STORE_FILE!
-  echo Probado:
-  echo   !STORE_FILE!
-  echo   app\!STORE_FILE!
-  echo Archivos encontrados en android\app:
+  echo ERROR: No encuentro el keystore: !STORE_FILE!
+  echo Archivos en android\app:
   dir /b app\*.jks app\*.keystore 2>nul
   popd
   pause
   exit /b 1
 )
 
-echo [4/4] Gradle: bundleRelease (signed)
-
+echo [4/4] Gradle: bundleRelease - signed
 echo.
-echo (Se pediran contrasenas ahora; no se guardan en key.properties)
-setlocal DisableDelayedExpansion
-set /p STORE_PWD=Introduce la contraseña del keystore (storePassword): 
-if "%STORE_PWD%"=="" (
+echo Se pediran contrasenas ahora - no se guardan en archivos
+
+set /p STORE_PWD=Contrasena del keystore (storePassword): 
+if "!STORE_PWD!"=="" (
   echo ERROR: storePassword vacio.
-  endlocal
   popd
   pause
   exit /b 1
 )
-set /p KEY_PWD=Introduce la contraseña de la key (keyPassword): 
-if "%KEY_PWD%"=="" (
+
+set /p KEY_PWD=Contrasena de la key (keyPassword): 
+if "!KEY_PWD!"=="" (
   echo ERROR: keyPassword vacio.
-  endlocal
   popd
   pause
   exit /b 1
 )
 
-call gradlew.bat clean :app:bundleRelease --stacktrace -Pandroid.injected.signing.store.file="%STORE_PATH%" -Pandroid.injected.signing.store.password="%STORE_PWD%" -Pandroid.injected.signing.key.alias="%KEY_ALIAS%" -Pandroid.injected.signing.key.password="%KEY_PWD%"
-set "GRADLE_ERR=%ERRORLEVEL%"
-endlocal
+call gradlew.bat clean :app:bundleRelease --stacktrace -Pandroid.injected.signing.store.file="!STORE_PATH!" -Pandroid.injected.signing.store.password="!STORE_PWD!" -Pandroid.injected.signing.key.alias="!KEY_ALIAS!" -Pandroid.injected.signing.key.password="!KEY_PWD!"
+set "GRADLE_ERR=!ERRORLEVEL!"
 
-if not "%GRADLE_ERR%"=="0" (
+if not "!GRADLE_ERR!"=="0" (
   echo ERROR: Gradle fallo generando el AAB.
   popd
   pause
   exit /b 1
 )
 
-
-echo ==== AAB generado(s) ====
+echo ==== AAB generado ====
 dir /s /b app\build\outputs\bundle\release\*.aab
 
 if exist "app\build\outputs\bundle\release" (
   start "" "app\build\outputs\bundle\release"
 ) else (
-  echo ERROR: No se creo la carpeta app\build\outputs\bundle\release
+  echo ERROR: No se creo la carpeta de salida
 )
 
 popd
