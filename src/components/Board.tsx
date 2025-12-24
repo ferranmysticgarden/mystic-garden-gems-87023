@@ -82,10 +82,10 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     return matches;
   }, []);
 
-  const removeMatches = useCallback((matches: Position[]) => {
-    if (matches.length === 0) return board;
+  const removeMatches = useCallback((currentBoard: string[][], matches: Position[]) => {
+    if (matches.length === 0) return currentBoard;
 
-    const newBoard = board.map(row => [...row]);
+    const newBoard = currentBoard.map(row => [...row]);
     const matchedTiles: string[] = [];
     
     // Animate tiles before removing
@@ -125,14 +125,14 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     }, 300);
 
     return newBoard;
-  }, [board, onMatch]);
+  }, [onMatch]);
 
   useEffect(() => {
     if (board.length === 0) return;
     
     const matches = findMatches(board);
     if (matches.length > 0) {
-      setTimeout(() => removeMatches(matches), 500);
+      setTimeout(() => removeMatches(board, matches), 500);
     }
   }, [board, findMatches, removeMatches]);
 
@@ -152,7 +152,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
         // No match, swap back
         setBoard(board);
       } else {
-        removeMatches(matches);
+        removeMatches(newBoard, matches);
       }
     }, 300);
   }, [board, findMatches, removeMatches, onMove]);
