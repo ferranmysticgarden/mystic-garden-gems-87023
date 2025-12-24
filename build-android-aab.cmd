@@ -121,6 +121,54 @@ if "!KEY_PWD!"=="" (
   exit /b 1
 )
 
+REM --- Pre-check: verify keystore password + alias BEFORE Gradle (avoids guessing) ---
+set "KEYTOOL_EXE="
+if exist "%PROGRAMFILES%\Android\Android Studio\jbr\bin\keytool.exe" set "KEYTOOL_EXE=%PROGRAMFILES%\Android\Android Studio\jbr\bin\keytool.exe"
+if not defined KEYTOOL_EXE (
+  for /f "delims=" %%K in ('where keytool 2^>nul') do (
+    if not defined KEYTOOL_EXE set "KEYTOOL_EXE=%%K"
+  )
+)
+
+if defined KEYTOOL_EXE (
+  echo.
+  echo Verificando keystore (contrasena + alias) antes de Gradle...
+  "%KEYTOOL_EXE%" -list -keystore "!STORE_PATH!" -storepass "!STORE_PWD!" > "%TEMP%\mg_keystore_list.txt" 2>nul
+  if errorlevel 1 (
+    echo ERROR: La contrasena del keystore NO coincide con el archivo:
+    echo   !STORE_PATH!
+    echo Nota: revisa teclado/Mayusculas y si era "mystic123" vs "mistico123" (con o sin acento).
+    del "%TEMP%\mg_keystore_list.txt" 2>nul
+    popd
+    pause
+    exit /b 1
+  )
+
+  REM Check if key alias exists; if not, show aliases and ask user
+  findstr /i /c:"Alias name: !KEY_ALIAS!" "%TEMP%\mg_keystore_list.txt" >nul
+  if errorlevel 1 findstr /i /c:"Nombre de alias: !KEY_ALIAS!" "%TEMP%\mg_keystore_list.txt" >nul
+
+  if errorlevel 1 (
+    echo.
+    echo ERROR: El alias configurado en key.properties no existe: "!KEY_ALIAS!"
+    echo Alias disponibles en el keystore:
+    findstr /i /c:"Alias name:" /c:"Nombre de alias:" "%TEMP%\mg_keystore_list.txt"
+    echo.
+    set /p KEY_ALIAS=Escribe el alias correcto EXACTO (tal cual aparece arriba): <con
+    if "!KEY_ALIAS!"=="" (
+      echo ERROR: alias vacio.
+      del "%TEMP%\mg_keystore_list.txt" 2>nul
+      popd
+      pause
+      exit /b 1
+    )
+  )
+
+  del "%TEMP%\mg_keystore_list.txt" 2>nul
+) else (
+  echo [AVISO] No encuentro keytool para verificar el keystore; sigo con Gradle.
+)
+
 call gradlew.bat clean :app:bundleRelease --stacktrace -Pandroid.injected.signing.store.file="!STORE_PATH!" -Pandroid.injected.signing.store.password="!STORE_PWD!" -Pandroid.injected.signing.key.alias="!KEY_ALIAS!" -Pandroid.injected.signing.key.password="!KEY_PWD!"
 set "GRADLE_ERR=!ERRORLEVEL!"
 
