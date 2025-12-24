@@ -81,20 +81,24 @@ if not defined KEY_ALIAS (
 
 set "STORE_FILE=!STORE_FILE:/=\!"
 
-REM Resolve storeFile path
-set "STORE_PATH=!STORE_FILE!"
+REM Resolve storeFile to ABSOLUTE path (fixes Gradle double-path bug)
+set "STORE_PATH=%CD%\app\!STORE_FILE!"
 if not exist "!STORE_PATH!" (
-  if exist "app\!STORE_FILE!" set "STORE_PATH=app\!STORE_FILE!"
+  set "STORE_PATH=%CD%\!STORE_FILE!"
 )
-
 if not exist "!STORE_PATH!" (
   echo ERROR: No encuentro el keystore: !STORE_FILE!
-  echo Archivos en android\app:
+  echo Buscado en:
+  echo   %CD%\app\!STORE_FILE!
+  echo   %CD%\!STORE_FILE!
+  echo.
+  echo Archivos .keystore en android\app:
   dir /b app\*.jks app\*.keystore 2>nul
   popd
   pause
   exit /b 1
 )
+echo Keystore encontrado: !STORE_PATH!
 
 echo [4/4] Gradle: bundleRelease - signed
 echo.
