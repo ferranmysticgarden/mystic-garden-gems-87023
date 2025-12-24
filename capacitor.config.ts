@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.evoluxe.mysticgarden',
+  appId: 'com.mysticgarden.game',
   appName: 'Mystic Garden Pro',
   // Version 1.0.1 - December 2025
   webDir: 'dist',
