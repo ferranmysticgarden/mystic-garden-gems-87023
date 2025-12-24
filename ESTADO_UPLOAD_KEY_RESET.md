@@ -1,6 +1,8 @@
 # Estado del Reset de Upload Key - Mystic Garden Pro
 
-> **Última actualización:** 24 diciembre 2025
+> **Última actualización:** 24 diciembre 2025  
+> **SHA-1 VERIFICADO:** ✅ `37:62:75:43:D5:7F:0E:BE:AE:F1:78:D6:79:6C:D2:DF:52:36:C3:09`  
+> **Contraseña keystore:** `mystic123`
 
 ---
 
