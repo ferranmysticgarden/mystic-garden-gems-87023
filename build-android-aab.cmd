@@ -104,7 +104,8 @@ echo [4/4] Gradle: bundleRelease - signed
 echo.
 echo Se pediran contrasenas ahora - no se guardan en archivos
 
-set /p STORE_PWD=Contrasena del keystore (storePassword): 
+REM Read from CON to avoid empty input when stdin is redirected
+set /p STORE_PWD=Contrasena del keystore (storePassword): <con
 if "!STORE_PWD!"=="" (
   echo ERROR: storePassword vacio.
   popd
@@ -112,7 +113,7 @@ if "!STORE_PWD!"=="" (
   exit /b 1
 )
 
-set /p KEY_PWD=Contrasena de la key (keyPassword): 
+set /p KEY_PWD=Contrasena de la key (keyPassword): <con
 if "!KEY_PWD!"=="" (
   echo ERROR: keyPassword vacio.
   popd
