@@ -52,18 +52,28 @@ En **Play Console → Integridad de la app → Certificado de clave de subida**:
 - El SHA-1 debe ser ahora: `37:62:75:43:D5:7F:0E:BE:AE:F1:78:D6:79:6C:D2:DF:52:36:C3:09`
 - Si sigue mostrando `41:F2:...` → el reset aún no se ha aplicado
 
-### Paso 7: Generar el AAB
+### Paso 7: Actualizar versionCode (OBLIGATORIO)
+```cmd
+cd C:\Users\PC\mystic-garden-gems-87023\android\app
+notepad build.gradle
+```
+Buscar y cambiar:
+- `versionCode 2` → `versionCode 3`
+- `versionName "1.0.1"` → `versionName "1.0.2"`
+
+Guardar y cerrar notepad.
+
+### Paso 8: Generar el AAB
 ```cmd
 cd C:\Users\PC\mystic-garden-gems-87023
 build-android-aab.cmd
 ```
-- Usar la contraseña del keystore NUEVO
+- Usar contraseña: `mystic123`
 - El script pedirá: storePassword y keyPassword (son la misma)
 
-### Paso 8: Subir AAB a Google Play
+### Paso 9: Subir AAB a Google Play
 - Play Console → Producción → Crear nueva versión
 - Subir el AAB generado en: `android/app/build/outputs/bundle/release/app-release.aab`
-- **IMPORTANTE:** El versionCode debe ser mayor que el anterior
 
 ### Paso 9: Publicar
 - Rellenar notas de la versión
