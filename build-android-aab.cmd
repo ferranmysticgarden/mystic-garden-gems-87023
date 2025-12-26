@@ -41,7 +41,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [3.5/4] Actualizando versionCode y versionName...
+echo [3.5/4] Forzando package (applicationId) + version...
 set "GRADLE_FILE=android\app\build.gradle"
 if not exist "%GRADLE_FILE%" (
   echo ERROR: No existe %GRADLE_FILE%
@@ -49,10 +49,10 @@ if not exist "%GRADLE_FILE%" (
   exit /b 1
 )
 
-powershell -Command "$f='%GRADLE_FILE%';$c=Get-Content $f -Raw;$c=$c -replace 'versionCode\s+\d+','versionCode 3';$c=$c -replace 'versionName\s+\"[^\"]+\"','versionName \"1.0.2\"';[IO.File]::WriteAllText($f,$c)"
+powershell -NoProfile -Command "$f='%GRADLE_FILE%';$c=Get-Content $f -Raw;$c=$c -replace 'applicationId\s+\"[^\"]+\"','applicationId \"com.mysticgarden.game\"';$c=$c -replace 'namespace\s+\"[^\"]+\"','namespace \"com.mysticgarden.game\"';$c=$c -replace 'versionCode\s+\d+','versionCode 3';$c=$c -replace 'versionName\s+\"[^\"]+\"','versionName \"1.0.2\"';[IO.File]::WriteAllText($f,$c)"
 
 echo Verificando cambios:
-findstr /n /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
+findstr /n /c:"applicationId" /c:"namespace" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 echo.
 
 pushd android
