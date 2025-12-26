@@ -43,21 +43,18 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [3.5/4] Configurando versionCode 3 y versionName 1.0.2...
-set "BUILD_GRADLE=android\app\build.gradle"
-if exist "!BUILD_GRADLE!" (
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$p='!BUILD_GRADLE!'; $c=Get-Content -Raw $p; $c=$c -replace 'versionCode\s+\d+','versionCode 3'; $c=$c -replace 'versionName\s+\"[^\"]+\"','versionName \"1.0.2\"'; [System.IO.File]::WriteAllText($p,$c,(New-Object System.Text.UTF8Encoding($false)))"
-  if errorlevel 1 (
-    echo ERROR: No pude actualizar build.gradle automaticamente.
-    echo Abre y cambia manualmente:
-    echo   notepad android\app\build.gradle
-    pause
-    exit /b 1
-  )
-  echo Version actualizada: versionCode 3, versionName 1.0.2
-) else (
-  echo AVISO: No se encontro build.gradle para actualizar version
-)
+echo [3.5/4] Actualizar versionCode y versionName en build.gradle
+echo.
+echo =====================================================
+echo   CAMBIA ESTOS VALORES EN EL ARCHIVO QUE SE ABRE:
+echo   versionCode 2  -^>  versionCode 3
+echo   versionName "1.0.1"  -^>  versionName "1.0.2"
+echo =====================================================
+echo.
+echo Guarda el archivo y cierra Notepad para continuar...
+echo.
+start /wait notepad android\app\build.gradle
+echo Continuando con el build...
 
 pushd android
 
