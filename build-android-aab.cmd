@@ -43,6 +43,15 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo [3.5/4] Configurando versionCode 3 y versionName 1.0.2...
+set "BUILD_GRADLE=android\app\build.gradle"
+if exist "!BUILD_GRADLE!" (
+  powershell -Command "(Get-Content '!BUILD_GRADLE!') -replace 'versionCode \d+', 'versionCode 3' -replace 'versionName \"[^\"]+\"', 'versionName \"1.0.2\"' | Set-Content '!BUILD_GRADLE!'"
+  echo Version actualizada: versionCode 3, versionName 1.0.2
+) else (
+  echo AVISO: No se encontro build.gradle para actualizar version
+)
+
 pushd android
 
 if not exist "gradlew.bat" (
