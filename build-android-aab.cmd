@@ -42,17 +42,22 @@ if errorlevel 1 (
 )
 
 echo [3.5/4] Forzando package (applicationId) + version...
-set "GRADLE_FILE=android\app\build.gradle"
-if not exist "%GRADLE_FILE%" (
-  echo ERROR: No existe %GRADLE_FILE%
+set "GRADLE_GROOVY=android\app\build.gradle"
+set "GRADLE_KTS=android\app\build.gradle.kts"
+set "GRADLE_FILE="
+if exist "%GRADLE_GROOVY%" set "GRADLE_FILE=%GRADLE_GROOVY%"
+if not defined GRADLE_FILE if exist "%GRADLE_KTS%" set "GRADLE_FILE=%GRADLE_KTS%"
+if not defined GRADLE_FILE (
+  echo ERROR: No existe android\app\build.gradle ni android\app\build.gradle.kts
   pause
   exit /b 1
 )
 
-powershell -NoProfile -Command "$f='%GRADLE_FILE%';$c=Get-Content $f -Raw;$c=$c -replace 'applicationId\s+\"[^\"]+\"','applicationId \"com.mysticgarden.game\"';$c=$c -replace 'namespace\s+\"[^\"]+\"','namespace \"com.mysticgarden.game\"';$c=$c -replace 'versionCode\s+\d+','versionCode 3';$c=$c -replace 'versionName\s+\"[^\"]+\"','versionName \"1.0.2\"';[IO.File]::WriteAllText($f,$c)"
+powershell -NoProfile -Command "$p='com.mysticgarden.game';$dq=[char]34;$f='%GRADLE_FILE%';$isKts=$f.ToLower().EndsWith('.kts');$appId=if($isKts){'applicationId = '+$dq+$p+$dq}else{'applicationId '+$dq+$p+$dq};$ns=if($isKts){'namespace = '+$dq+$p+$dq}else{'namespace '+$dq+$p+$dq};$vCode=if($isKts){'versionCode = 3'}else{'versionCode 3'};$vName=if($isKts){'versionName = '+$dq+'1.0.2'+$dq}else{'versionName '+$dq+'1.0.2'+$dq};$c=Get-Content $f -Raw;$c=$c -replace 'applicationId\s*(=)?\s*[''\x22][^''\x22]+[''\x22]',$appId;$c=$c -replace 'namespace\s*(=)?\s*[''\x22][^''\x22]+[''\x22]',$ns;$c=$c -replace 'versionCode\s*(=)?\s*\d+',$vCode;$c=$c -replace 'versionName\s*(=)?\s*[''\x22][^''\x22]+[''\x22]',$vName;[IO.File]::WriteAllText($f,$c);$mf='android\app\src\main\AndroidManifest.xml';if(Test-Path $mf){$m=Get-Content $mf -Raw;$m=$m -replace 'package\s*=\s*[''\x22][^''\x22]+[''\x22]','package='+$dq+$p+$dq;[IO.File]::WriteAllText($mf,$m)}"
 
 echo Verificando cambios:
 findstr /n /c:"applicationId" /c:"namespace" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
+if exist "android\app\src\main\AndroidManifest.xml" findstr /n /c:"package=" "android\app\src\main\AndroidManifest.xml"
 echo.
 
 pushd android
