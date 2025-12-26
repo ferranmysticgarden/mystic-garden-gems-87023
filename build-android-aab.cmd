@@ -41,16 +41,19 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo [3.5/4] Actualizando versionCode y versionName...
+set "GRADLE_FILE=android\app\build.gradle"
+if not exist "%GRADLE_FILE%" (
+  echo ERROR: No existe %GRADLE_FILE%
+  pause
+  exit /b 1
+)
+
+powershell -Command "$f='%GRADLE_FILE%';$c=Get-Content $f -Raw;$c=$c -replace 'versionCode\s+\d+','versionCode 3';$c=$c -replace 'versionName\s+\"[^\"]+\"','versionName \"1.0.2\"';[IO.File]::WriteAllText($f,$c)"
+
+echo Verificando cambios:
+findstr /n /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 echo.
-echo =====================================================
-echo   ABRE: android\app\build.gradle
-echo   CAMBIA:
-echo     versionCode 2  a  versionCode 3
-echo     versionName "1.0.1"  a  versionName "1.0.2"
-echo   GUARDA Y CIERRA
-echo =====================================================
-echo.
-pause
 
 pushd android
 
