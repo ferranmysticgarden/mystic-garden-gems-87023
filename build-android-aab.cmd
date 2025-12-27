@@ -47,20 +47,34 @@ set "TARGET_VERSION_CODE=700"
 set "TARGET_VERSION_NAME=7.0.0"
 
 REM IMPORTANTE:
-REM - NO tocamos android\app\capacitor.build.gradle (es generado por Capacitor).
+REM - NO tocar android\app\capacitor.build.gradle (es generado por Capacitor).
 REM - versionCode/versionName se deben cambiar en android\app\build.gradle (o build.gradle.kts).
 
 set "GRADLE_FILE="
-for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "$prefs=@('android/app/build.gradle','android/app/build.gradle.kts'); $p=$prefs | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($p) { (Resolve-Path $p).Path; exit 0 } $found=Get-ChildItem -Path 'android/app' -Recurse -File -Include 'build.gradle','build.gradle.kts' -ErrorAction SilentlyContinue | Select-Object -First 1; if ($found) { $found.FullName; exit 0 } exit 1"`) do set "GRADLE_FILE=%%F"
+
+REM 1) Ruta esperada
+if exist "android\app\build.gradle" set "GRADLE_FILE=android\app\build.gradle"
+if not defined GRADLE_FILE if exist "android\app\build.gradle.kts" set "GRADLE_FILE=android\app\build.gradle.kts"
+
+REM 2) Fallback: buscar por si la estructura cambia
+if not defined GRADLE_FILE (
+  for /f "delims=" %%F in ('dir /b /s "android\app\build.gradle" 2^>nul') do if not defined GRADLE_FILE set "GRADLE_FILE=%%F"
+)
+if not defined GRADLE_FILE (
+  for /f "delims=" %%F in ('dir /b /s "android\app\build.gradle.kts" 2^>nul') do if not defined GRADLE_FILE set "GRADLE_FILE=%%F"
+)
 
 if not defined GRADLE_FILE (
   echo ERROR: No encuentro android\app\build.gradle ni build.gradle.kts.
-  echo Si has hecho git pull en una maquina nueva, puede que te falte generar la plataforma Android.
-  echo Prueba: npx cap add android  (y luego vuelve a ejecutar este script)
+  echo Esto normalmente significa que NO tienes la plataforma Android generada.
+  echo Prueba: npx cap add android
   start "" explorer "android"
   pause
   exit /b 1
 )
+
+REM Normalizar a ruta absoluta
+for %%I in ("%GRADLE_FILE%") do set "GRADLE_FILE=%%~fI"
 
 set "GRADLE_KIND=groovy"
 echo %GRADLE_FILE% | findstr /i "\.kts$" >nul && set "GRADLE_KIND=kts"
@@ -68,27 +82,27 @@ echo %GRADLE_FILE% | findstr /i "\.kts$" >nul && set "GRADLE_KIND=kts"
 echo Gradle objetivo: "%GRADLE_FILE%" (%GRADLE_KIND%)
 
 echo Parcheando applicationId %TARGET_APP_ID% ^| versionCode %TARGET_VERSION_CODE% ^| versionName %TARGET_VERSION_NAME%...
-powershell -NoProfile -Command "$f='%GRADLE_FILE%'; $c=Get-Content $f -Raw; if ('%GRADLE_KIND%' -eq 'kts') {
-  $c=[regex]::Replace($c,'applicationId\s*=\s*\"[^\"]+\"','applicationId = \"%TARGET_APP_ID%\"',1);
-  $c=[regex]::Replace($c,'versionCode\s*=\s*\d+','versionCode = %TARGET_VERSION_CODE%',1);
-  $c=[regex]::Replace($c,'versionName\s*=\s*\"[^\"]+\"','versionName = \"%TARGET_VERSION_NAME%\"',1);
-} else {
-  $c=[regex]::Replace($c,'applicationId\s+\"[^\"]+\"','applicationId \"%TARGET_APP_ID%\"',1);
-  $c=[regex]::Replace($c,'versionCode\s+\d+','versionCode %TARGET_VERSION_CODE%',1);
-  $c=[regex]::Replace($c,'versionName\s+\"[^\"]+\"','versionName \"%TARGET_VERSION_NAME%\"',1);
-}
-[IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f)"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$f = '%GRADLE_FILE%'; $c = Get-Content -LiteralPath $f -Raw; if ('%GRADLE_KIND%' -eq 'kts') { $c=[regex]::Replace($c,'applicationId\s*=\s*\"[^\"]+\"','applicationId = \"%TARGET_APP_ID%\"',1); $c=[regex]::Replace($c,'versionCode\s*=\s*\d+','versionCode = %TARGET_VERSION_CODE%',1); $c=[regex]::Replace($c,'versionName\s*=\s*\"[^\"]+\"','versionName = \"%TARGET_VERSION_NAME%\"',1); } else { $c=[regex]::Replace($c,'applicationId\s+\"[^\"]+\"','applicationId \"%TARGET_APP_ID%\"',1); $c=[regex]::Replace($c,'versionCode\s+\d+','versionCode %TARGET_VERSION_CODE%',1); $c=[regex]::Replace($c,'versionName\s+\"[^\"]+\"','versionName \"%TARGET_VERSION_NAME%\"',1); } [IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f)"
+
+if errorlevel 1 (
+  echo ERROR: No pude parchear el build.gradle (PowerShell fallo).
+  pause
+  exit /b 1
+)
 
 echo.
 echo === Verificando %GRADLE_FILE% ===
 findstr /n /c:"applicationId" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
+for %%A in ("%GRADLE_FILE%") do echo Timestamp: %%~tA
+
 echo.
 echo Abriendo %GRADLE_FILE% para que lo edites (version 700)...
-powershell -NoProfile -Command "Start-Process notepad.exe -ArgumentList @('%GRADLE_FILE%')"
-start "" explorer /select,"%GRADLE_FILE%"
+start "" notepad.exe "%GRADLE_FILE%"
+start "" explorer.exe /select,"%GRADLE_FILE%"
 echo.
-echo EDITA/REVISA y GUARDA. Luego pulsa una tecla para continuar con el AAB.
+echo EDITA/REVISA y GUARDA. Luego vuelve aqui y pulsa una tecla para continuar con el AAB.
 pause
+
 
 pushd android
 
