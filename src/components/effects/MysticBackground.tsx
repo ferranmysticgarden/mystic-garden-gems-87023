@@ -9,7 +9,7 @@ export const MysticBackground = () => {
       <div 
         className="fixed inset-0 z-[-1]"
         style={{
-          backgroundImage: 'url(/mystic-forest-bg.jpg)',
+          backgroundImage: `url(${import.meta.env.BASE_URL}mystic-forest-bg.jpg)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

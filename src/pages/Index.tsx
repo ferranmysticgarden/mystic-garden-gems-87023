@@ -22,7 +22,7 @@ const Index = () => {
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasAdsDisabled, addPurchase } = usePurchases(user);
-  const { isPlaying, isMuted, play, toggleMute } = useAudio('/audio/background-music.mp3');
+  const { isPlaying, isMuted, play, toggleMute } = useAudio(`${import.meta.env.BASE_URL}audio/background-music.mp3`);
   const {
     gameState,
     loading: gameLoading,
