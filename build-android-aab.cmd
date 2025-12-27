@@ -92,17 +92,17 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo.
+echo(
 echo === Verificando %GRADLE_FILE% ===
 findstr /n /c:"applicationId" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 for %%A in ("%GRADLE_FILE%") do echo Timestamp: %%~tA
 
-echo.
-echo Abriendo %GRADLE_FILE% para que lo edites (version 700)...
+echo(
+echo Abriendo %GRADLE_FILE% para revisar (versionCode %TARGET_VERSION_CODE% / %TARGET_VERSION_NAME%)...
 start "" notepad.exe "%GRADLE_FILE%"
 start "" explorer.exe /select,"%GRADLE_FILE%"
-echo.
-echo EDITA/REVISA y GUARDA. Luego vuelve aqui y pulsa una tecla para continuar con el AAB.
+echo(
+echo REVISA y GUARDA si hace falta. Luego vuelve aqui y pulsa una tecla para continuar con el AAB.
 pause
 
 
