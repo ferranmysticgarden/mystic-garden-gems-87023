@@ -88,7 +88,7 @@ echo Parcheando applicationId %TARGET_APP_ID% ^| versionCode %TARGET_VERSION_COD
 
 set "GRADLE=%GRADLE_FILE%"
 set "KIND=%GRADLE_KIND%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$f=$env:GRADLE; $c=Get-Content -LiteralPath $f -Raw; if ($env:KIND -eq 'kts') { $c=[regex]::Replace($c,'applicationId\s*=\s*\"[^\"]+\"',('applicationId = \"'+$env:TARGET_APP_ID+'\"'),1); $c=[regex]::Replace($c,'versionCode\s*=\s*\d+',('versionCode = '+$env:TARGET_VERSION_CODE),1); $c=[regex]::Replace($c,'versionName\s*=\s*\"[^\"]+\"',('versionName = \"'+$env:TARGET_VERSION_NAME+'\"'),1); } else { $c=[regex]::Replace($c,'applicationId\s+\"[^\"]+\"',('applicationId \"'+$env:TARGET_APP_ID+'\"'),1); $c=[regex]::Replace($c,'versionCode\s+\d+',('versionCode '+$env:TARGET_VERSION_CODE),1); $c=[regex]::Replace($c,'versionName\s+\"[^\"]+\"',('versionName \"'+$env:TARGET_VERSION_NAME+'\"'),1); } [IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f)"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\patch-android-gradle.ps1" -GradleFile "%GRADLE%" -Kind "%KIND%" -AppId "%TARGET_APP_ID%" -VersionCode %TARGET_VERSION_CODE% -VersionName "%TARGET_VERSION_NAME%"
 
 if errorlevel 1 (
   echo ERROR: No pude parchear el build.gradle (PowerShell fallo).
