@@ -43,8 +43,8 @@ if errorlevel 1 (
 
 echo [3.5/4] Forzando version (versionCode/versionName) en build.gradle REAL...
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=700"
-set "TARGET_VERSION_NAME=7.0.0"
+set "TARGET_VERSION_CODE=701"
+set "TARGET_VERSION_NAME=7.0.4"
 
 REM IMPORTANTE:
 REM - NO tocar android\app\capacitor.build.gradle (es generado por Capacitor).
