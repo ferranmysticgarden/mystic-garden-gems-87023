@@ -129,12 +129,17 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
 
   useEffect(() => {
     if (board.length === 0) return;
+    if (animatingTiles.size > 0) return; // Don't check while animating
     
-    const matches = findMatches(board);
-    if (matches.length > 0) {
-      setTimeout(() => removeMatches(board, matches), 500);
-    }
-  }, [board, findMatches, removeMatches]);
+    const timeoutId = setTimeout(() => {
+      const matches = findMatches(board);
+      if (matches.length > 0) {
+        removeMatches(board, matches);
+      }
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [board, findMatches, removeMatches, animatingTiles.size]);
 
   const swapTiles = useCallback((pos1: Position, pos2: Position) => {
     const newBoard = board.map(row => [...row]);
