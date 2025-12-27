@@ -73,7 +73,7 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 100svh;
     overflow-x: hidden;
     overflow-y: auto;
   }
