@@ -41,7 +41,10 @@ const Index = () => {
   const [showNoLivesModal, setShowNoLivesModal] = useState(false);
 
   useEffect(() => {
-    // Start music on first user interaction
+    // Start music only after the user is authenticated.
+    // This avoids mobile keyboard/focus issues on the login screen.
+    if (!user) return;
+
     const handleFirstInteraction = () => {
       if (!isPlaying) {
         play();
@@ -50,7 +53,7 @@ const Index = () => {
 
     document.addEventListener('click', handleFirstInteraction, { once: true });
     return () => document.removeEventListener('click', handleFirstInteraction);
-  }, [isPlaying, play]);
+  }, [user, isPlaying, play]);
 
   const currentLevel = LEVELS.find(l => l.id === gameState.currentLevel) || LEVELS[0];
 
