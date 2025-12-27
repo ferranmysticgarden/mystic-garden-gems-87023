@@ -59,6 +59,12 @@ echo Verificando cambios:
 findstr /n /c:"applicationId" /c:"namespace" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 if exist "android\app\src\main\AndroidManifest.xml" findstr /n /c:"package=" "android\app\src\main\AndroidManifest.xml"
 echo.
+echo Abriendo el archivo Gradle que se va a compilar (para que lo puedas verificar/editar a mano)...
+if exist "%GRADLE_FILE%" start "" notepad "%GRADLE_FILE%"
+if exist "%GRADLE_FILE%" start "" explorer /select,"%GRADLE_FILE%"
+echo Guarda y cierra Notepad, luego pulsa una tecla para continuar con el AAB.
+pause
+echo.
 
 pushd android
 
