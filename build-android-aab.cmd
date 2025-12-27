@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions EnableDelayedExpansion
+setlocal EnableExtensions
 
 cd /d "%~dp0"
 
@@ -110,15 +110,15 @@ if not exist "gradlew.bat" (
 )
 
 set "STORE_PATH=%CD%\app\mystic-garden-release-key.keystore"
-if not exist "!STORE_PATH!" (
+if not exist "%STORE_PATH%" (
   echo ERROR: No encuentro el keystore
-  echo Buscado en: !STORE_PATH!
+  echo Buscado en: %STORE_PATH%
   popd
   pause
   exit /b 1
 )
 
-echo Keystore: !STORE_PATH!
+echo Keystore: %STORE_PATH%
 
 echo [4/4] Gradle bundleRelease
 echo Limpiando salida anterior (para no subir un AAB viejo)...
@@ -128,10 +128,10 @@ set /p STORE_PWD="Contrasena keystore: "
 set /p KEY_PWD="Contrasena key: "
 
 call gradlew.bat :app:bundleRelease ^
-  -Pandroid.injected.signing.store.file="!STORE_PATH!" ^
-  -Pandroid.injected.signing.store.password="!STORE_PWD!" ^
+  -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
+  -Pandroid.injected.signing.store.password="%STORE_PWD%" ^
   -Pandroid.injected.signing.key.alias="mystic-garden" ^
-  -Pandroid.injected.signing.key.password="!KEY_PWD!"
+  -Pandroid.injected.signing.key.password="%KEY_PWD%"
 
 if errorlevel 1 (
   echo ERROR: Gradle fallo
