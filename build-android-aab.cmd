@@ -46,25 +46,31 @@ set "TARGET_APP_ID=com.mysticgarden.game"
 set "TARGET_VERSION_CODE=700"
 set "TARGET_VERSION_NAME=7.0.0"
 
-echo Buscando el build.gradle REAL del modulo app dentro de ^"android\^" ...
+echo Localizando Gradle(s) del modulo app (android\app\*) ...
 set "GRADLE_FILE="
-for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "$ErrorActionPreference='Stop'; $pref=@('android\\app\\build.gradle','android\\app\\build.gradle.kts'); foreach($f in $pref){ if(Test-Path $f){ $f; exit } }; $c=Get-ChildItem -Path 'android' -Recurse -File -Include 'build.gradle','build.gradle.kts' ^| Where-Object { $_.FullName -notmatch '\\\\build\\\\' -and $_.FullName -notmatch '\\\\.gradle\\\\' }; foreach($fi in $c){ $t=Get-Content $fi.FullName -Raw; if($t -match 'com\\.android\\.application' -or $t -match 'id\\(\"com\\.android\\.application\"\\)'){ $fi.FullName; exit } }; throw 'NO_APP_GRADLE_FOUND'"`) do set "GRADLE_FILE=%%F"
+
+for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "$ErrorActionPreference='Stop'; $pref=@('android\\app\\build.gradle','android\\app\\build.gradle.kts','android\\app\\capacitor.build.gradle','android\\app\\capacitor.build.gradle.kts'); $files=$pref | Where-Object { Test-Path $_ }; if(-not $files){ throw 'NO_APP_GRADLE_FOUND' }; $files[0]"`) do set "GRADLE_FILE=%%F"
 
 if not defined GRADLE_FILE (
-  echo ERROR: No pude localizar el build.gradle del modulo app.
+  echo ERROR: No pude localizar android\app\build.gradle (ejecuta primero: npx cap sync android)
   pause
   exit /b 1
 )
 
-echo Gradle objetivo: "%GRADLE_FILE%"
+echo Gradle objetivo (principal): "%GRADLE_FILE%"
 
-powershell -NoProfile -Command "$p='%TARGET_APP_ID%';$vc=%TARGET_VERSION_CODE%;$vn='%TARGET_VERSION_NAME%';$dq=[char]34;$f='%GRADLE_FILE%';$isKts=$f.ToLower().EndsWith('.kts');$appId=if($isKts){'applicationId = '+$dq+$p+$dq}else{'applicationId '+$dq+$p+$dq};$ns=if($isKts){'namespace = '+$dq+$p+$dq}else{'namespace '+$dq+$p+$dq};$vCode=if($isKts){'versionCode = '+$vc}else{'versionCode '+$vc};$vName=if($isKts){'versionName = '+$dq+$vn+$dq}else{'versionName '+$dq+$vn+$dq};$c=Get-Content $f -Raw;$c=$c -replace 'applicationId\\s*(=)?\\s*[''\\x22][^''\\x22]+[''\\x22]',$appId;$c=$c -replace 'namespace\\s*(=)?\\s*[''\\x22][^''\\x22]+[''\\x22]',$ns;$c=$c -replace '\\bversionCode\\b\\s*(=)?\\s*[^\\r\\n]+',$vCode;$c=$c -replace '\\bversionName\\b\\s*(=)?\\s*[^\\r\\n]+',$vName;[IO.File]::WriteAllText($f,$c);$mf='android\\app\\src\\main\\AndroidManifest.xml';if(Test-Path $mf){$m=Get-Content $mf -Raw;$m=$m -replace 'package\\s*=\\s*[''\\x22][^''\\x22]+[''\\x22]','package='+$dq+$p+$dq;[IO.File]::WriteAllText($mf,$m)}"
+powershell -NoProfile -Command "$p='%TARGET_APP_ID%';$vc=%TARGET_VERSION_CODE%;$vn='%TARGET_VERSION_NAME%';$dq=[char]34;$pref=@('android\\app\\build.gradle','android\\app\\build.gradle.kts','android\\app\\capacitor.build.gradle','android\\app\\capacitor.build.gradle.kts');$files=$pref | Where-Object { Test-Path $_ }; if(-not $files){ throw 'NO_APP_GRADLE_FOUND' }; foreach($f in $files){ $isKts=$f.ToLower().EndsWith('.kts'); $appId=if($isKts){'applicationId = '+$dq+$p+$dq}else{'applicationId '+$dq+$p+$dq}; $ns=if($isKts){'namespace = '+$dq+$p+$dq}else{'namespace '+$dq+$p+$dq}; $vCode=if($isKts){'versionCode = '+$vc}else{'versionCode '+$vc}; $vName=if($isKts){'versionName = '+$dq+$vn+$dq}else{'versionName '+$dq+$vn+$dq}; $c=Get-Content $f -Raw; $c=$c -replace 'applicationId\\s*(=)?\\s*[''\\x22][^''\\x22]+[''\\x22]',$appId; $c=$c -replace 'namespace\\s*(=)?\\s*[''\\x22][^''\\x22]+[''\\x22]',$ns; $c=$c -replace '\\bversionCode\\b\\s*(=)?\\s*[^\\r\\n]+',$vCode; $c=$c -replace '\\bversionName\\b\\s*(=)?\\s*[^\\r\\n]+',$vName; [IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f) }; $mf='android\\app\\src\\main\\AndroidManifest.xml'; if(Test-Path $mf){ $m=Get-Content $mf -Raw; $m=$m -replace 'package\\s*=\\s*[''\\x22][^''\\x22]+[''\\x22]','package='+$dq+$p+$dq; [IO.File]::WriteAllText($mf,$m) }"
 
-echo Verificando cambios:
-findstr /n /c:"applicationId" /c:"namespace" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
+echo Verificando cambios (android\app\*build.gradle*):
+for %%G in (android\app\build.gradle android\app\build.gradle.kts android\app\capacitor.build.gradle android\app\capacitor.build.gradle.kts) do (
+  if exist "%%G" (
+    echo --- %%G ---
+    findstr /n /c:"applicationId" /c:"namespace" /c:"versionCode" /c:"versionName" "%%G"
+  )
+)
 if exist "android\app\src\main\AndroidManifest.xml" findstr /n /c:"package=" "android\app\src\main\AndroidManifest.xml"
 echo.
-echo Abriendo el archivo Gradle objetivo...
+echo Abriendo el Gradle principal...
 if exist "%GRADLE_FILE%" start "" notepad "%GRADLE_FILE%"
 if exist "%GRADLE_FILE%" start "" explorer /select,"%GRADLE_FILE%"
 echo Guarda y cierra Notepad, luego pulsa una tecla para continuar con el AAB.
@@ -90,6 +96,8 @@ if not exist "!STORE_PATH!" (
 echo Keystore: !STORE_PATH!
 
 echo [4/4] Gradle bundleRelease
+echo Limpiando salida anterior (para no subir un AAB viejo)...
+if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundle\release"
 
 set /p STORE_PWD="Contrasena keystore: "
 set /p KEY_PWD="Contrasena key: "
