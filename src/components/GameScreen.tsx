@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Board } from './Board';
 import { Button } from './ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Level } from '@/data/levels';
+import { LEVELS, Level } from '@/data/levels';
 import confetti from 'canvas-confetti';
 
 interface GameScreenProps {
@@ -20,22 +20,6 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
 
-  const winTimeoutRef = useRef<number | null>(null);
-  const loseTimeoutRef = useRef<number | null>(null);
-  const finishedRef = useRef(false);
-
-  useEffect(() => {
-    return () => {
-      if (winTimeoutRef.current) window.clearTimeout(winTimeoutRef.current);
-      if (loseTimeoutRef.current) window.clearTimeout(loseTimeoutRef.current);
-      try {
-        confetti.reset();
-      } catch {
-        // ignore
-      }
-    };
-  }, []);
-
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
       return score >= level.objective.count;
@@ -46,55 +30,40 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   }, [level, score, collected]);
 
   useEffect(() => {
-    if (gameOver || finishedRef.current) return;
-
-    if (checkWinCondition()) {
-      finishedRef.current = true;
+    if (checkWinCondition() && !gameOver) {
       setGameOver(true);
       setWon(true);
-
+      
       // Calculate stars
       let stars = 1;
-      const finalScore =
-        level.objective.type === 'score' ? score : (collected[level.objective.target] || 0);
+      const finalScore = level.objective.type === 'score' ? score : (collected[level.objective.target] || 0);
       if (finalScore >= level.stars.three) stars = 3;
       else if (finalScore >= level.stars.two) stars = 2;
-
-      // IMPORTANT: programamos onWin ANTES del confetti para que nunca se quede colgado
-      if (winTimeoutRef.current) window.clearTimeout(winTimeoutRef.current);
-      winTimeoutRef.current = window.setTimeout(() => onWin(stars, level.reward), 2000);
-
-      // Confetti effect (puede fallar en algunos entornos móviles)
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } catch (e) {
-        console.warn('[GameScreen] confetti failed', e);
-      }
-    } else if (moves === 0) {
-      finishedRef.current = true;
+      
+      // Confetti effect
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      setTimeout(() => onWin(stars, level.reward), 2000);
+    } else if (moves === 0 && !checkWinCondition() && !gameOver) {
       setGameOver(true);
       setWon(false);
-
-      if (loseTimeoutRef.current) window.clearTimeout(loseTimeoutRef.current);
-      loseTimeoutRef.current = window.setTimeout(() => onLose(), 2000);
+      setTimeout(() => onLose(), 2000);
     }
   }, [moves, score, collected, checkWinCondition, gameOver, level, onWin, onLose]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
-
-    setCollected((prev) => {
-      const next = { ...prev };
-      tiles.forEach((tile) => {
-        next[tile] = (next[tile] || 0) + 1;
-      });
-      return next;
+    
+    const newCollected = { ...collected };
+    tiles.forEach((tile) => {
+      newCollected[tile] = (newCollected[tile] || 0) + 1;
     });
-  }, []);
+    setCollected(newCollected);
+  }, [collected]);
 
   const handleMove = useCallback(() => {
     setMoves((prev) => Math.max(0, prev - 1));
