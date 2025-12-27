@@ -97,7 +97,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
             </h2>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-muted/50 rounded-lg p-2">
               <div className="text-xs text-muted-foreground">{t('game.moves')}</div>
               <div className="text-2xl font-bold">{moves}</div>
@@ -112,8 +112,33 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
             </div>
           </div>
           
-          <div className="mt-3 text-center text-sm">
-            {getObjectiveText()}
+          {/* OBJETIVO CLARO Y VISIBLE */}
+          <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border-2 border-primary/30">
+            <div className="flex items-center justify-center gap-3">
+              {level.objective.type === 'collect' ? (
+                <>
+                  <span className="text-sm text-muted-foreground">{t('game.collect')}</span>
+                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-1">
+                    <span className="text-4xl animate-pulse">{level.objective.target}</span>
+                    <span className="text-2xl font-bold text-gold">×{level.objective.count}</span>
+                  </div>
+                  <div className="text-lg font-semibold text-primary">
+                    ({collected[level.objective.target] || 0}/{level.objective.count})
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm text-muted-foreground">{t('game.collect')}</span>
+                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-1">
+                    <span className="text-2xl">⭐</span>
+                    <span className="text-2xl font-bold text-gold">{level.objective.count} pts</span>
+                  </div>
+                  <div className="text-lg font-semibold text-primary">
+                    ({score}/{level.objective.count})
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
