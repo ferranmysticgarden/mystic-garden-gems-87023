@@ -41,46 +41,41 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [3.5/4] Forzando package (applicationId) + version...
+echo [3.5/4] Forzando version (versionCode/versionName) en build.gradle REAL...
 set "TARGET_APP_ID=com.mysticgarden.game"
 set "TARGET_VERSION_CODE=700"
 set "TARGET_VERSION_NAME=7.0.0"
 
 REM IMPORTANTE:
 REM - NO tocamos android\app\capacitor.build.gradle (es generado por Capacitor).
-REM - versionCode/versionName viven en android\app\build.gradle (o build.gradle.kts).
+REM - versionCode/versionName se deben cambiar en android\app\build.gradle (o build.gradle.kts).
 
-echo Localizando build.gradle de la app...
-set "GRADLE_FILE=android\app\build.gradle"
-set "GRADLE_FILE_KTS=android\app\build.gradle.kts"
+set "GRADLE_FILE="
+for /f "usebackq delims=" %%F in (`powershell -NoProfile -Command "$prefs=@('android/app/build.gradle','android/app/build.gradle.kts'); $p=$prefs | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($p) { (Resolve-Path $p).Path; exit 0 } $found=Get-ChildItem -Path 'android/app' -Recurse -File -Include 'build.gradle','build.gradle.kts' -ErrorAction SilentlyContinue | Select-Object -First 1; if ($found) { $found.FullName; exit 0 } exit 1"`) do set "GRADLE_FILE=%%F"
 
-if exist "%GRADLE_FILE%" (
-  set "GRADLE_KIND=groovy"
-) else if exist "%GRADLE_FILE_KTS%" (
-  set "GRADLE_KIND=kts"
-  set "GRADLE_FILE=%GRADLE_FILE_KTS%"
-) else (
-  echo ERROR: No encuentro android\app\build.gradle ni android\app\build.gradle.kts
-  echo Ejecuta primero: npx cap sync android
+if not defined GRADLE_FILE (
+  echo ERROR: No encuentro android\app\build.gradle ni build.gradle.kts.
+  echo Si has hecho git pull en una maquina nueva, puede que te falte generar la plataforma Android.
+  echo Prueba: npx cap add android  (y luego vuelve a ejecutar este script)
+  start "" explorer "android"
   pause
   exit /b 1
 )
 
+set "GRADLE_KIND=groovy"
+echo %GRADLE_FILE% | findstr /i "\.kts$" >nul && set "GRADLE_KIND=kts"
+
 echo Gradle objetivo: "%GRADLE_FILE%" (%GRADLE_KIND%)
 
 echo Parcheando applicationId %TARGET_APP_ID% ^| versionCode %TARGET_VERSION_CODE% ^| versionName %TARGET_VERSION_NAME%...
-powershell -NoProfile -Command "$f='%GRADLE_FILE%'; $c=Get-Content $f -Raw; $nl=[Environment]::NewLine; if ('%GRADLE_KIND%' -eq 'kts') { 
-  if ($c -match 'defaultConfig\\s*\\{') { 
-    if ($c -match 'applicationId\\s*=\\s*\\"[^\\\"]+\\"') { $c=[regex]::Replace($c,'applicationId\\s*=\\s*\\"[^\\\"]+\\"','applicationId = \"%TARGET_APP_ID%\"',1) } else { $c=[regex]::Replace($c,'defaultConfig\\s*\\{',('defaultConfig {'+$nl+'        applicationId = \"%TARGET_APP_ID%\"'),1) }
-    if ($c -match 'versionCode\\s*=\\s*\\d+') { $c=[regex]::Replace($c,'versionCode\\s*=\\s*\\d+','versionCode = %TARGET_VERSION_CODE%',1) } else { $c=[regex]::Replace($c,'defaultConfig\\s*\\{',('defaultConfig {'+$nl+'        versionCode = %TARGET_VERSION_CODE%'),1) }
-    if ($c -match 'versionName\\s*=\\s*\\"[^\\\"]+\\"') { $c=[regex]::Replace($c,'versionName\\s*=\\s*\\"[^\\\"]+\\"','versionName = \"%TARGET_VERSION_NAME%\"',1) } else { $c=[regex]::Replace($c,'defaultConfig\\s*\\{',('defaultConfig {'+$nl+'        versionName = \"%TARGET_VERSION_NAME%\"'),1) }
-  } else { throw 'No encuentro defaultConfig { } en build.gradle.kts' }
+powershell -NoProfile -Command "$f='%GRADLE_FILE%'; $c=Get-Content $f -Raw; if ('%GRADLE_KIND%' -eq 'kts') {
+  $c=[regex]::Replace($c,'applicationId\s*=\s*\"[^\"]+\"','applicationId = \"%TARGET_APP_ID%\"',1);
+  $c=[regex]::Replace($c,'versionCode\s*=\s*\d+','versionCode = %TARGET_VERSION_CODE%',1);
+  $c=[regex]::Replace($c,'versionName\s*=\s*\"[^\"]+\"','versionName = \"%TARGET_VERSION_NAME%\"',1);
 } else {
-  if ($c -match 'defaultConfig\\s*\\{') {
-    if ($c -match 'applicationId\\s+\\"[^\\\"]+\\"') { $c=[regex]::Replace($c,'applicationId\\s+\\"[^\\\"]+\\"','applicationId \"%TARGET_APP_ID%\"',1) } else { $c=[regex]::Replace($c,'defaultConfig\\s*\\{',('defaultConfig {'+$nl+'        applicationId \"%TARGET_APP_ID%\"'),1) }
-    if ($c -match 'versionCode\\s+\\d+') { $c=[regex]::Replace($c,'versionCode\\s+\\d+','versionCode %TARGET_VERSION_CODE%',1) } else { $c=[regex]::Replace($c,'defaultConfig\\s*\\{',('defaultConfig {'+$nl+'        versionCode %TARGET_VERSION_CODE%'),1) }
-    if ($c -match 'versionName\\s+\\"[^\\\"]+\\"') { $c=[regex]::Replace($c,'versionName\\s+\\"[^\\\"]+\\"','versionName \"%TARGET_VERSION_NAME%\"',1) } else { $c=[regex]::Replace($c,'defaultConfig\\s*\\{',('defaultConfig {'+$nl+'        versionName \"%TARGET_VERSION_NAME%\"'),1) }
-  } else { throw 'No encuentro defaultConfig { } en build.gradle' }
+  $c=[regex]::Replace($c,'applicationId\s+\"[^\"]+\"','applicationId \"%TARGET_APP_ID%\"',1);
+  $c=[regex]::Replace($c,'versionCode\s+\d+','versionCode %TARGET_VERSION_CODE%',1);
+  $c=[regex]::Replace($c,'versionName\s+\"[^\"]+\"','versionName \"%TARGET_VERSION_NAME%\"',1);
 }
 [IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f)"
 
@@ -88,12 +83,11 @@ echo.
 echo === Verificando %GRADLE_FILE% ===
 findstr /n /c:"applicationId" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 echo.
-echo Abriendo %GRADLE_FILE% para que verifiques...
-start "" notepad "%GRADLE_FILE%"
+echo Abriendo %GRADLE_FILE% para que lo edites (version 700)...
+powershell -NoProfile -Command "Start-Process notepad.exe -ArgumentList @('%GRADLE_FILE%')"
 start "" explorer /select,"%GRADLE_FILE%"
 echo.
-echo VERIFICA que diga: versionCode 700 y versionName "7.0.0"
-echo Guarda Notepad si hiciste cambios, luego pulsa una tecla para continuar.
+echo EDITA/REVISA y GUARDA. Luego pulsa una tecla para continuar con el AAB.
 pause
 
 pushd android
