@@ -23,7 +23,7 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
           {t('menu.levels')}
         </h2>
         
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {LEVELS.map((level) => {
             const isUnlocked = level.id <= unlockedLevels;
             
@@ -33,19 +33,35 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
                 onClick={() => isUnlocked && onSelectLevel(level.id)}
                 disabled={!isUnlocked}
                 className={`
-                  gradient-card shadow-card rounded-xl p-4 aspect-square
-                  flex flex-col items-center justify-center gap-2
-                  transition-all duration-300
+                  gradient-card shadow-card rounded-xl p-3
+                  flex flex-col items-center justify-center gap-1
+                  transition-all duration-300 min-h-[100px]
                   ${isUnlocked 
-                    ? 'hover:scale-110 hover:shadow-gold cursor-pointer' 
+                    ? 'hover:scale-105 hover:shadow-gold cursor-pointer' 
                     : 'opacity-50 cursor-not-allowed'
                   }
                 `}
               >
                 {isUnlocked ? (
                   <>
-                    <span className="text-2xl font-bold text-gold">{level.id}</span>
-                    <div className="flex gap-1">
+                    <span className="text-xl font-bold text-gold">{level.id}</span>
+                    
+                    {/* OBJETIVO DEL NIVEL - MUY CLARO */}
+                    <div className="bg-background/50 rounded-lg px-2 py-1 flex items-center gap-1">
+                      {level.objective.type === 'collect' ? (
+                        <>
+                          <span className="text-2xl">{level.objective.target}</span>
+                          <span className="text-xs font-bold text-primary">×{level.objective.count}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-lg">⭐</span>
+                          <span className="text-xs font-bold text-primary">{level.objective.count}</span>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-0.5">
                       {[1, 2, 3].map((star) => (
                         <Star
                           key={star}
@@ -55,7 +71,10 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
                     </div>
                   </>
                 ) : (
-                  <Lock className="w-6 h-6 text-muted-foreground" />
+                  <>
+                    <Lock className="w-5 h-5 text-muted-foreground mb-1" />
+                    <span className="text-sm text-muted-foreground">{level.id}</span>
+                  </>
                 )}
               </button>
             );
