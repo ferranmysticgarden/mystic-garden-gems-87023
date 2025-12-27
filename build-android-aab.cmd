@@ -82,7 +82,9 @@ echo %GRADLE_FILE% | findstr /i "\.kts$" >nul && set "GRADLE_KIND=kts"
 echo Gradle objetivo: "%GRADLE_FILE%" (%GRADLE_KIND%)
 
 echo Parcheando applicationId %TARGET_APP_ID% ^| versionCode %TARGET_VERSION_CODE% ^| versionName %TARGET_VERSION_NAME%...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$f = '%GRADLE_FILE%'; $c = Get-Content -LiteralPath $f -Raw; if ('%GRADLE_KIND%' -eq 'kts') { $c=[regex]::Replace($c,'applicationId\s*=\s*\"[^\"]+\"','applicationId = \"%TARGET_APP_ID%\"',1); $c=[regex]::Replace($c,'versionCode\s*=\s*\d+','versionCode = %TARGET_VERSION_CODE%',1); $c=[regex]::Replace($c,'versionName\s*=\s*\"[^\"]+\"','versionName = \"%TARGET_VERSION_NAME%\"',1); } else { $c=[regex]::Replace($c,'applicationId\s+\"[^\"]+\"','applicationId \"%TARGET_APP_ID%\"',1); $c=[regex]::Replace($c,'versionCode\s+\d+','versionCode %TARGET_VERSION_CODE%',1); $c=[regex]::Replace($c,'versionName\s+\"[^\"]+\"','versionName \"%TARGET_VERSION_NAME%\"',1); } [IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f)"
+set "GRADLE=%GRADLE_FILE%"
+set "KIND=%GRADLE_KIND%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$f=$env:GRADLE; $c=Get-Content -LiteralPath $f -Raw; if ($env:KIND -eq 'kts') { $c=[regex]::Replace($c,'applicationId\s*=\s*\"[^\"]+\"',('applicationId = \"'+$env:TARGET_APP_ID+'\"'),1); $c=[regex]::Replace($c,'versionCode\s*=\s*\d+',('versionCode = '+$env:TARGET_VERSION_CODE),1); $c=[regex]::Replace($c,'versionName\s*=\s*\"[^\"]+\"',('versionName = \"'+$env:TARGET_VERSION_NAME+'\"'),1); } else { $c=[regex]::Replace($c,'applicationId\s+\"[^\"]+\"',('applicationId \"'+$env:TARGET_APP_ID+'\"'),1); $c=[regex]::Replace($c,'versionCode\s+\d+',('versionCode '+$env:TARGET_VERSION_CODE),1); $c=[regex]::Replace($c,'versionName\s+\"[^\"]+\"',('versionName \"'+$env:TARGET_VERSION_NAME+'\"'),1); } [IO.File]::WriteAllText($f,$c); Write-Host ('PARCHADO: '+$f); (Get-Item -LiteralPath $f).LastWriteTime"
 
 if errorlevel 1 (
   echo ERROR: No pude parchear el build.gradle (PowerShell fallo).
