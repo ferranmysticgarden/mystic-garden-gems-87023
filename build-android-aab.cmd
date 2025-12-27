@@ -50,43 +50,27 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM --- Patch Gradle (REAL) ---
-echo [3_5/4] Forzando version (versionCode/versionName) en build.gradle REAL...
-
-REM IMPORTANTE:
-REM - NO tocar android\app\capacitor.build.gradle (es generado por Capacitor).
-REM - versionCode/versionName se deben cambiar en android\app\build.gradle (o build.gradle.kts).
-
-set "GRADLE_FILE="
-set "GRADLE_KIND="
+REM --- Step 3.5/4: Patch version ---
+echo [3.5/4] Parcheando version en build.gradle...
 
 if exist "android\app\build.gradle" (
   set "GRADLE_FILE=android\app\build.gradle"
   set "GRADLE_KIND=groovy"
-) else if exist "android\app\build.gradle.kts" (
-  set "GRADLE_FILE=android\app\build.gradle.kts"
-  set "GRADLE_KIND=kts"
+) else (
+  if exist "android\app\build.gradle.kts" (
+    set "GRADLE_FILE=android\app\build.gradle.kts"
+    set "GRADLE_KIND=kts"
+  ) else (
+    echo ERROR: No encuentro build.gradle
+    pause
+    exit /b 1
+  )
 )
 
-if not defined GRADLE_FILE (
-  echo ERROR: No encuentro android\app\build.gradle ni build.gradle.kts.
-  echo Esto normalmente significa que NO tienes la plataforma Android generada.
-  echo Prueba: npx cap add android
-  start "" explorer "android"
-  pause
-  exit /b 1
-)
-
-REM Normalizar a ruta absoluta
-for %%I in ("%GRADLE_FILE%") do set "GRADLE_FILE=%%~fI"
-
-echo Gradle objetivo: "%GRADLE_FILE%" (%GRADLE_KIND%)
-echo Parcheando applicationId %TARGET_APP_ID%  versionCode %TARGET_VERSION_CODE%  versionName %TARGET_VERSION_NAME%...
-
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\patch-android-gradle.ps1" -GradleFile "%GRADLE_FILE%" -Kind "%GRADLE_KIND%" -AppId "%TARGET_APP_ID%" -VersionCode %TARGET_VERSION_CODE% -VersionName "%TARGET_VERSION_NAME%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\patch-android-gradle.ps1" -GradleFile "%GRADLE_FILE%" -Kind "%GRADLE_KIND%" -AppId "%TARGET_APP_ID%" -VersionCode %TARGET_VERSION_CODE% -VersionName "%TARGET_VERSION_NAME%"
 
 if errorlevel 1 (
-  echo ERROR: No pude parchear el build.gradle (PowerShell fallo).
+  echo ERROR: PowerShell fallo al parchear.
   pause
   exit /b 1
 )
@@ -116,8 +100,8 @@ echo [4/4] Gradle bundleRelease
 echo Limpiando salida anterior (para no subir un AAB viejo)...
 if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundle\release"
 
-set /p STORE_PWD=Contrasena keystore: 
-set /p KEY_PWD=Contrasena key: 
+set /p STORE_PWD="Contrasena keystore: "
+set /p KEY_PWD="Contrasena key: "
 
 call gradlew.bat :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
