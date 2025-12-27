@@ -46,8 +46,8 @@ set "TARGET_APP_ID=com.mysticgarden.game"
 set "TARGET_VERSION_CODE=700"
 set "TARGET_VERSION_NAME=7.0.0"
 
-echo Localizando capacitor.build.gradle (el archivo correcto con versionCode)...
-set "GRADLE_FILE=android\app\capacitor.build.gradle"
+echo Localizando build.gradle (el archivo con versionCode)...
+set "GRADLE_FILE=android\app\build.gradle"
 
 if not exist "%GRADLE_FILE%" (
   echo ERROR: No existe %GRADLE_FILE% - ejecuta primero: npx cap sync android
