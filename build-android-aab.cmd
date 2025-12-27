@@ -51,21 +51,21 @@ if errorlevel 1 (
 )
 
 REM --- Patch Gradle (REAL) ---
-echo [3.5/4] Forzando version (versionCode/versionName) en build.gradle REAL...
+echo [3_5/4] Forzando version (versionCode/versionName) en build.gradle REAL...
 
 REM IMPORTANTE:
 REM - NO tocar android\app\capacitor.build.gradle (es generado por Capacitor).
 REM - versionCode/versionName se deben cambiar en android\app\build.gradle (o build.gradle.kts).
 
 set "GRADLE_FILE="
-if exist "android\app\build.gradle" set "GRADLE_FILE=android\app\build.gradle"
-if not defined GRADLE_FILE if exist "android\app\build.gradle.kts" set "GRADLE_FILE=android\app\build.gradle.kts"
+set "GRADLE_KIND="
 
-if not defined GRADLE_FILE (
-  for /f "delims=" %%F in ('dir /b /s "android\app\build.gradle" 2^>nul') do if not defined GRADLE_FILE set "GRADLE_FILE=%%F"
-)
-if not defined GRADLE_FILE (
-  for /f "delims=" %%F in ('dir /b /s "android\app\build.gradle.kts" 2^>nul') do if not defined GRADLE_FILE set "GRADLE_FILE=%%F"
+if exist "android\app\build.gradle" (
+  set "GRADLE_FILE=android\app\build.gradle"
+  set "GRADLE_KIND=groovy"
+) else if exist "android\app\build.gradle.kts" (
+  set "GRADLE_FILE=android\app\build.gradle.kts"
+  set "GRADLE_KIND=kts"
 )
 
 if not defined GRADLE_FILE (
@@ -80,25 +80,16 @@ if not defined GRADLE_FILE (
 REM Normalizar a ruta absoluta
 for %%I in ("%GRADLE_FILE%") do set "GRADLE_FILE=%%~fI"
 
-set "GRADLE_KIND=groovy"
-echo %GRADLE_FILE% | findstr /i "\.kts$" >nul && set "GRADLE_KIND=kts"
-
 echo Gradle objetivo: "%GRADLE_FILE%" (%GRADLE_KIND%)
-echo Parcheando applicationId %TARGET_APP_ID% ^| versionCode %TARGET_VERSION_CODE% ^| versionName %TARGET_VERSION_NAME%...
+echo Parcheando applicationId %TARGET_APP_ID%  versionCode %TARGET_VERSION_CODE%  versionName %TARGET_VERSION_NAME%...
 
-set "GRADLE=%GRADLE_FILE%"
-set "KIND=%GRADLE_KIND%"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\patch-android-gradle.ps1" -GradleFile "%GRADLE%" -Kind "%KIND%" -AppId "%TARGET_APP_ID%" -VersionCode %TARGET_VERSION_CODE% -VersionName "%TARGET_VERSION_NAME%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\patch-android-gradle.ps1" -GradleFile "%GRADLE_FILE%" -Kind "%GRADLE_KIND%" -AppId "%TARGET_APP_ID%" -VersionCode %TARGET_VERSION_CODE% -VersionName "%TARGET_VERSION_NAME%"
 
 if errorlevel 1 (
   echo ERROR: No pude parchear el build.gradle (PowerShell fallo).
   pause
   exit /b 1
 )
-
-echo Verificacion rapida:
-REM (Desactivado: en algunos Windows produce "No se esperaba . en este momento.")
-REM findstr /n /c:"applicationId" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 
 REM --- Step 4/4 ---
 pushd android
@@ -125,8 +116,8 @@ echo [4/4] Gradle bundleRelease
 echo Limpiando salida anterior (para no subir un AAB viejo)...
 if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundle\release"
 
-set /p STORE_PWD="Contrasena keystore: "
-set /p KEY_PWD="Contrasena key: "
+set /p STORE_PWD=Contrasena keystore: 
+set /p KEY_PWD=Contrasena key: 
 
 call gradlew.bat :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
