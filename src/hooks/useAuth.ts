@@ -8,23 +8,46 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    let mounted = true;
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Failsafe: avoid getting stuck forever on loading state
+    const failSafeId = window.setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 8000);
+
+    // Set up auth state listener FIRST
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only sync state here (no other supabase calls)
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      window.clearTimeout(failSafeId);
     });
 
-    return () => subscription.unsubscribe();
+    // THEN check for existing session
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!mounted) return;
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error getting session:', error);
+        if (mounted) setLoading(false);
+      })
+      .finally(() => {
+        window.clearTimeout(failSafeId);
+      });
+
+    return () => {
+      mounted = false;
+      window.clearTimeout(failSafeId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
