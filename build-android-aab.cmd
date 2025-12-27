@@ -97,7 +97,8 @@ if errorlevel 1 (
 )
 
 echo Verificacion rapida:
-findstr /n /c:"applicationId" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
+REM (Desactivado: en algunos Windows produce "No se esperaba . en este momento.")
+REM findstr /n /c:"applicationId" /c:"versionCode" /c:"versionName" "%GRADLE_FILE%"
 
 REM --- Step 4/4 ---
 pushd android
