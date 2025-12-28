@@ -76,10 +76,20 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      // Detectar si estamos en una app nativa
+      const isNative = typeof window !== 'undefined' && 
+        (window as any).Capacitor?.isNativePlatform?.();
+      
+      // Usar deep link para apps nativas, URL normal para web
+      const redirectUrl = isNative 
+        ? 'com.mysticgarden.game://callback'
+        : `${window.location.origin}/`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: false,
         }
       });
       
