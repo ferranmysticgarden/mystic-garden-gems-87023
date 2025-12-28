@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { App, URLOpenListenerEvent } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
 
@@ -26,6 +27,8 @@ export const useDeepLinks = () => {
           if (error) {
             console.error('Error exchanging code for session:', error);
           }
+          // Si el login se abrió en navegador interno, lo cerramos al volver
+          Browser.close().catch(() => {});
           return;
         }
 
@@ -42,6 +45,8 @@ export const useDeepLinks = () => {
           if (error) {
             console.error('Error setting session from deep link:', error);
           }
+
+          Browser.close().catch(() => {});
         }
       } catch (error) {
         console.error('Error processing deep link:', error);
