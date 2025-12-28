@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -77,8 +78,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     setLoading(true);
     try {
       // Detectar si estamos en una app nativa
-      const isNative = typeof window !== 'undefined' && 
-        (window as any).Capacitor?.isNativePlatform?.();
+      const isNative = Capacitor.isNativePlatform();
       
       // Usar deep link para apps nativas, URL normal para web
       const redirectUrl = isNative 

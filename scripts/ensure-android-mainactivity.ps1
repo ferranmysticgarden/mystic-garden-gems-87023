@@ -74,6 +74,34 @@ class MainActivity : BridgeActivity()
     }
     $m = $re.Replace($m, $evaluator, 1)
 
+    # Ensure deep link intent-filter for OAuth callback (so the browser returns to the app)
+    $scheme = $AppId
+    $schemePattern = 'android:scheme\s*=\s*"' + [regex]::Escape($scheme) + '"'
+    if ($m -notmatch $schemePattern) {
+      $intent = @"
+        <intent-filter>
+          <action android:name=\"android.intent.action.VIEW\" />
+          <category android:name=\"android.intent.category.DEFAULT\" />
+          <category android:name=\"android.intent.category.BROWSABLE\" />
+          <data android:scheme=\"$scheme\" android:host=\"callback\" />
+        </intent-filter>
+"@
+
+      $actPattern = '(<activity\b(?:(?!</activity>).)*android:name="[^"]*MainActivity"(?:(?!</activity>).)*?)(</activity>)'
+      $actRe = New-Object System.Text.RegularExpressions.Regex($actPattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
+      $actEval = [System.Text.RegularExpressions.MatchEvaluator]{
+        param($match)
+        $before = $match.Groups[1].Value
+        $after = $match.Groups[2].Value
+        if ($before -match $schemePattern) { return $match.Value }
+        return ($before + "`r`n" + $intent + "`r`n" + $after)
+      }
+      $m = $actRe.Replace($m, $actEval, 1)
+      Write-Host ('OK: Intent-filter deep link agregado para ' + $scheme + '://callback')
+    } else {
+      Write-Host 'OK: Intent-filter deep link ya existia.'
+    }
+
     [System.IO.File]::WriteAllText($manifestPath, $m)
     Write-Host ('OK: AndroidManifest.xml actualizado con package=' + $AppId)
   } else {

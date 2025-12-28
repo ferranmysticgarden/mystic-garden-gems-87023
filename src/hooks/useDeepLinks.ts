@@ -12,38 +12,39 @@ export const useDeepLinks = () => {
 
     const handleDeepLink = async (event: URLOpenListenerEvent) => {
       const url = event.url;
-      console.log('Deep link received:', url);
 
-      // Verificar si es un callback de autenticación
-      // El formato esperado es: com.mysticgarden.game://callback#access_token=...
-      if (url.includes('access_token') || url.includes('refresh_token')) {
-        try {
-          // Extraer el fragmento de la URL (después del #)
-          const hashIndex = url.indexOf('#');
-          if (hashIndex !== -1) {
-            const fragment = url.substring(hashIndex + 1);
-            const params = new URLSearchParams(fragment);
-            
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
+      try {
+        // Nota: no logueamos la URL completa porque puede contener códigos/tokens sensibles
+        const parsed = new URL(url);
 
-            if (accessToken && refreshToken) {
-              // Establecer la sesión manualmente
-              const { error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
+        // 1) Flujo PKCE (lo normal): devuelve ?code=... (o #code=...)
+        const hashParams = new URLSearchParams(parsed.hash.startsWith('#') ? parsed.hash.slice(1) : parsed.hash);
+        const code = parsed.searchParams.get('code') ?? hashParams.get('code');
 
-              if (error) {
-                console.error('Error setting session from deep link:', error);
-              } else {
-                console.log('Session established from deep link');
-              }
-            }
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.error('Error exchanging code for session:', error);
           }
-        } catch (error) {
-          console.error('Error processing deep link:', error);
+          return;
         }
+
+        // 2) Flujo implícito (fallback): #access_token=...&refresh_token=...
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            console.error('Error setting session from deep link:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing deep link:', error);
       }
     };
 
