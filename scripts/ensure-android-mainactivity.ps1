@@ -15,6 +15,7 @@ try {
   $manifestPath = Join-Path -Path $androidRoot -ChildPath 'app\src\main\AndroidManifest.xml'
   $javaRoot = Join-Path -Path $androidRoot -ChildPath 'app\src\main\java'
 
+  # Build path for the target package
   $pkgPath = ($AppId -split '\.') -join '\'
   $targetDir = Join-Path -Path $javaRoot -ChildPath $pkgPath
   Ensure-Dir $targetDir
@@ -38,24 +39,32 @@ import com.getcapacitor.BridgeActivity
 class MainActivity : BridgeActivity()
 "@
 
-  if (Test-Path -LiteralPath $mainActivityKt) {
-    # Overwrite to guarantee a valid entrypoint (not only package)
-    [System.IO.File]::WriteAllText($mainActivityKt, $kotlinContent)
-    Write-Host ('OK: MainActivity.kt asegurado en ' + $mainActivityKt)
-  } else {
-    # Create/overwrite Java MainActivity to guarantee the expected entrypoint exists
-    [System.IO.File]::WriteAllText($mainActivityJava, $javaContent)
-    Write-Host ('OK: MainActivity.java asegurado en ' + $mainActivityJava)
+  # --- STEP 1: Delete ALL existing MainActivity files from any package ---
+  Write-Host 'Buscando y eliminando MainActivity existentes...'
+  $existingMainActivities = Get-ChildItem -Path $javaRoot -Recurse -Include 'MainActivity.java','MainActivity.kt' -ErrorAction SilentlyContinue
+  foreach ($f in $existingMainActivities) {
+    Write-Host ('  Eliminando: ' + $f.FullName)
+    Remove-Item -LiteralPath $f.FullName -Force
   }
 
+  # --- STEP 2: Create MainActivity in correct package ---
+  Write-Host ('Creando MainActivity en: ' + $targetDir)
+  [System.IO.File]::WriteAllText($mainActivityJava, $javaContent)
+  Write-Host ('OK: MainActivity.java creado en ' + $mainActivityJava)
+
+  # --- STEP 3: Update AndroidManifest.xml ---
   if (Test-Path -LiteralPath $manifestPath) {
     $m = Get-Content -LiteralPath $manifestPath -Raw
 
-    # Normalize launcher activity name to relative .MainActivity so it resolves via namespace/applicationId
-    $m2 = [regex]::Replace($m, 'android:name="[^"]*MainActivity"', 'android:name=".MainActivity"')
+    # Replace package attribute in manifest tag
+    $m = [regex]::Replace($m, 'package="[^"]+"', ('package="' + $AppId + '"'))
 
-    # Ensure android:exported="true" on MainActivity (required on Android 12+ when intent-filters exist)
-    $pattern = '(<activity\b(?:(?!>).)*android:name="\\.MainActivity"(?:(?!>).)*)>'
+    # Normalize launcher activity name to use FQCN (fully qualified class name)
+    $fqcn = $AppId + '.MainActivity'
+    $m = [regex]::Replace($m, 'android:name="[^"]*MainActivity"', ('android:name="' + $fqcn + '"'))
+
+    # Ensure android:exported="true" on MainActivity (required on Android 12+)
+    $pattern = '(<activity\b(?:(?!>).)*android:name="[^"]*MainActivity"(?:(?!>).)*)>'
     $re = New-Object System.Text.RegularExpressions.Regex($pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $evaluator = [System.Text.RegularExpressions.MatchEvaluator]{
       param($match)
@@ -63,17 +72,20 @@ class MainActivity : BridgeActivity()
       if ($tag -match 'android:exported\s*=') { return $tag }
       return ($tag -replace '>$', ' android:exported="true">')
     }
+    $m = $re.Replace($m, $evaluator, 1)
 
-    $m3 = $re.Replace($m2, $evaluator, 1)
-
-    if ($m3 -ne $m) {
-      [System.IO.File]::WriteAllText($manifestPath, $m3)
-      Write-Host ('OK: AndroidManifest.xml actualizado (' + $manifestPath + ')')
-    } else {
-      Write-Host ('OK: AndroidManifest.xml sin cambios (' + $manifestPath + ')')
-    }
+    [System.IO.File]::WriteAllText($manifestPath, $m)
+    Write-Host ('OK: AndroidManifest.xml actualizado con package=' + $AppId)
   } else {
     Write-Host ('WARN: No existe AndroidManifest.xml aun en: ' + $manifestPath)
+  }
+
+  # --- STEP 4: Verify the file exists ---
+  if (Test-Path -LiteralPath $mainActivityJava) {
+    Write-Host 'VERIFICACION: MainActivity.java existe correctamente.'
+    Get-Content -LiteralPath $mainActivityJava | Write-Host
+  } else {
+    throw 'ERROR: MainActivity.java no se creo correctamente!'
   }
 
   exit 0
