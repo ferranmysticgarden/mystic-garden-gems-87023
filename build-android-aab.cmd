@@ -75,6 +75,15 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM --- Step 3.6/4: Ensure MainActivity exists ---
+echo [3.6/4] Verificando MainActivity...
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\ensure-android-mainactivity.ps1" -AppId "%TARGET_APP_ID%"
+if errorlevel 1 (
+  echo ERROR: No pude asegurar MainActivity.
+  pause
+  exit /b 1
+)
+
 REM --- Step 4/4 ---
 pushd android
 
