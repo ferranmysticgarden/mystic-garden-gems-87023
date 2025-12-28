@@ -63,14 +63,22 @@ class MainActivity : BridgeActivity()
     $fqcn = $AppId + '.MainActivity'
     $m = [regex]::Replace($m, 'android:name="[^"]*MainActivity"', ('android:name="' + $fqcn + '"'))
 
-    # Ensure android:exported="true" on MainActivity (required on Android 12+)
+    # Ensure android:exported="true" (Android 12+) and launchMode="singleTask" (deep links) on MainActivity
     $pattern = '(<activity\b(?:(?!>).)*android:name="[^"]*MainActivity"(?:(?!>).)*)>'
     $re = New-Object System.Text.RegularExpressions.Regex($pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $evaluator = [System.Text.RegularExpressions.MatchEvaluator]{
       param($match)
       $tag = $match.Value
-      if ($tag -match 'android:exported\s*=') { return $tag }
-      return ($tag -replace '>$', ' android:exported="true">')
+
+      if ($tag -notmatch 'android:exported\s*=') {
+        $tag = ($tag -replace '>$', ' android:exported="true">')
+      }
+
+      if ($tag -notmatch 'android:launchMode\s*=') {
+        $tag = ($tag -replace '>$', ' android:launchMode="singleTask">')
+      }
+
+      return $tag
     }
     $m = $re.Replace($m, $evaluator, 1)
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -29,29 +30,35 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
       passwordSchema.parse(password);
 
       if (isSignUp) {
+        const emailRedirectTo = Capacitor.isNativePlatform()
+          ? 'com.mysticgarden.game://callback'
+          : `${window.location.origin}/`;
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo,
             data: {
-              display_name: email.split('@')[0]
-            }
-          }
+              display_name: email.split('@')[0],
+            },
+          },
         });
-        
+
         if (error) throw error;
-        
+
         // Enviar email de notificación (sin esperar respuesta)
         if (data.user) {
-          supabase.functions.invoke('send-registration-email', {
-            body: {
-              email,
-              displayName: email.split('@')[0]
-            }
-          }).catch(err => console.error('Error sending registration email:', err));
+          supabase.functions
+            .invoke('send-registration-email', {
+              body: {
+                email,
+                displayName: email.split('@')[0],
+              },
+            })
+            .catch((err) => console.error('Error sending registration email:', err));
         }
-        
+
         toast.success('¡Cuenta creada! Ahora puedes iniciar sesión');
         setIsSignUp(false);
       } else {
@@ -59,7 +66,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           email,
           password,
         });
-        
+
         if (error) throw error;
         toast.success('¡Bienvenido!');
       }
@@ -75,25 +82,33 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   };
 
   const handleGoogleSignIn = async () => {
+    const isNative = Capacitor.isNativePlatform();
     setLoading(true);
-    try {
-      // Detectar si estamos en una app nativa
-      const isNative = Capacitor.isNativePlatform();
-      
-      // Usar deep link para apps nativas, URL normal para web
-      const redirectUrl = isNative 
-        ? 'com.mysticgarden.game://callback'
-        : `${window.location.origin}/`;
 
-      const { error } = await supabase.auth.signInWithOAuth({
+    try {
+      const redirectUrl = isNative ? 'com.mysticgarden.game://callback' : `${window.location.origin}/`;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: false,
-        }
+          // En nativo abrimos la URL nosotros (Custom Tabs / SFSafariViewController)
+          skipBrowserRedirect: isNative,
+        },
       });
-      
+
       if (error) throw error;
+
+      if (isNative) {
+        const url = data?.url;
+        if (!url) {
+          throw new Error('No se pudo iniciar el login con Google.');
+        }
+
+        await Browser.open({ url });
+        // El cierre del navegador se hace cuando vuelve el deep link (useDeepLinks)
+        setLoading(false);
+      }
     } catch (error: any) {
       toast.error(error.message || 'Error al iniciar sesión con Google');
       setLoading(false);
