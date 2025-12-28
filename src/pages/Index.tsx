@@ -122,14 +122,9 @@ const Index = () => {
     setScreen('menu');
   };
 
-  const handleWatchAd = () => {
-    if (hasAdsDisabled()) {
-      toast.error('No hay anuncios disponibles con tu compra activa');
-      return;
-    }
-    // Simulate AdMob ad watch
-    toast.success('¡Anuncio visto! +1 vida');
-    addLives(1);
+  const handleQuickLifePurchased = () => {
+    // Esta función se llama después de iniciar el pago de vida rápida
+    // El webhook procesará la compra real y añadirá la vida
     setShowNoLivesModal(false);
   };
 
@@ -285,10 +280,9 @@ const Index = () => {
       {showNoLivesModal && (
         <NoLivesModal
           gems={gameState.gems}
-          hasAdsDisabled={hasAdsDisabled()}
-          onWatchAd={handleWatchAd}
           onUseGems={handleUseGemsForLife}
           onClose={() => setShowNoLivesModal(false)}
+          onQuickLifePurchased={handleQuickLifePurchased}
         />
       )}
     </div>

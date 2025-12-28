@@ -15,6 +15,7 @@ const PRODUCT_PRICES: Record<string, string> = {
   "no_ads_month": "price_1SOlxtFOm1x8pT7SqKoeeYTq",
   "no_ads_forever": "price_1SOly7FOm1x8pT7SypwYMFz9",
   "garden_pass": "price_1SOlyNFOm1x8pT7SzEKZMpYY",
+  "quick_life": "price_1SjOPdFOm1x8pT7SQOeGku65",
 };
 
 serve(async (req) => {
@@ -79,9 +80,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
-    console.error("Error creating payment:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error creating payment:", errorMessage);
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

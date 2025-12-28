@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
@@ -17,6 +17,7 @@ const PRODUCT_NAMES: Record<string, string> = {
   "no_ads_month": "Sin Anuncios (1 Mes)",
   "no_ads_forever": "Sin Anuncios (Para Siempre)",
   "garden_pass": "Pase de Jardín Mensual",
+  "quick_life": "1 Vida Rápida",
 };
 
 serve(async (req) => {
@@ -75,6 +76,28 @@ serve(async (req) => {
           console.error("Error saving purchase:", purchaseError);
         } else {
           console.log("Purchase saved successfully");
+        }
+
+        // Si es una vida rápida, añadir la vida al progreso del juego
+        if (productId === "quick_life") {
+          const { data: progressData, error: progressError } = await supabaseAdmin
+            .from("game_progress")
+            .select("lives")
+            .eq("user_id", userId)
+            .single();
+
+          if (!progressError && progressData) {
+            const { error: updateError } = await supabaseAdmin
+              .from("game_progress")
+              .update({ lives: progressData.lives + 1 })
+              .eq("user_id", userId);
+
+            if (updateError) {
+              console.error("Error updating lives:", updateError);
+            } else {
+              console.log("Life added successfully");
+            }
+          }
         }
 
         // Enviar email al administrador
@@ -139,10 +162,11 @@ serve(async (req) => {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Webhook error:", error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Webhook error:", errorMessage);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
