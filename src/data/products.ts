@@ -17,6 +17,14 @@ export interface Product {
 
 export const PRODUCTS: Product[] = [
   { 
+    id: 'quick_life', 
+    nameKey: 'shop.quickLife',
+    name: '1 Vida Rápida', 
+    price: 0.20, 
+    currency: 'EUR',
+    lives: 1
+  },
+  { 
     id: 'gems_100', 
     nameKey: 'shop.gems100',
     name: '100 Gemas', 

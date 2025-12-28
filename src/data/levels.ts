@@ -17,17 +17,18 @@ export interface Level {
 }
 
 export const LEVELS: Level[] = [
-  { id: 1, objective: { type: 'score', target: 'points', count: 1000 }, moves: 20, stars: { one: 1000, two: 1500, three: 2000 }, reward: {} },
-  { id: 2, objective: { type: 'collect', target: '🌸', count: 10 }, moves: 18, stars: { one: 10, two: 12, three: 15 }, reward: {} },
-  { id: 3, objective: { type: 'collect', target: '🍃', count: 15 }, moves: 20, stars: { one: 15, two: 18, three: 20 }, reward: {} },
-  { id: 4, objective: { type: 'score', target: 'points', count: 1500 }, moves: 22, stars: { one: 1500, two: 2000, three: 2500 }, reward: {} },
-  { id: 5, objective: { type: 'collect', target: '🌺', count: 12 }, moves: 20, stars: { one: 12, two: 15, three: 18 }, reward: { gems: 5 } },
+  // Niveles 1-10: MUY FÁCILES para que los jugadores se enganchen
+  { id: 1, objective: { type: 'score', target: 'points', count: 500 }, moves: 30, stars: { one: 500, two: 800, three: 1000 }, reward: {} },
+  { id: 2, objective: { type: 'collect', target: '🌸', count: 5 }, moves: 25, stars: { one: 5, two: 7, three: 10 }, reward: {} },
+  { id: 3, objective: { type: 'collect', target: '🍃', count: 6 }, moves: 25, stars: { one: 6, two: 8, three: 10 }, reward: {} },
+  { id: 4, objective: { type: 'score', target: 'points', count: 700 }, moves: 28, stars: { one: 700, two: 1000, three: 1300 }, reward: {} },
+  { id: 5, objective: { type: 'collect', target: '🌺', count: 6 }, moves: 25, stars: { one: 6, two: 8, three: 10 }, reward: { gems: 5 } },
   
-  { id: 6, objective: { type: 'collect', target: '🌼', count: 20 }, moves: 25, stars: { one: 20, two: 25, three: 30 }, reward: {} },
-  { id: 7, objective: { type: 'score', target: 'points', count: 2000 }, moves: 20, stars: { one: 2000, two: 2500, three: 3000 }, reward: {} },
-  { id: 8, objective: { type: 'collect', target: '🌸', count: 15 }, moves: 18, stars: { one: 15, two: 18, three: 22 }, reward: {} },
-  { id: 9, objective: { type: 'collect', target: '🍃', count: 25 }, moves: 22, stars: { one: 25, two: 30, three: 35 }, reward: {} },
-  { id: 10, objective: { type: 'score', target: 'points', count: 2500 }, moves: 25, stars: { one: 2500, two: 3000, three: 3500 }, reward: { gems: 10 } },
+  { id: 6, objective: { type: 'collect', target: '🌼', count: 8 }, moves: 28, stars: { one: 8, two: 10, three: 12 }, reward: {} },
+  { id: 7, objective: { type: 'score', target: 'points', count: 900 }, moves: 28, stars: { one: 900, two: 1200, three: 1500 }, reward: {} },
+  { id: 8, objective: { type: 'collect', target: '🌸', count: 8 }, moves: 25, stars: { one: 8, two: 10, three: 12 }, reward: {} },
+  { id: 9, objective: { type: 'collect', target: '🍃', count: 10 }, moves: 28, stars: { one: 10, two: 12, three: 15 }, reward: {} },
+  { id: 10, objective: { type: 'score', target: 'points', count: 1200 }, moves: 30, stars: { one: 1200, two: 1500, three: 1800 }, reward: { gems: 10 } },
   
   { id: 11, objective: { type: 'collect', target: '🌺', count: 18 }, moves: 20, stars: { one: 18, two: 22, three: 26 }, reward: {} },
   { id: 12, objective: { type: 'collect', target: '🌼', count: 20 }, moves: 22, stars: { one: 20, two: 25, three: 30 }, reward: {} },

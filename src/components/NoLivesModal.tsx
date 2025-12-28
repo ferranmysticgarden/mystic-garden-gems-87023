@@ -1,15 +1,25 @@
-import { Tv, Gem } from 'lucide-react';
+import { Gem, Heart } from 'lucide-react';
 import { Button } from './ui/button';
+import { useStripePayment } from '@/hooks/useStripePayment';
 
 interface NoLivesModalProps {
   gems: number;
-  hasAdsDisabled: boolean;
-  onWatchAd: () => void;
   onUseGems: () => void;
   onClose: () => void;
+  onQuickLifePurchased?: () => void;
 }
 
-export const NoLivesModal = ({ gems, hasAdsDisabled, onWatchAd, onUseGems, onClose }: NoLivesModalProps) => {
+export const NoLivesModal = ({ gems, onUseGems, onClose, onQuickLifePurchased }: NoLivesModalProps) => {
+  const { createPayment, loading } = useStripePayment();
+
+  const handleQuickLifePurchase = async () => {
+    await createPayment('quick_life');
+    // El webhook de Stripe procesará la compra y añadirá la vida
+    if (onQuickLifePurchased) {
+      onQuickLifePurchased();
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
       <div className="gradient-card shadow-card rounded-2xl p-6 max-w-md w-full">
@@ -20,16 +30,15 @@ export const NoLivesModal = ({ gems, hasAdsDisabled, onWatchAd, onUseGems, onClo
         </div>
 
         <div className="space-y-3">
-          {!hasAdsDisabled && (
-            <Button
-              onClick={onWatchAd}
-              className="w-full gradient-gold shadow-gold text-lg py-6"
-              id="watch-ad-for-life"
-            >
-              <Tv className="w-6 h-6 mr-2" />
-              Ver Anuncio (+1 Vida)
-            </Button>
-          )}
+          <Button
+            onClick={handleQuickLifePurchase}
+            disabled={loading}
+            className="w-full gradient-gold shadow-gold text-lg py-6"
+            id="buy-quick-life"
+          >
+            <Heart className="w-6 h-6 mr-2" />
+            {loading ? 'Procesando...' : 'Comprar 1 Vida - €0.20'}
+          </Button>
 
           <Button
             onClick={onUseGems}
