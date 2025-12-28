@@ -15,7 +15,7 @@ try {
   $manifestPath = Join-Path -Path $androidRoot -ChildPath 'app\src\main\AndroidManifest.xml'
   $javaRoot = Join-Path -Path $androidRoot -ChildPath 'app\src\main\java'
 
-  $pkgPath = ($AppId -split '\.') -join '\\'
+  $pkgPath = ($AppId -split '\.') -join '\'
   $targetDir = Join-Path -Path $javaRoot -ChildPath $pkgPath
   Ensure-Dir $targetDir
 
@@ -50,22 +50,21 @@ class MainActivity : BridgeActivity()
 
   if (Test-Path -LiteralPath $manifestPath) {
     $m = Get-Content -LiteralPath $manifestPath -Raw
+
     # Normalize launcher activity name to relative .MainActivity so it resolves via namespace/applicationId
     $m2 = [regex]::Replace($m, 'android:name="[^"]*MainActivity"', 'android:name=".MainActivity"')
 
     # Ensure android:exported="true" on MainActivity (required on Android 12+ when intent-filters exist)
-    $m3 = [regex]::Replace(
-      $m2,
-      '(<activity\b(?:(?!>).)*android:name="\\.MainActivity"(?:(?!>).)*)>',
-      {
-        param($match)
-        $tag = $match.Value
-        if ($tag -match 'android:exported\s*=') { return $tag }
-        return ($tag -replace '>$', ' android:exported="true">')
-      },
-      1,
-      [System.Text.RegularExpressions.RegexOptions]::Singleline
-    )
+    $pattern = '(<activity\b(?:(?!>).)*android:name="\\.MainActivity"(?:(?!>).)*)>'
+    $re = New-Object System.Text.RegularExpressions.Regex($pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
+    $evaluator = [System.Text.RegularExpressions.MatchEvaluator]{
+      param($match)
+      $tag = $match.Value
+      if ($tag -match 'android:exported\s*=') { return $tag }
+      return ($tag -replace '>$', ' android:exported="true">')
+    }
+
+    $m3 = $re.Replace($m2, $evaluator, 1)
 
     if ($m3 -ne $m) {
       [System.IO.File]::WriteAllText($manifestPath, $m3)
@@ -76,7 +75,6 @@ class MainActivity : BridgeActivity()
   } else {
     Write-Host ('WARN: No existe AndroidManifest.xml aun en: ' + $manifestPath)
   }
-
 
   exit 0
 }
