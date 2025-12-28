@@ -18,8 +18,8 @@
 |-------|-------|
 | **Package name** | `com.mysticgarden.game` |
 | **App name** | `Mystic Garden Pro` |
-| **versionCode actual** | `710` |
-| **versionName actual** | `7.1.0` |
+| **versionCode actual** | `711` |
+| **versionName actual** | `7.1.1` |
 
 ---
 
@@ -50,8 +50,8 @@ mystic-garden-gems-87023/
 │   │   └── key.properties         # Configuración de firma
 │   └── local.properties           # Ruta SDK (generado localmente)
 └── scripts/
-    └── patch-android-gradle.ps1   # Script PowerShell para parchear versión
-```
+    ├── patch-android-gradle.ps1         # Script PowerShell para parchear versión
+    └── ensure-android-mainactivity.ps1  # Script para asegurar MainActivity existe
 
 ### Generados localmente (después de `npx cap sync android`):
 ```
@@ -153,7 +153,7 @@ SHA-1 debe ser: `37:62:75:43:D5:7F:0E:BE:AE:F1:78:D6:79:6C:D2:DF:52:36:C3:09`
 
 ## 📋 CHECKLIST PRE-PUBLICACIÓN
 
-- [ ] versionCode es mayor al anterior (actual: 710)
+- [ ] versionCode es mayor al anterior (actual: 711)
 - [ ] Keystore correcto (`mystic-garden-release-key.keystore`)
 - [ ] Contraseña: `mystic123`
 - [ ] Package: `com.mysticgarden.game`
@@ -180,10 +180,90 @@ SHA-1 debe ser: `37:62:75:43:D5:7F:0E:BE:AE:F1:78:D6:79:6C:D2:DF:52:36:C3:09`
 
 | versionCode | versionName | Fecha | Cambios |
 |-------------|-------------|-------|---------|
+| 711 | 7.1.1 | 28 dic 2025 | **FIX CRÍTICO**: Solución ClassNotFoundException MainActivity |
 | 710 | 7.1.0 | 27 dic 2025 | Correcciones de versión |
 | 709 | 7.0.9 | 26 dic 2025 | Actualización |
 | 703 | 7.0.7 | 24 dic 2025 | Nueva clave de firma |
 | ... | ... | ... | ... |
+
+---
+
+## 🔧 CAMBIOS VERSIÓN 7.1.1 (FIX CRÍTICO)
+
+### Problema resuelto:
+**ClassNotFoundException: com.mysticgarden.game.MainActivity**
+- La app crasheaba inmediatamente al abrirse
+- Capacitor generaba MainActivity en ruta incorrecta
+
+### Archivos creados/modificados:
+
+#### 1. `scripts/ensure-android-mainactivity.ps1` (NUEVO)
+**Ubicación:** `scripts/ensure-android-mainactivity.ps1`
+**Función:** Asegura que MainActivity exista en la ruta correcta
+
+```powershell
+# Lo que hace:
+# 1. Crea carpeta: android/app/src/main/java/com/mysticgarden/game/
+# 2. Genera MainActivity.java con package correcto
+# 3. Parchea AndroidManifest.xml para usar .MainActivity
+```
+
+#### 2. `scripts/patch-android-gradle.ps1` (MODIFICADO)
+**Ubicación:** `scripts/patch-android-gradle.ps1`
+**Cambios:** Ahora también parchea el `namespace` en build.gradle
+
+#### 3. `build-android-aab.cmd` (MODIFICADO)
+**Ubicación:** `build-android-aab.cmd`
+**Cambios:**
+- Versión actualizada a 711/7.1.1
+- Añadido paso 3.6: ejecuta ensure-android-mainactivity.ps1
+
+#### 4. `build-android-aab-nopatch.cmd` (MODIFICADO)
+**Ubicación:** `build-android-aab-nopatch.cmd`
+**Cambios:** Añadido paso 3.6 para ensure-android-mainactivity.ps1
+
+### Estructura de archivos Android después del fix:
+
+```
+android/
+├── app/
+│   ├── mystic-garden-release-key.keystore
+│   ├── build.gradle                    # Con namespace=com.mysticgarden.game
+│   └── src/main/
+│       ├── AndroidManifest.xml         # Con android:name=".MainActivity"
+│       ├── java/
+│       │   └── com/
+│       │       └── mysticgarden/
+│       │           └── game/
+│       │               └── MainActivity.java  # ⚠️ GENERADO POR SCRIPT
+│       ├── res/
+│       └── assets/
+└── ...
+```
+
+### Flujo del build actualizado:
+
+```
+1. npm install
+2. npm run build
+3. npx cap sync android
+   ↓
+3.5 patch-android-gradle.ps1      → Parchea versionCode, versionName, namespace
+   ↓
+3.6 ensure-android-mainactivity.ps1 → Crea/parchea MainActivity + AndroidManifest
+   ↓
+4. gradlew bundleRelease         → Genera AAB firmado
+```
+
+### Si el problema vuelve a ocurrir:
+
+1. Verifica que existe: `android/app/src/main/java/com/mysticgarden/game/MainActivity.java`
+2. Verifica AndroidManifest.xml tiene: `android:name=".MainActivity"`
+3. Verifica build.gradle tiene: `namespace "com.mysticgarden.game"`
+4. Ejecuta manualmente:
+   ```powershell
+   powershell -File scripts\ensure-android-mainactivity.ps1 -AppId "com.mysticgarden.game"
+   ```
 
 ---
 
