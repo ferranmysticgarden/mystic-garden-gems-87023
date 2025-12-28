@@ -20,8 +20,8 @@ if not exist "android\key.properties" (
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=716"
-set "TARGET_VERSION_NAME=7.1.6"
+set "TARGET_VERSION_CODE=717"
+set "TARGET_VERSION_NAME=7.1.7"
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
@@ -46,6 +46,15 @@ echo [3/4] npx cap sync android
 call npx cap sync android
 if errorlevel 1 (
   echo ERROR: npx cap sync android fallo.
+  pause
+  exit /b 1
+)
+
+REM --- Step 3.3/4: Generate Android icons ---
+echo [3.3/4] Generando iconos Android...
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\generate-android-icons.ps1"
+if errorlevel 1 (
+  echo ERROR: No se pudieron generar los iconos.
   pause
   exit /b 1
 )
