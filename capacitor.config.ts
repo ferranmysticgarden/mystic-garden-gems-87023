@@ -7,10 +7,6 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   android: {
     backgroundColor: '#1a0a2e',
-    buildOptions: {
-      keystorePath: 'app/mystic-garden-release-key.keystore',
-      keystoreAlias: 'mystic-garden',
-    }
   },
   ios: {
     backgroundColor: '#1a0a2e'
