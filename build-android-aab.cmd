@@ -20,8 +20,8 @@ if not exist "android\key.properties" (
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=718"
-set "TARGET_VERSION_NAME=7.1.8"
+set "TARGET_VERSION_CODE=719"
+set "TARGET_VERSION_NAME=7.1.9"
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
