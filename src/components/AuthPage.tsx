@@ -14,6 +14,10 @@ interface AuthPageProps {
 const emailSchema = z.string().trim().email({ message: "Email inválido" });
 const passwordSchema = z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" });
 
+// Para login/confirmación en móvil nativo usamos una URL https (permitida por el backend)
+// que luego “salta” de vuelta a la app con deep link.
+const NATIVE_OAUTH_CALLBACK_URL = 'https://mysticgarden.com/callback';
+
 export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -31,7 +35,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
 
       if (isSignUp) {
         const emailRedirectTo = Capacitor.isNativePlatform()
-          ? 'com.mysticgarden.game://callback'
+          ? NATIVE_OAUTH_CALLBACK_URL
           : `${window.location.origin}/`;
 
         const { data, error } = await supabase.auth.signUp({
@@ -86,7 +90,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     setLoading(true);
 
     try {
-      const redirectUrl = isNative ? 'com.mysticgarden.game://callback' : `${window.location.origin}/`;
+      const redirectUrl = isNative ? NATIVE_OAUTH_CALLBACK_URL : `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
