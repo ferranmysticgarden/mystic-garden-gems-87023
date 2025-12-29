@@ -81,10 +81,10 @@ export default function OAuthCallback() {
 
     setStatus('ready');
 
-    // Intento automático (Android suele funcionar). En iOS puede requerir toque.
+    // Intento automático lo más inmediato posible (mejor UX, menos tiempo visible en navegador)
     const id = window.setTimeout(() => {
-      window.location.href = deepLinkUrl;
-    }, 350);
+      window.location.replace(deepLinkUrl);
+    }, 0);
 
     return () => window.clearTimeout(id);
   }, [deepLinkUrl, parsed.error]);
