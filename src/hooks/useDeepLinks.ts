@@ -56,11 +56,26 @@ export const useDeepLinks = () => {
     };
 
     // Escuchar eventos de deep link
-    App.addListener('appUrlOpen', handleDeepLink);
+    // Nota: evitamos removeAllListeners() para no romper otros listeners
+    let handle: { remove: () => Promise<void> | void } | null = null;
+    const sub = App.addListener('appUrlOpen', handleDeepLink);
+
+    // Capacitor puede devolver handle directo o promesa según plataforma/typing
+    Promise.resolve(sub)
+      .then((h) => {
+        handle = h;
+      })
+      .catch(() => {
+        handle = null;
+      });
 
     // Limpiar listener al desmontar
     return () => {
-      App.removeAllListeners();
+      try {
+        handle?.remove?.();
+      } catch {
+        // ignore
+      }
     };
   }, []);
 };
