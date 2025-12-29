@@ -23,12 +23,13 @@ export const useDeepLinks = () => {
         const code = parsed.searchParams.get('code') ?? hashParams.get('code');
 
         if (code) {
+          // Cerrar el navegador lo antes posible para evitar que se quede visible
+          Browser.close().catch(() => {});
+
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             console.error('Error exchanging code for session:', error);
           }
-          // Si el login se abrió en navegador interno, lo cerramos al volver
-          Browser.close().catch(() => {});
           return;
         }
 
@@ -37,6 +38,9 @@ export const useDeepLinks = () => {
         const refreshToken = hashParams.get('refresh_token');
 
         if (accessToken && refreshToken) {
+          // Cerrar el navegador lo antes posible para evitar que se quede visible
+          Browser.close().catch(() => {});
+
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -45,8 +49,6 @@ export const useDeepLinks = () => {
           if (error) {
             console.error('Error setting session from deep link:', error);
           }
-
-          Browser.close().catch(() => {});
         }
       } catch (error) {
         console.error('Error processing deep link:', error);

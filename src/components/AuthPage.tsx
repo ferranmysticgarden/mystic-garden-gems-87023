@@ -109,7 +109,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           throw new Error('No se pudo iniciar el login con Google.');
         }
 
-        await Browser.open({ url });
+        await Browser.open({ url, toolbarColor: '#1a0a2e', presentationStyle: 'fullscreen' });
         // El cierre del navegador se hace cuando vuelve el deep link (useDeepLinks)
         setLoading(false);
       }
