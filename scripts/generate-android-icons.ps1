@@ -58,7 +58,7 @@ try {
         $targetPathRound = Join-Path $targetDir "ic_launcher_round.png"
         $newImage.Save($targetPathRound, [System.Drawing.Imaging.ImageFormat]::Png)
 
-        # Adaptive icon foreground (referenciado por mipmap-anydpi-v26/ic_launcher.xml)
+        # Adaptive icon foreground
         $targetPathForeground = Join-Path $targetDir "ic_launcher_foreground.png"
         $newImage.Save($targetPathForeground, [System.Drawing.Imaging.ImageFormat]::Png)
 
@@ -72,10 +72,11 @@ try {
     $anydpiDir = Join-Path $androidResRoot "mipmap-anydpi-v26"
     Ensure-Dir $anydpiDir
 
-    $adaptiveXml = @"<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<adaptive-icon xmlns:android=\"http://schemas.android.com/apk/res/android\">
-  <background android:drawable=\"@color/ic_launcher_background\"/>
-  <foreground android:drawable=\"@mipmap/ic_launcher_foreground\"/>
+    $adaptiveXml = @"
+<?xml version=""1.0"" encoding=""utf-8""?>
+<adaptive-icon xmlns:android=""http://schemas.android.com/apk/res/android"">
+  <background android:drawable=""@color/ic_launcher_background""/>
+  <foreground android:drawable=""@mipmap/ic_launcher_foreground""/>
 </adaptive-icon>
 "@
 
@@ -83,15 +84,16 @@ try {
     [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher_round.xml"), $adaptiveXml)
     Write-Host "  OK: mipmap-anydpi-v26 adaptive icons" -ForegroundColor Green
 
-    # Asegurar color de fondo (si no existe)
+    # Asegurar color de fondo
     $valuesDir = Join-Path $androidResRoot "values"
     Ensure-Dir $valuesDir
     $bgColorFile = Join-Path $valuesDir "ic_launcher_background.xml"
 
     if (-not (Test-Path -LiteralPath $bgColorFile)) {
-        $bgXml = @"<?xml version=\"1.0\" encoding=\"utf-8\"?>
+        $bgXml = @"
+<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
-  <color name=\"ic_launcher_background\">#1a0a2e</color>
+  <color name=""ic_launcher_background"">#1a0a2e</color>
 </resources>
 "@
         [System.IO.File]::WriteAllText($bgColorFile, $bgXml)
@@ -103,6 +105,12 @@ try {
     Write-Host "" 
     Write-Host "Iconos Android generados correctamente!" -ForegroundColor Green
 }
+catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
 finally {
-    $sourceImage.Dispose()
+    if ($sourceImage -ne $null) {
+        $sourceImage.Dispose()
+    }
 }
