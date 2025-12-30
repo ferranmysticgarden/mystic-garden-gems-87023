@@ -72,16 +72,19 @@ try {
     $anydpiDir = Join-Path $androidResRoot "mipmap-anydpi-v26"
     Ensure-Dir $anydpiDir
 
-    $adaptiveXml = @"
-<?xml version=""1.0"" encoding=""utf-8""?>
-<adaptive-icon xmlns:android=""http://schemas.android.com/apk/res/android"">
-  <background android:drawable=""@color/ic_launcher_background""/>
-  <foreground android:drawable=""@mipmap/ic_launcher_foreground""/>
+    # IMPORTANT: The XML declaration must be the very first bytes of the file (no leading whitespace/BOM),
+    # otherwise Android's resource compiler (AAPT2) can fail with "XML version \"\" not supported".
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+    $adaptiveXml = @"<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+  <background android:drawable="@color/ic_launcher_background"/>
+  <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>
 "@
 
-    [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher.xml"), $adaptiveXml)
-    [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher_round.xml"), $adaptiveXml)
+    [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher.xml"), $adaptiveXml, $utf8NoBom)
+    [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher_round.xml"), $adaptiveXml, $utf8NoBom)
     Write-Host "  OK: mipmap-anydpi-v26 adaptive icons" -ForegroundColor Green
 
     # Asegurar color de fondo
@@ -90,13 +93,12 @@ try {
     $bgColorFile = Join-Path $valuesDir "ic_launcher_background.xml"
 
     if (-not (Test-Path -LiteralPath $bgColorFile)) {
-        $bgXml = @"
-<?xml version=""1.0"" encoding=""utf-8""?>
+        $bgXml = @"<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name=""ic_launcher_background"">#1a0a2e</color>
+  <color name="ic_launcher_background">#1a0a2e</color>
 </resources>
 "@
-        [System.IO.File]::WriteAllText($bgColorFile, $bgXml)
+        [System.IO.File]::WriteAllText($bgColorFile, $bgXml, $utf8NoBom)
         Write-Host "  OK: values/ic_launcher_background.xml creado" -ForegroundColor Green
     } else {
         Write-Host "  OK: values/ic_launcher_background.xml ya existia" -ForegroundColor DarkGray
