@@ -34,26 +34,19 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       setGameOver(true);
       setWon(true);
       
-      // Calculate stars
-      let stars = 1;
-      const finalScore = level.objective.type === 'score' ? score : (collected[level.objective.target] || 0);
-      if (finalScore >= level.stars.three) stars = 3;
-      else if (finalScore >= level.stars.two) stars = 2;
-      
       // Confetti effect
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
-      
-      setTimeout(() => onWin(stars, level.reward), 2000);
+      // El usuario pulsará "Continuar" manualmente
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
       setGameOver(true);
       setWon(false);
-      setTimeout(() => onLose(), 2000);
+      // El usuario pulsará "Continuar" manualmente
     }
-  }, [moves, score, collected, checkWinCondition, gameOver, level, onWin, onLose]);
+  }, [moves, score, collected, checkWinCondition, gameOver, level]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
@@ -164,6 +157,12 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
                   🎉 {t('game.score')}: {score} 🎉
                 </div>
               )}
+              <Button
+                onClick={() => won ? onWin(1, level.reward) : onLose()}
+                className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
+              >
+                {t('game.continue')}
+              </Button>
             </div>
           </div>
         )}
