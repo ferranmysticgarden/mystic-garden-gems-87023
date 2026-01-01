@@ -76,12 +76,11 @@ try {
     # otherwise Android's resource compiler (AAPT2) can fail with "XML version \"\" not supported".
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
-    $adaptiveXml = @"<?xml version="1.0" encoding="utf-8"?>
+    $adaptiveXml = '<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
   <background android:drawable="@color/ic_launcher_background"/>
   <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-"@
+</adaptive-icon>'
 
     [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher.xml"), $adaptiveXml, $utf8NoBom)
     [System.IO.File]::WriteAllText((Join-Path $anydpiDir "ic_launcher_round.xml"), $adaptiveXml, $utf8NoBom)
@@ -93,11 +92,10 @@ try {
     $bgColorFile = Join-Path $valuesDir "ic_launcher_background.xml"
 
     if (-not (Test-Path -LiteralPath $bgColorFile)) {
-        $bgXml = @"<?xml version="1.0" encoding="utf-8"?>
+        $bgXml = '<?xml version="1.0" encoding="utf-8"?>
 <resources>
   <color name="ic_launcher_background">#1a0a2e</color>
-</resources>
-"@
+</resources>'
         [System.IO.File]::WriteAllText($bgColorFile, $bgXml, $utf8NoBom)
         Write-Host "  OK: values/ic_launcher_background.xml creado" -ForegroundColor Green
     } else {
