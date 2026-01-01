@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuth } from '@/hooks/useAuth';
@@ -66,16 +66,16 @@ const Index = () => {
     }
   };
 
-  const handleWin = (stars: number, reward: { gems?: number }) => {
+  const handleWin = useCallback((stars: number, reward: { gems?: number }) => {
     completeLevel(currentLevel.id, reward);
     toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
     setScreen('menu');
-  };
+  }, [completeLevel, currentLevel.id, t]);
 
-  const handleLose = () => {
+  const handleLose = useCallback(() => {
     toast.error(t('game.lose'));
     setScreen('menu');
-  };
+  }, [t]);
 
   const handleSelectLevel = (levelId: number) => {
     // Check if level is accessible (need to complete previous level first)
