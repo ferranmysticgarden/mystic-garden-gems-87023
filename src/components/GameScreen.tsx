@@ -50,13 +50,15 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
-    
-    const newCollected = { ...collected };
-    tiles.forEach((tile) => {
-      newCollected[tile] = (newCollected[tile] || 0) + 1;
+
+    setCollected((prev) => {
+      const next = { ...prev };
+      tiles.forEach((tile) => {
+        next[tile] = (next[tile] || 0) + 1;
+      });
+      return next;
     });
-    setCollected(newCollected);
-  }, [collected]);
+  }, []);
 
   const handleMove = useCallback(() => {
     setMoves((prev) => Math.max(0, prev - 1));

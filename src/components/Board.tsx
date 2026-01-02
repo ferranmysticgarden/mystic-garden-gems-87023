@@ -20,6 +20,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
   const [board, setBoard] = useState<string[][]>([]);
   const [selected, setSelected] = useState<Position | null>(null);
   const [animatingTiles, setAnimatingTiles] = useState<Set<string>>(new Set());
+  const [isSwapping, setIsSwapping] = useState(false);
 
   const initializeBoard = useCallback(() => {
     const newBoard: string[][] = [];
@@ -130,53 +131,61 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
   useEffect(() => {
     if (board.length === 0) return;
     if (animatingTiles.size > 0) return; // Don't check while animating
-    
+    if (isSwapping) return; // Don't resolve cascades while validating a swap
+
     const timeoutId = setTimeout(() => {
       const matches = findMatches(board);
       if (matches.length > 0) {
         removeMatches(board, matches);
       }
     }, 500);
-    
+
     return () => clearTimeout(timeoutId);
-  }, [board, findMatches, removeMatches, animatingTiles.size]);
+  }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping]);
 
   const swapTiles = useCallback((pos1: Position, pos2: Position) => {
+    setIsSwapping(true);
+
+    const prevBoard = board.map(row => [...row]);
     const newBoard = board.map(row => [...row]);
+
     const temp = newBoard[pos1.row][pos1.col];
     newBoard[pos1.row][pos1.col] = newBoard[pos2.row][pos2.col];
     newBoard[pos2.row][pos2.col] = temp;
-    
+
     setBoard(newBoard);
     onMove();
-    
+
     // Check for matches after swap
     setTimeout(() => {
       const matches = findMatches(newBoard);
       if (matches.length === 0) {
-        // No match, swap back
-        setBoard(board);
+        // No match, swap back (using the snapshot from before the swap)
+        setBoard(prevBoard);
+        setIsSwapping(false);
       } else {
         removeMatches(newBoard, matches);
+        setIsSwapping(false);
       }
     }, 300);
   }, [board, findMatches, removeMatches, onMove]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;
-    
+    if (isSwapping || animatingTiles.size > 0) return;
+
     if (!selected) {
       setSelected({ row, col });
     } else {
       const rowDiff = Math.abs(selected.row - row);
       const colDiff = Math.abs(selected.col - col);
-      
+
       if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
         swapTiles(selected, { row, col });
       }
       setSelected(null);
     }
-  }, [selected, swapTiles, disabled]);
+  }, [selected, swapTiles, disabled, isSwapping, animatingTiles.size]);
 
   if (board.length === 0) {
     return <div className="w-full aspect-square flex items-center justify-center">Loading...</div>;
