@@ -12,9 +12,9 @@ interface NoLivesModalProps {
 export const NoLivesModal = ({ gems, onUseGems, onClose, onQuickLifePurchased }: NoLivesModalProps) => {
   const { createPayment, loading } = useStripePayment();
 
-  const handleQuickLifePurchase = async () => {
-    await createPayment('quick_life');
-    // El webhook de Stripe procesará la compra y añadirá la vida
+  const handleQuickPackPurchase = async () => {
+    await createPayment('quick_pack');
+    // El webhook de Stripe procesará la compra y añadirá 3 vidas + 20 gemas
     if (onQuickLifePurchased) {
       onQuickLifePurchased();
     }
@@ -31,13 +31,14 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onQuickLifePurchased }:
 
         <div className="space-y-3">
           <Button
-            onClick={handleQuickLifePurchase}
+            onClick={handleQuickPackPurchase}
             disabled={loading}
             className="w-full gradient-gold shadow-gold text-lg py-6"
-            id="buy-quick-life"
+            id="buy-quick-pack"
           >
             <Heart className="w-6 h-6 mr-2" />
-            {loading ? 'Procesando...' : 'Comprar 1 Vida - €0.20'}
+            <Gem className="w-5 h-5 mr-2" />
+            {loading ? 'Procesando...' : '3 Vidas + 20 Gemas - €0.99'}
           </Button>
 
           <Button

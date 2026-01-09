@@ -15,7 +15,7 @@ const PRODUCT_PRICES: Record<string, string> = {
   "no_ads_month": "price_1SOlxtFOm1x8pT7SqKoeeYTq",
   "no_ads_forever": "price_1SOly7FOm1x8pT7SypwYMFz9",
   "garden_pass": "price_1SOlyNFOm1x8pT7SzEKZMpYY",
-  "quick_life": "price_1SlRBPB6GI8NmIPnV7x0f6mH",
+  "quick_pack": "price_1SnbakB6GI8NmIPnVmGc39IK",
 };
 
 serve(async (req) => {
