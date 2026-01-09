@@ -17,7 +17,7 @@ const PRODUCT_NAMES: Record<string, string> = {
   "no_ads_month": "Sin Anuncios (1 Mes)",
   "no_ads_forever": "Sin Anuncios (Para Siempre)",
   "garden_pass": "Pase de Jardín Mensual",
-  "quick_life": "1 Vida Rápida",
+  "quick_pack": "Pack Rápido (3 Vidas + 20 Gemas)",
 };
 
 serve(async (req) => {
@@ -78,24 +78,27 @@ serve(async (req) => {
           console.log("Purchase saved successfully");
         }
 
-        // Si es una vida rápida, añadir la vida al progreso del juego
-        if (productId === "quick_life") {
+        // Si es un pack rápido, añadir 3 vidas + 20 gemas al progreso del juego
+        if (productId === "quick_pack") {
           const { data: progressData, error: progressError } = await supabaseAdmin
             .from("game_progress")
-            .select("lives")
+            .select("lives, gems")
             .eq("user_id", userId)
             .single();
 
           if (!progressError && progressData) {
             const { error: updateError } = await supabaseAdmin
               .from("game_progress")
-              .update({ lives: progressData.lives + 1 })
+              .update({ 
+                lives: progressData.lives + 3,
+                gems: progressData.gems + 20
+              })
               .eq("user_id", userId);
 
             if (updateError) {
-              console.error("Error updating lives:", updateError);
+              console.error("Error updating lives and gems:", updateError);
             } else {
-              console.log("Life added successfully");
+              console.log("Quick pack applied: +3 lives, +20 gems");
             }
           }
         }
