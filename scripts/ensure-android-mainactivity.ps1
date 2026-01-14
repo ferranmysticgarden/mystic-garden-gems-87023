@@ -88,10 +88,10 @@ class MainActivity : BridgeActivity()
     if ($m -notmatch $schemePattern) {
       $intent = @"
         <intent-filter>
-          <action android:name=\"android.intent.action.VIEW\" />
-          <category android:name=\"android.intent.category.DEFAULT\" />
-          <category android:name=\"android.intent.category.BROWSABLE\" />
-          <data android:scheme=\"$scheme\" android:host=\"callback\" />
+          <action android:name="android.intent.action.VIEW" />
+          <category android:name="android.intent.category.DEFAULT" />
+          <category android:name="android.intent.category.BROWSABLE" />
+          <data android:scheme="$scheme" android:host="callback" />
         </intent-filter>
 "@
 
@@ -110,7 +110,7 @@ class MainActivity : BridgeActivity()
       Write-Host 'OK: Intent-filter deep link ya existia.'
     }
 
-    [System.IO.File]::WriteAllText($manifestPath, $m)
+    [System.IO.File]::WriteAllText($manifestPath, $m, (New-Object System.Text.UTF8Encoding($false)))
     Write-Host ('OK: AndroidManifest.xml actualizado con package=' + $AppId)
   } else {
     Write-Host ('WARN: No existe AndroidManifest.xml aun en: ' + $manifestPath)
