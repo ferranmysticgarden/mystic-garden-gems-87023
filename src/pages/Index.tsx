@@ -4,17 +4,25 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useAuth } from '@/hooks/useAuth';
 import { usePurchases } from '@/hooks/usePurchases';
 import { useAudio } from '@/hooks/useAudio';
+import { useAchievements } from '@/hooks/useAchievements';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
 import { LevelSelect } from '@/components/LevelSelect';
 import { Shop } from '@/components/Shop';
 import { NoLivesModal } from '@/components/NoLivesModal';
+import { FirstDayOffer } from '@/components/game/FirstDayOffer';
+import { LuckySpin } from '@/components/game/LuckySpin';
+import { Tutorial } from '@/components/game/Tutorial';
+import { ProgressionBar } from '@/components/game/ProgressionBar';
+import { BattlePass } from '@/components/game/BattlePass';
+import { RewardedAds } from '@/components/game/RewardedAds';
+import { AchievementModal } from '@/components/game/AchievementModal';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Trophy } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -36,13 +44,19 @@ const Index = () => {
     hasUnlimitedLives,
     getTimeUntilNextLife,
   } = useGameState();
+  
+  const { 
+    newlyUnlocked, 
+    clearNewlyUnlocked, 
+    checkLevelAchievements,
+    checkGemsAchievements 
+  } = useAchievements(user?.id);
 
   const [screen, setScreen] = useState<Screen>('menu');
   const [showNoLivesModal, setShowNoLivesModal] = useState(false);
+  const [showBattlePass, setShowBattlePass] = useState(false);
 
   useEffect(() => {
-    // Start music only after the user is authenticated.
-    // This avoids mobile keyboard/focus issues on the login screen.
     if (!user) return;
 
     const handleFirstInteraction = () => {
@@ -66,11 +80,19 @@ const Index = () => {
     }
   };
 
-  const handleWin = useCallback((stars: number, reward: { gems?: number }) => {
+  const handleWin = useCallback(async (stars: number, reward: { gems?: number }) => {
     completeLevel(currentLevel.id, reward);
     toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
+    
+    // Check achievements
+    const completedCount = gameState.completedLevels.length + 1;
+    await checkLevelAchievements(completedCount);
+    if (reward.gems) {
+      await checkGemsAchievements(gameState.gems + reward.gems);
+    }
+    
     setScreen('menu');
-  }, [completeLevel, currentLevel.id, t]);
+  }, [completeLevel, currentLevel.id, t, gameState.completedLevels.length, gameState.gems, checkLevelAchievements, checkGemsAchievements]);
 
   const handleLose = useCallback(() => {
     toast.error(t('game.lose'));
@@ -78,7 +100,6 @@ const Index = () => {
   }, [t]);
 
   const handleSelectLevel = (levelId: number) => {
-    // Check if level is accessible (need to complete previous level first)
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
     if (levelId > maxUnlockedLevel) {
       toast.error('Nivel bloqueado. Completa niveles anteriores.');
@@ -98,7 +119,6 @@ const Index = () => {
     const product = PRODUCTS.find(p => p.id === productId);
     if (!product) return;
 
-    // Add gems
     if (product.amount) {
       addGems(product.amount);
     }
@@ -106,7 +126,6 @@ const Index = () => {
       addGems(product.instantGems);
     }
 
-    // Handle no-ads purchases
     if (product.noAdsDays) {
       await addPurchase(productId, product.noAdsDays);
     }
@@ -114,7 +133,6 @@ const Index = () => {
       await addPurchase(productId);
     }
 
-    // Handle garden pass (no longer includes level unlocking)
     if (productId === 'garden_pass') {
       await addPurchase(productId, 30);
     }
@@ -123,8 +141,6 @@ const Index = () => {
   };
 
   const handleQuickLifePurchased = () => {
-    // Esta función se llama después de iniciar el pago de vida rápida
-    // El webhook procesará la compra real y añadirá la vida
     setShowNoLivesModal(false);
   };
 
@@ -137,6 +153,10 @@ const Index = () => {
     } else {
       toast.error('No tienes suficientes gemas');
     }
+  };
+
+  const handleRewardedAdEarned = (gems: number) => {
+    toast.success(`¡Ganaste ${gems} gemas! 💎`);
   };
 
   if (authLoading || gameLoading) {
@@ -214,8 +234,13 @@ const Index = () => {
           onShopClick={() => setScreen('shop')}
         />
 
+        {/* Progression Bar */}
+        <div className="mb-4">
+          <ProgressionBar />
+        </div>
+
         {/* Logo */}
-        <div className="text-center mb-8 animate-float">
+        <div className="text-center mb-6 animate-float">
           <h1 className="text-5xl font-bold text-gold mb-2 drop-shadow-lg">
             {t('game.title')}
           </h1>
@@ -223,7 +248,7 @@ const Index = () => {
         </div>
 
         {/* Main Menu */}
-        <div className="gradient-card shadow-card rounded-2xl p-6 mb-6">
+        <div className="gradient-card shadow-card rounded-2xl p-6 mb-4">
           <div className="text-center mb-6">
             <div className="text-lg font-semibold mb-2">
               {t('game.level')} {gameState.currentLevel}
@@ -264,8 +289,22 @@ const Index = () => {
               {t('menu.shop')}
             </Button>
           </div>
+
+          {/* Battle Pass Button */}
+          <Button
+            onClick={() => setShowBattlePass(true)}
+            variant="outline"
+            className="w-full mt-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
+          >
+            <Crown className="w-5 h-5 mr-2 text-yellow-400" />
+            <span className="text-yellow-400 font-semibold">Battle Pass</span>
+          </Button>
         </div>
 
+        {/* Rewarded Ads Section */}
+        <div className="mb-4">
+          <RewardedAds onRewardEarned={handleRewardedAdEarned} />
+        </div>
       </div>
 
       {/* Shop Modal */}
@@ -283,6 +322,28 @@ const Index = () => {
           onUseGems={handleUseGemsForLife}
           onClose={() => setShowNoLivesModal(false)}
           onQuickLifePurchased={handleQuickLifePurchased}
+        />
+      )}
+
+      {/* Battle Pass Modal */}
+      {showBattlePass && (
+        <BattlePass onClose={() => setShowBattlePass(false)} />
+      )}
+
+      {/* First Day Offer */}
+      <FirstDayOffer />
+
+      {/* Lucky Spin */}
+      <LuckySpin />
+
+      {/* Tutorial */}
+      <Tutorial onComplete={() => console.log('Tutorial completado')} />
+
+      {/* Achievement Modal */}
+      {newlyUnlocked && (
+        <AchievementModal
+          achievement={newlyUnlocked}
+          onClose={clearNewlyUnlocked}
         />
       )}
     </div>

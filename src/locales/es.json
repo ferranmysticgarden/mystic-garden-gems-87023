@@ -41,5 +41,32 @@
     "levels": "Niveles",
     "shop": "Tienda",
     "settings": "Ajustes"
+  },
+  "achievements": {
+    "title": "Logros",
+    "firstWin": "Primera Victoria",
+    "firstWinDesc": "Completa tu primer nivel",
+    "level10": "Maestro del Jardín",
+    "level10Desc": "Completa 10 niveles",
+    "level25": "Experto en Flores",
+    "level25Desc": "Completa 25 niveles",
+    "level50": "Leyenda del Jardín",
+    "level50Desc": "Completa todos los 50 niveles",
+    "streak3": "Racha de 3",
+    "streak3Desc": "Juega 3 días consecutivos",
+    "streak7": "Racha Semanal",
+    "streak7Desc": "Juega 7 días consecutivos",
+    "streak14": "Racha Legendaria",
+    "streak14Desc": "Juega 14 días consecutivos",
+    "gems100": "Coleccionista",
+    "gems100Desc": "Acumula 100 gemas",
+    "gems500": "Cazador de Tesoros",
+    "gems500Desc": "Acumula 500 gemas",
+    "stars10": "Perfeccionista",
+    "stars10Desc": "Consigue 10 victorias con 3 estrellas",
+    "stars30": "Maestro Perfecto",
+    "stars30Desc": "Consigue 30 victorias con 3 estrellas",
+    "unlocked": "¡Logro desbloqueado!",
+    "reward": "Recompensa"
   }
 }
