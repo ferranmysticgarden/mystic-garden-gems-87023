@@ -41,5 +41,32 @@
     "levels": "Níveis",
     "shop": "Loja",
     "settings": "Configurações"
+  },
+  "achievements": {
+    "title": "Conquistas",
+    "firstWin": "Primeira Vitória",
+    "firstWinDesc": "Complete seu primeiro nível",
+    "level10": "Mestre do Jardim",
+    "level10Desc": "Complete 10 níveis",
+    "level25": "Especialista em Flores",
+    "level25Desc": "Complete 25 níveis",
+    "level50": "Lenda do Jardim",
+    "level50Desc": "Complete todos os 50 níveis",
+    "streak3": "Sequência de 3",
+    "streak3Desc": "Jogue 3 dias consecutivos",
+    "streak7": "Sequência Semanal",
+    "streak7Desc": "Jogue 7 dias consecutivos",
+    "streak14": "Sequência Lendária",
+    "streak14Desc": "Jogue 14 dias consecutivos",
+    "gems100": "Colecionador",
+    "gems100Desc": "Acumule 100 gemas",
+    "gems500": "Caçador de Tesouros",
+    "gems500Desc": "Acumule 500 gemas",
+    "stars10": "Perfeccionista",
+    "stars10Desc": "Consiga 10 vitórias com 3 estrelas",
+    "stars30": "Mestre Perfeito",
+    "stars30Desc": "Consiga 30 vitórias com 3 estrelas",
+    "unlocked": "Conquista desbloqueada!",
+    "reward": "Recompensa"
   }
 }

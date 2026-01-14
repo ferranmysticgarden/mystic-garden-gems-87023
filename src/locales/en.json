@@ -41,5 +41,32 @@
     "levels": "Levels",
     "shop": "Shop",
     "settings": "Settings"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "firstWin": "First Victory",
+    "firstWinDesc": "Complete your first level",
+    "level10": "Garden Master",
+    "level10Desc": "Complete 10 levels",
+    "level25": "Flower Expert",
+    "level25Desc": "Complete 25 levels",
+    "level50": "Garden Legend",
+    "level50Desc": "Complete all 50 levels",
+    "streak3": "3-Day Streak",
+    "streak3Desc": "Play 3 consecutive days",
+    "streak7": "Weekly Streak",
+    "streak7Desc": "Play 7 consecutive days",
+    "streak14": "Legendary Streak",
+    "streak14Desc": "Play 14 consecutive days",
+    "gems100": "Collector",
+    "gems100Desc": "Accumulate 100 gems",
+    "gems500": "Treasure Hunter",
+    "gems500Desc": "Accumulate 500 gems",
+    "stars10": "Perfectionist",
+    "stars10Desc": "Get 10 three-star victories",
+    "stars30": "Perfect Master",
+    "stars30Desc": "Get 30 three-star victories",
+    "unlocked": "Achievement unlocked!",
+    "reward": "Reward"
   }
 }
