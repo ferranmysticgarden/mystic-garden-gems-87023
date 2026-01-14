@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const FirstDayOffer = () => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3600);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -51,10 +53,28 @@ export const FirstDayOffer = () => {
     return () => clearInterval(timer);
   }, [show]);
 
-  const handleClaim = async () => {
-    if (!user?.id) return;
-    localStorage.setItem(`first-day-offer-${user.id}`, 'true');
-    setShow(false);
+  const handleBuy = async () => {
+    if (!user?.id || loading) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { productId: 'mega_pack_inicial' }
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        // Mark as seen before redirect
+        localStorage.setItem(`first-day-offer-${user.id}`, 'true');
+        window.open(data.url, '_blank');
+        setShow(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Error al procesar el pago');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDismiss = () => {
@@ -118,10 +138,11 @@ export const FirstDayOffer = () => {
           </div>
 
           <Button 
-            onClick={handleClaim}
+            onClick={handleBuy}
+            disabled={loading}
             className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-4 rounded-xl text-lg"
           >
-            ¡COMPRAR AHORA! 🎉
+            {loading ? '⏳ Procesando...' : '¡COMPRAR AHORA! 🎉'}
           </Button>
 
           <p className="text-purple-300 text-xs mt-3">
