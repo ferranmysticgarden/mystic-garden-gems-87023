@@ -80,10 +80,13 @@ echo [4/4] Gradle bundleRelease
 echo Limpiando salida anterior (para no subir un AAB viejo)...
 if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundle\release"
 
+REM Asegura que no reutilice artefactos viejos
+call gradlew.bat --stop >nul 2>&1
+
 set /p STORE_PWD="Contrasena keystore: "
 set /p KEY_PWD="Contrasena key: "
 
-call gradlew.bat :app:bundleRelease ^
+call gradlew.bat :app:clean :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
   -Pandroid.injected.signing.store.password="%STORE_PWD%" ^
   -Pandroid.injected.signing.key.alias="mystic-garden" ^
@@ -94,6 +97,27 @@ if errorlevel 1 (
   popd
   pause
   exit /b 1
+)
+
+REM Verificacion de firma del AAB (Google Play lo exige)
+set "AAB_PATH=%CD%\app\build\outputs\bundle\release\app-release.aab"
+if not exist "%AAB_PATH%" (
+  echo ERROR: No encuentro el AAB generado: %AAB_PATH%
+  popd
+  pause
+  exit /b 1
+)
+
+echo Verificando firma del AAB...
+jarsigner -verify -verbose -certs "%AAB_PATH%" | findstr /i /c:"jar verified" >nul
+if errorlevel 1 (
+  echo ERROR: El AAB NO parece estar firmado. NO lo subas a Google Play.
+  echo Prueba a ejecutar este script de nuevo y revisa las contrasenas.
+  popd
+  pause
+  exit /b 1
+) else (
+  echo OK: AAB firmado correctamente.
 )
 
 echo ==== AAB generado ====
