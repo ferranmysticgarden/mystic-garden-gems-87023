@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface LoseBundleProps {
   onBuy: () => void;
@@ -7,6 +10,28 @@ interface LoseBundleProps {
 }
 
 export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleBuy = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { productId: 'pack_revancha' }
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        onBuy();
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Error al procesar el pago');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
       <div className="relative bg-gradient-to-b from-red-900 via-purple-900 to-indigo-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-orange-400 shadow-2xl animate-scale-in">
@@ -47,10 +72,11 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
           </div>
 
           <Button 
-            onClick={onBuy}
+            onClick={handleBuy}
+            disabled={loading}
             className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-bold py-4 rounded-xl text-lg mb-3"
           >
-            ¡COMPRAR Y CONTINUAR! 💪
+            {loading ? '⏳ Procesando...' : '¡COMPRAR Y CONTINUAR! 💪'}
           </Button>
 
           <Button 

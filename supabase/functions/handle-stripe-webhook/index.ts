@@ -18,6 +18,8 @@ const PRODUCT_NAMES: Record<string, string> = {
   "no_ads_forever": "Sin Anuncios (Para Siempre)",
   "garden_pass": "Pase de Jardín Mensual",
   "quick_pack": "Pack Rápido (3 Vidas + 20 Gemas)",
+  "mega_pack_inicial": "Mega Pack Inicial (500 Gemas + 10 Vidas)",
+  "pack_revancha": "Pack Revancha (5 Vidas + 50 Gemas)",
 };
 
 serve(async (req) => {
@@ -78,7 +80,7 @@ serve(async (req) => {
           console.log("Purchase saved successfully");
         }
 
-        // Si es un pack rápido, añadir 3 vidas + 20 gemas al progreso del juego
+        // Procesar packs según el producto
         if (productId === "quick_pack") {
           const { data: progressData, error: progressError } = await supabaseAdmin
             .from("game_progress")
@@ -99,6 +101,60 @@ serve(async (req) => {
               console.error("Error updating lives and gems:", updateError);
             } else {
               console.log("Quick pack applied: +3 lives, +20 gems");
+            }
+          }
+        }
+
+        // Mega Pack Inicial: 500 gemas + 10 vidas + 24h sin anuncios
+        if (productId === "mega_pack_inicial") {
+          const { data: progressData, error: progressError } = await supabaseAdmin
+            .from("game_progress")
+            .select("lives, gems")
+            .eq("user_id", userId)
+            .single();
+
+          if (!progressError && progressData) {
+            const unlimitedUntil = new Date();
+            unlimitedUntil.setHours(unlimitedUntil.getHours() + 24);
+
+            const { error: updateError } = await supabaseAdmin
+              .from("game_progress")
+              .update({ 
+                lives: progressData.lives + 10,
+                gems: progressData.gems + 500,
+                unlimited_lives_until: unlimitedUntil.toISOString()
+              })
+              .eq("user_id", userId);
+
+            if (updateError) {
+              console.error("Error updating mega pack:", updateError);
+            } else {
+              console.log("Mega Pack applied: +10 lives, +500 gems, 24h unlimited");
+            }
+          }
+        }
+
+        // Pack Revancha: 5 vidas + 50 gemas
+        if (productId === "pack_revancha") {
+          const { data: progressData, error: progressError } = await supabaseAdmin
+            .from("game_progress")
+            .select("lives, gems")
+            .eq("user_id", userId)
+            .single();
+
+          if (!progressError && progressData) {
+            const { error: updateError } = await supabaseAdmin
+              .from("game_progress")
+              .update({ 
+                lives: progressData.lives + 5,
+                gems: progressData.gems + 50
+              })
+              .eq("user_id", userId);
+
+            if (updateError) {
+              console.error("Error updating pack revancha:", updateError);
+            } else {
+              console.log("Pack Revancha applied: +5 lives, +50 gems");
             }
           }
         }

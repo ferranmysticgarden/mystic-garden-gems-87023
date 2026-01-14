@@ -3,6 +3,8 @@ import { Board } from './Board';
 import { Button } from './ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
 import { LEVELS, Level } from '@/data/levels';
+import { LoseBundle } from './game/LoseBundle';
+import { ComboMultiplier } from './game/ComboMultiplier';
 import confetti from 'canvas-confetti';
 
 interface GameScreenProps {
@@ -19,6 +21,8 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [collected, setCollected] = useState<Record<string, number>>({});
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
+  const [showLoseBundle, setShowLoseBundle] = useState(false);
+  const [combo, setCombo] = useState(0);
 
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
@@ -34,22 +38,22 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       setGameOver(true);
       setWon(true);
       
-      // Confetti effect
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
-      // El usuario pulsará "Continuar" manualmente
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
       setGameOver(true);
       setWon(false);
-      // El usuario pulsará "Continuar" manualmente
+      // Show LoseBundle offer instead of immediate game over
+      setShowLoseBundle(true);
     }
   }, [moves, score, collected, checkWinCondition, gameOver, level]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
+    setCombo((prev) => prev + 1);
 
     setCollected((prev) => {
       const next = { ...prev };
@@ -62,13 +66,23 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
 
   const handleMove = useCallback(() => {
     setMoves((prev) => Math.max(0, prev - 1));
+    // Reset combo on move without match (handled by match timing)
   }, []);
 
-  const getObjectiveText = () => {
-    if (level.objective.type === 'score') {
-      return `${t('game.collect')} ${level.objective.count} ${t('game.points')}`;
-    }
-    return `${t('game.collect')} ${level.objective.count} ${level.objective.target}`;
+  const handleComboEnd = useCallback(() => {
+    setCombo(0);
+  }, []);
+
+  const handleLoseBundleBuy = () => {
+    // User bought the bundle - add 5 moves and continue
+    setMoves(5);
+    setGameOver(false);
+    setShowLoseBundle(false);
+  };
+
+  const handleLoseBundleDismiss = () => {
+    setShowLoseBundle(false);
+    // Game over - show final screen
   };
 
   const getProgress = () => {
@@ -92,7 +106,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
             </h2>
           </div>
           
-        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-muted/50 rounded-lg p-2">
               <div className="text-xs text-muted-foreground">{t('game.moves')}</div>
               <div className="text-2xl font-bold">{moves}</div>
@@ -147,8 +161,19 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
           />
         </div>
 
-        {/* Game Over Overlay */}
-        {gameOver && (
+        {/* Combo Multiplier */}
+        <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
+
+        {/* LoseBundle Offer */}
+        {showLoseBundle && (
+          <LoseBundle 
+            onBuy={handleLoseBundleBuy}
+            onDismiss={handleLoseBundleDismiss}
+          />
+        )}
+
+        {/* Game Over Overlay - only show after LoseBundle is dismissed or if won */}
+        {gameOver && !showLoseBundle && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
               <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>
