@@ -25,6 +25,7 @@ set "P4=android"
 set "P5=123456"
 set "P6=changeit"
 set "P7=password"
+set "P8=mystic2026"
 
 for %%K in ("%K1%" "%K2%" "%K3%" "%K4%" "%K5%" "%K6%" "%K7%" "%K8%" "%K9%" "%K10%" "%K11%" "%K12%") do (
   call :TEST_ONE "%%~fK"
@@ -48,7 +49,7 @@ echo ==========================
 echo Keystore: %FILE%
 
 for %%T in (PKCS12 JKS) do (
-  for %%I in (1 2 3 4 5 6 7) do (
+  for %%I in (1 2 3 4 5 6 7 8) do (
     set "PASS=!P%%I!"
     call :TRY "%FILE%" "%%T" "!PASS!"
   )
