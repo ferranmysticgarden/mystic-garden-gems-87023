@@ -1,9 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Download, Sparkles, Image, FileText, Loader2, X, Check } from 'lucide-react';
+import { Upload, Download, Sparkles, Image, FileText, Loader2, X, Check, Video, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,18 +25,30 @@ interface GeneratedTexts {
   googleAdsLong: string;
 }
 
+interface GeneratedVideo {
+  id: string;
+  name: string;
+  blob: Blob;
+  url: string;
+  duration: number;
+  resolution: string;
+}
+
 export default function VideoTool() {
   const [video, setVideo] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [frames, setFrames] = useState<ExtractedFrame[]>([]);
   const [texts, setTexts] = useState<GeneratedTexts | null>(null);
+  const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -59,6 +70,7 @@ export default function VideoTool() {
       setVideoUrl(URL.createObjectURL(file));
       setFrames([]);
       setTexts(null);
+      setGeneratedVideos([]);
     } else {
       toast.error('Por favor, sube un archivo de video');
     }
@@ -71,6 +83,7 @@ export default function VideoTool() {
       setVideoUrl(URL.createObjectURL(file));
       setFrames([]);
       setTexts(null);
+      setGeneratedVideos([]);
     } else {
       toast.error('Por favor, sube un archivo de video');
     }
@@ -325,6 +338,248 @@ Combina 3 o más gemas del mismo color para ganar puntos. Crea combos épicos pa
     }
   };
 
+  // Generate promotional videos from selected frames
+  const generatePromoVideos = async () => {
+    const selectedFrames = frames.filter(f => f.selected);
+    if (selectedFrames.length < 3) {
+      toast.error('Selecciona al menos 3 frames para generar videos');
+      return;
+    }
+
+    setIsGeneratingVideo(true);
+    setStage('Generando videos promocionales...');
+    setProgress(0);
+
+    const videos: GeneratedVideo[] = [];
+
+    try {
+      // Video configurations for different platforms
+      const videoConfigs = [
+        { name: 'promo_15s_1080p', duration: 15, width: 1920, height: 1080, fps: 30 },
+        { name: 'promo_30s_1080p', duration: 30, width: 1920, height: 1080, fps: 30 },
+        { name: 'promo_vertical_15s', duration: 15, width: 1080, height: 1920, fps: 30 },
+      ];
+
+      for (let i = 0; i < videoConfigs.length; i++) {
+        const config = videoConfigs[i];
+        setStage(`Generando ${config.name}...`);
+        setProgress((i / videoConfigs.length) * 100);
+
+        const videoBlob = await createVideoFromFrames(
+          selectedFrames,
+          config.width,
+          config.height,
+          config.duration,
+          config.fps,
+          texts?.shortTitle || 'Mystic Garden'
+        );
+
+        if (videoBlob) {
+          const url = URL.createObjectURL(videoBlob);
+          videos.push({
+            id: `video-${i}`,
+            name: `${config.name}.webm`,
+            blob: videoBlob,
+            url,
+            duration: config.duration,
+            resolution: `${config.width}x${config.height}`,
+          });
+        }
+      }
+
+      setGeneratedVideos(videos);
+      setProgress(100);
+      toast.success(`¡${videos.length} videos generados!`);
+    } catch (error) {
+      console.error('Error generating videos:', error);
+      toast.error('Error al generar videos');
+    } finally {
+      setIsGeneratingVideo(false);
+      setStage('');
+    }
+  };
+
+  const createVideoFromFrames = async (
+    framesToUse: ExtractedFrame[],
+    width: number,
+    height: number,
+    durationSecs: number,
+    fps: number,
+    title: string
+  ): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const canvas = videoCanvasRef.current;
+      if (!canvas) return resolve(null);
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(null);
+
+      // Calculate timing
+      const totalFrames = durationSecs * fps;
+      const framesPerImage = Math.floor(totalFrames / framesToUse.length);
+      const transitionFrames = Math.floor(fps * 0.5); // 0.5s transitions
+
+      // Setup MediaRecorder
+      const stream = canvas.captureStream(fps);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 8000000,
+      });
+
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        resolve(blob);
+      };
+
+      // Load all images first
+      const loadedImages: HTMLImageElement[] = [];
+      let loadedCount = 0;
+
+      framesToUse.forEach((frame, idx) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          loadedImages[idx] = img;
+          loadedCount++;
+          if (loadedCount === framesToUse.length) {
+            startRecording();
+          }
+        };
+        img.src = frame.dataUrl;
+      });
+
+      const startRecording = () => {
+        mediaRecorder.start();
+
+        let frameIndex = 0;
+        let currentImageIndex = 0;
+        let frameInCurrentImage = 0;
+
+        const renderFrame = () => {
+          if (frameIndex >= totalFrames) {
+            mediaRecorder.stop();
+            return;
+          }
+
+          // Calculate which image to show
+          currentImageIndex = Math.min(
+            Math.floor(frameIndex / framesPerImage),
+            loadedImages.length - 1
+          );
+          frameInCurrentImage = frameIndex % framesPerImage;
+
+          const currentImage = loadedImages[currentImageIndex];
+          const nextImage = loadedImages[Math.min(currentImageIndex + 1, loadedImages.length - 1)];
+
+          // Clear canvas
+          ctx.fillStyle = '#1a0a2e';
+          ctx.fillRect(0, 0, width, height);
+
+          // Calculate aspect ratio fit
+          const imgAspect = currentImage.width / currentImage.height;
+          const canvasAspect = width / height;
+          let drawWidth, drawHeight, drawX, drawY;
+
+          if (imgAspect > canvasAspect) {
+            drawWidth = width;
+            drawHeight = width / imgAspect;
+            drawX = 0;
+            drawY = (height - drawHeight) / 2;
+          } else {
+            drawHeight = height;
+            drawWidth = height * imgAspect;
+            drawX = (width - drawWidth) / 2;
+            drawY = 0;
+          }
+
+          // Draw current image with possible transition
+          const transitionProgress = frameInCurrentImage / framesPerImage;
+          
+          if (frameInCurrentImage >= framesPerImage - transitionFrames && currentImageIndex < loadedImages.length - 1) {
+            // Crossfade transition
+            const fadeProgress = (frameInCurrentImage - (framesPerImage - transitionFrames)) / transitionFrames;
+            
+            ctx.globalAlpha = 1 - fadeProgress;
+            ctx.drawImage(currentImage, drawX, drawY, drawWidth, drawHeight);
+            
+            ctx.globalAlpha = fadeProgress;
+            ctx.drawImage(nextImage, drawX, drawY, drawWidth, drawHeight);
+            
+            ctx.globalAlpha = 1;
+          } else {
+            // Subtle zoom effect
+            const zoomFactor = 1 + transitionProgress * 0.05;
+            const zoomWidth = drawWidth * zoomFactor;
+            const zoomHeight = drawHeight * zoomFactor;
+            const zoomX = drawX - (zoomWidth - drawWidth) / 2;
+            const zoomY = drawY - (zoomHeight - drawHeight) / 2;
+            
+            ctx.drawImage(currentImage, zoomX, zoomY, zoomWidth, zoomHeight);
+          }
+
+          // Add title overlay on first 2 seconds
+          if (frameIndex < fps * 2) {
+            const titleOpacity = frameIndex < fps ? frameIndex / fps : 1;
+            ctx.globalAlpha = titleOpacity * 0.9;
+            
+            // Gradient background for title
+            const gradient = ctx.createLinearGradient(0, height - 200, 0, height);
+            gradient.addColorStop(0, 'rgba(26, 10, 46, 0)');
+            gradient.addColorStop(1, 'rgba(26, 10, 46, 0.8)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, height - 200, width, 200);
+
+            // Title text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${Math.floor(width / 20)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(147, 51, 234, 0.8)';
+            ctx.shadowBlur = 20;
+            ctx.fillText(title, width / 2, height - 60);
+            ctx.shadowBlur = 0;
+            
+            ctx.globalAlpha = 1;
+          }
+
+          // Add "Download Now" CTA in last 2 seconds
+          if (frameIndex > totalFrames - fps * 2) {
+            const ctaOpacity = (totalFrames - frameIndex) > fps 
+              ? (frameIndex - (totalFrames - fps * 2)) / fps 
+              : (totalFrames - frameIndex) / fps;
+            
+            ctx.globalAlpha = Math.min(ctaOpacity, 1) * 0.95;
+            
+            // CTA button background
+            const btnWidth = width * 0.4;
+            const btnHeight = height * 0.08;
+            const btnX = (width - btnWidth) / 2;
+            const btnY = height * 0.8;
+            
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.roundRect(btnX, btnY, btnWidth, btnHeight, 20);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = `bold ${Math.floor(width / 30)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('¡Descargar Ahora!', width / 2, btnY + btnHeight * 0.65);
+            
+            ctx.globalAlpha = 1;
+          }
+
+          frameIndex++;
+          requestAnimationFrame(renderFrame);
+        };
+
+        renderFrame();
+      };
+    });
+  };
+
   const toggleFrameSelection = (frameId: string) => {
     setFrames(frames.map(f => 
       f.id === frameId ? { ...f, selected: !f.selected } : f
@@ -333,14 +588,17 @@ Combina 3 o más gemas del mismo color para ganar puntos. Crea combos épicos pa
 
   const handleDownloadZip = async () => {
     const selectedFrames = frames.filter(f => f.selected);
-    if (selectedFrames.length === 0 && !texts) {
+    if (selectedFrames.length === 0 && !texts && generatedVideos.length === 0) {
       toast.error('No hay nada que descargar');
       return;
     }
 
+    toast.info('Preparando ZIP...');
+
     const zip = new JSZip();
     const screenshotsFolder = zip.folder('screenshots');
     const textsFolder = zip.folder('texts');
+    const videosFolder = zip.folder('videos');
 
     // Add selected frames
     selectedFrames.forEach((frame, index) => {
@@ -378,6 +636,12 @@ ${texts.googleAdsLong}
       
       // Also save as JSON for easy parsing
       textsFolder?.file('textos.json', JSON.stringify(texts, null, 2));
+    }
+
+    // Add generated videos
+    for (const video of generatedVideos) {
+      const arrayBuffer = await video.blob.arrayBuffer();
+      videosFolder?.file(video.name, arrayBuffer);
     }
 
     // Generate and download
@@ -492,6 +756,7 @@ ${texts.googleAdsLong}
           />
         )}
         <canvas ref={canvasRef} className="hidden" />
+        <canvas ref={videoCanvasRef} className="hidden" />
 
         {/* Generate Button */}
         {video && !isProcessing && frames.length === 0 && (
@@ -604,15 +869,84 @@ ${texts.googleAdsLong}
           </Card>
         )}
 
+        {/* Generate Videos Button */}
+        {frames.filter(f => f.selected).length >= 3 && !isGeneratingVideo && generatedVideos.length === 0 && (
+          <Button
+            onClick={generatePromoVideos}
+            size="lg"
+            className="w-full py-6 text-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400"
+          >
+            <Video className="w-6 h-6 mr-3" />
+            Generar Videos Promocionales ({frames.filter(f => f.selected).length} frames)
+          </Button>
+        )}
+
+        {/* Video Generation Progress */}
+        {isGeneratingVideo && (
+          <Card className="p-6 bg-purple-900/50">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-pink-400" />
+                  <span className="text-white font-medium">{stage}</span>
+                </div>
+                <span className="text-purple-300">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          </Card>
+        )}
+
+        {/* Generated Videos */}
+        {generatedVideos.length > 0 && (
+          <Card className="p-6 bg-purple-900/50">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
+              <Video className="w-5 h-5" />
+              Videos Generados ({generatedVideos.length})
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {generatedVideos.map((video) => (
+                <div key={video.id} className="bg-purple-800/50 rounded-lg overflow-hidden">
+                  <video
+                    src={video.url}
+                    controls
+                    className="w-full aspect-video bg-black"
+                  />
+                  <div className="p-3 space-y-2">
+                    <p className="text-white font-medium text-sm">{video.name}</p>
+                    <p className="text-purple-300 text-xs">
+                      {video.resolution} • {video.duration}s
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = video.url;
+                        a.download = video.name;
+                        a.click();
+                      }}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Descargar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Download Button */}
-        {(frames.filter(f => f.selected).length > 0 || texts) && (
+        {(frames.filter(f => f.selected).length > 0 || texts || generatedVideos.length > 0) && (
           <Button
             onClick={handleDownloadZip}
             size="lg"
             className="w-full py-6 text-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
           >
             <Download className="w-6 h-6 mr-3" />
-            Descargar ZIP ({frames.filter(f => f.selected).length} capturas + textos)
+            Descargar TODO en ZIP ({frames.filter(f => f.selected).length} capturas + textos{generatedVideos.length > 0 ? ` + ${generatedVideos.length} videos` : ''})
           </Button>
         )}
 
