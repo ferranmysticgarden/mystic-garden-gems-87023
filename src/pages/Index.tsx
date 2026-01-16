@@ -5,6 +5,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePurchases } from '@/hooks/usePurchases';
 import { useAudio } from '@/hooks/useAudio';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useDailyStreak } from '@/hooks/useDailyStreak';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
@@ -18,11 +20,13 @@ import { ProgressionBar } from '@/components/game/ProgressionBar';
 import { BattlePass } from '@/components/game/BattlePass';
 import { RewardedAds } from '@/components/game/RewardedAds';
 import { AchievementModal } from '@/components/game/AchievementModal';
+import { DailyStreakCalendar } from '@/components/game/DailyStreakCalendar';
+import { NotificationPrompt } from '@/components/game/NotificationPrompt';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Trophy } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Trophy, Flame } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -55,6 +59,28 @@ const Index = () => {
   const [screen, setScreen] = useState<Screen>('menu');
   const [showNoLivesModal, setShowNoLivesModal] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
+  const [showStreakCalendar, setShowStreakCalendar] = useState(false);
+  
+  // Daily Streak & Push Notifications
+  const { streakData, claimDailyReward } = useDailyStreak();
+  const { scheduleLivesFullNotification, scheduleStreakReminder } = usePushNotifications();
+
+  // Auto-show streak calendar if reward available
+  useEffect(() => {
+    if (streakData.canClaimToday && user) {
+      const timer = setTimeout(() => {
+        setShowStreakCalendar(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [streakData.canClaimToday, user]);
+
+  // Schedule streak reminder if user has a streak
+  useEffect(() => {
+    if (streakData.currentStreak > 0 && !streakData.canClaimToday) {
+      scheduleStreakReminder(streakData.currentStreak);
+    }
+  }, [streakData.currentStreak, streakData.canClaimToday, scheduleStreakReminder]);
 
   useEffect(() => {
     if (!user) return;
@@ -291,14 +317,31 @@ const Index = () => {
           </div>
 
           {/* Battle Pass Button */}
-          <Button
-            onClick={() => setShowBattlePass(true)}
-            variant="outline"
-            className="w-full mt-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
-          >
-            <Crown className="w-5 h-5 mr-2 text-yellow-400" />
-            <span className="text-yellow-400 font-semibold">Battle Pass</span>
-          </Button>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <Button
+              onClick={() => setShowBattlePass(true)}
+              variant="outline"
+              className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
+            >
+              <Crown className="w-5 h-5 mr-2 text-yellow-400" />
+              <span className="text-yellow-400 font-semibold text-sm">Battle Pass</span>
+            </Button>
+
+            {/* Daily Streak Button */}
+            <Button
+              onClick={() => setShowStreakCalendar(true)}
+              variant="outline"
+              className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50 hover:border-orange-400 relative"
+            >
+              <Flame className="w-5 h-5 mr-2 text-orange-400" />
+              <span className="text-orange-400 font-semibold text-sm">
+                Racha {streakData.currentStreak > 0 ? `🔥${streakData.currentStreak}` : ''}
+              </span>
+              {streakData.canClaimToday && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Rewarded Ads Section */}
@@ -330,6 +373,18 @@ const Index = () => {
         <BattlePass onClose={() => setShowBattlePass(false)} />
       )}
 
+      {/* Daily Streak Calendar Modal */}
+      {showStreakCalendar && (
+        <DailyStreakCalendar 
+          onClose={() => setShowStreakCalendar(false)}
+          onRewardClaimed={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Racha reclamada! +${gems}💎 +${lives}❤️`);
+          }}
+        />
+      )}
+
       {/* First Day Offer */}
       <FirstDayOffer />
 
@@ -346,6 +401,9 @@ const Index = () => {
           onClose={clearNewlyUnlocked}
         />
       )}
+
+      {/* Push Notification Prompt */}
+      <NotificationPrompt onClose={() => {}} />
     </div>
   );
 };

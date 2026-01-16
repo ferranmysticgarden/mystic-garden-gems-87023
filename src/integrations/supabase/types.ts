@@ -40,12 +40,16 @@ export type Database = {
           completed_levels: number[]
           created_at: string
           current_level: number
+          current_streak: number | null
           gems: number
           hammer_count: number
           id: string
           last_life_refill: string
+          last_login_date: string | null
           lives: number
+          max_streak: number | null
           shuffle_count: number
+          streak_claimed_today: boolean | null
           undo_count: number
           unlimited_lives_until: string | null
           updated_at: string
@@ -55,12 +59,16 @@ export type Database = {
           completed_levels?: number[]
           created_at?: string
           current_level?: number
+          current_streak?: number | null
           gems?: number
           hammer_count?: number
           id?: string
           last_life_refill?: string
+          last_login_date?: string | null
           lives?: number
+          max_streak?: number | null
           shuffle_count?: number
+          streak_claimed_today?: boolean | null
           undo_count?: number
           unlimited_lives_until?: string | null
           updated_at?: string
@@ -70,12 +78,16 @@ export type Database = {
           completed_levels?: number[]
           created_at?: string
           current_level?: number
+          current_streak?: number | null
           gems?: number
           hammer_count?: number
           id?: string
           last_life_refill?: string
+          last_login_date?: string | null
           lives?: number
+          max_streak?: number | null
           shuffle_count?: number
+          streak_claimed_today?: boolean | null
           undo_count?: number
           unlimited_lives_until?: string | null
           updated_at?: string
