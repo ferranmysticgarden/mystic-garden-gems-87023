@@ -76,25 +76,87 @@ export default function VideoTool() {
     }
   };
 
+  // Calculate image difference score (0-1, higher = more different)
+  const calculateImageDifference = (
+    ctx: CanvasRenderingContext2D, 
+    prevImageData: ImageData | null, 
+    currentImageData: ImageData
+  ): number => {
+    if (!prevImageData) return 1; // First frame is always unique
+    
+    const data1 = prevImageData.data;
+    const data2 = currentImageData.data;
+    
+    // Sample pixels for faster comparison (every 10th pixel)
+    let diffSum = 0;
+    let sampleCount = 0;
+    
+    for (let i = 0; i < data1.length; i += 40) { // 4 channels * 10 = 40
+      const r1 = data1[i], g1 = data1[i+1], b1 = data1[i+2];
+      const r2 = data2[i], g2 = data2[i+1], b2 = data2[i+2];
+      
+      diffSum += Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
+      sampleCount++;
+    }
+    
+    // Normalize to 0-1 (max diff per pixel = 765)
+    return diffSum / (sampleCount * 765);
+  };
+
   const extractFrames = async (): Promise<ExtractedFrame[]> => {
     return new Promise((resolve) => {
       const videoEl = videoRef.current;
       const canvas = canvasRef.current;
       if (!videoEl || !canvas) return resolve([]);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (!ctx) return resolve([]);
 
-      const extractedFrames: ExtractedFrame[] = [];
+      const allFrames: { dataUrl: string; timestamp: number; diffScore: number }[] = [];
       const duration = videoEl.duration;
-      const frameCount = 15; // Extract 15 frames
-      const interval = duration / frameCount;
+      const rawFrameCount = 60; // Extract more frames initially
+      const interval = duration / rawFrameCount;
+      const minDifferenceThreshold = 0.05; // Minimum visual difference to keep a frame
 
       let currentFrame = 0;
+      let prevImageData: ImageData | null = null;
 
       const captureFrame = () => {
-        if (currentFrame >= frameCount) {
-          resolve(extractedFrames);
+        if (currentFrame >= rawFrameCount) {
+          // Filter similar frames and keep the most diverse ones
+          const uniqueFrames: ExtractedFrame[] = [];
+          let lastAddedImageIdx = -1;
+          
+          // Sort by timestamp and filter by diversity
+          const sorted = allFrames.sort((a, b) => a.timestamp - b.timestamp);
+          
+          sorted.forEach((frame, idx) => {
+            // Always keep first frame
+            if (idx === 0) {
+              uniqueFrames.push({
+                id: `frame-${uniqueFrames.length}`,
+                dataUrl: frame.dataUrl,
+                timestamp: frame.timestamp,
+                selected: false,
+              });
+              lastAddedImageIdx = idx;
+              return;
+            }
+            
+            // Keep frames that are sufficiently different
+            if (frame.diffScore >= minDifferenceThreshold || idx - lastAddedImageIdx > 5) {
+              uniqueFrames.push({
+                id: `frame-${uniqueFrames.length}`,
+                dataUrl: frame.dataUrl,
+                timestamp: frame.timestamp,
+                selected: false,
+              });
+              lastAddedImageIdx = idx;
+            }
+          });
+          
+          console.log(`Extracted ${rawFrameCount} frames, kept ${uniqueFrames.length} unique frames`);
+          resolve(uniqueFrames);
           return;
         }
 
@@ -107,15 +169,19 @@ export default function VideoTool() {
         canvas.height = videoEl.videoHeight;
         ctx.drawImage(videoEl, 0, 0);
         
+        const currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const diffScore = calculateImageDifference(ctx, prevImageData, currentImageData);
+        
         const dataUrl = canvas.toDataURL('image/png');
-        extractedFrames.push({
-          id: `frame-${currentFrame}`,
+        allFrames.push({
           dataUrl,
           timestamp: videoEl.currentTime,
-          selected: false,
+          diffScore,
         });
+        
+        prevImageData = currentImageData;
 
-        setProgress((currentFrame / frameCount) * 40);
+        setProgress((currentFrame / rawFrameCount) * 40);
         currentFrame++;
         captureFrame();
       };
