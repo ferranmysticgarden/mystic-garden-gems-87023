@@ -65,16 +65,17 @@ if not exist "gradlew.bat" (
   exit /b 1
 )
 
-set "STORE_PATH=%CD%\app\mystic-garden-release-key.keystore"
+set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
+if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
 if not exist "%STORE_PATH%" (
-  echo ERROR: No encuentro el keystore
+  echo ERROR: No encuentro el keystore de subida (Upload Key)
   echo Buscado en: %STORE_PATH%
   popd
   pause
   exit /b 1
 )
 
-echo Keystore: %STORE_PATH%
+echo Keystore (upload): %STORE_PATH%
 
 echo [4/4] Gradle bundleRelease
 echo Limpiando salida anterior (para no subir un AAB viejo)...

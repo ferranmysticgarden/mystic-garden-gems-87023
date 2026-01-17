@@ -12,16 +12,12 @@ if not exist "package.json" (
   exit /b 1
 )
 
-if not exist "android\key.properties" (
-  echo ERROR: No existe android\key.properties
-  pause
-  exit /b 1
-)
+REM key.properties es opcional: la firma se inyecta por linea de comandos (keystore externo)
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=801"
-set "TARGET_VERSION_NAME=8.0.1"
+set "TARGET_VERSION_CODE=750"
+set "TARGET_VERSION_NAME=7.5.0"
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
@@ -48,6 +44,25 @@ if errorlevel 1 (
   echo ERROR: npx cap sync android fallo.
   pause
   exit /b 1
+)
+
+REM --- Step 3.1/4: Ensure Android platform exists ---
+if not exist "android\gradlew.bat" (
+  echo [3.1/4] Android no encontrado o corrupto. Regenerando plataforma...
+  if exist "android" rmdir /s /q "android"
+  call npx cap add android
+  if errorlevel 1 (
+    echo ERROR: npx cap add android fallo.
+    pause
+    exit /b 1
+  )
+  echo [3.2/4] npx cap sync android (tras regenerar)
+  call npx cap sync android
+  if errorlevel 1 (
+    echo ERROR: npx cap sync android fallo tras regenerar.
+    pause
+    exit /b 1
+  )
 )
 
 REM --- Step 3.3/4: Generate Android icons ---
@@ -103,25 +118,32 @@ if not exist "gradlew.bat" (
   exit /b 1
 )
 
-set "STORE_PATH=%CD%\app\mystic-garden-release-key.keystore"
+REM --- Signing (Upload Key) ---
+set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
+if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
+
 if not exist "%STORE_PATH%" (
-  echo ERROR: No encuentro el keystore
+  echo ERROR: No encuentro el keystore de subida (Upload Key)
   echo Buscado en: %STORE_PATH%
+  echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
   popd
   pause
   exit /b 1
 )
 
-echo Keystore: %STORE_PATH%
+echo Keystore (upload): %STORE_PATH%
 
 echo [4/4] Gradle bundleRelease
 echo Limpiando salida anterior (para no subir un AAB viejo)...
 if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundle\release"
 
+REM Asegura que no reutilice artefactos viejos
+call gradlew.bat --stop >nul 2>&1
+
 set /p STORE_PWD="Contrasena keystore: "
 set /p KEY_PWD="Contrasena key: "
 
-call gradlew.bat :app:bundleRelease ^
+call gradlew.bat :app:clean :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
   -Pandroid.injected.signing.store.password="%STORE_PWD%" ^
   -Pandroid.injected.signing.key.alias="mystic-garden" ^
@@ -132,6 +154,27 @@ if errorlevel 1 (
   popd
   pause
   exit /b 1
+)
+
+REM Verificacion de firma del AAB (Google Play lo exige)
+set "AAB_PATH=%CD%\app\build\outputs\bundle\release\app-release.aab"
+if not exist "%AAB_PATH%" (
+  echo ERROR: No encuentro el AAB generado: %AAB_PATH%
+  popd
+  pause
+  exit /b 1
+)
+
+echo Verificando firma del AAB...
+jarsigner -verify -verbose -certs "%AAB_PATH%" | findstr /i /c:"jar verified" >nul
+if errorlevel 1 (
+  echo ERROR: El AAB NO parece estar firmado. NO lo subas.
+  echo Prueba de nuevo y revisa las contrasenas.
+  popd
+  pause
+  exit /b 1
+) else (
+  echo OK: AAB firmado correctamente.
 )
 
 echo ==== AAB generado ====
