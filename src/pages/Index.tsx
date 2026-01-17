@@ -22,11 +22,13 @@ import { RewardedAds } from '@/components/game/RewardedAds';
 import { AchievementModal } from '@/components/game/AchievementModal';
 import { DailyStreakCalendar } from '@/components/game/DailyStreakCalendar';
 import { NotificationPrompt } from '@/components/game/NotificationPrompt';
+import { ComeBackBanner } from '@/components/game/ComeBackBanner';
+import { StreakReminderBanner } from '@/components/game/StreakReminderBanner';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Trophy, Flame } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Flame } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -260,6 +262,9 @@ const Index = () => {
           onShopClick={() => setScreen('shop')}
         />
 
+        {/* Streak Reminder Banner - VISIBLE when can claim */}
+        <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />
+
         {/* Progression Bar */}
         <div className="mb-4">
           <ProgressionBar />
@@ -404,6 +409,15 @@ const Index = () => {
 
       {/* Push Notification Prompt */}
       <NotificationPrompt onClose={() => {}} />
+
+      {/* Come Back Banner for returning users */}
+      <ComeBackBanner 
+        onClaimReward={(gems, lives) => {
+          addGems(gems);
+          addLives(lives);
+          toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
+        }}
+      />
     </div>
   );
 };
