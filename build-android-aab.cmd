@@ -16,8 +16,8 @@ REM key.properties es opcional: la firma se inyecta por linea de comandos (keyst
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=750"
-set "TARGET_VERSION_NAME=7.5.0"
+set "TARGET_VERSION_CODE=900"
+set "TARGET_VERSION_NAME=9.0.0"
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
