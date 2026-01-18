@@ -119,8 +119,11 @@ if not exist "gradlew.bat" (
 )
 
 REM --- Signing (Upload Key) ---
+
+REM Permite sobreescribir la ruta por variable de entorno, pero la normaliza para evitar problemas con comillas
 set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
 if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
+for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
 
 if not exist "%STORE_PATH%" (
   echo ERROR: No encuentro el keystore de subida (Upload Key)
