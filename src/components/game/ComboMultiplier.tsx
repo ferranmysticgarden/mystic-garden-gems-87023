@@ -14,7 +14,7 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
       const timer = setTimeout(() => {
         setShow(false);
         onComboEnd?.();
-      }, 2000);
+      }, 800); // Reducido de 2000ms a 800ms para no molestar
       return () => clearTimeout(timer);
     }
   }, [combo, onComboEnd]);
@@ -22,9 +22,9 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
   if (!show || combo < 3) return null;
 
   const getMultiplierText = () => {
-    if (combo >= 7) return '🔥 INCREÍBLE! x4';
-    if (combo >= 5) return '⚡ GENIAL! x3';
-    if (combo >= 3) return '✨ COMBO! x2';
+    if (combo >= 7) return '🔥x4';
+    if (combo >= 5) return '⚡x3';
+    if (combo >= 3) return '✨x2';
     return '';
   };
 
@@ -34,14 +34,12 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
     return 'from-purple-500 to-pink-500';
   };
 
+  // Ahora aparece en la esquina superior derecha, pequeño y sin bloquear
   return (
-    <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-40">
-      <div className={`bg-gradient-to-r ${getColorClass()} px-8 py-4 rounded-2xl animate-bounce shadow-2xl`}>
-        <p className="text-3xl font-bold text-white drop-shadow-lg">
+    <div className="fixed top-20 right-4 pointer-events-none z-40 animate-in slide-in-from-right duration-300">
+      <div className={`bg-gradient-to-r ${getColorClass()} px-3 py-1.5 rounded-full shadow-lg`}>
+        <p className="text-lg font-bold text-white drop-shadow">
           {getMultiplierText()}
-        </p>
-        <p className="text-center text-white/80 text-sm">
-          {combo} combos seguidos
         </p>
       </div>
     </div>
