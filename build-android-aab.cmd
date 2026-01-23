@@ -195,7 +195,7 @@ if not exist "%AAB_PATH%" (
  REM --- Post-build AUTHORITATIVE check: Verify AD_ID is inside the final AAB ---
  REM Play Console valida el manifiesto empaquetado dentro del .aab, no el manifest fuente.
  echo Verificando permiso AD_ID dentro del AAB (bundletool)...
- powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $aab='%AAB_PATH%'; $jar=(Join-Path $env:TEMP 'bundletool-all-1.16.0.jar'); if(!(Test-Path -LiteralPath $jar)){ Write-Host ('Descargando bundletool: ' + $jar); Invoke-WebRequest -Uri 'https://github.com/google/bundletool/releases/download/1.16.0/bundletool-all-1.16.0.jar' -OutFile $jar -UseBasicParsing }; $xml = & java -jar $jar dump manifest --bundle $aab --module base; if($LASTEXITCODE -ne 0){ throw 'bundletool fallo'; }; if($xml -notmatch 'com\.google\.android\.gms\.permission\.AD_ID'){ throw 'FALTA_AD_ID_EN_AAB' }; Write-Host 'OK: AD_ID esta dentro del AAB.'"
+ powershell -NoProfile -ExecutionPolicy Bypass -File "..\scripts\verify-aab-adid.ps1" -AabPath "%AAB_PATH%"
  if errorlevel 1 (
    echo ERROR: El AAB generado NO contiene AD_ID (o no pude verificarlo).
    echo NO lo subas a Play Console. Este error es exactamente el que te sale.
