@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
 
-// ID de test oficial de Google - NUNCA usar en producción sin cambiarlo
-const TEST_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
+// Banner Ad Unit ID - Using test ID until you create a real one in AdMob console
+// To create: AdMob > Apps > Mystic Garden > Ad units > Add ad unit > Banner
+const BANNER_AD_ID = 'ca-app-pub-3940256099942544/6300978111';
 
 interface AdBannerProps {
   visible?: boolean;
@@ -23,7 +24,7 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
 
       try {
         await AdMob.initialize({
-          initializeForTesting: true, // Modo de prueba
+          initializeForTesting: false, // Production mode
         });
         setIsInitialized(true);
       } catch (error) {
@@ -52,11 +53,11 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
 
         // Mostrar el banner
         await AdMob.showBanner({
-          adId: TEST_BANNER_ID,
+          adId: BANNER_AD_ID,
           adSize: BannerAdSize.BANNER, // 320x50
           position: BannerAdPosition.BOTTOM_CENTER,
           margin: 0,
-          isTesting: true,
+          isTesting: false, // Production mode
         });
       } catch (error) {
         console.log('Error showing banner:', error);
