@@ -34,9 +34,12 @@ try {
     $code2 = $LASTEXITCODE
   }
 
-  $dump = ($out1 + "`n" + $out2)
-  if (($code1 -ne 0 -and $code2 -ne 0) -or ($dump -notmatch '<manifest')) {
-    Write-Host $dump
+  # NOTA: bundletool a veces devuelve exit code != 0 aunque el stdout contenga el manifest.
+  # Nos fiamos del contenido: si hay <manifest>, lo consideramos válido.
+  $dump = $out1
+  if ($dump -notmatch '<manifest') { $dump = $out2 }
+  if ($dump -notmatch '<manifest') {
+    Write-Host ($out1 + "`n" + $out2)
     Fail 'bundletool no pudo extraer el AndroidManifest.xml del AAB.'
   }
 
