@@ -24,11 +24,14 @@ import { DailyStreakCalendar } from '@/components/game/DailyStreakCalendar';
 import { NotificationPrompt } from '@/components/game/NotificationPrompt';
 import { ComeBackBanner } from '@/components/game/ComeBackBanner';
 import { StreakReminderBanner } from '@/components/game/StreakReminderBanner';
+import { ReviewRequestModal } from '@/components/game/ReviewRequestModal';
+import { ExitConfirmModal } from '@/components/game/ExitConfirmModal';
+import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Flame } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Flame, DoorOpen } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -62,6 +65,8 @@ const Index = () => {
   const [showNoLivesModal, setShowNoLivesModal] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
   const [showStreakCalendar, setShowStreakCalendar] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [gamesPlayed, setGamesPlayed] = useState(0);
   
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
@@ -112,6 +117,9 @@ const Index = () => {
     completeLevel(currentLevel.id, reward);
     toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
     
+    // Increment games played counter for review request
+    setGamesPlayed(prev => prev + 1);
+    
     // Check achievements
     const completedCount = gameState.completedLevels.length + 1;
     await checkLevelAchievements(completedCount);
@@ -124,6 +132,8 @@ const Index = () => {
 
   const handleLose = useCallback(() => {
     toast.error(t('game.lose'));
+    // Increment games played counter for review request
+    setGamesPlayed(prev => prev + 1);
     setScreen('menu');
   }, [t]);
 
@@ -243,12 +253,13 @@ const Index = () => {
               {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </Button>
             <Button
-              onClick={signOut}
+              onClick={() => setShowExitModal(true)}
               variant="ghost"
               size="sm"
-              id="logout-btn"
+              id="exit-btn"
+              className="text-red-400 hover:text-red-300"
             >
-              <LogOut className="w-4 h-4" />
+              <DoorOpen className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -416,6 +427,27 @@ const Index = () => {
           addGems(gems);
           addLives(lives);
           toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
+        }}
+      />
+
+      {/* Review Request Modal - shows after 3 games */}
+      <ReviewRequestModal gamesPlayed={gamesPlayed} />
+
+      {/* Exit Confirmation Modal */}
+      {showExitModal && (
+        <ExitConfirmModal 
+          onStay={() => setShowExitModal(false)}
+          streak={streakData.currentStreak}
+        />
+      )}
+
+      {/* Day 2-3 Unlock Bonus */}
+      <Day2UnlockBanner 
+        streak={streakData.currentStreak}
+        onClaimReward={(gems, lives) => {
+          addGems(gems);
+          addLives(lives);
+          toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
         }}
       />
     </div>
