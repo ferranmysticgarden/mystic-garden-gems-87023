@@ -128,16 +128,19 @@ for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
 REM NOTE: En algunos entornos, `if exist` puede fallar por permisos/expansion rara.
 REM Usamos PowerShell Test-Path (LiteralPath) que es mas robusto.
 echo Keystore (upload) buscado en: "%STORE_PATH%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path -LiteralPath '%STORE_PATH%') { exit 0 } else { exit 1 }"
-
-if errorlevel 1 (
-  echo ERROR: No encuentro el keystore de subida (Upload Key)
-  echo Buscado en: %STORE_PATH%
-  echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
-  popd
-  pause
-  exit /b 1
+REM Verificacion directa con CMD if exist (sin PowerShell para evitar problemas de expansion)
+if exist "%STORE_PATH%" (
+  echo OK: Keystore encontrado.
+  goto :keystore_found
 )
+echo ERROR: No encuentro el keystore de subida (Upload Key)
+echo Buscado en: %STORE_PATH%
+echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
+popd
+pause
+exit /b 1
+
+:keystore_found
 
 echo Keystore (upload): %STORE_PATH%
 
