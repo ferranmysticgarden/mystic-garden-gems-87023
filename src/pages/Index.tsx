@@ -30,6 +30,7 @@ import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
 import { FirstWinCelebration } from '@/components/game/FirstWinCelebration';
 import { SharePrompt } from '@/components/game/SharePrompt';
 import { DayCounter } from '@/components/game/DayCounter';
+import { AdBanner } from '@/components/ads/AdBanner';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
@@ -476,6 +477,12 @@ const Index = () => {
         gamesPlayed={gamesPlayed}
         daysPlayed={streakData.currentStreak}
       />
+
+      {/* Banner Ad - SOLO en menú principal */}
+      <AdBanner visible={screen === 'menu'} />
+
+      {/* Espacio para el banner */}
+      <div className="h-[60px]" />
     </div>
   );
 };
