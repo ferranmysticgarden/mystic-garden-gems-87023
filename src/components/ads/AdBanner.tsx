@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
 
-// Banner Ad Unit ID - Using test ID until you create a real one in AdMob console
-// To create: AdMob > Apps > Mystic Garden > Ad units > Add ad unit > Banner
-const BANNER_AD_ID = 'ca-app-pub-3940256099942544/6300978111';
+// Production Banner Ad Unit ID
+const BANNER_AD_ID = 'ca-app-pub-7198650429290924/5826208729';
 
 interface AdBannerProps {
   visible?: boolean;
