@@ -12,6 +12,12 @@
     android:supportsRtl="true"
     android:theme="@style/AppTheme">
 
+    <!-- AdMob App ID - REQUIRED for apps using AdMob -->
+    <!-- Using test App ID for now - REPLACE with your real AdMob App ID before production -->
+    <meta-data
+      android:name="com.google.android.gms.ads.APPLICATION_ID"
+      android:value="ca-app-pub-3940256099942544~3347511713"/>
+
     <activity
       android:name="com.mysticgarden.game.MainActivity"
       android:exported="true"
