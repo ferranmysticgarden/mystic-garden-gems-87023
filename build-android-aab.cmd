@@ -125,7 +125,12 @@ set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
 if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
 for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
 
-if not exist "%STORE_PATH%" (
+REM NOTE: En algunos entornos, `if exist` puede fallar por permisos/expansion rara.
+REM Usamos PowerShell Test-Path (LiteralPath) que es mas robusto.
+echo Keystore (upload) buscado en: "%STORE_PATH%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "param([string]$p) if (Test-Path -LiteralPath $p) { exit 0 } else { exit 1 }" "%STORE_PATH%"
+
+if errorlevel 1 (
   echo ERROR: No encuentro el keystore de subida (Upload Key)
   echo Buscado en: %STORE_PATH%
   echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
