@@ -108,6 +108,18 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM --- Step 3.6.1/4: Verify AD_ID permission exists in manifest (pre-Gradle) ---
+echo [3.6.1/4] Verificando permiso AD_ID en AndroidManifest...
+findstr /C:"com.google.android.gms.permission.AD_ID" "android\app\src\main\AndroidManifest.xml" >nul
+if errorlevel 1 (
+  echo ERROR: El AndroidManifest NO contiene el permiso AD_ID.
+  echo Revisa android\app\src\main\AndroidManifest.xml y scripts\ensure-android-mainactivity.ps1
+  pause
+  exit /b 1
+) else (
+  echo OK: Permiso AD_ID presente en AndroidManifest.xml
+)
+
 REM --- Step 4/4 ---
 pushd android
 
@@ -166,6 +178,10 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+
+REM --- Post-build sanity: Check merged manifests contain AD_ID (best-effort) ---
+echo Verificando permiso AD_ID en manifests mergeados (best-effort)...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$root='app\\build\\intermediates'; if (!(Test-Path $root)) { Write-Host 'WARN: No existe app\\build\\intermediates (no puedo verificar manifests mergeados).'; exit 0 }; $files = Get-ChildItem -Path $root -Recurse -Filter AndroidManifest.xml -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'merged' -or $_.FullName -match 'manifest' }; $ok=$false; foreach($f in $files){ try { $c = Get-Content -LiteralPath $f.FullName -Raw -ErrorAction Stop } catch { continue }; if($c -match 'com.google.android.gms.permission.AD_ID'){ Write-Host ('OK: AD_ID encontrado en: ' + $f.FullName); $ok=$true; break } }; if(-not $ok){ Write-Host 'WARN: No encontre AD_ID en los manifests mergeados que vi. Si Play sigue fallando, revisa el AAB subido (puede ser viejo).'; }"
 
 REM Verificacion de firma del AAB (Google Play lo exige)
 set "AAB_PATH=%CD%\app\build\outputs\bundle\release\app-release.aab"

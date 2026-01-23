@@ -85,19 +85,22 @@ class MainActivity : BridgeActivity()
     # Ensure AD_ID permission (required for Android 13+ when using advertising ID)
     $adIdPermission = 'com.google.android.gms.permission.AD_ID'
     if ($m -notmatch [regex]::Escape($adIdPermission)) {
+      # IMPORTANT: Don't use backslash-escaping (\") in PowerShell; build the XML with real quotes.
+      $permLine = '  <uses-permission android:name="' + $adIdPermission + '" />'
+ 
       $internetPermPattern = '(<uses-permission[^>]*android\.permission\.INTERNET[^>]*/>\s*)'
       if ($m -match $internetPermPattern) {
         $m = [regex]::Replace(
           $m,
           $internetPermPattern,
-          ('$1' + "  <uses-permission android:name=\"$adIdPermission\" />`r`n"),
+          ('$1' + $permLine + "`r`n"),
           1
         )
       } else {
         $m = [regex]::Replace(
           $m,
           '(<manifest[^>]*>\s*)',
-          ('$1' + "`r`n  <uses-permission android:name=\"$adIdPermission\" />`r`n"),
+          ('$1' + "`r`n" + $permLine + "`r`n"),
           1
         )
       }
