@@ -76,6 +76,7 @@ const Index = () => {
   const [showFirstWin, setShowFirstWin] = useState(false);
   const [showMotivational, setShowMotivational] = useState(false);
   const [gamesPlayed, setGamesPlayed] = useState(0);
+  const [justWonClean, setJustWonClean] = useState(false);
   
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
@@ -122,12 +123,15 @@ const Index = () => {
     }
   };
 
-  const handleWin = useCallback(async (stars: number, reward: { gems?: number }) => {
+  const handleWin = useCallback(async (stars: number, reward: { gems?: number }, usedPowerups: boolean = false) => {
     completeLevel(currentLevel.id, reward);
     toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
     
     // Increment games played counter for review request
     setGamesPlayed(prev => prev + 1);
+    
+    // Track if won without using power-ups (for smart review gate)
+    setJustWonClean(!usedPowerups);
     
     // Check achievements
     const completedCount = gameState.completedLevels.length + 1;
@@ -452,8 +456,13 @@ const Index = () => {
         }}
       />
 
-      {/* Review Request Modal - shows after 3 games */}
-      <ReviewRequestModal gamesPlayed={gamesPlayed} />
+      {/* Smart Review Gate - shows after positive emotional moment */}
+      <ReviewRequestModal 
+        daysPlayed={streakData.maxStreak || streakData.currentStreak}
+        currentStreak={streakData.currentStreak}
+        justWonClean={justWonClean}
+        onRespond={() => setJustWonClean(false)}
+      />
 
       {/* Exit Confirmation Modal */}
       {showExitModal && (

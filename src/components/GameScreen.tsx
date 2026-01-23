@@ -11,7 +11,7 @@ import confetti from 'canvas-confetti';
 
 interface GameScreenProps {
   level: Level;
-  onWin: (stars: number, reward: { gems?: number }) => void;
+  onWin: (stars: number, reward: { gems?: number }, usedPowerups: boolean) => void;
   onLose: () => void;
   onBack: () => void;
 }
@@ -27,6 +27,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [showWinCelebration, setShowWinCelebration] = useState(false);
   const [combo, setCombo] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [usedPowerups, setUsedPowerups] = useState(false);
 
   // Level 1 is impossible to lose - infinite moves
   const isFirstLevel = level.id === 1;
@@ -95,6 +96,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
     setMoves(5);
     setGameOver(false);
     setShowLoseBundle(false);
+    setUsedPowerups(true); // Buying extra moves counts as using powerup
   };
 
   const handleLoseBundleDismiss = () => {
@@ -105,7 +107,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const handleWinContinue = () => {
     const stars = calculateStars();
     setShowWinCelebration(false);
-    onWin(stars, level.reward);
+    onWin(stars, level.reward, usedPowerups);
   };
 
   const getProgress = () => {
