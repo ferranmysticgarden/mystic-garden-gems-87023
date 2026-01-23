@@ -5,6 +5,8 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { LEVELS, Level } from '@/data/levels';
 import { LoseBundle } from './game/LoseBundle';
 import { ComboMultiplier } from './game/ComboMultiplier';
+import { LevelWinCelebration } from './game/LevelWinCelebration';
+import { OnboardingMessage } from './game/OnboardingMessage';
 import confetti from 'canvas-confetti';
 
 interface GameScreenProps {
@@ -22,7 +24,12 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [showLoseBundle, setShowLoseBundle] = useState(false);
+  const [showWinCelebration, setShowWinCelebration] = useState(false);
   const [combo, setCombo] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(true);
+
+  // Level 1 is impossible to lose - infinite moves
+  const isFirstLevel = level.id === 1;
 
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
@@ -33,23 +40,34 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
     return false;
   }, [level, score, collected]);
 
+  const calculateStars = useCallback(() => {
+    const value = level.objective.type === 'score' 
+      ? score 
+      : (collected[level.objective.target] || 0);
+    
+    if (value >= level.stars.three) return 3;
+    if (value >= level.stars.two) return 2;
+    return 1;
+  }, [level, score, collected]);
+
   useEffect(() => {
     if (checkWinCondition() && !gameOver) {
       setGameOver(true);
       setWon(true);
-      
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      setShowWinCelebration(true);
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
+      // Level 1 can't be lost - give extra moves
+      if (isFirstLevel) {
+        setMoves(10); // Give 10 more moves
+        return;
+      }
+      
       setGameOver(true);
       setWon(false);
       // Show LoseBundle offer instead of immediate game over
       setShowLoseBundle(true);
     }
-  }, [moves, score, collected, checkWinCondition, gameOver, level]);
+  }, [moves, score, collected, checkWinCondition, gameOver, level, isFirstLevel]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
@@ -66,7 +84,6 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
 
   const handleMove = useCallback(() => {
     setMoves((prev) => Math.max(0, prev - 1));
-    // Reset combo on move without match (handled by match timing)
   }, []);
 
   const handleComboEnd = useCallback(() => {
@@ -83,6 +100,12 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const handleLoseBundleDismiss = () => {
     setShowLoseBundle(false);
     // Game over - show final screen
+  };
+
+  const handleWinContinue = () => {
+    const stars = calculateStars();
+    setShowWinCelebration(false);
+    onWin(stars, level.reward);
   };
 
   const getProgress = () => {
@@ -109,7 +132,9 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-muted/50 rounded-lg p-2">
               <div className="text-xs text-muted-foreground">{t('game.moves')}</div>
-              <div className="text-2xl font-bold">{moves}</div>
+              <div className={`text-2xl font-bold ${isFirstLevel ? 'text-emerald-400' : ''}`}>
+                {isFirstLevel ? '∞' : moves}
+              </div>
             </div>
             <div className="bg-muted/50 rounded-lg p-2">
               <div className="text-xs text-muted-foreground">{t('game.score')}</div>
@@ -149,6 +174,15 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
               )}
             </div>
           </div>
+
+          {/* First level indicator */}
+          {isFirstLevel && (
+            <div className="mt-3 text-center">
+              <span className="text-sm text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+                ✨ Nivel de práctica - No puedes perder
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Board */}
@@ -164,6 +198,25 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
         {/* Combo Multiplier */}
         <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
 
+        {/* Onboarding Message for Level 1 */}
+        {showOnboarding && (
+          <OnboardingMessage 
+            levelId={level.id} 
+            onDismiss={() => setShowOnboarding(false)} 
+          />
+        )}
+
+        {/* Level Win Celebration */}
+        {showWinCelebration && (
+          <LevelWinCelebration
+            levelId={level.id}
+            score={score}
+            stars={calculateStars()}
+            reward={level.reward}
+            onContinue={handleWinContinue}
+          />
+        )}
+
         {/* LoseBundle Offer */}
         {showLoseBundle && (
           <LoseBundle 
@@ -172,20 +225,18 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
           />
         )}
 
-        {/* Game Over Overlay - only show after LoseBundle is dismissed or if won */}
-        {gameOver && !showLoseBundle && (
+        {/* Game Over Overlay - only show after LoseBundle is dismissed (for losses) */}
+        {gameOver && !showLoseBundle && !won && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
-              <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>
-                {won ? t('game.win') : t('game.lose')}
+              <h2 className="text-4xl font-bold mb-4 text-destructive">
+                {t('game.lose')}
               </h2>
-              {won && (
-                <div className="text-2xl mb-4">
-                  🎉 {t('game.score')}: {score} 🎉
-                </div>
-              )}
+              <p className="text-muted-foreground mb-4">
+                ¡No te rindas! Inténtalo de nuevo.
+              </p>
               <Button
-                onClick={() => won ? onWin(1, level.reward) : onLose()}
+                onClick={onLose}
                 className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
               >
                 {t('game.continue')}

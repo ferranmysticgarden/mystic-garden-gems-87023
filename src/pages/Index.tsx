@@ -7,6 +7,7 @@ import { useAudio } from '@/hooks/useAudio';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useClickSound } from '@/hooks/useClickSound';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
@@ -30,6 +31,7 @@ import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
 import { FirstWinCelebration } from '@/components/game/FirstWinCelebration';
 import { SharePrompt } from '@/components/game/SharePrompt';
 import { DayCounter } from '@/components/game/DayCounter';
+import { MotivationalMessage } from '@/components/game/MotivationalMessage';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
@@ -44,6 +46,7 @@ const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasAdsDisabled, addPurchase } = usePurchases(user);
   const { isPlaying, isMuted, play, toggleMute } = useAudio(`${import.meta.env.BASE_URL}audio/background-music.mp3`);
+  const { playClick } = useClickSound();
   const {
     gameState,
     loading: gameLoading,
@@ -71,6 +74,7 @@ const Index = () => {
   const [showStreakCalendar, setShowStreakCalendar] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showFirstWin, setShowFirstWin] = useState(false);
+  const [showMotivational, setShowMotivational] = useState(false);
   const [gamesPlayed, setGamesPlayed] = useState(0);
   
   // Daily Streak & Push Notifications
@@ -135,6 +139,11 @@ const Index = () => {
     // Show first win celebration for level 1
     if (completedCount === 1) {
       setShowFirstWin(true);
+    }
+    
+    // Show motivational message after levels 3-4
+    if (completedCount === 3 || completedCount === 4) {
+      setTimeout(() => setShowMotivational(true), 1000);
     }
     
     setScreen('menu');
@@ -469,6 +478,14 @@ const Index = () => {
         <FirstWinCelebration 
           levelsCompleted={gameState.completedLevels.length}
           onClose={() => setShowFirstWin(false)}
+        />
+      )}
+
+      {/* Motivational Message - after levels 3-4 */}
+      {showMotivational && (
+        <MotivationalMessage 
+          levelsCompleted={gameState.completedLevels.length}
+          onClose={() => setShowMotivational(false)}
         />
       )}
 
