@@ -27,11 +27,14 @@ import { StreakReminderBanner } from '@/components/game/StreakReminderBanner';
 import { ReviewRequestModal } from '@/components/game/ReviewRequestModal';
 import { ExitConfirmModal } from '@/components/game/ExitConfirmModal';
 import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
+import { FirstWinCelebration } from '@/components/game/FirstWinCelebration';
+import { SharePrompt } from '@/components/game/SharePrompt';
+import { DayCounter } from '@/components/game/DayCounter';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, LogOut, User, Volume2, VolumeX, Crown, Flame, DoorOpen } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, User, Volume2, VolumeX, Crown, Flame, DoorOpen } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -66,6 +69,7 @@ const Index = () => {
   const [showBattlePass, setShowBattlePass] = useState(false);
   const [showStreakCalendar, setShowStreakCalendar] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showFirstWin, setShowFirstWin] = useState(false);
   const [gamesPlayed, setGamesPlayed] = useState(0);
   
   // Daily Streak & Push Notifications
@@ -125,6 +129,11 @@ const Index = () => {
     await checkLevelAchievements(completedCount);
     if (reward.gems) {
       await checkGemsAchievements(gameState.gems + reward.gems);
+    }
+    
+    // Show first win celebration for level 1
+    if (completedCount === 1) {
+      setShowFirstWin(true);
     }
     
     setScreen('menu');
@@ -275,6 +284,9 @@ const Index = () => {
 
         {/* Streak Reminder Banner - VISIBLE when can claim */}
         <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />
+
+        {/* Day Counter - "Día X en Mystic Garden" */}
+        <DayCounter currentStreak={streakData.currentStreak} />
 
         {/* Progression Bar */}
         <div className="mb-4">
@@ -449,6 +461,20 @@ const Index = () => {
           addLives(lives);
           toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
         }}
+      />
+
+      {/* First Win Celebration */}
+      {showFirstWin && (
+        <FirstWinCelebration 
+          levelsCompleted={gameState.completedLevels.length}
+          onClose={() => setShowFirstWin(false)}
+        />
+      )}
+
+      {/* Share Prompt - after 5 games or 1 day */}
+      <SharePrompt 
+        gamesPlayed={gamesPlayed}
+        daysPlayed={streakData.currentStreak}
       />
     </div>
   );

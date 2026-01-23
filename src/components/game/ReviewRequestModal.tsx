@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, X, Heart } from 'lucide-react';
+import { Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Capacitor } from '@capacitor/core';
@@ -38,7 +38,11 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
     setShow(false);
   };
 
-  const handleDismiss = () => {
+  const handleLater = () => {
+    // Reset so it can show again after more games
+    if (user?.id) {
+      localStorage.removeItem(`review-asked-${user.id}`);
+    }
     setShow(false);
   };
 
@@ -47,68 +51,47 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-gradient-to-b from-emerald-900 via-teal-900 to-blue-900 rounded-3xl p-6 max-w-sm w-full border-4 border-emerald-400/50 shadow-2xl animate-in zoom-in-95 duration-300">
-        {/* Close button */}
-        <div className="flex justify-end mb-2">
-          <button 
-            onClick={handleDismiss} 
-            className="text-white/50 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        {/* Stars animation */}
+        <div className="flex justify-center gap-1 mb-4">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star 
+              key={star} 
+              className="w-8 h-8 text-yellow-400 fill-yellow-400 animate-pulse" 
+              style={{ animationDelay: `${star * 100}ms` }}
+            />
+          ))}
         </div>
-
-        {/* Content */}
+        
+        {/* Simple, friendly question */}
         <div className="text-center mb-6">
-          <div className="flex justify-center gap-1 mb-4">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star 
-                key={star} 
-                className="w-8 h-8 text-yellow-400 fill-yellow-400 animate-pulse" 
-                style={{ animationDelay: `${star * 100}ms` }}
-              />
-            ))}
-          </div>
-          
           <h2 className="text-2xl font-bold text-emerald-300 mb-3">
             ¿Te gusta Mystic Garden? 🌸
           </h2>
           
           <p className="text-emerald-100/80 text-sm leading-relaxed">
-            Una reseña nos ayuda muchísimo a seguir mejorando el juego.
-            <br />
-            <span className="text-yellow-300">¡Solo toma 30 segundos!</span>
+            Tu opinión nos ayuda a mejorar
           </p>
         </div>
 
-        {/* Hearts decoration */}
-        <div className="flex justify-center gap-2 mb-6">
-          <Heart className="w-5 h-5 text-pink-400 fill-pink-400 animate-bounce" />
-          <Heart className="w-6 h-6 text-red-400 fill-red-400 animate-bounce" style={{ animationDelay: '100ms' }} />
-          <Heart className="w-5 h-5 text-pink-400 fill-pink-400 animate-bounce" style={{ animationDelay: '200ms' }} />
-        </div>
-
-        {/* Buttons */}
+        {/* Two clear options - no pressure */}
         <div className="space-y-3">
           <Button
             onClick={handleReview}
             className="w-full py-5 text-lg font-bold bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 border-2 border-yellow-300 shadow-lg"
           >
             <Star className="w-5 h-5 mr-2 fill-white" />
-            ¡Dejar una Reseña!
+            Dejar reseña
           </Button>
           
           <Button
-            onClick={handleDismiss}
-            variant="ghost"
-            className="w-full text-emerald-300/70 hover:text-emerald-300"
+            onClick={handleLater}
+            variant="outline"
+            className="w-full py-4 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/20"
           >
-            Ahora no, gracias
+            <Clock className="w-4 h-4 mr-2" />
+            Más tarde
           </Button>
         </div>
-
-        <p className="text-center text-emerald-300/40 text-xs mt-4">
-          🙏 Gracias por jugar
-        </p>
       </div>
     </div>
   );
