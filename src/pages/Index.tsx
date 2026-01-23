@@ -19,7 +19,7 @@ import { LuckySpin } from '@/components/game/LuckySpin';
 import { Tutorial } from '@/components/game/Tutorial';
 import { ProgressionBar } from '@/components/game/ProgressionBar';
 import { BattlePass } from '@/components/game/BattlePass';
-import { RewardedAds } from '@/components/game/RewardedAds';
+// RewardedAds removed - was simulated, caused Play Store rejection
 import { AchievementModal } from '@/components/game/AchievementModal';
 import { DailyStreakCalendar } from '@/components/game/DailyStreakCalendar';
 import { NotificationPrompt } from '@/components/game/NotificationPrompt';
@@ -216,9 +216,7 @@ const Index = () => {
     }
   };
 
-  const handleRewardedAdEarned = (gems: number) => {
-    toast.success(`¡Ganaste ${gems} gemas! 💎`);
-  };
+  // handleRewardedAdEarned removed - feature was simulated
 
   if (authLoading || gameLoading) {
     return (
@@ -386,10 +384,12 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Rewarded Ads Section */}
-        <div className="mb-4">
-          <RewardedAds onRewardEarned={handleRewardedAdEarned} />
-        </div>
+        {/* Ad Banner - only shown if ads not disabled */}
+        {!hasAdsDisabled() && (
+          <div className="mb-4">
+            <AdBanner />
+          </div>
+        )}
       </div>
 
       {/* Shop Modal */}
