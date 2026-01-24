@@ -9,6 +9,7 @@ interface SpringEventProps {
 export const SpringEvent = ({ onClose }: SpringEventProps) => {
   const [timeLeft, setTimeLeft] = useState('');
   const [show, setShow] = useState(false);
+  const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
     // Event runs for 48 hours starting from a fixed point
@@ -17,16 +18,33 @@ export const SpringEvent = ({ onClose }: SpringEventProps) => {
     eventStart.setHours(0, 0, 0, 0);
     const eventEnd = new Date(eventStart.getTime() + 48 * 60 * 60 * 1000);
 
+    const getTodayKey = () => new Date().toDateString();
+    const hasDismissedToday = () => {
+      try {
+        return localStorage.getItem('spring-event-seen') === getTodayKey();
+      } catch {
+        // If storage isn't available for some reason, default to showing.
+        return false;
+      }
+    };
+
     const checkEvent = () => {
       const now = Date.now();
       const remaining = eventEnd.getTime() - now;
 
       if (remaining <= 0) {
+        setIsActive(false);
         setShow(false);
         return;
       }
 
-      setShow(true);
+      setIsActive(true);
+
+      // If user already dismissed it today, never re-open it automatically.
+      if (hasDismissedToday()) {
+        setShow(false);
+      }
+
       const hours = Math.floor(remaining / (60 * 60 * 1000));
       const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
       setTimeLeft(`${hours}h ${mins}m`);
@@ -35,14 +53,13 @@ export const SpringEvent = ({ onClose }: SpringEventProps) => {
     checkEvent();
     const interval = setInterval(checkEvent, 60000);
     
-    // Auto-show banner after delay
+    // Auto-show popup after a short delay (only if not dismissed today)
     const showTimer = setTimeout(() => {
-      const hasSeenToday = localStorage.getItem('spring-event-seen');
-      const today = new Date().toDateString();
-      if (hasSeenToday !== today) {
-        // Will be shown
+      const remaining = eventEnd.getTime() - Date.now();
+      if (remaining > 0 && !hasDismissedToday()) {
+        setShow(true);
       }
-    }, 3000);
+    }, 1200);
 
     return () => {
       clearInterval(interval);
@@ -50,15 +67,20 @@ export const SpringEvent = ({ onClose }: SpringEventProps) => {
     };
   }, []);
 
-  if (!show) return null;
+  if (!isActive || !show) return null;
 
   const handleDismiss = () => {
-    localStorage.setItem('spring-event-seen', new Date().toDateString());
+    try {
+      localStorage.setItem('spring-event-seen', new Date().toDateString());
+    } catch {
+      // ignore
+    }
+    setShow(false);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="relative bg-gradient-to-b from-pink-900 via-rose-900 to-purple-900 rounded-3xl p-6 max-w-sm w-full border-4 border-pink-400 shadow-2xl overflow-hidden">
         {/* Floating petals */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -78,7 +100,8 @@ export const SpringEvent = ({ onClose }: SpringEventProps) => {
           ))}
         </div>
 
-        <button 
+        <button
+          type="button"
           onClick={handleDismiss}
           className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
