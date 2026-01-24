@@ -2,41 +2,34 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Check, Loader2, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { createProceduralMusicPlayer, type ProceduralMusicPlayer, type ProceduralMusicPreset } from '@/lib/proceduralMusic';
 
 interface MusicOption {
   id: string;
   name: string;
   description: string;
-  type: 'local' | 'generated';
-  url?: string;
-  prompt?: string;
+  preset: ProceduralMusicPreset;
 }
 
 const MUSIC_OPTIONS: MusicOption[] = [
   {
-    id: 'current-game',
-    name: '🎮 Actual del juego',
-    description: 'La música que ya está integrada ahora mismo (referencia).',
-    type: 'local',
-    url: '/audio/background-music.mp3',
+    id: 'harp-bells',
+    name: '🌿 Harp & Bells',
+    description: 'Arpa suave + campanillas, bosque encantado (relajante).',
+    preset: 'harp_bells',
   },
   {
-    id: 'fairy-garden',
-    name: '🧚 Fairy Garden',
-    description: 'Flauta ligera, pads etéreos, sensación de jardín de hadas.',
-    type: 'generated',
-    prompt:
-      'Calm fantasy ambient background music for a magical garden puzzle game. Light flute melody, airy pads, gentle shimmer, cozy and peaceful. No vocals, no heavy bass, no drums. Loopable. 75-85 BPM.',
+    id: 'flute-pads',
+    name: '🧚 Flute & Pads',
+    description: 'Flauta ligera + pads etéreos, jardín de hadas.',
+    preset: 'flute_pads',
   },
   {
     id: 'enchanted-bells',
     name: '✨ Enchanted Bells',
-    description: 'Campanillas mágicas, melodía suave, muy "fantasy casual".',
-    type: 'generated',
-    prompt:
-      'Magical forest ambient music for a cozy mobile puzzle game. Soft harp arpeggios, sparkling bells, warm pads, gentle ambience. No vocals, no strong percussion. Loopable. 60-80 BPM.',
+    description: 'Campanillas mágicas (más “casual”), sin tensión.',
+    preset: 'enchanted_bells',
   }
 ];
 
@@ -44,69 +37,39 @@ export default function MusicPreview() {
   const [playing, setPlaying] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [generatedUrls, setGeneratedUrls] = useState<Record<string, string>>({});
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null); // legacy (kept to avoid risky UI patching)
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const playerRef = useRef<ProceduralMusicPlayer | null>(null);
   const navigate = useNavigate();
-
-  const generatedUrlsRef = useRef<Record<string, string>>({});
-  useEffect(() => {
-    generatedUrlsRef.current = generatedUrls;
-  }, [generatedUrls]);
 
   useEffect(() => {
     return () => {
-      // Stop audio
+      // Stop any audio
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
-      // Revoke generated blob URLs
-      Object.values(generatedUrlsRef.current).forEach((url) => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch {
-          // ignore
-        }
-      });
+
+      // Stop procedural music
+      playerRef.current?.stop();
     };
   }, []);
 
-  const base64ToBlobUrl = (base64: string, mimeType: string) => {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const blob = new Blob([bytes], { type: mimeType });
-    return URL.createObjectURL(blob);
+  const getAudioContext = async () => {
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
   };
 
-  const ensureOptionUrl = async (option: MusicOption): Promise<string> => {
-    if (option.type === 'local') {
-      if (!option.url) throw new Error('Missing local URL');
-      return option.url;
-    }
-
-    const existing = generatedUrls[option.id];
-    if (existing) return existing;
-
-    setLoadingId(option.id);
-    try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-music', {
-        body: {
-          prompt: option.prompt,
-          duration: 30,
-        },
-      });
-
-      if (error) throw error;
-      const base64Audio = data?.audioContent as string | undefined;
-      if (!base64Audio) throw new Error('No audio returned');
-
-      const blobUrl = base64ToBlobUrl(base64Audio, 'audio/mpeg');
-      setGeneratedUrls((prev) => ({ ...prev, [option.id]: blobUrl }));
-      return blobUrl;
-    } finally {
-      setLoadingId(null);
-    }
+  const ensurePlayer = async (): Promise<ProceduralMusicPlayer> => {
+    if (playerRef.current) return playerRef.current;
+    const ctx = await getAudioContext();
+    playerRef.current = createProceduralMusicPlayer(ctx);
+    return playerRef.current;
   };
 
   const handlePlay = async (option: MusicOption) => {
@@ -116,29 +79,25 @@ export default function MusicPreview() {
       audioRef.current = null;
     }
 
+    // Stop procedural if playing
+    playerRef.current?.stop();
+
     if (playing === option.id) {
       setPlaying(null);
       return;
     }
 
     try {
-      const url = await ensureOptionUrl(option);
-
-      // Play new audio
-      const audio = new Audio(url);
-      audio.loop = true;
-      audio.volume = 0.5;
-      audio.preload = 'auto';
-      audio.play().catch((err) => {
-        console.error(err);
-        toast.error('No se pudo reproducir el audio en este dispositivo');
-      });
-      audioRef.current = audio;
+      setLoadingId(option.id);
+      const player = await ensurePlayer();
+      player.play(option.preset, { volume: 0.25 });
       setPlaying(option.id);
     } catch (err) {
       console.error(err);
-      toast.error('Error al cargar la música');
+      toast.error('No se pudo iniciar el audio (prueba subir el volumen del móvil/PC)');
       setPlaying(null);
+    } finally {
+      setLoadingId(null);
     }
   };
 
