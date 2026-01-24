@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Tile } from './Tile';
+import { Capacitor } from '@capacitor/core';
 
 const TILE_TYPES = ['🌸', '🌺', '🌼', '🍃', '🌻', '🌷'];
 const BOARD_SIZE = 8;
@@ -16,11 +17,92 @@ interface BoardProps {
   disabled?: boolean;
 }
 
+// Inline sound utilities to avoid hook dependency issues
+const createAudioContext = () => {
+  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+};
+
+const vibrate = (pattern: number | number[]) => {
+  if (Capacitor.isNativePlatform() && 'vibrate' in navigator) {
+    navigator.vibrate(pattern);
+  }
+};
+
 export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => {
   const [board, setBoard] = useState<string[][]>([]);
   const [selected, setSelected] = useState<Position | null>(null);
   const [animatingTiles, setAnimatingTiles] = useState<Set<string>>(new Set());
   const [isSwapping, setIsSwapping] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const matchCountRef = useRef(0);
+
+  const getCtx = useCallback(() => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = createAudioContext();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  // Sound: tile select
+  const playSelectSound = useCallback(() => {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, now);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.1);
+    vibrate(20);
+  }, [getCtx]);
+
+  // Sound: match (pitch increases with combo)
+  const playMatchSound = useCallback((comboLevel: number) => {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const baseFreq = 523.25 + comboLevel * 80; // C5 + combo bonus
+    
+    [0, 0.08, 0.16].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(baseFreq + i * 100, now + delay);
+      gain.gain.setValueAtTime(0.25, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.2);
+    });
+    vibrate([30, 20, 30]);
+  }, [getCtx]);
+
+  // Sound: invalid swap
+  const playInvalidSound = useCallback(() => {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(150, now + 0.15);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.15);
+    vibrate([50, 30, 50]);
+  }, [getCtx]);
 
   const initializeBoard = useCallback(() => {
     const newBoard: string[][] = [];
@@ -160,22 +242,27 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     setTimeout(() => {
       const matches = findMatches(newBoard);
       if (matches.length === 0) {
-        // No match, swap back (using the snapshot from before the swap)
+        // No match, swap back
+        playInvalidSound();
         setBoard(prevBoard);
         setIsSwapping(false);
       } else {
+        matchCountRef.current += 1;
+        playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
       }
     }, 300);
-  }, [board, findMatches, removeMatches, onMove]);
+  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;
     if (isSwapping || animatingTiles.size > 0) return;
 
     if (!selected) {
+      playSelectSound();
       setSelected({ row, col });
+      matchCountRef.current = 0; // Reset combo on new selection
     } else {
       const rowDiff = Math.abs(selected.row - row);
       const colDiff = Math.abs(selected.col - col);
@@ -185,7 +272,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
       }
       setSelected(null);
     }
-  }, [selected, swapTiles, disabled, isSwapping, animatingTiles.size]);
+  }, [selected, swapTiles, disabled, isSwapping, animatingTiles.size, playSelectSound]);
 
   if (board.length === 0) {
     return <div className="w-full aspect-square flex items-center justify-center">Loading...</div>;
