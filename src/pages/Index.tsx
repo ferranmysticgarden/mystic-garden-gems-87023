@@ -36,11 +36,12 @@ import { DailyMissions } from '@/components/game/DailyMissions';
 import { LootChest } from '@/components/game/LootChest';
 import { SpringEvent } from '@/components/game/SpringEvent';
 import { PlayerRank } from '@/components/game/PlayerRank';
+import { AudioControls } from '@/components/game/AudioControls';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, User, Volume2, VolumeX, Crown, Flame, DoorOpen, Gift, Target } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -48,7 +49,7 @@ const Index = () => {
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasAdsDisabled, addPurchase } = usePurchases(user);
-  const { setScreen: setMusicScreen, toggleMute, isMuted, duck } = useBackgroundMusic('menu');
+  const { setScreen: setMusicScreen } = useBackgroundMusic('menu');
   const {
     gameState,
     loading: gameLoading,
@@ -282,21 +283,17 @@ const Index = () => {
             <User className="w-4 h-4" />
             <span className="text-sm">{user.email?.split('@')[0]}</span>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => toggleMute()}
-              variant="ghost"
-              size="sm"
-              id="toggle-music-btn"
-            >
-              {isMuted() ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            </Button>
+          <div className="flex items-center gap-2">
+            {/* Audio Controls - Sound & Music */}
+            <AudioControls />
+            
+            {/* Exit Button */}
             <Button
               onClick={() => setShowExitModal(true)}
               variant="ghost"
               size="sm"
               id="exit-btn"
-              className="text-red-400 hover:text-red-300"
+              className="text-destructive hover:text-destructive/80"
             >
               <DoorOpen className="w-5 h-5" />
             </Button>
