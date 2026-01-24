@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
 
 // Production Banner Ad Unit ID
 const BANNER_AD_ID = 'ca-app-pub-7198650429290924/5826208729';
@@ -22,12 +21,14 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
       }
 
       try {
+        // Dynamic import para evitar crash si el plugin no está disponible
+        const { AdMob } = await import('@capacitor-community/admob');
         await AdMob.initialize({
           initializeForTesting: false, // Production mode
         });
         setIsInitialized(true);
       } catch (error) {
-        console.log('AdMob initialization error:', error);
+        console.log('AdMob initialization error (non-fatal):', error);
         setShowPlaceholder(true);
       }
     };
@@ -40,12 +41,14 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
 
     const showBanner = async () => {
       try {
+        const { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } = await import('@capacitor-community/admob');
+        
         // Configurar listeners
         AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
           console.log('Banner loaded');
         });
 
-        AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error) => {
+        AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error: unknown) => {
           console.log('Banner failed to load:', error);
           setShowPlaceholder(true);
         });
@@ -59,7 +62,7 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
           isTesting: false, // Production mode
         });
       } catch (error) {
-        console.log('Error showing banner:', error);
+        console.log('Error showing banner (non-fatal):', error);
         setShowPlaceholder(true);
       }
     };
@@ -69,7 +72,9 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
     // Cleanup al desmontar
     return () => {
       if (Capacitor.isNativePlatform()) {
-        AdMob.removeBanner().catch(console.log);
+        import('@capacitor-community/admob').then(({ AdMob }) => {
+          AdMob.removeBanner().catch(console.log);
+        }).catch(() => {});
       }
     };
   }, [isInitialized, visible]);
@@ -78,11 +83,13 @@ export const AdBanner = ({ visible = true }: AdBannerProps) => {
   useEffect(() => {
     if (!isInitialized) return;
 
-    if (!visible) {
-      AdMob.hideBanner().catch(console.log);
-    } else {
-      AdMob.resumeBanner().catch(console.log);
-    }
+    import('@capacitor-community/admob').then(({ AdMob }) => {
+      if (!visible) {
+        AdMob.hideBanner().catch(console.log);
+      } else {
+        AdMob.resumeBanner().catch(console.log);
+      }
+    }).catch(() => {});
   }, [visible, isInitialized]);
 
   // Si no está visible, no renderizar nada
