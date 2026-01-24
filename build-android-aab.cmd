@@ -119,20 +119,26 @@ if not exist "gradlew.bat" (
 )
 
 REM --- Signing (Upload Key) ---
+REM Ruta fija del keystore - Password: mystic2026
+set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
 
-REM Permite sobreescribir la ruta por variable de entorno, pero la normaliza para evitar problemas con comillas
-set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
-if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
-for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
-
+REM Si no existe, buscar alternativas
 if not exist "%STORE_PATH%" (
-  echo ERROR: No encuentro el keystore de subida (Upload Key)
-  echo Buscado en: %STORE_PATH%
-  echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
-  popd
-  pause
-  exit /b 1
+  echo Keystore primario no encontrado, buscando alternativas...
+  if exist "D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore" (
+    set "STORE_PATH=D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore"
+    echo Usando backup: %STORE_PATH%
+  ) else (
+    echo ERROR: No encuentro ningun keystore valido
+    echo Buscado en: D:\keys_upload_new\mystic-upload-key.jks
+    echo Backup en: D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore
+    popd
+    pause
+    exit /b 1
+  )
 )
+
+echo.
 
 echo Keystore (upload): %STORE_PATH%
 
