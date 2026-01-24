@@ -17,22 +17,34 @@ interface Mission {
 
 interface DailyMissionsProps {
   onClose: () => void;
-  onClaimReward: (gems: number) => void;
-  levelsCompleted: number;
-  powerupsUsed: number;
-  adsWatched: number;
+  onRewardClaimed?: (gems: number) => void;
 }
 
 export const DailyMissions = ({ 
   onClose, 
-  onClaimReward, 
-  levelsCompleted, 
-  powerupsUsed, 
-  adsWatched 
+  onRewardClaimed
 }: DailyMissionsProps) => {
   const { user } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [mysteryChestClaimed, setMysteryChestClaimed] = useState(false);
+  
+  // Track progress locally (in a real app this would come from game state)
+  const [levelsCompleted] = useState(() => {
+    const stored = localStorage.getItem(`missions-levels-${user?.id}`);
+    return stored ? parseInt(stored) : 0;
+  });
+  const [powerupsUsed] = useState(() => {
+    const stored = localStorage.getItem(`missions-powerups-${user?.id}`);
+    return stored ? parseInt(stored) : 0;
+  });
+  const [adsWatched] = useState(() => {
+    const stored = localStorage.getItem(`missions-ads-${user?.id}`);
+    return stored ? parseInt(stored) : 0;
+  });
+  
+  const handleReward = (gems: number) => {
+    if (onRewardClaimed) onRewardClaimed(gems);
+  };
 
   useEffect(() => {
     const storedData = localStorage.getItem(`daily-missions-${user?.id}`);
@@ -112,7 +124,7 @@ export const DailyMissions = ({
       m.id === missionId ? { ...m, claimed: true } : m
     );
     setMissions(updatedMissions);
-    onClaimReward(mission.reward);
+    handleReward(mission.reward);
 
     localStorage.setItem(`daily-missions-${user?.id}`, JSON.stringify({
       date: new Date().toDateString(),
@@ -128,7 +140,7 @@ export const DailyMissions = ({
     if (!canClaimChest) return;
     
     const chestReward = 25 + Math.floor(Math.random() * 26); // 25-50 gems
-    onClaimReward(chestReward);
+    handleReward(chestReward);
     setMysteryChestClaimed(true);
 
     localStorage.setItem(`daily-missions-${user?.id}`, JSON.stringify({
