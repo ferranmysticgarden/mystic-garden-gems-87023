@@ -6,10 +6,28 @@ import { Capacitor } from '@capacitor/core';
  * Style: magical garden, enchanted forest, soft bells, harp, chimes
  * NO harsh sounds, NO dark tones - pure magical fairy vibes
  */
+
+// Global sound enabled state
+let globalSoundEnabled = true;
+
+// Initialize from localStorage
+if (typeof window !== 'undefined') {
+  const saved = localStorage.getItem('mystic_sound_enabled');
+  globalSoundEnabled = saved === null ? true : saved === 'true';
+}
+
+export const setSoundEnabled = (enabled: boolean) => {
+  globalSoundEnabled = enabled;
+};
+
+export const isSoundEnabled = () => globalSoundEnabled;
+
 export const useMysticSounds = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const getAudioContext = useCallback(() => {
+    if (!globalSoundEnabled) return null;
+    
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -21,6 +39,7 @@ export const useMysticSounds = () => {
 
   // Soft vibration for mobile
   const vibrate = useCallback((pattern: number | number[]) => {
+    if (!globalSoundEnabled) return;
     if (Capacitor.isNativePlatform() && 'vibrate' in navigator) {
       navigator.vibrate(pattern);
     }
@@ -29,6 +48,8 @@ export const useMysticSounds = () => {
   // ✨ Magical chime - tile selection (soft bell + sparkle)
   const playSelectSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Soft bell tone
@@ -61,6 +82,8 @@ export const useMysticSounds = () => {
   // 🎵 Harp arpeggio - match sound (increases with combo)
   const playMatchSound = useCallback((comboLevel: number = 0) => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Pentatonic scale for magical feel: C, D, E, G, A
@@ -106,6 +129,8 @@ export const useMysticSounds = () => {
   // 🌸 Soft wind chime - invalid move (gentle, not harsh)
   const playInvalidSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Two descending soft tones (like a gentle "nope")
@@ -137,6 +162,8 @@ export const useMysticSounds = () => {
   // ✨ Fairy dust reward sound - magical ascending chimes
   const playRewardSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Ascending fairy scale
@@ -181,6 +208,8 @@ export const useMysticSounds = () => {
   // 💎 Gem collect - quick magical pop
   const playGemCollectSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     const osc = ctx.createOscillator();
@@ -216,6 +245,8 @@ export const useMysticSounds = () => {
   // 🎁 Chest open - magical reveal with shimmer
   const playChestOpenSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Soft whoosh using filtered noise
@@ -265,6 +296,8 @@ export const useMysticSounds = () => {
   // 🏆 Victory fanfare - triumphant but magical
   const playVictorySound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Ascending triumphant arpeggio
@@ -310,6 +343,8 @@ export const useMysticSounds = () => {
   // 😢 Lose sound - gentle, not harsh (descending lullaby)
   const playLoseSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Soft descending notes
@@ -334,6 +369,8 @@ export const useMysticSounds = () => {
   // 🎰 Roulette tick - soft bell
   const playTickSound = useCallback((speed: number = 1) => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     const osc = ctx.createOscillator();
@@ -356,6 +393,8 @@ export const useMysticSounds = () => {
   // 🌟 Milestone/achievement - grand magical moment
   const playMilestoneSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Magical chord with shimmer
@@ -395,6 +434,8 @@ export const useMysticSounds = () => {
   // 💫 Offer/special sound - attention but magical
   const playOfferSound = useCallback(() => {
     const ctx = getAudioContext();
+    if (!ctx) return;
+    
     const now = ctx.currentTime;
 
     // Bright fanfare notes
