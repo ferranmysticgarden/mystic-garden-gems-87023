@@ -1,136 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Tile } from './Tile';
 
 const TILE_TYPES = ['🌸', '🌺', '🌼', '🍃', '🌻', '🌷'];
 const BOARD_SIZE = 8;
-
-// Audio context singleton para sonidos del gameplay
-let gameAudioCtx: AudioContext | null = null;
-const getGameAudioContext = () => {
-  if (!gameAudioCtx) {
-    gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  return gameAudioCtx;
-};
-
-// Sonido de selección de gema
-const playGemSelect = () => {
-  try {
-    const ctx = getGameAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 600;
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {}
-};
-
-// Sonido de match exitoso
-const playMatchSound = (matchCount: number) => {
-  try {
-    const ctx = getGameAudioContext();
-    const baseFreq = 400 + (matchCount * 100); // Más gemas = tono más alto
-    
-    [0, 0.08, 0.16].forEach((delay, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = baseFreq + (i * 150);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.15);
-    });
-  } catch (e) {}
-};
-
-// Sonido de movimiento inválido
-const playInvalidMove = () => {
-  try {
-    const ctx = getGameAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.value = 150;
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.2);
-  } catch (e) {}
-};
-
-// Sonido de swap
-const playSwapSound = () => {
-  try {
-    const ctx = getGameAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(300, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {}
-};
-
-// Sonido de EXPLOSIÓN cuando las gemas desaparecen
-const playExplosionSound = (count: number) => {
-  try {
-    const ctx = getGameAudioContext();
-    
-    // Explosión base - ruido filtrado
-    const bufferSize = ctx.sampleRate * 0.3;
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
-    }
-    
-    const noise = ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(800 + (count * 100), ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.25);
-    
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.15 + (count * 0.02), ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-    
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    noise.start();
-    noise.stop(ctx.currentTime + 0.3);
-    
-    // Añadir "pop" tonal
-    const pop = ctx.createOscillator();
-    const popGain = ctx.createGain();
-    pop.type = 'sine';
-    pop.frequency.setValueAtTime(300 + (count * 50), ctx.currentTime);
-    pop.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
-    popGain.gain.setValueAtTime(0.2, ctx.currentTime);
-    popGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    pop.connect(popGain);
-    popGain.connect(ctx.destination);
-    pop.start();
-    pop.stop(ctx.currentTime + 0.1);
-  } catch (e) {}
-};
 
 interface Position {
   row: number;
@@ -227,9 +99,6 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     
     setAnimatingTiles(animatingKeys);
     
-    // Sonido de explosión cuando las gemas desaparecen
-    playExplosionSound(matches.length);
-    
     setTimeout(() => {
       setAnimatingTiles(new Set());
       
@@ -292,11 +161,9 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
       const matches = findMatches(newBoard);
       if (matches.length === 0) {
         // No match, swap back (using the snapshot from before the swap)
-        playInvalidMove(); // Sonido de movimiento inválido
         setBoard(prevBoard);
         setIsSwapping(false);
       } else {
-        playMatchSound(matches.length); // Sonido de match
         removeMatches(newBoard, matches);
         setIsSwapping(false);
       }
@@ -309,13 +176,11 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
 
     if (!selected) {
       setSelected({ row, col });
-      playGemSelect(); // Sonido al seleccionar gema
     } else {
       const rowDiff = Math.abs(selected.row - row);
       const colDiff = Math.abs(selected.col - col);
 
       if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
-        playSwapSound(); // Sonido al intercambiar
         swapTiles(selected, { row, col });
       }
       setSelected(null);

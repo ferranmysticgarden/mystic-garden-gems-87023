@@ -16,8 +16,8 @@ REM key.properties es opcional: la firma se inyecta por linea de comandos (keyst
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=915"
-set "TARGET_VERSION_NAME=9.1.5"
+set "TARGET_VERSION_CODE=903"
+set "TARGET_VERSION_NAME=9.0.3"
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
@@ -108,18 +108,6 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM --- Step 3.6.1/4: Verify AD_ID permission exists in manifest (pre-Gradle) ---
-echo [3.6.1/4] Verificando permiso AD_ID en AndroidManifest...
-findstr /C:"com.google.android.gms.permission.AD_ID" "android\app\src\main\AndroidManifest.xml" >nul
-if errorlevel 1 (
-  echo ERROR: El AndroidManifest NO contiene el permiso AD_ID.
-  echo Revisa android\app\src\main\AndroidManifest.xml y scripts\ensure-android-mainactivity.ps1
-  pause
-  exit /b 1
-) else (
-  echo OK: Permiso AD_ID presente en AndroidManifest.xml
-)
-
 REM --- Step 4/4 ---
 pushd android
 
@@ -137,22 +125,14 @@ set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
 if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
 for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
 
-REM NOTE: En algunos entornos, `if exist` puede fallar por permisos/expansion rara.
-REM Usamos PowerShell Test-Path (LiteralPath) que es mas robusto.
-echo Keystore (upload) buscado en: "%STORE_PATH%"
-REM Verificacion directa con CMD if exist (sin PowerShell para evitar problemas de expansion)
-if exist "%STORE_PATH%" (
-  echo OK: Keystore encontrado.
-  goto :keystore_found
+if not exist "%STORE_PATH%" (
+  echo ERROR: No encuentro el keystore de subida (Upload Key)
+  echo Buscado en: %STORE_PATH%
+  echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
+  popd
+  pause
+  exit /b 1
 )
-echo ERROR: No encuentro el keystore de subida (Upload Key)
-echo Buscado en: %STORE_PATH%
-echo TIP: Puedes definir UPLOAD_KEYSTORE_PATH con la ruta correcta.
-popd
-pause
-exit /b 1
-
-:keystore_found
 
 echo Keystore (upload): %STORE_PATH%
 
@@ -163,18 +143,8 @@ if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundl
 REM Asegura que no reutilice artefactos viejos
 call gradlew.bat --stop >nul 2>&1
 
- REM --- Passwords (optional via env vars to avoid typing every build) ---
- REM If you set STORE_PWD / KEY_PWD before calling this script, it will reuse them.
- if "%STORE_PWD%"=="" (
-   set /p STORE_PWD="Contrasena keystore: "
- ) else (
-   echo Usando STORE_PWD desde variable de entorno.
- )
- if "%KEY_PWD%"=="" (
-   set /p KEY_PWD="Contrasena key: "
- ) else (
-   echo Usando KEY_PWD desde variable de entorno.
- )
+set /p STORE_PWD="Contrasena keystore: "
+set /p KEY_PWD="Contrasena key: "
 
 call gradlew.bat :app:clean :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
@@ -189,10 +159,6 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM --- Post-build sanity: Check merged manifests contain AD_ID (best-effort) ---
-echo Verificando permiso AD_ID en manifests mergeados (best-effort)...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$root='app\\build\\intermediates'; if (!(Test-Path $root)) { Write-Host 'WARN: No existe app\\build\\intermediates (no puedo verificar manifests mergeados).'; exit 0 }; $files = Get-ChildItem -Path $root -Recurse -Filter AndroidManifest.xml -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'merged' -or $_.FullName -match 'manifest' }; $ok=$false; foreach($f in $files){ try { $c = Get-Content -LiteralPath $f.FullName -Raw -ErrorAction Stop } catch { continue }; if($c -match 'com.google.android.gms.permission.AD_ID'){ Write-Host ('OK: AD_ID encontrado en: ' + $f.FullName); $ok=$true; break } }; if(-not $ok){ Write-Host 'WARN: No encontre AD_ID en los manifests mergeados que vi. Si Play sigue fallando, revisa el AAB subido (puede ser viejo).'; }"
-
 REM Verificacion de firma del AAB (Google Play lo exige)
 set "AAB_PATH=%CD%\app\build\outputs\bundle\release\app-release.aab"
 if not exist "%AAB_PATH%" (
@@ -201,18 +167,6 @@ if not exist "%AAB_PATH%" (
   pause
   exit /b 1
 )
-
- REM --- Post-build AUTHORITATIVE check: Verify AD_ID is inside the final AAB ---
- REM Play Console valida el manifiesto empaquetado dentro del .aab, no el manifest fuente.
- echo Verificando permiso AD_ID dentro del AAB (bundletool)...
- powershell -NoProfile -ExecutionPolicy Bypass -File "..\scripts\verify-aab-adid.ps1" -AabPath "%AAB_PATH%"
- if errorlevel 1 (
-   echo ERROR: El AAB generado NO contiene AD_ID (o no pude verificarlo).
-   echo NO lo subas a Play Console. Este error es exactamente el que te sale.
-   popd
-   pause
-   exit /b 1
- )
 
 echo Verificando firma del AAB...
 jarsigner -verify -verbose -certs "%AAB_PATH%" | findstr /i /c:"jar verified" >nul

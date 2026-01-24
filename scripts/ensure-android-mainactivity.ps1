@@ -82,31 +82,6 @@ class MainActivity : BridgeActivity()
     }
     $m = $re.Replace($m, $evaluator, 1)
 
-    # Ensure AD_ID permission (required for Android 13+ when using advertising ID)
-    $adIdPermission = 'com.google.android.gms.permission.AD_ID'
-    if ($m -notmatch [regex]::Escape($adIdPermission)) {
-      # IMPORTANT: Don't use backslash-escaping (\") in PowerShell; build the XML with real quotes.
-      $permLine = '  <uses-permission android:name="' + $adIdPermission + '" />'
- 
-      $internetPermPattern = '(<uses-permission[^>]*android\.permission\.INTERNET[^>]*/>\s*)'
-      if ($m -match $internetPermPattern) {
-        $m = [regex]::Replace(
-          $m,
-          $internetPermPattern,
-          ('$1' + $permLine + "`r`n"),
-          1
-        )
-      } else {
-        $m = [regex]::Replace(
-          $m,
-          '(<manifest[^>]*>\s*)',
-          ('$1' + "`r`n" + $permLine + "`r`n"),
-          1
-        )
-      }
-      Write-Host 'OK: Permiso AD_ID agregado al AndroidManifest.xml'
-    }
-
     # Ensure deep link intent-filter for OAuth callback (so the browser returns to the app)
     $scheme = $AppId
     $schemePattern = 'android:scheme\s*=\s*"' + [regex]::Escape($scheme) + '"'

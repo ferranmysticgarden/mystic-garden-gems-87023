@@ -2,7 +2,6 @@ import { Lock, Star } from 'lucide-react';
 import { LEVELS } from '@/data/levels';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
-import { AdBanner } from './ads/AdBanner';
 
 interface LevelSelectProps {
   unlockedLevels: number;
@@ -82,12 +81,6 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
           })}
         </div>
       </div>
-
-      {/* Banner Ad - visible en selección de nivel */}
-      <AdBanner visible={true} />
-
-      {/* Espacio para el banner */}
-      <div className="h-[60px]" />
     </div>
   );
 };

@@ -44,8 +44,11 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
     loadProgress();
   }, [user?.id]);
 
-  // Premium purchase removed - was fake/simulated (no real payment)
-  // Battle Pass is now 100% free to avoid Play Store rejection
+  const handleBuyPremium = () => {
+    if (!user?.id) return;
+    localStorage.setItem(`battle-pass-premium-${user.id}`, 'true');
+    setIsPremium(true);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -56,7 +59,15 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
             <h2 className="text-xl font-bold text-yellow-400">Battle Pass</h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-green-400 font-semibold">100% GRATIS</span>
+            {!isPremium && (
+              <Button
+                onClick={handleBuyPremium}
+                size="sm"
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold"
+              >
+                Premium €4.99
+              </Button>
+            )}
             <button onClick={onClose} className="text-white/70 hover:text-white">
               <X className="w-6 h-6" />
             </button>

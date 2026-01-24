@@ -7,7 +7,6 @@ import { useAudio } from '@/hooks/useAudio';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useClickSound } from '@/hooks/useClickSound';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
@@ -19,7 +18,7 @@ import { LuckySpin } from '@/components/game/LuckySpin';
 import { Tutorial } from '@/components/game/Tutorial';
 import { ProgressionBar } from '@/components/game/ProgressionBar';
 import { BattlePass } from '@/components/game/BattlePass';
-// RewardedAds removed - was simulated, caused Play Store rejection
+import { RewardedAds } from '@/components/game/RewardedAds';
 import { AchievementModal } from '@/components/game/AchievementModal';
 import { DailyStreakCalendar } from '@/components/game/DailyStreakCalendar';
 import { NotificationPrompt } from '@/components/game/NotificationPrompt';
@@ -31,8 +30,6 @@ import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
 import { FirstWinCelebration } from '@/components/game/FirstWinCelebration';
 import { SharePrompt } from '@/components/game/SharePrompt';
 import { DayCounter } from '@/components/game/DayCounter';
-import { MotivationalMessage } from '@/components/game/MotivationalMessage';
-import { AdBanner } from '@/components/ads/AdBanner';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
@@ -46,7 +43,6 @@ const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasAdsDisabled, addPurchase } = usePurchases(user);
   const { isPlaying, isMuted, play, toggleMute } = useAudio(`${import.meta.env.BASE_URL}audio/background-music.mp3`);
-  const { playClick } = useClickSound();
   const {
     gameState,
     loading: gameLoading,
@@ -74,9 +70,7 @@ const Index = () => {
   const [showStreakCalendar, setShowStreakCalendar] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showFirstWin, setShowFirstWin] = useState(false);
-  const [showMotivational, setShowMotivational] = useState(false);
   const [gamesPlayed, setGamesPlayed] = useState(0);
-  const [justWonClean, setJustWonClean] = useState(false);
   
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
@@ -123,15 +117,12 @@ const Index = () => {
     }
   };
 
-  const handleWin = useCallback(async (stars: number, reward: { gems?: number }, usedPowerups: boolean = false) => {
+  const handleWin = useCallback(async (stars: number, reward: { gems?: number }) => {
     completeLevel(currentLevel.id, reward);
     toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
     
     // Increment games played counter for review request
     setGamesPlayed(prev => prev + 1);
-    
-    // Track if won without using power-ups (for smart review gate)
-    setJustWonClean(!usedPowerups);
     
     // Check achievements
     const completedCount = gameState.completedLevels.length + 1;
@@ -143,11 +134,6 @@ const Index = () => {
     // Show first win celebration for level 1
     if (completedCount === 1) {
       setShowFirstWin(true);
-    }
-    
-    // Show motivational message after levels 3-4
-    if (completedCount === 3 || completedCount === 4) {
-      setTimeout(() => setShowMotivational(true), 1000);
     }
     
     setScreen('menu');
@@ -216,7 +202,9 @@ const Index = () => {
     }
   };
 
-  // handleRewardedAdEarned removed - feature was simulated
+  const handleRewardedAdEarned = (gems: number) => {
+    toast.success(`¡Ganaste ${gems} gemas! 💎`);
+  };
 
   if (authLoading || gameLoading) {
     return (
@@ -384,12 +372,10 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Ad Banner - only shown if ads not disabled */}
-        {!hasAdsDisabled() && (
-          <div className="mb-4">
-            <AdBanner />
-          </div>
-        )}
+        {/* Rewarded Ads Section */}
+        <div className="mb-4">
+          <RewardedAds onRewardEarned={handleRewardedAdEarned} />
+        </div>
       </div>
 
       {/* Shop Modal */}
@@ -456,13 +442,8 @@ const Index = () => {
         }}
       />
 
-      {/* Smart Review Gate - shows after positive emotional moment */}
-      <ReviewRequestModal 
-        daysPlayed={streakData.maxStreak || streakData.currentStreak}
-        currentStreak={streakData.currentStreak}
-        justWonClean={justWonClean}
-        onRespond={() => setJustWonClean(false)}
-      />
+      {/* Review Request Modal - shows after 3 games */}
+      <ReviewRequestModal gamesPlayed={gamesPlayed} />
 
       {/* Exit Confirmation Modal */}
       {showExitModal && (
@@ -490,25 +471,11 @@ const Index = () => {
         />
       )}
 
-      {/* Motivational Message - after levels 3-4 */}
-      {showMotivational && (
-        <MotivationalMessage 
-          levelsCompleted={gameState.completedLevels.length}
-          onClose={() => setShowMotivational(false)}
-        />
-      )}
-
       {/* Share Prompt - after 5 games or 1 day */}
       <SharePrompt 
         gamesPlayed={gamesPlayed}
         daysPlayed={streakData.currentStreak}
       />
-
-      {/* Banner Ad - SOLO en menú principal */}
-      <AdBanner visible={screen === 'menu'} />
-
-      {/* Espacio para el banner */}
-      <div className="h-[60px]" />
     </div>
   );
 };
