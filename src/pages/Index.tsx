@@ -3,7 +3,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuth } from '@/hooks/useAuth';
 import { usePurchases } from '@/hooks/usePurchases';
-import { useAudio } from '@/hooks/useAudio';
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -48,7 +48,7 @@ const Index = () => {
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasAdsDisabled, addPurchase } = usePurchases(user);
-  const { isPlaying, isMuted, play, toggleMute } = useAudio(`${import.meta.env.BASE_URL}audio/background-music.mp3`);
+  const { setScreen: setMusicScreen, toggleMute, isMuted, duck } = useBackgroundMusic('menu');
   const {
     gameState,
     loading: gameLoading,
@@ -70,7 +70,13 @@ const Index = () => {
     checkGemsAchievements 
   } = useAchievements(user?.id);
 
-  const [screen, setScreen] = useState<Screen>('menu');
+  const [screen, setScreenState] = useState<Screen>('menu');
+  
+  // Sync music volume with screen changes
+  const setScreen = useCallback((newScreen: Screen) => {
+    setScreenState(newScreen);
+    setMusicScreen(newScreen);
+  }, [setMusicScreen]);
   const [showNoLivesModal, setShowNoLivesModal] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
   const [showStreakCalendar, setShowStreakCalendar] = useState(false);
@@ -108,18 +114,7 @@ const Index = () => {
     }
   }, [streakData.currentStreak, streakData.canClaimToday, scheduleStreakReminder]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const handleFirstInteraction = () => {
-      if (!isPlaying) {
-        play();
-      }
-    };
-
-    document.addEventListener('click', handleFirstInteraction, { once: true });
-    return () => document.removeEventListener('click', handleFirstInteraction);
-  }, [user, isPlaying, play]);
+  // Music is now auto-started by useBackgroundMusic hook
 
   const currentLevel = LEVELS.find(l => l.id === gameState.currentLevel) || LEVELS[0];
 
@@ -289,12 +284,12 @@ const Index = () => {
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={toggleMute}
+              onClick={() => toggleMute()}
               variant="ghost"
               size="sm"
               id="toggle-music-btn"
             >
-              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              {isMuted() ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </Button>
             <Button
               onClick={() => setShowExitModal(true)}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Tile } from './Tile';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
+import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 
 const TILE_TYPES = ['🌸', '🌺', '🌼', '🍃', '🌻', '🌷'];
 const BOARD_SIZE = 8;
@@ -171,6 +172,8 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
         setIsSwapping(false);
       } else {
         matchCountRef.current += 1;
+        // Duck music during match sounds
+        backgroundMusic.duck(400);
         playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
