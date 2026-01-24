@@ -119,36 +119,50 @@ if not exist "gradlew.bat" (
 )
 
 REM --- Signing (Upload Key) ---
-REM Soporta 3 modos de ruta:
-REM 1) UPLOAD_KEYSTORE_PATH (override)
-REM 2) Ruta por defecto (D:\keys_upload_new\mystic-upload-key.jks)
-REM 3) Fallback a backup si no existe
+REM Selecciona el primer keystore que exista (en este orden):
+REM 1) %UPLOAD_KEYSTORE_PATH% (si existe)
+REM 2) D:\keys_upload_new\mystic-upload-key.jks
+REM 3) app\mystic-garden-release-key.keystore   (dentro de la carpeta android\)
+REM 4) D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore
 
-set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
-if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
+set "STORE_PATH="
 
-REM Normaliza la ruta para evitar problemas con comillas / rutas relativas
-for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
-
-if not exist "%STORE_PATH%" (
-  echo Keystore no encontrado en: %STORE_PATH%
-  echo Buscando fallback...
-  if exist "D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore" (
-    set "STORE_PATH=D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore"
-    for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
-    echo OK: Usando backup: %STORE_PATH%
-  ) else (
-    echo ERROR: No encuentro ningun keystore valido.
-    echo Intentado (principal): D:\keys_upload_new\mystic-upload-key.jks
-    echo Intentado (backup):    D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore
-    echo.
-    echo TIP: verifica el archivo con:
-    echo      dir /a "D:\keys_upload_new\mystic-upload-key.jks"
-    popd
-    pause
-    exit /b 1
-  )
+if not "%UPLOAD_KEYSTORE_PATH%"=="" (
+  if exist "%UPLOAD_KEYSTORE_PATH%" set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
 )
+
+if "%STORE_PATH%"=="" (
+  if exist "D:\keys_upload_new\mystic-upload-key.jks" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
+)
+
+if "%STORE_PATH%"=="" (
+  if exist "app\mystic-garden-release-key.keystore" set "STORE_PATH=app\mystic-garden-release-key.keystore"
+)
+
+if "%STORE_PATH%"=="" (
+  if exist "D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore" set "STORE_PATH=D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore"
+)
+
+if "%STORE_PATH%"=="" (
+  echo ERROR: No encuentro ningun keystore valido.
+  echo.
+  echo Rutas comprobadas:
+  echo  - ^(env^)  %%UPLOAD_KEYSTORE_PATH%%
+  echo  - D:\keys_upload_new\mystic-upload-key.jks
+  echo  - %CD%\app\mystic-garden-release-key.keystore
+  echo  - D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore
+  echo.
+  echo Prueba estos comandos para ver cual existe:
+  echo  dir /a "D:\keys_upload_new\mystic-upload-key.jks"
+  echo  dir /a "%CD%\app\mystic-garden-release-key.keystore"
+  echo  dir /a "D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore"
+  popd
+  pause
+  exit /b 1
+)
+
+REM Normaliza a ruta absoluta
+for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
 
 echo.
 
