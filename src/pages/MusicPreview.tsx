@@ -1,43 +1,115 @@
-import { useState, useRef } from 'react';
-import { Play, Pause, Check, ArrowLeft } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Check, Loader2, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MusicOption {
   id: string;
   name: string;
   description: string;
-  url: string;
+  type: 'local' | 'generated';
+  url?: string;
+  prompt?: string;
 }
 
 const MUSIC_OPTIONS: MusicOption[] = [
   {
-    id: 'magical-forest',
-    name: '🌿 Magical Forest',
-    description: 'Arpa suave, campanillas, ambiente de bosque encantado. Muy relajante.',
-    url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bab.mp3'
+    id: 'current-game',
+    name: '🎮 Actual del juego',
+    description: 'La música que ya está integrada ahora mismo (referencia).',
+    type: 'local',
+    url: '/audio/background-music.mp3',
   },
   {
     id: 'fairy-garden',
     name: '🧚 Fairy Garden',
     description: 'Flauta ligera, pads etéreos, sensación de jardín de hadas.',
-    url: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_946b0939c5.mp3'
+    type: 'generated',
+    prompt:
+      'Calm fantasy ambient background music for a magical garden puzzle game. Light flute melody, airy pads, gentle shimmer, cozy and peaceful. No vocals, no heavy bass, no drums. Loopable. 75-85 BPM.',
   },
   {
     id: 'enchanted-bells',
     name: '✨ Enchanted Bells',
     description: 'Campanillas mágicas, melodía suave, muy "fantasy casual".',
-    url: 'https://cdn.pixabay.com/download/audio/2021/04/07/audio_dda8810eb9.mp3'
+    type: 'generated',
+    prompt:
+      'Magical forest ambient music for a cozy mobile puzzle game. Soft harp arpeggios, sparkling bells, warm pads, gentle ambience. No vocals, no strong percussion. Loopable. 60-80 BPM.',
   }
 ];
 
 export default function MusicPreview() {
   const [playing, setPlaying] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [generatedUrls, setGeneratedUrls] = useState<Record<string, string>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
 
-  const handlePlay = (option: MusicOption) => {
+  const generatedUrlsRef = useRef<Record<string, string>>({});
+  useEffect(() => {
+    generatedUrlsRef.current = generatedUrls;
+  }, [generatedUrls]);
+
+  useEffect(() => {
+    return () => {
+      // Stop audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      // Revoke generated blob URLs
+      Object.values(generatedUrlsRef.current).forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // ignore
+        }
+      });
+    };
+  }, []);
+
+  const base64ToBlobUrl = (base64: string, mimeType: string) => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: mimeType });
+    return URL.createObjectURL(blob);
+  };
+
+  const ensureOptionUrl = async (option: MusicOption): Promise<string> => {
+    if (option.type === 'local') {
+      if (!option.url) throw new Error('Missing local URL');
+      return option.url;
+    }
+
+    const existing = generatedUrls[option.id];
+    if (existing) return existing;
+
+    setLoadingId(option.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('elevenlabs-music', {
+        body: {
+          prompt: option.prompt,
+          duration: 30,
+        },
+      });
+
+      if (error) throw error;
+      const base64Audio = data?.audioContent as string | undefined;
+      if (!base64Audio) throw new Error('No audio returned');
+
+      const blobUrl = base64ToBlobUrl(base64Audio, 'audio/mpeg');
+      setGeneratedUrls((prev) => ({ ...prev, [option.id]: blobUrl }));
+      return blobUrl;
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handlePlay = async (option: MusicOption) => {
     // Stop current audio if playing
     if (audioRef.current) {
       audioRef.current.pause();
@@ -49,13 +121,25 @@ export default function MusicPreview() {
       return;
     }
 
-    // Play new audio
-    const audio = new Audio(option.url);
-    audio.loop = true;
-    audio.volume = 0.5;
-    audio.play().catch(console.error);
-    audioRef.current = audio;
-    setPlaying(option.id);
+    try {
+      const url = await ensureOptionUrl(option);
+
+      // Play new audio
+      const audio = new Audio(url);
+      audio.loop = true;
+      audio.volume = 0.5;
+      audio.preload = 'auto';
+      audio.play().catch((err) => {
+        console.error(err);
+        toast.error('No se pudo reproducir el audio en este dispositivo');
+      });
+      audioRef.current = audio;
+      setPlaying(option.id);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al cargar la música');
+      setPlaying(null);
+    }
   };
 
   const handleSelect = (id: string) => {
@@ -103,13 +187,16 @@ export default function MusicPreview() {
               <div className="flex items-start gap-4">
                 <button
                   onClick={() => handlePlay(option)}
+                    disabled={loadingId === option.id}
                   className={`p-4 rounded-full transition-all ${
                     playing === option.id
                       ? 'bg-purple-500 animate-pulse'
                       : 'bg-white/20 hover:bg-white/30'
                   }`}
                 >
-                  {playing === option.id ? (
+                    {loadingId === option.id ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : playing === option.id ? (
                     <Pause className="w-6 h-6 text-white" />
                   ) : (
                     <Play className="w-6 h-6 text-white" />
