@@ -119,19 +119,31 @@ if not exist "gradlew.bat" (
 )
 
 REM --- Signing (Upload Key) ---
-REM Ruta fija del keystore - Password: mystic2026
-set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
+REM Soporta 3 modos de ruta:
+REM 1) UPLOAD_KEYSTORE_PATH (override)
+REM 2) Ruta por defecto (D:\keys_upload_new\mystic-upload-key.jks)
+REM 3) Fallback a backup si no existe
 
-REM Si no existe, buscar alternativas
+set "STORE_PATH=%UPLOAD_KEYSTORE_PATH%"
+if "%STORE_PATH%"=="" set "STORE_PATH=D:\keys_upload_new\mystic-upload-key.jks"
+
+REM Normaliza la ruta para evitar problemas con comillas / rutas relativas
+for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
+
 if not exist "%STORE_PATH%" (
-  echo Keystore primario no encontrado, buscando alternativas...
+  echo Keystore no encontrado en: %STORE_PATH%
+  echo Buscando fallback...
   if exist "D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore" (
     set "STORE_PATH=D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore"
-    echo Usando backup: %STORE_PATH%
+    for %%I in ("%STORE_PATH%") do set "STORE_PATH=%%~fI"
+    echo OK: Usando backup: %STORE_PATH%
   ) else (
-    echo ERROR: No encuentro ningun keystore valido
-    echo Buscado en: D:\keys_upload_new\mystic-upload-key.jks
-    echo Backup en: D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore
+    echo ERROR: No encuentro ningun keystore valido.
+    echo Intentado (principal): D:\keys_upload_new\mystic-upload-key.jks
+    echo Intentado (backup):    D:\BACKUP_MYSTIC_GARDEN_20260114\android\app\mystic-garden-release-key.keystore
+    echo.
+    echo TIP: verifica el archivo con:
+    echo      dir /a "D:\keys_upload_new\mystic-upload-key.jks"
     popd
     pause
     exit /b 1
@@ -149,8 +161,11 @@ if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundl
 REM Asegura que no reutilice artefactos viejos
 call gradlew.bat --stop >nul 2>&1
 
-set /p STORE_PWD="Contrasena keystore: "
-set /p KEY_PWD="Contrasena key: "
+REM Passwords: NO se hardcodean en el repo.
+REM - Si defines STORE_PWD/KEY_PWD en entorno, no pregunta.
+REM - Si no, pide por consola.
+if "%STORE_PWD%"=="" set /p STORE_PWD="Contrasena keystore: "
+if "%KEY_PWD%"=="" set /p KEY_PWD="Contrasena key: "
 
 call gradlew.bat :app:clean :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
