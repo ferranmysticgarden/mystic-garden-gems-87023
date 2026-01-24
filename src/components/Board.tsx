@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Tile } from './Tile';
-import { Capacitor } from '@capacitor/core';
 
 const TILE_TYPES = ['🌸', '🌺', '🌼', '🍃', '🌻', '🌷'];
 const BOARD_SIZE = 8;
@@ -19,13 +18,21 @@ interface BoardProps {
 
 // Inline sound utilities to avoid hook dependency issues
 const createAudioContext = () => {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  if (ctx.state === 'suspended') ctx.resume();
-  return ctx;
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    console.log('[AUDIO] Created AudioContext, state:', ctx.state);
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => console.log('[AUDIO] AudioContext resumed'));
+    }
+    return ctx;
+  } catch (e) {
+    console.error('[AUDIO] Failed to create AudioContext:', e);
+    return null;
+  }
 };
 
 const vibrate = (pattern: number | number[]) => {
-  if (Capacitor.isNativePlatform() && 'vibrate' in navigator) {
+  if ('vibrate' in navigator) {
     navigator.vibrate(pattern);
   }
 };
@@ -42,32 +49,41 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
       audioCtxRef.current = createAudioContext();
     }
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().then(() => console.log('[AUDIO] Context resumed from getCtx'));
     }
     return audioCtxRef.current;
   }, []);
 
   // Sound: tile select
   const playSelectSound = useCallback(() => {
+    console.log('[AUDIO] playSelectSound called');
     const ctx = getCtx();
+    if (!ctx) {
+      console.error('[AUDIO] No AudioContext available');
+      return;
+    }
+    console.log('[AUDIO] AudioContext state:', ctx.state);
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(600, now);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    gain.gain.setValueAtTime(0.3, now); // Increased volume
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.1);
+    osc.stop(now + 0.15);
+    console.log('[AUDIO] Select sound played');
     vibrate(20);
   }, [getCtx]);
 
   // Sound: match (pitch increases with combo)
   const playMatchSound = useCallback((comboLevel: number) => {
+    console.log('[AUDIO] playMatchSound called, combo:', comboLevel);
     const ctx = getCtx();
+    if (!ctx) return;
     const now = ctx.currentTime;
     const baseFreq = 523.25 + comboLevel * 80; // C5 + combo bonus
     
@@ -76,31 +92,35 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(baseFreq + i * 100, now + delay);
-      gain.gain.setValueAtTime(0.25, now + delay);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.2);
+      gain.gain.setValueAtTime(0.4, now + delay); // Increased volume
+      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.25);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now + delay);
-      osc.stop(now + delay + 0.2);
+      osc.stop(now + delay + 0.25);
     });
+    console.log('[AUDIO] Match sound played');
     vibrate([30, 20, 30]);
   }, [getCtx]);
 
   // Sound: invalid swap
   const playInvalidSound = useCallback(() => {
+    console.log('[AUDIO] playInvalidSound called');
     const ctx = getCtx();
+    if (!ctx) return;
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'square';
     osc.frequency.setValueAtTime(200, now);
-    osc.frequency.linearRampToValueAtTime(150, now + 0.15);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(150, now + 0.2);
+    gain.gain.setValueAtTime(0.25, now); // Increased volume
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.15);
+    osc.stop(now + 0.2);
+    console.log('[AUDIO] Invalid sound played');
     vibrate([50, 30, 50]);
   }, [getCtx]);
 
