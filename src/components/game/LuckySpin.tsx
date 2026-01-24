@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
+import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -26,6 +27,16 @@ export const LuckySpin = () => {
   const [canSpin, setCanSpin] = useState(false);
   const [reward, setReward] = useState<number | null>(null);
   const { user } = useAuth();
+
+  // Set music to lower volume when Lucky Spin is open
+  useEffect(() => {
+    if (show) {
+      backgroundMusic.setScreen('luckyspin');
+      return () => {
+        backgroundMusic.setScreen('menu');
+      };
+    }
+  }, [show]);
   
   const lastTickRef = useRef(0);
   const animationRef = useRef<number | null>(null);

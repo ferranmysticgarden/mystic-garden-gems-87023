@@ -6,6 +6,7 @@ import { LEVELS, Level } from '@/data/levels';
 import { LoseBundle } from './game/LoseBundle';
 import { ComboMultiplier } from './game/ComboMultiplier';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
+import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import confetti from 'canvas-confetti';
 
 interface GameScreenProps {
@@ -29,6 +30,14 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   // Use mystical fairy sounds
   const { playVictorySound, playLoseSound } = useMysticSounds();
 
+  // Set music to very low during gameplay
+  useEffect(() => {
+    backgroundMusic.setScreen('game');
+    return () => {
+      backgroundMusic.setScreen('menu');
+    };
+  }, []);
+
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
       return score >= level.objective.count;
@@ -45,6 +54,8 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       
       if (!hasPlayedEndSound.current) {
         hasPlayedEndSound.current = true;
+        // Silence music for victory fanfare
+        backgroundMusic.setScreen('victory');
         playVictorySound();
       }
       
@@ -59,6 +70,8 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       
       if (!hasPlayedEndSound.current) {
         hasPlayedEndSound.current = true;
+        // Silence music for defeat sound
+        backgroundMusic.setScreen('defeat');
         playLoseSound();
       }
       

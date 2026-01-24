@@ -4,6 +4,7 @@ import { X, Gift, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 
 interface ChestType {
   id: string;
@@ -63,6 +64,14 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   const [freeChestTimeLeft, setFreeChestTimeLeft] = useState('');
   const [reward, setReward] = useState<{ gems: number; lives: number; noAdsMins: number } | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Set music to chest volume when open
+  useEffect(() => {
+    backgroundMusic.setScreen('chest');
+    return () => {
+      backgroundMusic.setScreen('menu');
+    };
+  }, []);
 
   useEffect(() => {
     checkFreeChest();
