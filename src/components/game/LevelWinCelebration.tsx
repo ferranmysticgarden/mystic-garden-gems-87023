@@ -91,38 +91,98 @@ export const LevelWinCelebration = ({
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Victory fanfare - ascending notes
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      notes.forEach((freq, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.value = freq;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.15);
-        gain.gain.exponentialDecayTo?.(0.01, 0.3) || gain.gain.setValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.3);
-        osc.start(audioCtx.currentTime + i * 0.15);
-        osc.stop(audioCtx.currentTime + i * 0.15 + 0.4);
-      });
-
-      // Sparkle sounds
-      setTimeout(() => {
-        for (let i = 0; i < 5; i++) {
-          setTimeout(() => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = 2000 + Math.random() * 2000;
-            osc.type = 'sine';
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialDecayTo?.(0.001, 0.1) || gain.gain.setValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
-          }, i * 80);
+      // 1. APLAUSOS - ruido blanco filtrado con ritmo
+      const playApplause = () => {
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
         }
-      }, 600);
+        
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        filter.Q.value = 0.5;
+        
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.3);
+        gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 1);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
+        
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start();
+        noise.stop(audioCtx.currentTime + 2);
+      };
+      
+      // 2. PETARDOS - explosiones cortas
+      const playFirework = (delay: number) => {
+        setTimeout(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.15);
+          
+          // Crackle después del boom
+          setTimeout(() => {
+            for (let i = 0; i < 8; i++) {
+              setTimeout(() => {
+                const crackle = audioCtx.createOscillator();
+                const crackleGain = audioCtx.createGain();
+                crackle.frequency.value = 800 + Math.random() * 2000;
+                crackle.type = 'square';
+                crackleGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                crackleGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+                crackle.connect(crackleGain);
+                crackleGain.connect(audioCtx.destination);
+                crackle.start();
+                crackle.stop(audioCtx.currentTime + 0.05);
+              }, i * 30);
+            }
+          }, 100);
+        }, delay);
+      };
+      
+      // 3. SILBIDOS - frecuencias altas ascendentes
+      const playWhistle = (delay: number) => {
+        setTimeout(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(2500, audioCtx.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime + 0.25);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.35);
+        }, delay);
+      };
+      
+      // Ejecutar todo
+      playApplause();
+      playFirework(0);
+      playFirework(300);
+      playFirework(700);
+      playWhistle(150);
+      playWhistle(500);
+      playWhistle(900);
+      
     } catch (e) {
       console.log('Victory sound failed:', e);
     }
