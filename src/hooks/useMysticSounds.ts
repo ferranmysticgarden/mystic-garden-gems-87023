@@ -293,29 +293,32 @@ export const useMysticSounds = () => {
     vibrate([30, 20, 60, 20, 40]);
   }, [getAudioContext, vibrate]);
 
-  // 🏆 Victory fanfare - triumphant but magical
+  // 🎉 Victory sound - APPLAUSE + CELEBRATION FANFARE
   const playVictorySound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Ascending triumphant arpeggio
-    const notes = [
-      { freq: 523.25, time: 0, dur: 0.3 },      // C5
-      { freq: 659.25, time: 0.15, dur: 0.3 },   // E5
-      { freq: 783.99, time: 0.3, dur: 0.3 },    // G5
-      { freq: 1046.50, time: 0.45, dur: 0.6 },  // C6 (held)
-      { freq: 1318.51, time: 0.6, dur: 0.5 },   // E6
+    // === FANFARE TRUMPETS (triumphant brass) ===
+    const fanfareNotes = [
+      { freq: 392.00, time: 0, dur: 0.15 },      // G4 - short
+      { freq: 392.00, time: 0.12, dur: 0.15 },   // G4 - short  
+      { freq: 392.00, time: 0.24, dur: 0.15 },   // G4 - short
+      { freq: 523.25, time: 0.4, dur: 0.4 },     // C5 - HOLD
+      { freq: 659.25, time: 0.85, dur: 0.15 },   // E5 - short
+      { freq: 783.99, time: 1.0, dur: 0.15 },    // G5 - short
+      { freq: 1046.50, time: 1.15, dur: 0.8 },   // C6 - FINAL HOLD
     ];
 
-    notes.forEach(({ freq, time, dur }) => {
+    fanfareNotes.forEach(({ freq, time, dur }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'triangle';
+      // Sawtooth for brass-like fanfare
+      osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(freq, now + time);
-      gain.gain.setValueAtTime(0.2, now + time);
-      gain.gain.linearRampToValueAtTime(0.15, now + time + 0.1);
+      gain.gain.setValueAtTime(0.12, now + time);
+      gain.gain.linearRampToValueAtTime(0.1, now + time + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.01, now + time + dur);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -323,21 +326,60 @@ export const useMysticSounds = () => {
       osc.stop(now + time + dur);
     });
 
-    // Sparkle shower at the end
-    for (let i = 0; i < 10; i++) {
-      const sparkle = ctx.createOscillator();
-      const sparkleGain = ctx.createGain();
-      sparkle.type = 'sine';
-      sparkle.frequency.setValueAtTime(1500 + Math.random() * 2500, now + 0.8 + i * 0.05);
-      sparkleGain.gain.setValueAtTime(0.06, now + 0.8 + i * 0.05);
-      sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 1.1 + i * 0.05);
-      sparkle.connect(sparkleGain);
-      sparkleGain.connect(ctx.destination);
-      sparkle.start(now + 0.8 + i * 0.05);
-      sparkle.stop(now + 1.1 + i * 0.05);
+    // === APPLAUSE (white noise bursts simulating clapping) ===
+    const createClap = (startTime: number, volume: number) => {
+      const bufferSize = ctx.sampleRate * 0.08; // 80ms clap
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      for (let i = 0; i < bufferSize; i++) {
+        // Filtered noise with envelope
+        const envelope = Math.exp(-i / (bufferSize * 0.15));
+        data[i] = (Math.random() * 2 - 1) * envelope;
+      }
+      
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      
+      // Bandpass filter to make it sound like clapping
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 2500;
+      filter.Q.value = 0.5;
+      
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(volume, startTime);
+      
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      source.start(startTime);
+    };
+
+    // Crowd applause pattern (random claps over 2 seconds)
+    for (let i = 0; i < 40; i++) {
+      const clapTime = now + 0.3 + Math.random() * 1.8;
+      const clapVolume = 0.03 + Math.random() * 0.04;
+      createClap(clapTime, clapVolume);
     }
 
-    vibrate([80, 40, 80, 40, 150]);
+    // === CELEBRATION CHIME (magical sparkles) ===
+    for (let i = 0; i < 8; i++) {
+      const chime = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+      chime.type = 'sine';
+      const chimeFreq = 1800 + Math.random() * 1500;
+      chime.frequency.setValueAtTime(chimeFreq, now + 1.5 + i * 0.08);
+      chimeGain.gain.setValueAtTime(0.08, now + 1.5 + i * 0.08);
+      chimeGain.gain.exponentialRampToValueAtTime(0.01, now + 1.8 + i * 0.08);
+      chime.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+      chime.start(now + 1.5 + i * 0.08);
+      chime.stop(now + 1.8 + i * 0.08);
+    }
+
+    // Strong celebration vibration pattern
+    vibrate([100, 50, 100, 50, 200, 100, 300]);
   }, [getAudioContext, vibrate]);
 
   // 😢 Lose sound - gentle, not harsh (descending lullaby)
