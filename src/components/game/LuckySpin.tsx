@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useMysticSounds } from '@/hooks/useMysticSounds';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -26,7 +27,6 @@ export const LuckySpin = () => {
   const [reward, setReward] = useState<number | null>(null);
   const { user } = useAuth();
   
-  const audioCtxRef = useRef<AudioContext | null>(null);
   const lastTickRef = useRef(0);
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
@@ -34,62 +34,8 @@ export const LuckySpin = () => {
   const targetRotationRef = useRef(0);
   const spinDurationRef = useRef(5000); // 5 seconds spin
 
-  // Create or get AudioContext
-  const getAudioCtx = useCallback(() => {
-    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-    return audioCtxRef.current;
-  }, []);
-
-  // Tick sound - short click for each segment
-  const playTickSound = useCallback((speed: number) => {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    
-    // Higher pitch when spinning fast, lower when slow
-    const freq = 800 + speed * 400;
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, now);
-    
-    const volume = Math.min(0.3, 0.1 + speed * 0.2);
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-    
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.05);
-  }, [getAudioCtx]);
-
-  // Victory fanfare
-  const playVictorySound = useCallback(() => {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    
-    const now = ctx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-    
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + i * 0.12);
-      gain.gain.setValueAtTime(0.3, now + i * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.4);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + i * 0.12);
-      osc.stop(now + i * 0.12 + 0.4);
-    });
-  }, [getAudioCtx]);
+  // Use mystical fairy sounds
+  const { playTickSound, playVictorySound } = useMysticSounds();
 
   // Easing function - starts fast, slows down smoothly
   const easeOutCubic = (t: number): number => {
@@ -163,9 +109,6 @@ export const LuckySpin = () => {
 
   const handleSpin = async () => {
     if (!canSpin || spinning || !user?.id) return;
-
-    // Initialize audio context on user interaction
-    getAudioCtx();
 
     setSpinning(true);
     setReward(null);
