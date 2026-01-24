@@ -30,11 +30,17 @@ import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
 import { FirstWinCelebration } from '@/components/game/FirstWinCelebration';
 import { SharePrompt } from '@/components/game/SharePrompt';
 import { DayCounter } from '@/components/game/DayCounter';
+import { FlashOffer } from '@/components/game/FlashOffer';
+import { PostVictoryOffer } from '@/components/game/PostVictoryOffer';
+import { DailyMissions } from '@/components/game/DailyMissions';
+import { LootChest } from '@/components/game/LootChest';
+import { SpringEvent } from '@/components/game/SpringEvent';
+import { PlayerRank } from '@/components/game/PlayerRank';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
 import { toast } from 'sonner';
-import { Play, Grid3x3, ShoppingBag, User, Volume2, VolumeX, Crown, Flame, DoorOpen } from 'lucide-react';
+import { Play, Grid3x3, ShoppingBag, User, Volume2, VolumeX, Crown, Flame, DoorOpen, Gift, Target } from 'lucide-react';
 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
@@ -71,6 +77,15 @@ const Index = () => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showFirstWin, setShowFirstWin] = useState(false);
   const [gamesPlayed, setGamesPlayed] = useState(0);
+  
+  // New monetization modals
+  const [showFlashOffer, setShowFlashOffer] = useState(false);
+  const [showPostVictoryOffer, setShowPostVictoryOffer] = useState(false);
+  const [showDailyMissions, setShowDailyMissions] = useState(false);
+  const [showLootChest, setShowLootChest] = useState(false);
+  const [showSpringEvent, setShowSpringEvent] = useState(false);
+  const [lastWinGems, setLastWinGems] = useState(0);
+  const [consecutiveLosses, setConsecutiveLosses] = useState(0);
   
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
@@ -121,6 +136,9 @@ const Index = () => {
     completeLevel(currentLevel.id, reward);
     toast.success(`${t('game.win')}${reward.gems ? ` +${reward.gems} 💎` : ''}`);
     
+    // Reset consecutive losses on win
+    setConsecutiveLosses(0);
+    
     // Increment games played counter for review request
     setGamesPlayed(prev => prev + 1);
     
@@ -136,6 +154,12 @@ const Index = () => {
       setShowFirstWin(true);
     }
     
+    // Show post-victory offer for harder levels (level 5+)
+    if (currentLevel.id >= 5 && reward.gems && reward.gems > 0) {
+      setLastWinGems(reward.gems);
+      setTimeout(() => setShowPostVictoryOffer(true), 1500);
+    }
+    
     setScreen('menu');
   }, [completeLevel, currentLevel.id, t, gameState.completedLevels.length, gameState.gems, checkLevelAchievements, checkGemsAchievements]);
 
@@ -143,6 +167,17 @@ const Index = () => {
     toast.error(t('game.lose'));
     // Increment games played counter for review request
     setGamesPlayed(prev => prev + 1);
+    
+    // Track consecutive losses for flash offer
+    setConsecutiveLosses(prev => {
+      const newCount = prev + 1;
+      // Show flash offer after 2 consecutive losses
+      if (newCount >= 2) {
+        setTimeout(() => setShowFlashOffer(true), 1000);
+      }
+      return newCount;
+    });
+    
     setScreen('menu');
   }, [t]);
 
@@ -370,6 +405,32 @@ const Index = () => {
               )}
             </Button>
           </div>
+
+          {/* Daily Missions & Loot Chest buttons */}
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <Button
+              onClick={() => setShowDailyMissions(true)}
+              variant="outline"
+              className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 hover:border-blue-400"
+            >
+              <Target className="w-5 h-5 mr-2 text-blue-400" />
+              <span className="text-blue-400 font-semibold text-sm">Misiones</span>
+            </Button>
+
+            <Button
+              onClick={() => setShowLootChest(true)}
+              variant="outline"
+              className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
+            >
+              <Gift className="w-5 h-5 mr-2 text-amber-400" />
+              <span className="text-amber-400 font-semibold text-sm">Cofres</span>
+            </Button>
+          </div>
+
+          {/* Player Rank Display */}
+          <div className="mt-4">
+            <PlayerRank levelsCompleted={gameState.completedLevels.length} />
+          </div>
         </div>
 
         {/* Rewarded Ads Section */}
@@ -476,6 +537,55 @@ const Index = () => {
         gamesPlayed={gamesPlayed}
         daysPlayed={streakData.currentStreak}
       />
+
+      {/* Flash Offer - after 2 consecutive losses */}
+      {showFlashOffer && (
+        <FlashOffer 
+          trigger="loss"
+          onClose={() => {
+            setShowFlashOffer(false);
+            setConsecutiveLosses(0);
+          }}
+        />
+      )}
+
+      {/* Post Victory Offer - after winning harder levels */}
+      {showPostVictoryOffer && lastWinGems > 0 && (
+        <PostVictoryOffer 
+          baseGems={lastWinGems}
+          onClose={() => setShowPostVictoryOffer(false)}
+          onMultiply={(newGems) => {
+            addGems(newGems - lastWinGems); // Add the difference
+            toast.success(`¡Gemas multiplicadas! +${newGems - lastWinGems}💎`);
+          }}
+        />
+      )}
+
+      {/* Daily Missions Modal */}
+      {showDailyMissions && (
+        <DailyMissions 
+          onClose={() => setShowDailyMissions(false)}
+          onRewardClaimed={(gems) => {
+            addGems(gems);
+            toast.success(`¡Misión completada! +${gems}💎`);
+          }}
+        />
+      )}
+
+      {/* Loot Chest Modal */}
+      {showLootChest && (
+        <LootChest 
+          onClose={() => setShowLootChest(false)}
+          onRewardClaimed={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Cofre abierto! +${gems}💎 +${lives}❤️`);
+          }}
+        />
+      )}
+
+      {/* Spring Event Banner */}
+      <SpringEvent onClose={() => setShowSpringEvent(false)} />
     </div>
   );
 };

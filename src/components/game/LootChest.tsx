@@ -53,10 +53,10 @@ const CHEST_TYPES: ChestType[] = [
 
 interface LootChestProps {
   onClose: () => void;
-  onReward: (gems: number, lives: number, noAdsMins: number) => void;
+  onRewardClaimed?: (gems: number, lives: number) => void;
 }
 
-export const LootChest = ({ onClose, onReward }: LootChestProps) => {
+export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   const { user } = useAuth();
   const [opening, setOpening] = useState<string | null>(null);
   const [freeChestAvailable, setFreeChestAvailable] = useState(false);
@@ -115,7 +115,9 @@ export const LootChest = ({ onClose, onReward }: LootChestProps) => {
       setTimeout(() => {
         const rewardResult = getRandomReward(chest);
         setReward(rewardResult);
-        onReward(rewardResult.gems, rewardResult.lives, rewardResult.noAdsMins);
+        if (onRewardClaimed) onRewardClaimed(rewardResult.gems, rewardResult.lives);
+        setOpening(null);
+        checkFreeChest();
         setOpening(null);
         checkFreeChest();
       }, 2000);
