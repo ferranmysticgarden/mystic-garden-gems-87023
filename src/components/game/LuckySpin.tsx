@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { X } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -15,6 +16,8 @@ const REWARDS = [
   { gems: 5, color: '#A8E6CF', label: '5 💎' }
 ];
 
+const SEGMENT_ANGLE = 360 / REWARDS.length;
+
 export const LuckySpin = () => {
   const [show, setShow] = useState(false);
   const [spinning, setSpinning] = useState(false);
@@ -22,6 +25,117 @@ export const LuckySpin = () => {
   const [canSpin, setCanSpin] = useState(false);
   const [reward, setReward] = useState<number | null>(null);
   const { user } = useAuth();
+  
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const lastTickRef = useRef(0);
+  const animationRef = useRef<number | null>(null);
+  const startTimeRef = useRef(0);
+  const startRotationRef = useRef(0);
+  const targetRotationRef = useRef(0);
+  const spinDurationRef = useRef(5000); // 5 seconds spin
+
+  // Create or get AudioContext
+  const getAudioCtx = useCallback(() => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  // Tick sound - short click for each segment
+  const playTickSound = useCallback((speed: number) => {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    // Higher pitch when spinning fast, lower when slow
+    const freq = 800 + speed * 400;
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    
+    const volume = Math.min(0.3, 0.1 + speed * 0.2);
+    gain.gain.setValueAtTime(volume, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }, [getAudioCtx]);
+
+  // Victory fanfare
+  const playVictorySound = useCallback(() => {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    
+    const now = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + i * 0.12);
+      gain.gain.setValueAtTime(0.3, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.4);
+    });
+  }, [getAudioCtx]);
+
+  // Easing function - starts fast, slows down smoothly
+  const easeOutCubic = (t: number): number => {
+    return 1 - Math.pow(1 - t, 3);
+  };
+
+  // Animation loop
+  const animate = useCallback((timestamp: number) => {
+    if (!startTimeRef.current) {
+      startTimeRef.current = timestamp;
+    }
+
+    const elapsed = timestamp - startTimeRef.current;
+    const progress = Math.min(elapsed / spinDurationRef.current, 1);
+    const easedProgress = easeOutCubic(progress);
+    
+    const totalRotation = targetRotationRef.current - startRotationRef.current;
+    const currentRotation = startRotationRef.current + totalRotation * easedProgress;
+    
+    setRotation(currentRotation);
+
+    // Calculate current speed (derivative of eased progress)
+    const speed = 1 - progress; // Simplified speed calculation
+    
+    // Play tick sound when crossing segment boundary
+    const currentSegment = Math.floor(currentRotation / SEGMENT_ANGLE);
+    if (currentSegment !== lastTickRef.current && speed > 0.05) {
+      lastTickRef.current = currentSegment;
+      playTickSound(speed);
+    }
+
+    if (progress < 1) {
+      animationRef.current = requestAnimationFrame(animate);
+    } else {
+      // Animation complete
+      setSpinning(false);
+      playVictorySound();
+      
+      // Trigger confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.5 }
+      });
+    }
+  }, [playTickSound, playVictorySound]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -50,15 +164,32 @@ export const LuckySpin = () => {
   const handleSpin = async () => {
     if (!canSpin || spinning || !user?.id) return;
 
+    // Initialize audio context on user interaction
+    getAudioCtx();
+
     setSpinning(true);
     setReward(null);
     
     const randomIndex = Math.floor(Math.random() * REWARDS.length);
-    const extraRotation = 360 * 5;
-    const targetRotation = extraRotation + (randomIndex * (360 / REWARDS.length));
     
-    setRotation(prev => prev + targetRotation);
+    // Calculate target: 3-4 full rotations + landing on the segment
+    // We need to land so the pointer (at top) points to the segment
+    // Pointer is at 0°, so segment 0 is at top when rotation is 0
+    // To land on segment N, we rotate so segment N is at top
+    const fullRotations = 360 * (3 + Math.random()); // 3-4 rotations
+    const segmentOffset = randomIndex * SEGMENT_ANGLE;
+    // Add half segment to land in center
+    const targetAngle = fullRotations + (360 - segmentOffset) + SEGMENT_ANGLE / 2;
+    
+    startRotationRef.current = rotation;
+    targetRotationRef.current = rotation + targetAngle;
+    startTimeRef.current = 0;
+    lastTickRef.current = Math.floor(rotation / SEGMENT_ANGLE);
+    
+    // Start animation
+    animationRef.current = requestAnimationFrame(animate);
 
+    // Save reward after animation
     setTimeout(async () => {
       const wonReward = REWARDS[randomIndex];
       
@@ -80,14 +211,25 @@ export const LuckySpin = () => {
       localStorage.setItem(`last-spin-${user.id}`, new Date().toISOString());
       
       setReward(wonReward.gems);
-      setSpinning(false);
       setCanSpin(false);
-    }, 4000);
+    }, spinDurationRef.current + 100);
   };
 
   const handleClose = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
     setShow(false);
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
   if (!show) return null;
 
@@ -105,38 +247,74 @@ export const LuckySpin = () => {
           🎰 RULETA DE LA SUERTE
         </h2>
 
+        {/* Wheel container */}
         <div className="relative w-64 h-64 mx-auto mb-6">
+          {/* Wheel with segments */}
           <div 
-            className="w-full h-full rounded-full border-8 border-yellow-400 overflow-hidden transition-transform duration-[4000ms] ease-out"
-            style={{ transform: `rotate(${rotation}deg)` }}
+            className="w-full h-full rounded-full border-8 border-yellow-400 overflow-hidden shadow-xl"
+            style={{ 
+              transform: `rotate(${rotation}deg)`,
+              background: `conic-gradient(${REWARDS.map((r, i) => 
+                `${r.color} ${i * SEGMENT_ANGLE}deg ${(i + 1) * SEGMENT_ANGLE}deg`
+              ).join(', ')})`
+            }}
           >
-            {REWARDS.map((reward, index) => {
-              const angle = (360 / REWARDS.length) * index;
+            {REWARDS.map((rewardItem, index) => {
+              const angle = SEGMENT_ANGLE * index + SEGMENT_ANGLE / 2;
               return (
                 <div
                   key={index}
-                  className="absolute w-full h-full flex items-start justify-center pt-4"
+                  className="absolute w-full h-full flex items-start justify-center"
                   style={{ 
                     transform: `rotate(${angle}deg)`,
                     transformOrigin: 'center center'
                   }}
                 >
-                  <span className="text-lg font-bold text-white drop-shadow-lg">
-                    {reward.label}
+                  <span 
+                    className="text-sm font-bold text-white drop-shadow-lg mt-3"
+                    style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+                  >
+                    {rewardItem.label}
                   </span>
                 </div>
               );
             })}
           </div>
           
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
-            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400" />
+          {/* Center circle */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-yellow-400 to-yellow-600 border-4 border-yellow-300 shadow-lg z-10 flex items-center justify-center">
+            <span className="text-xl">🎰</span>
           </div>
+          
+          {/* Pointer arrow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20">
+            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-lg" />
+          </div>
+
+          {/* Decorative lights */}
+          {[...Array(12)].map((_, i) => {
+            const lightAngle = (360 / 12) * i;
+            return (
+              <div
+                key={i}
+                className="absolute w-3 h-3 rounded-full"
+                style={{
+                  top: '50%',
+                  left: '50%',
+                  transform: `rotate(${lightAngle}deg) translateY(-125px) translateX(-6px)`,
+                  background: spinning && i % 2 === Math.floor(Date.now() / 200) % 2 
+                    ? '#FFD700' 
+                    : '#FFA500',
+                  boxShadow: '0 0 8px rgba(255, 215, 0, 0.8)'
+                }}
+              />
+            );
+          })}
         </div>
 
         {reward !== null && (
-          <div className="text-center mb-4 animate-bounce">
-            <p className="text-2xl font-bold text-yellow-400">
+          <div className="text-center mb-4">
+            <p className="text-2xl font-bold text-yellow-400 animate-pulse">
               ¡Ganaste {reward} gemas! 🎉
             </p>
           </div>
@@ -145,7 +323,7 @@ export const LuckySpin = () => {
         <Button
           onClick={handleSpin}
           disabled={!canSpin || spinning}
-          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-4 rounded-xl text-lg disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-4 rounded-xl text-lg disabled:opacity-50 transform transition-transform active:scale-95"
         >
           {spinning ? '🎰 GIRANDO...' : reward !== null ? '✓ ¡COMPLETADO!' : '🎰 ¡GIRAR! (GRATIS)'}
         </Button>
