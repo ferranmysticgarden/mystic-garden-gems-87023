@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
-import { useDeepLinks } from './useDeepLinks';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Inicializar deep links para apps nativas
-  useDeepLinks();
+  // Deep links se manejan en App.tsx, no aquí (evita duplicados)
 
   useEffect(() => {
     let mounted = true;
