@@ -43,14 +43,17 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
         </button>
 
         <div className="text-center">
-          <Zap className="w-12 h-12 text-orange-400 mx-auto mb-2 animate-pulse" />
+          <div className="text-5xl mb-3">😢</div>
           
           <h2 className="text-2xl font-bold text-orange-400 mb-1">
-            ¡NO TE RINDAS!
+            ¡CASI LO TENÍAS!
           </h2>
           
-          <p className="text-purple-200 text-sm mb-4">
-            ¡Estuviste muy cerca! Continúa con ventaja
+          <p className="text-purple-200 text-sm mb-2">
+            Estuviste a solo <span className="text-yellow-400 font-bold">2 movimientos</span> de ganar...
+          </p>
+          <p className="text-orange-300 text-xs mb-4">
+            No dejes que el nivel te gane ahora
           </p>
 
           <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl p-4 mb-4">

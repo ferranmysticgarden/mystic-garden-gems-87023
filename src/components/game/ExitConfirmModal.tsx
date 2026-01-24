@@ -31,16 +31,19 @@ export const ExitConfirmModal = ({ onStay, streak }: ExitConfirmModalProps) => {
           </p>
         </div>
 
-        {/* Streak reminder with emotion */}
+        {/* Streak warning with more friction */}
         {streak > 0 && (
-          <div className="bg-orange-500/20 rounded-xl p-4 mb-5 border border-orange-400/30 text-center">
-            <div className="flex items-center justify-center gap-2 text-orange-300">
-              <span className="text-2xl">🔥</span>
-              <span className="font-bold">Racha de {streak} días</span>
-              <Sparkles className="w-4 h-4 text-yellow-400" />
+          <div className="bg-red-500/30 rounded-xl p-4 mb-5 border-2 border-red-400/50 text-center animate-pulse">
+            <div className="flex items-center justify-center gap-2 text-red-300 mb-2">
+              <span className="text-3xl">🔥</span>
+              <span className="font-bold text-lg">¡CUIDADO!</span>
+              <span className="text-3xl">🔥</span>
             </div>
-            <p className="text-orange-200/70 text-xs mt-1">
-              ¡No la pierdas! Vuelve mañana 💪
+            <p className="text-red-200 font-semibold">
+              Tu racha de <span className="text-yellow-400 font-bold">{streak} días</span> se perderá si no juegas mañana
+            </p>
+            <p className="text-red-300/70 text-xs mt-2">
+              ¡No pierdas todo tu progreso!
             </p>
           </div>
         )}

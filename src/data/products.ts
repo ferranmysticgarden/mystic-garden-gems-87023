@@ -73,5 +73,61 @@ export const PRODUCTS: Product[] = [
     currency: 'EUR',
     instantGems: 1000,
     noAdsDays: 30
+  },
+  // Flash Offer - 2 hour limited
+  { 
+    id: 'flash_offer', 
+    nameKey: 'shop.flashOffer',
+    name: 'Pack Relámpago', 
+    price: 0.99, 
+    currency: 'EUR',
+    lives: 10,
+    gems: 150,
+    noAdsDays: 0 // 30 mins handled separately
+  },
+  // Victory Multiplier
+  { 
+    id: 'victory_multiplier', 
+    nameKey: 'shop.victoryMultiplier',
+    name: 'Multiplicador x3', 
+    price: 0.99, 
+    currency: 'EUR',
+    lives: 2
+  },
+  // Almost had it - extra moves
+  { 
+    id: 'extra_moves', 
+    nameKey: 'shop.extraMoves',
+    name: 'Última Oportunidad', 
+    price: 0.49, 
+    currency: 'EUR',
+    powerups: 5
+  },
+  // Chest Silver
+  { 
+    id: 'chest_silver', 
+    nameKey: 'shop.chestSilver',
+    name: 'Cofre Plata', 
+    price: 0.99, 
+    currency: 'EUR'
+  },
+  // Chest Gold
+  { 
+    id: 'chest_gold', 
+    nameKey: 'shop.chestGold',
+    name: 'Cofre Oro', 
+    price: 2.99, 
+    currency: 'EUR'
+  },
+  // First purchase pack
+  { 
+    id: 'first_purchase', 
+    nameKey: 'shop.firstPurchase',
+    name: 'Pack Primera Compra x5', 
+    price: 0.99, 
+    currency: 'EUR',
+    gems: 500,
+    lives: 20,
+    noAdsDays: 1
   }
 ];

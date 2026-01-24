@@ -55,11 +55,11 @@ export const RewardedAds = ({ onRewardEarned }: RewardedAdsProps) => {
     setLoading(false);
   };
 
-  // Modal del anuncio simulado
+  // Modal del anuncio simulado con mensaje emocional
   if (showingAd) {
     return (
       <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
-        {/* Contenido del anuncio simulado */}
+        {/* Contenido del anuncio con mensaje emocional */}
         <div className="w-full max-w-md p-6 text-center">
           <div className="mb-6">
             <Sparkles className="w-20 h-20 text-yellow-400 mx-auto animate-pulse" />
@@ -70,7 +70,7 @@ export const RewardedAds = ({ onRewardEarned }: RewardedAdsProps) => {
           <p className="text-xl text-purple-300 mb-2">
             ¡El mejor juego de puzzles!
           </p>
-          <p className="text-gray-400 mb-8">
+          <p className="text-muted-foreground mb-8">
             Resuelve niveles, colecciona flores y gana recompensas
           </p>
           
@@ -86,23 +86,26 @@ export const RewardedAds = ({ onRewardEarned }: RewardedAdsProps) => {
             </p>
           </div>
 
-          {/* Contador */}
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">{countdown}</span>
+          {/* Contador con animación más lenta */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center animate-pulse shadow-lg shadow-green-500/30">
+              <span className="text-3xl font-bold text-white">{countdown}</span>
             </div>
-            <p className="text-gray-400">segundos restantes</p>
+            <p className="text-muted-foreground">Tu recompensa está casi lista...</p>
           </div>
         </div>
 
-        {/* Barra de progreso */}
+        {/* Barra de progreso mejorada */}
         <div className="absolute bottom-20 left-0 right-0 px-8">
-          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-3 bg-muted/30 rounded-full overflow-hidden shadow-inner">
             <div 
-              className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-1000"
+              className="h-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 transition-all duration-1000 rounded-full"
               style={{ width: `${((5 - countdown) / 5) * 100}%` }}
             />
           </div>
+          <p className="text-center text-sm text-muted-foreground mt-2">
+            🌸 Gracias por apoyar el jardín 🌸
+          </p>
         </div>
       </div>
     );
