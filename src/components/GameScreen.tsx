@@ -1,11 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Board } from './Board';
 import { Button } from './ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
 import { LEVELS, Level } from '@/data/levels';
 import { LoseBundle } from './game/LoseBundle';
 import { ComboMultiplier } from './game/ComboMultiplier';
+import { Capacitor } from '@capacitor/core';
 import confetti from 'canvas-confetti';
+
+// Inline audio utilities
+const createAudioContext = () => {
+  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+};
+
+const vibrate = (pattern: number | number[]) => {
+  if (Capacitor.isNativePlatform() && 'vibrate' in navigator) {
+    navigator.vibrate(pattern);
+  }
+};
 
 interface GameScreenProps {
   level: Level;
@@ -23,6 +37,57 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [won, setWon] = useState(false);
   const [showLoseBundle, setShowLoseBundle] = useState(false);
   const [combo, setCombo] = useState(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const hasPlayedEndSound = useRef(false);
+
+  const getCtx = useCallback(() => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = createAudioContext();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  // Victory fanfare
+  const playVictorySound = useCallback(() => {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + i * 0.12);
+      gain.gain.setValueAtTime(0.3, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.5);
+    });
+    vibrate([100, 50, 100, 50, 200]);
+  }, [getCtx]);
+
+  // Lose sound
+  const playLoseSound = useCallback(() => {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.4);
+    vibrate([200, 100, 200]);
+  }, [getCtx]);
 
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
@@ -38,6 +103,11 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       setGameOver(true);
       setWon(true);
       
+      if (!hasPlayedEndSound.current) {
+        hasPlayedEndSound.current = true;
+        playVictorySound();
+      }
+      
       confetti({
         particleCount: 100,
         spread: 70,
@@ -46,10 +116,16 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
       setGameOver(true);
       setWon(false);
+      
+      if (!hasPlayedEndSound.current) {
+        hasPlayedEndSound.current = true;
+        playLoseSound();
+      }
+      
       // Show LoseBundle offer instead of immediate game over
       setShowLoseBundle(true);
     }
-  }, [moves, score, collected, checkWinCondition, gameOver, level]);
+  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
