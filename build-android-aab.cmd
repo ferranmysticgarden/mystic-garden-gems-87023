@@ -163,8 +163,18 @@ if exist "app\build\outputs\bundle\release" rmdir /s /q "app\build\outputs\bundl
 REM Asegura que no reutilice artefactos viejos
 call gradlew.bat --stop >nul 2>&1
 
-set /p STORE_PWD="Contrasena keystore: "
-set /p KEY_PWD="Contrasena key: "
+ REM --- Passwords (optional via env vars to avoid typing every build) ---
+ REM If you set STORE_PWD / KEY_PWD before calling this script, it will reuse them.
+ if "%STORE_PWD%"=="" (
+   set /p STORE_PWD="Contrasena keystore: "
+ ) else (
+   echo Usando STORE_PWD desde variable de entorno.
+ )
+ if "%KEY_PWD%"=="" (
+   set /p KEY_PWD="Contrasena key: "
+ ) else (
+   echo Usando KEY_PWD desde variable de entorno.
+ )
 
 call gradlew.bat :app:clean :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
