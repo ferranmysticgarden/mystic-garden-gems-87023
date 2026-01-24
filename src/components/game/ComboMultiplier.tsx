@@ -1,5 +1,51 @@
 import { useEffect, useState } from 'react';
 
+// Audio para combos
+let comboAudioCtx: AudioContext | null = null;
+const getComboAudioContext = () => {
+  if (!comboAudioCtx) {
+    comboAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return comboAudioCtx;
+};
+
+const playComboSound = (combo: number) => {
+  try {
+    const ctx = getComboAudioContext();
+    const baseFreq = 400 + (combo * 80);
+    
+    // Acorde ascendente épico
+    [0, 0.05, 0.1].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = combo >= 7 ? 'sawtooth' : 'sine';
+      osc.frequency.value = baseFreq + (i * 200);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.3);
+    });
+    
+    // Brillo extra para combos altos
+    if (combo >= 5) {
+      setTimeout(() => {
+        const sparkle = ctx.createOscillator();
+        const sparkleGain = ctx.createGain();
+        sparkle.type = 'sine';
+        sparkle.frequency.value = 2000 + (combo * 200);
+        sparkleGain.gain.setValueAtTime(0.08, ctx.currentTime);
+        sparkleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        sparkle.connect(sparkleGain);
+        sparkleGain.connect(ctx.destination);
+        sparkle.start();
+        sparkle.stop(ctx.currentTime + 0.15);
+      }, 100);
+    }
+  } catch (e) {}
+};
+
 interface ComboMultiplierProps {
   combo: number;
   onComboEnd?: () => void;
@@ -11,10 +57,11 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
   useEffect(() => {
     if (combo >= 3) {
       setShow(true);
+      playComboSound(combo); // Sonido de combo
       const timer = setTimeout(() => {
         setShow(false);
         onComboEnd?.();
-      }, 800); // Reducido de 2000ms a 800ms para no molestar
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [combo, onComboEnd]);

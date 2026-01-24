@@ -9,6 +9,50 @@ import { LevelWinCelebration } from './game/LevelWinCelebration';
 import { OnboardingMessage } from './game/OnboardingMessage';
 import confetti from 'canvas-confetti';
 
+// Audio para derrota
+let loseAudioCtx: AudioContext | null = null;
+const getLoseAudioContext = () => {
+  if (!loseAudioCtx) {
+    loseAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return loseAudioCtx;
+};
+
+const playLoseSound = () => {
+  try {
+    const ctx = getLoseAudioContext();
+    
+    // Notas descendentes tristes
+    const notes = [400, 350, 300, 250];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.2 + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.2);
+      osc.stop(ctx.currentTime + i * 0.2 + 0.3);
+    });
+    
+    // Bajo triste final
+    setTimeout(() => {
+      const bass = ctx.createOscillator();
+      const bassGain = ctx.createGain();
+      bass.type = 'triangle';
+      bass.frequency.value = 100;
+      bassGain.gain.setValueAtTime(0.2, ctx.currentTime);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      bass.connect(bassGain);
+      bassGain.connect(ctx.destination);
+      bass.start();
+      bass.stop(ctx.currentTime + 0.5);
+    }, 700);
+  } catch (e) {}
+};
+
 interface GameScreenProps {
   level: Level;
   onWin: (stars: number, reward: { gems?: number }, usedPowerups: boolean) => void;
@@ -65,6 +109,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       
       setGameOver(true);
       setWon(false);
+      playLoseSound(); // Sonido de derrota
       // Show LoseBundle offer instead of immediate game over
       setShowLoseBundle(true);
     }
