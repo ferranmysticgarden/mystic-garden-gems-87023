@@ -3,7 +3,8 @@ import { Board } from './Board';
 import { Button } from './ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
 import { LEVELS, Level } from '@/data/levels';
-import { LoseBundle } from './game/LoseBundle';
+import { CloseDefeatOffer } from './game/CloseDefeatOffer';
+import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
@@ -23,9 +24,12 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [collected, setCollected] = useState<Record<string, number>>({});
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
-  const [showLoseBundle, setShowLoseBundle] = useState(false);
+  const [showCloseDefeatOffer, setShowCloseDefeatOffer] = useState(false);
+  const [showFlashOffer, setShowFlashOffer] = useState(false);
+  const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
   const hasPlayedEndSound = useRef(false);
+  const hasShownFlashOffer = useRef(false);
   
   // Use mystical fairy sounds
   const { playVictorySound, playLoseSound } = useMysticSounds();
@@ -47,6 +51,27 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
     return false;
   }, [level, score, collected]);
 
+  // Calcular qué tan cerca estuvo el jugador de ganar
+  const getProgressPercentage = useCallback(() => {
+    if (level.objective.type === 'score') {
+      return (score / level.objective.count) * 100;
+    } else {
+      const current = collected[level.objective.target] || 0;
+      return (current / level.objective.count) * 100;
+    }
+  }, [level, score, collected]);
+
+  // Estimar cuántos movimientos le faltaron (aproximado)
+  const estimateMovesNeeded = useCallback(() => {
+    const progress = getProgressPercentage();
+    if (progress >= 100) return 0;
+    // Si llegó al 80%+, probablemente le faltaban 2-3 movimientos
+    if (progress >= 80) return Math.ceil((100 - progress) / 15);
+    // Si llegó al 60%+, probablemente le faltaban 4-5
+    if (progress >= 60) return Math.ceil((100 - progress) / 10);
+    return Math.ceil((100 - progress) / 8);
+  }, [getProgressPercentage]);
+
   useEffect(() => {
     if (checkWinCondition() && !gameOver) {
       setGameOver(true);
@@ -54,7 +79,6 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       
       if (!hasPlayedEndSound.current) {
         hasPlayedEndSound.current = true;
-        // Silence music for victory fanfare
         backgroundMusic.setScreen('victory');
         playVictorySound();
       }
@@ -70,15 +94,30 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       
       if (!hasPlayedEndSound.current) {
         hasPlayedEndSound.current = true;
-        // Silence music for defeat sound
         backgroundMusic.setScreen('defeat');
         playLoseSound();
       }
       
-      // Show LoseBundle offer instead of immediate game over
-      setShowLoseBundle(true);
+      // Calcular qué tan cerca estuvo
+      const progress = getProgressPercentage();
+      const movesNeeded = estimateMovesNeeded();
+      setMovesShortBy(movesNeeded);
+      
+      // Si llegó al 70%+ del objetivo = "derrota cercana"
+      // Mostrar oferta simple y directa
+      if (progress >= 70) {
+        setShowCloseDefeatOffer(true);
+        
+        // Si es la primera derrota cercana de la sesión, mostrar Flash Offer después
+        if (!hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
+          hasShownFlashOffer.current = true;
+        }
+      } else {
+        // Derrota normal - ir directo al game over
+        setShowCloseDefeatOffer(false);
+      }
     }
-  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound]);
+  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
@@ -102,16 +141,25 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
     setCombo(0);
   }, []);
 
-  const handleLoseBundleBuy = () => {
-    // User bought the bundle - add 5 moves and continue
+  const handleCloseDefeatBuy = () => {
+    // User bought - add 5 moves and continue
     setMoves(5);
     setGameOver(false);
-    setShowLoseBundle(false);
+    setShowCloseDefeatOffer(false);
   };
 
-  const handleLoseBundleDismiss = () => {
-    setShowLoseBundle(false);
-    // Game over - show final screen
+  const handleCloseDefeatDismiss = () => {
+    setShowCloseDefeatOffer(false);
+    
+    // Si es primera derrota cercana, mostrar Flash Offer
+    if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
+      localStorage.setItem('flash_offer_shown_session', 'true');
+      setShowFlashOffer(true);
+    }
+  };
+
+  const handleFlashOfferClose = () => {
+    setShowFlashOffer(false);
   };
 
   const getProgress = () => {
@@ -193,16 +241,25 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
         {/* Combo Multiplier */}
         <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
 
-        {/* LoseBundle Offer */}
-        {showLoseBundle && (
-          <LoseBundle 
-            onBuy={handleLoseBundleBuy}
-            onDismiss={handleLoseBundleDismiss}
+        {/* Close Defeat Offer - oferta simple cuando pierde por poco */}
+        {showCloseDefeatOffer && (
+          <CloseDefeatOffer 
+            movesShort={movesShortBy}
+            onBuy={handleCloseDefeatBuy}
+            onDismiss={handleCloseDefeatDismiss}
           />
         )}
 
-        {/* Game Over Overlay - only show after LoseBundle is dismissed or if won */}
-        {gameOver && !showLoseBundle && (
+        {/* Flash Offer - aparece después de primera derrota cercana */}
+        {showFlashOffer && (
+          <FlashOffer 
+            trigger="loss"
+            onClose={handleFlashOfferClose}
+          />
+        )}
+
+        {/* Game Over Overlay - only show after offers are dismissed or if won */}
+        {gameOver && !showCloseDefeatOffer && !showFlashOffer && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
               <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>

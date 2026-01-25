@@ -94,6 +94,15 @@ export const PRODUCTS: Product[] = [
     currency: 'EUR',
     lives: 2
   },
+  // Ice Breaker - Termina este nivel (primera compra psicológica)
+  { 
+    id: 'finish_level', 
+    nameKey: 'shop.finishLevel',
+    name: 'Termina Este Nivel', 
+    price: 0.99, 
+    currency: 'EUR',
+    powerups: 5 // +5 movimientos
+  },
   // Almost had it - extra moves
   { 
     id: 'extra_moves', 
