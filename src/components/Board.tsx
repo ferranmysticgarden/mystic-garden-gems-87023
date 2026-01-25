@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Tile } from './Tile';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const TILE_TYPES = ['🌸', '🌺', '🌼', '🍃', '🌻', '🌷'];
 const BOARD_SIZE = 8;
@@ -19,17 +20,113 @@ interface BoardProps {
 }
 
 export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => {
+  const { t } = useLanguage();
   const [board, setBoard] = useState<string[][]>([]);
   const [selected, setSelected] = useState<Position | null>(null);
   const [animatingTiles, setAnimatingTiles] = useState<Set<string>>(new Set());
   const [isSwapping, setIsSwapping] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [showShuffleMessage, setShowShuffleMessage] = useState(false);
   const matchCountRef = useRef(0);
   
   // Use mystical fairy sounds
-  const { playSelectSound, playMatchSound, playInvalidSound } = useMysticSounds();
+  const { playSelectSound, playMatchSound, playInvalidSound, playShuffleSound } = useMysticSounds();
+
+  // Check if there are any valid moves on the board
+  const hasValidMoves = useCallback((currentBoard: string[][]): boolean => {
+    if (currentBoard.length === 0) return true;
+    
+    for (let row = 0; row < BOARD_SIZE; row++) {
+      for (let col = 0; col < BOARD_SIZE; col++) {
+        const tile = currentBoard[row][col];
+        if (!tile) continue;
+        
+        // Check swap right
+        if (col < BOARD_SIZE - 1) {
+          const testBoard = currentBoard.map(r => [...r]);
+          testBoard[row][col] = testBoard[row][col + 1];
+          testBoard[row][col + 1] = tile;
+          if (wouldCreateMatch(testBoard, row, col) || wouldCreateMatch(testBoard, row, col + 1)) {
+            return true;
+          }
+        }
+        
+        // Check swap down
+        if (row < BOARD_SIZE - 1) {
+          const testBoard = currentBoard.map(r => [...r]);
+          testBoard[row][col] = testBoard[row + 1][col];
+          testBoard[row + 1][col] = tile;
+          if (wouldCreateMatch(testBoard, row, col) || wouldCreateMatch(testBoard, row + 1, col)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }, []);
+
+  // Check if a position would be part of a match
+  const wouldCreateMatch = (testBoard: string[][], row: number, col: number): boolean => {
+    const tile = testBoard[row][col];
+    if (!tile) return false;
+    
+    // Check horizontal
+    let hCount = 1;
+    let c = col - 1;
+    while (c >= 0 && testBoard[row][c] === tile) { hCount++; c--; }
+    c = col + 1;
+    while (c < BOARD_SIZE && testBoard[row][c] === tile) { hCount++; c++; }
+    if (hCount >= 3) return true;
+    
+    // Check vertical
+    let vCount = 1;
+    let r = row - 1;
+    while (r >= 0 && testBoard[r][col] === tile) { vCount++; r--; }
+    r = row + 1;
+    while (r < BOARD_SIZE && testBoard[r][col] === tile) { vCount++; r++; }
+    if (vCount >= 3) return true;
+    
+    return false;
+  };
+
+  // Shuffle the board ensuring valid moves exist
+  const shuffleBoard = useCallback((currentBoard: string[][]): string[][] => {
+    let newBoard: string[][];
+    let attempts = 0;
+    const maxAttempts = 50;
+    
+    do {
+      // Fisher-Yates shuffle
+      const flat = currentBoard.flat();
+      for (let i = flat.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [flat[i], flat[j]] = [flat[j], flat[i]];
+      }
+      
+      newBoard = [];
+      for (let i = 0; i < BOARD_SIZE; i++) {
+        newBoard.push(flat.slice(i * BOARD_SIZE, (i + 1) * BOARD_SIZE));
+      }
+      attempts++;
+    } while (!hasValidMoves(newBoard) && attempts < maxAttempts);
+    
+    // If still no valid moves after max attempts, regenerate with fresh tiles
+    if (!hasValidMoves(newBoard)) {
+      newBoard = [];
+      for (let i = 0; i < BOARD_SIZE; i++) {
+        const row: string[] = [];
+        for (let j = 0; j < BOARD_SIZE; j++) {
+          row.push(TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)]);
+        }
+        newBoard.push(row);
+      }
+    }
+    
+    return newBoard;
+  }, [hasValidMoves]);
 
   const initializeBoard = useCallback(() => {
-    const newBoard: string[][] = [];
+    let newBoard: string[][] = [];
     for (let i = 0; i < BOARD_SIZE; i++) {
       const row: string[] = [];
       for (let j = 0; j < BOARD_SIZE; j++) {
@@ -37,9 +134,15 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
       }
       newBoard.push(row);
     }
+    
+    // Ensure initial board has valid moves
+    if (!hasValidMoves(newBoard)) {
+      newBoard = shuffleBoard(newBoard);
+    }
+    
     setBoard(newBoard);
     setSelected(null);
-  }, []);
+  }, [hasValidMoves, shuffleBoard]);
 
   useEffect(() => {
     initializeBoard();
@@ -134,20 +237,50 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     return newBoard;
   }, [onMatch]);
 
+  // Check for no valid moves after board settles
   useEffect(() => {
     if (board.length === 0) return;
-    if (animatingTiles.size > 0) return; // Don't check while animating
-    if (isSwapping) return; // Don't resolve cascades while validating a swap
+    if (animatingTiles.size > 0) return;
+    if (isSwapping) return;
+    if (isShuffling) return;
+    if (disabled) return;
 
     const timeoutId = setTimeout(() => {
       const matches = findMatches(board);
       if (matches.length > 0) {
         removeMatches(board, matches);
+      } else if (!hasValidMoves(board)) {
+        // No matches and no valid moves - auto shuffle!
+        setIsShuffling(true);
+        setShowShuffleMessage(true);
+        playShuffleSound();
+        
+        // Animate all tiles
+        const allTiles = new Set<string>();
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            allTiles.add(`${r}-${c}`);
+          }
+        }
+        setAnimatingTiles(allTiles);
+        
+        // After animation, shuffle and reset
+        setTimeout(() => {
+          const shuffledBoard = shuffleBoard(board);
+          setBoard(shuffledBoard);
+          setAnimatingTiles(new Set());
+          setIsShuffling(false);
+          
+          // Hide message after a bit more time
+          setTimeout(() => {
+            setShowShuffleMessage(false);
+          }, 800);
+        }, 600);
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping]);
+  }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping, isShuffling, hasValidMoves, shuffleBoard, disabled, playShuffleSound]);
 
   const swapTiles = useCallback((pos1: Position, pos2: Position) => {
     setIsSwapping(true);
@@ -205,9 +338,30 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto relative">
+      {/* Shuffle Message Overlay */}
+      {showShuffleMessage && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div 
+            className="px-6 py-4 rounded-2xl animate-scale-in"
+            style={{
+              background: 'linear-gradient(135deg, hsl(270 60% 30% / 0.95), hsl(280 50% 20% / 0.95))',
+              boxShadow: '0 0 40px rgba(168, 85, 247, 0.6), 0 0 80px rgba(168, 85, 247, 0.3)',
+              border: '2px solid rgba(168, 85, 247, 0.5)',
+            }}
+          >
+            <div className="text-center">
+              <div className="text-3xl mb-2 animate-pulse">✨🔮✨</div>
+              <p className="text-lg font-bold text-white/90">
+                {t('game.magic_shuffle')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div 
-        className="grid grid-cols-8 gap-1 p-3 rounded-2xl"
+        className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-300 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
         style={{
           background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
           boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',

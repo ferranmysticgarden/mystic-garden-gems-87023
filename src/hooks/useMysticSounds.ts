@@ -662,6 +662,96 @@ export const useMysticSounds = () => {
     vibrate([50, 30, 80]);
   }, [getAudioContext, vibrate]);
 
+  // 🔄 Shuffle mágico - sonido de reorganización mística
+  const playShuffleSound = useCallback(() => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    
+    const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.MILESTONE * 0.8;
+    const reverb = reverbRef.current;
+
+    // Whoosh descendente suave
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseBuffer.length; i++) {
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (noiseBuffer.length * 0.4));
+    }
+    
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(randomPitch(2000), now);
+    filter.frequency.exponentialRampToValueAtTime(randomPitch(400), now + 0.5);
+    filter.Q.value = 1.5;
+    
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(vol * 0.5, now + 0.05);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    if (reverb) {
+      const wetGain = ctx.createGain();
+      wetGain.gain.value = 0.1;
+      noiseGain.connect(reverb);
+      reverb.connect(wetGain);
+      wetGain.connect(ctx.destination);
+    }
+    noise.start(now);
+    noise.stop(now + 0.6);
+
+    // Notas mágicas ascendentes (reorganización)
+    const notes = [392, 523.25, 659.25, 783.99];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      const noteStart = now + 0.15 + i * 0.08;
+      osc.frequency.setValueAtTime(randomPitch(freq), noteStart);
+      
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(vol * 0.6, noteStart + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.25);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (reverb) {
+        const wetGain = ctx.createGain();
+        wetGain.gain.value = 0.08;
+        gain.connect(reverb);
+        reverb.connect(wetGain);
+        wetGain.connect(ctx.destination);
+      }
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.25);
+    });
+
+    // Sparkles finales
+    for (let i = 0; i < 5; i++) {
+      const sparkle = ctx.createOscillator();
+      const sparkleGain = ctx.createGain();
+      sparkle.type = 'sine';
+      const sparkleStart = now + 0.5 + i * 0.05;
+      sparkle.frequency.setValueAtTime(randomPitch(1600 + Math.random() * 1200), sparkleStart);
+      
+      sparkleGain.gain.setValueAtTime(0, sparkleStart);
+      sparkleGain.gain.linearRampToValueAtTime(vol * 0.4, sparkleStart + 0.008);
+      sparkleGain.gain.exponentialRampToValueAtTime(0.001, sparkleStart + 0.15);
+      
+      sparkle.connect(sparkleGain);
+      sparkleGain.connect(ctx.destination);
+      sparkle.start(sparkleStart);
+      sparkle.stop(sparkleStart + 0.15);
+    }
+
+    vibrate([40, 20, 40, 20, 60]);
+  }, [getAudioContext, vibrate]);
+
   return {
     playSelectSound,
     playMatchSound,
@@ -674,6 +764,7 @@ export const useMysticSounds = () => {
     playTickSound,
     playMilestoneSound,
     playOfferSound,
+    playShuffleSound,
     vibrate
   };
 };

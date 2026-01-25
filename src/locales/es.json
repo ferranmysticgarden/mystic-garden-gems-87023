@@ -12,7 +12,8 @@
     "continue": "Continuar",
     "retry": "Reintentar",
     "watchAd": "Ver anuncio",
-    "play": "Jugar"
+    "play": "Jugar",
+    "magic_shuffle": "La magia reorganiza el jardín..."
   },
   "resources": {
     "lives": "Vidas",

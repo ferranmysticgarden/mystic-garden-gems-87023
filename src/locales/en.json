@@ -12,7 +12,8 @@
     "continue": "Continue",
     "retry": "Retry",
     "watchAd": "Watch Ad",
-    "play": "Play"
+    "play": "Play",
+    "magic_shuffle": "Magic is reshuffling the garden..."
   },
   "resources": {
     "lives": "Lives",
