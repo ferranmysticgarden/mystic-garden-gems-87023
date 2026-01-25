@@ -1,6 +1,6 @@
 {
   "game": {
-    "title": "Mystic Garden Pro",
+    "title": "Mystic Garden",
     "level": "Nível",
     "moves": "Movimentos",
     "score": "Pontuação",
@@ -19,7 +19,8 @@
     "lives": "Vidas",
     "gems": "Gemas",
     "leaves": "Folhas",
-    "unlimited": "Ilimitadas"
+    "unlimited": "Ilimitadas",
+    "nextLife": "Próxima vida em"
   },
   "shop": {
     "title": "Loja",
@@ -33,6 +34,10 @@
     "gardenPass": "Passe de Jardim Mensal",
     "finishLevel": "Termine Este Nível",
     "victoryMultiplier": "Multiplicador x3",
+    "flashOffer": "Pacote Relâmpago",
+    "starterPack": "Pacote Inicial",
+    "continueGame": "Continuar Jogo",
+    "buyMoves": "+5 Movimentos",
     "purchased": "Compra realizada com sucesso!"
   },
   "powerups": {

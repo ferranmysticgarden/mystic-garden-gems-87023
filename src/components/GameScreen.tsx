@@ -6,6 +6,8 @@ import { LEVELS, Level } from '@/data/levels';
 import { CloseDefeatOffer } from './game/CloseDefeatOffer';
 import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
+import { BuyMovesOffer } from './game/BuyMovesOffer';
+import { ContinueGameOffer } from './game/ContinueGameOffer';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import confetti from 'canvas-confetti';
@@ -26,10 +28,14 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
   const [won, setWon] = useState(false);
   const [showCloseDefeatOffer, setShowCloseDefeatOffer] = useState(false);
   const [showFlashOffer, setShowFlashOffer] = useState(false);
+  const [showBuyMovesOffer, setShowBuyMovesOffer] = useState(false);
+  const [showContinueOffer, setShowContinueOffer] = useState(false);
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
+  const [progressAtLoss, setProgressAtLoss] = useState(0);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
+  const hasShownBuyMoves = useRef(false);
   
   // Use mystical fairy sounds
   const { playVictorySound, playLoseSound } = useMysticSounds();
@@ -89,6 +95,14 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
         origin: { y: 0.6 }
       });
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
+      // Player ran out of moves - show buy moves offer BEFORE defeat
+      if (!hasShownBuyMoves.current) {
+        hasShownBuyMoves.current = true;
+        setShowBuyMovesOffer(true);
+        return; // Don't end game yet - give chance to buy moves
+      }
+      
+      // If already shown buy moves, now it's game over
       setGameOver(true);
       setWon(false);
       
@@ -102,19 +116,16 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
       const progress = getProgressPercentage();
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
+      setProgressAtLoss(progress);
       
-      // Si llegó al 70%+ del objetivo = "derrota cercana"
-      // Mostrar oferta simple y directa
+      // Si llegó al 70%+ del objetivo = mostrar oferta emocional de continuar
       if (progress >= 70) {
-        setShowCloseDefeatOffer(true);
+        setShowContinueOffer(true);
         
         // Si es la primera derrota cercana de la sesión, mostrar Flash Offer después
         if (!hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
           hasShownFlashOffer.current = true;
         }
-      } else {
-        // Derrota normal - ir directo al game over
-        setShowCloseDefeatOffer(false);
       }
     }
   }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded]);
@@ -160,6 +171,49 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
 
   const handleFlashOfferClose = () => {
     setShowFlashOffer(false);
+  };
+
+  // Handler para comprar movimientos ANTES de perder
+  const handleBuyMovesBuy = () => {
+    setMoves(5);
+    setShowBuyMovesOffer(false);
+    hasShownBuyMoves.current = false; // Reset para siguiente vez
+  };
+
+  const handleBuyMovesDismiss = () => {
+    setShowBuyMovesOffer(false);
+    // Ahora sí es game over
+    setGameOver(true);
+    setWon(false);
+    
+    if (!hasPlayedEndSound.current) {
+      hasPlayedEndSound.current = true;
+      backgroundMusic.setScreen('defeat');
+      playLoseSound();
+    }
+    
+    const progress = getProgressPercentage();
+    setProgressAtLoss(progress);
+    
+    if (progress >= 70) {
+      setShowContinueOffer(true);
+    }
+  };
+
+  // Handler para continuar partida después de perder (emocional)
+  const handleContinueBuy = () => {
+    setMoves(5);
+    setGameOver(false);
+    setShowContinueOffer(false);
+  };
+
+  const handleContinueExit = () => {
+    setShowContinueOffer(false);
+    // Mostrar Flash Offer si aplica
+    if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
+      localStorage.setItem('flash_offer_shown_session', 'true');
+      setShowFlashOffer(true);
+    }
   };
 
   const getProgress = () => {
@@ -258,8 +312,25 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
           />
         )}
 
-        {/* Game Over Overlay - only show after offers are dismissed or if won */}
-        {gameOver && !showCloseDefeatOffer && !showFlashOffer && (
+        {/* Buy Moves Offer - ANTES de perder cuando quedan 0 movimientos */}
+        {showBuyMovesOffer && (
+          <BuyMovesOffer 
+            onBuy={handleBuyMovesBuy}
+            onDismiss={handleBuyMovesDismiss}
+          />
+        )}
+
+        {/* Continue Game Offer - oferta emocional después de perder */}
+        {showContinueOffer && (
+          <ContinueGameOffer 
+            progressPercent={progressAtLoss}
+            onContinue={handleContinueBuy}
+            onExit={handleContinueExit}
+          />
+        )}
+
+        {/* Game Over Overlay - only show after all offers are dismissed or if won */}
+        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showContinueOffer && !showBuyMovesOffer && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
               <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>
