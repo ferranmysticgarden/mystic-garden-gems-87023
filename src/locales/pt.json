@@ -24,12 +24,15 @@
   "shop": {
     "title": "Loja",
     "buy": "Comprar",
+    "quickPack": "Pacote Rápido",
     "gems100": "100 Gemas",
     "gems300": "300 Gemas",
     "gems1200": "1200 Gemas",
     "noAdsMonth": "Remover Anúncios (1 Mês)",
     "noAdsForever": "Remover Anúncios (Para Sempre)",
     "gardenPass": "Passe de Jardim Mensal",
+    "finishLevel": "Termine Este Nível",
+    "victoryMultiplier": "Multiplicador x3",
     "purchased": "Compra realizada com sucesso!"
   },
   "powerups": {

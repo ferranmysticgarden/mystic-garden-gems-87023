@@ -24,12 +24,15 @@
   "shop": {
     "title": "Shop",
     "buy": "Buy",
+    "quickPack": "Quick Pack",
     "gems100": "100 Gems",
     "gems300": "300 Gems",
     "gems1200": "1200 Gems",
     "noAdsMonth": "Remove Ads (1 Month)",
     "noAdsForever": "Remove Ads (Forever)",
     "gardenPass": "Garden Pass Monthly",
+    "finishLevel": "Finish This Level",
+    "victoryMultiplier": "x3 Multiplier",
     "purchased": "Purchase successful!"
   },
   "powerups": {

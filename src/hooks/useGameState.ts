@@ -26,7 +26,7 @@ const INITIAL_STATE: GameState = {
   unlimitedLivesUntil: null,
 };
 
-const LIFE_REFILL_TIME = 25 * 60 * 1000; // 25 minutes in milliseconds
+const LIFE_REFILL_TIME = 35 * 60 * 1000; // 35 minutes - más tiempo para que duela esperar
 
 export const useGameState = () => {
   const { user } = useAuth();
