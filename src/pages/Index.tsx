@@ -14,6 +14,7 @@ import { LevelSelect } from '@/components/LevelSelect';
 import { Shop } from '@/components/Shop';
 import { NoLivesModal } from '@/components/NoLivesModal';
 import { FirstDayOffer } from '@/components/game/FirstDayOffer';
+import { StarterPack } from '@/components/game/StarterPack';
 import { LuckySpin } from '@/components/game/LuckySpin';
 import { Tutorial } from '@/components/game/Tutorial';
 import { ProgressionBar } from '@/components/game/ProgressionBar';
@@ -91,6 +92,8 @@ const Index = () => {
   const [showDailyMissions, setShowDailyMissions] = useState(false);
   const [showLootChest, setShowLootChest] = useState(false);
   const [showSpringEvent, setShowSpringEvent] = useState(false);
+  const [showStarterPack, setShowStarterPack] = useState(false);
+  const [lastCompletedLevel, setLastCompletedLevel] = useState(0);
   const [lastWinGems, setLastWinGems] = useState(0);
   const [consecutiveLosses, setConsecutiveLosses] = useState(0);
   
@@ -135,6 +138,9 @@ const Index = () => {
     // Reset consecutive losses on win
     setConsecutiveLosses(0);
     
+    // Track last completed level for starter pack
+    setLastCompletedLevel(currentLevel.id);
+    
     // Increment games played counter for review request
     setGamesPlayed(prev => prev + 1);
     
@@ -148,6 +154,11 @@ const Index = () => {
     // Show first win celebration for level 1
     if (completedCount === 1) {
       setShowFirstWin(true);
+    }
+    
+    // Show Starter Pack after level 3 or 4
+    if (currentLevel.id === 3 || currentLevel.id === 4) {
+      setTimeout(() => setShowStarterPack(true), 2000);
     }
     
     // Show post-victory offer for harder levels (level 5+)
@@ -468,6 +479,14 @@ const Index = () => {
 
       {/* First Day Offer */}
       <FirstDayOffer />
+
+      {/* Starter Pack - aparece después de nivel 3-4 */}
+      {showStarterPack && (
+        <StarterPack 
+          levelJustCompleted={lastCompletedLevel}
+          onClose={() => setShowStarterPack(false)}
+        />
+      )}
 
       {/* Lucky Spin */}
       <LuckySpin />

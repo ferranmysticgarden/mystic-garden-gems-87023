@@ -21,6 +21,14 @@ const PRODUCT_PRICES: Record<string, string> = {
   "victory_multiplier": "price_1StWrVB6GI8NmIPnn88ftQMe",
   // Ice-breaker: oferta simple cuando pierde por poco
   "finish_level": "price_1StbMWB6GI8NmIPn9BMYkgrR",
+  // NEW: Starter Pack - oferta irresistible después de nivel 3-4
+  "starter_pack": "price_1StceHB6GI8NmIPn2RGJWhAA",
+  // NEW: Continuar partida - oferta emocional cuando pierde
+  "continue_game": "price_1StcfKB6GI8NmIPnUYIOAmai",
+  // NEW: Comprar movimientos - antes de perder (0 movs)
+  "buy_moves": "price_1StcfiB6GI8NmIPntLwsg80l",
+  // Flash offer
+  "flash_offer": "price_1StWrVB6GI8NmIPnn88ftQMe",
 };
 
 serve(async (req) => {

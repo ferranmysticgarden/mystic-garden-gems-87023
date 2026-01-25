@@ -1,19 +1,19 @@
 {
   "game": {
-    "title": "Mystic Garden Pro",
+    "title": "Mystic Garden",
     "level": "Nivel",
     "moves": "Movimientos",
     "score": "Puntuación",
     "objective": "Objetivo",
-    "collect": "Recoger",
+    "collect": "Recolectar",
     "points": "puntos",
     "win": "¡Nivel Completado!",
     "lose": "Nivel Fallido",
     "continue": "Continuar",
     "retry": "Reintentar",
-    "watchAd": "Ver Anuncio",
+    "watchAd": "Ver anuncio",
     "play": "Jugar",
-    "magic_shuffle": "La magia está reorganizando el jardín..."
+    "magic_shuffle": "La magia reorganiza el jardín..."
   },
   "resources": {
     "lives": "Vidas",
@@ -34,42 +34,10 @@
     "gardenPass": "Pase de Jardín Mensual",
     "finishLevel": "Termina Este Nivel",
     "victoryMultiplier": "Multiplicador x3",
-    "purchased": "¡Compra realizada con éxito!"
-  },
-  "game": {
-    "title": "Mystic Garden Pro",
-    "level": "Nivel",
-    "moves": "Movimientos",
-    "score": "Puntuación",
-    "objective": "Objetivo",
-    "collect": "Recolectar",
-    "points": "puntos",
-    "win": "¡Nivel Completado!",
-    "lose": "Nivel Fallido",
-    "continue": "Continuar",
-    "retry": "Reintentar",
-    "watchAd": "Ver anuncio",
-    "play": "Jugar",
-    "magic_shuffle": "La magia reorganiza el jardín..."
-  },
-  "resources": {
-    "lives": "Vidas",
-    "gems": "Gemas",
-    "leaves": "Hojas",
-    "unlimited": "Ilimitadas"
-  },
-  "shop": {
-    "title": "Tienda",
-    "buy": "Comprar",
-    "quickPack": "Pack Rápido",
-    "gems100": "100 Gemas",
-    "gems300": "300 Gemas",
-    "gems1200": "1200 Gemas",
-    "noAdsMonth": "Quitar Anuncios (1 Mes)",
-    "noAdsForever": "Quitar Anuncios (Para Siempre)",
-    "gardenPass": "Pase de Jardín Mensual",
-    "finishLevel": "Termina Este Nivel",
-    "victoryMultiplier": "Multiplicador x3",
+    "flashOffer": "Pack Relámpago",
+    "starterPack": "Starter Pack",
+    "continueGame": "Continuar Partida",
+    "buyMoves": "+5 Movimientos",
     "purchased": "¡Compra exitosa!"
   },
   "powerups": {
