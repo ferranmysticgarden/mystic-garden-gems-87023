@@ -18,6 +18,7 @@ const PRODUCT_PRICES: Record<string, string> = {
   "quick_pack": "price_1SnbakB6GI8NmIPnVmGc39IK",
   "mega_pack_inicial": "price_1Spc1wB6GI8NmIPnsUGlPqoR",
   "pack_revancha": "price_1Spc2AB6GI8NmIPnKpsekI9G",
+  "victory_multiplier": "price_1StWrVB6GI8NmIPnn88ftQMe",
 };
 
 serve(async (req) => {
