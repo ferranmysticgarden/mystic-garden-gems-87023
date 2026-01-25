@@ -2,9 +2,9 @@ import { useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 
 /**
- * Mystical fairy-tale sounds for the game
+ * Mystical fairy-tale sounds for the game - AAA QUALITY
  * Style: magical garden, enchanted forest, soft bells, harp, chimes
- * NO harsh sounds, NO dark tones - pure magical fairy vibes
+ * Features: pitch variation, fade in/out, reverb, rate limiting, volume hierarchy
  */
 
 // Global sound enabled state
@@ -18,12 +18,97 @@ if (typeof window !== 'undefined') {
 
 export const setSoundEnabled = (enabled: boolean) => {
   globalSoundEnabled = enabled;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('mystic_sound_enabled', String(enabled));
+  }
 };
 
 export const isSoundEnabled = () => globalSoundEnabled;
 
+// Volume hierarchy (relative to master)
+const VOLUME = {
+  SELECT: 0.6,
+  MATCH: 0.65,
+  INVALID: 0.7,
+  COMBO: 0.8,
+  EXPLOSION: 1.0,
+  VICTORY: 1.0,
+  CHEST: 1.0,
+  GEM: 0.7,
+  TICK: 0.5,
+  MILESTONE: 0.9,
+  OFFER: 0.85,
+};
+
+// Master volume (adjust overall loudness)
+const MASTER_VOLUME = 0.22;
+
+// Rate limiting timestamps
+const lastPlayTime: Record<string, number> = {};
+const RATE_LIMITS = {
+  select: 60,   // ms
+  match: 100,   // ms
+  invalid: 80,  // ms
+  reward: 150,  // ms
+};
+
+// Check if enough time has passed since last play
+const canPlay = (soundType: string): boolean => {
+  const now = Date.now();
+  const limit = RATE_LIMITS[soundType as keyof typeof RATE_LIMITS] || 50;
+  if (lastPlayTime[soundType] && now - lastPlayTime[soundType] < limit) {
+    return false;
+  }
+  lastPlayTime[soundType] = now;
+  return true;
+};
+
+// ±2% random pitch variation for organic feel
+const randomPitch = (baseFreq: number): number => {
+  return baseFreq * (1 + (Math.random() * 0.04 - 0.02));
+};
+
+// Create smooth fade envelope (no clicks)
+const createEnvelope = (
+  gain: GainNode,
+  ctx: AudioContext,
+  volume: number,
+  duration: number,
+  fadeIn: number = 0.01,
+  fadeOut: number = 0.03
+) => {
+  const now = ctx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + fadeIn);
+  gain.gain.setValueAtTime(volume, now + duration - fadeOut);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+};
+
+// Create subtle convolver reverb
+const createReverb = (ctx: AudioContext, wetAmount: number = 0.06): ConvolverNode | null => {
+  try {
+    const convolver = ctx.createConvolver();
+    const rate = ctx.sampleRate;
+    const length = rate * 0.5; // 0.5s impulse
+    const impulse = ctx.createBuffer(2, length, rate);
+    
+    for (let channel = 0; channel < 2; channel++) {
+      const channelData = impulse.getChannelData(channel);
+      for (let i = 0; i < length; i++) {
+        channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5) * wetAmount;
+      }
+    }
+    
+    convolver.buffer = impulse;
+    return convolver;
+  } catch {
+    return null;
+  }
+};
+
 export const useMysticSounds = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
+  const reverbRef = useRef<ConvolverNode | null>(null);
 
   const getAudioContext = useCallback(() => {
     if (!globalSoundEnabled) return null;
@@ -34,6 +119,12 @@ export const useMysticSounds = () => {
     if (audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume();
     }
+    
+    // Create reverb if not exists
+    if (!reverbRef.current && audioContextRef.current) {
+      reverbRef.current = createReverb(audioContextRef.current, 0.06);
+    }
+    
     return audioContextRef.current;
   }, []);
 
@@ -45,21 +136,26 @@ export const useMysticSounds = () => {
     }
   }, []);
 
-  // 🟢 SELECCIÓN DE GEMA - cristal tocado (50-80ms) - 70-75% volume
+  // 🟢 SELECCIÓN DE GEMA - cristal tocado (50-80ms)
   const playSelectSound = useCallback(() => {
+    if (!canPlay('select')) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.SELECT;
 
-    // Click cristal agudo - reduced to 70% of master
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1400, now);
-    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.06);
-    gain.gain.setValueAtTime(0.13, now); // 0.18 * 0.72 ≈ 0.13
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    osc.frequency.setValueAtTime(randomPitch(1400), now);
+    osc.frequency.exponentialRampToValueAtTime(randomPitch(2200), now + 0.06);
+    
+    // Smooth envelope
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
@@ -68,33 +164,37 @@ export const useMysticSounds = () => {
     vibrate(10);
   }, [getAudioContext, vibrate]);
 
-  // ✨ MATCH NORMAL - nota arpa simple (100-150ms) - 70-75% volume
-  // 🔥 COMBO - arpegio corto solo en combo (200-300ms) - progressive volume
+  // ✨ MATCH NORMAL & 🔥 COMBO
   const playMatchSound = useCallback((comboLevel: number = 0) => {
+    if (!canPlay('match')) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
     if (comboLevel === 0) {
-      // Match normal: una sola nota de arpa - 70% volume
+      // Match normal: single harp note
+      const vol = MASTER_VOLUME * VOLUME.MATCH;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(880, now);
-      gain.gain.setValueAtTime(0.16, now); // 0.22 * 0.72 ≈ 0.16
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+      osc.frequency.setValueAtTime(randomPitch(880), now);
+      
+      // Smooth envelope
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(vol, now + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.12);
       vibrate(15);
     } else {
-      // Combo: arpegio corto que "canta" - progressive volume
-      // Combo 2: normal (0.16), Combo 3+: +10% per level
-      const baseVolume = 0.16;
+      // Combo: progressive volume arpeggio
+      const baseVol = MASTER_VOLUME * VOLUME.COMBO;
       const volumeBoost = comboLevel >= 2 ? (comboLevel - 1) * 0.1 : 0;
-      const comboVolume = Math.min(baseVolume * (1 + volumeBoost), 0.28); // cap at 0.28
+      const comboVolume = Math.min(baseVol * (1 + volumeBoost), MASTER_VOLUME * 1.1);
       
       const notes = [880, 1100, 1320];
       const notesToPlay = Math.min(notes.length, 1 + comboLevel);
@@ -103,33 +203,43 @@ export const useMysticSounds = () => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq * (1 + comboLevel * 0.05), now + i * 0.05);
-        gain.gain.setValueAtTime(comboVolume, now + i * 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.1);
+        osc.frequency.setValueAtTime(randomPitch(freq) * (1 + comboLevel * 0.05), now + i * 0.05);
+        
+        // Smooth envelope per note
+        const noteStart = now + i * 0.05;
+        gain.gain.setValueAtTime(0, noteStart);
+        gain.gain.linearRampToValueAtTime(comboVolume, noteStart + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.1);
+        
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(now + i * 0.05);
-        osc.stop(now + i * 0.05 + 0.1);
+        osc.start(noteStart);
+        osc.stop(noteStart + 0.1);
       });
       vibrate([15, 10, 15]);
     }
   }, [getAudioContext, vibrate]);
 
-  // 🚫 MOVIMIENTO INVÁLIDO - seco, no musical (50ms)
+  // 🚫 MOVIMIENTO INVÁLIDO
   const playInvalidSound = useCallback(() => {
+    if (!canPlay('invalid')) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.INVALID;
 
-    // "Nope" inmediato - square wave grave
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(120, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.05);
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+    osc.frequency.setValueAtTime(randomPitch(120), now);
+    osc.frequency.exponentialRampToValueAtTime(randomPitch(80), now + 0.05);
+    
+    // Smooth envelope
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
@@ -138,14 +248,16 @@ export const useMysticSounds = () => {
     vibrate(25);
   }, [getAudioContext, vibrate]);
 
-  // 💥 EXPLOSIÓN / ELIMINAR FILA - físico, no musical (150ms) - 90-100% volume (FUERTE)
+  // 💥 EXPLOSIÓN / ELIMINAR FILA - físico (150ms)
   const playRewardSound = useCallback(() => {
+    if (!canPlay('reward')) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.EXPLOSION;
 
-    // Ruido blanco filtrado (explosión) - full volume
+    // Ruido blanco filtrado (explosión)
     const bufferSize = ctx.sampleRate * 0.15;
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -158,12 +270,14 @@ export const useMysticSounds = () => {
     
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(800, now);
-    filter.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+    filter.frequency.setValueAtTime(randomPitch(800), now);
+    filter.frequency.exponentialRampToValueAtTime(randomPitch(200), now + 0.15);
     
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.22, now); // Slightly increased for impact
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    // Smooth envelope
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(vol, now + 0.01);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
     
     noise.connect(filter);
     filter.connect(noiseGain);
@@ -171,13 +285,17 @@ export const useMysticSounds = () => {
     noise.start(now);
     noise.stop(now + 0.15);
 
-    // Subgrave corto (90Hz) - full volume for physical feel
+    // Subgrave corto (90Hz)
     const sub = ctx.createOscillator();
     const subGain = ctx.createGain();
     sub.type = 'sine';
-    sub.frequency.setValueAtTime(90, now);
-    subGain.gain.setValueAtTime(0.28, now); // Increased for punch
-    subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    sub.frequency.setValueAtTime(randomPitch(90), now);
+    
+    // Smooth envelope
+    subGain.gain.setValueAtTime(0, now);
+    subGain.gain.linearRampToValueAtTime(vol * 1.2, now + 0.01);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    
     sub.connect(subGain);
     subGain.connect(ctx.destination);
     sub.start(now);
@@ -192,16 +310,19 @@ export const useMysticSounds = () => {
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.GEM;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(698.46, now); // F5
-    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.1); // Rise to C6
+    osc.frequency.setValueAtTime(randomPitch(698.46), now);
+    osc.frequency.exponentialRampToValueAtTime(randomPitch(1046.50), now + 0.1);
     
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    // Smooth envelope
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
     
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -212,9 +333,10 @@ export const useMysticSounds = () => {
     const spark = ctx.createOscillator();
     const sparkGain = ctx.createGain();
     spark.type = 'sine';
-    spark.frequency.setValueAtTime(2093, now + 0.05); // C7
-    sparkGain.gain.setValueAtTime(0.1, now + 0.05);
-    sparkGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    spark.frequency.setValueAtTime(randomPitch(2093), now + 0.05);
+    sparkGain.gain.setValueAtTime(0, now + 0.05);
+    sparkGain.gain.linearRampToValueAtTime(vol * 0.5, now + 0.058);
+    sparkGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     spark.connect(sparkGain);
     sparkGain.connect(ctx.destination);
     spark.start(now + 0.05);
@@ -223,12 +345,14 @@ export const useMysticSounds = () => {
     vibrate(25);
   }, [getAudioContext, vibrate]);
 
-  // 🎁 Chest open - magical reveal with shimmer
+  // 🎁 Chest open - magical reveal with shimmer + REVERB
   const playChestOpenSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.CHEST;
+    const reverb = reverbRef.current;
 
     // Soft whoosh using filtered noise
     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
@@ -242,62 +366,94 @@ export const useMysticSounds = () => {
     
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(800, now);
-    filter.frequency.exponentialRampToValueAtTime(3000, now + 0.3);
+    filter.frequency.setValueAtTime(randomPitch(800), now);
+    filter.frequency.exponentialRampToValueAtTime(randomPitch(3000), now + 0.3);
     filter.Q.value = 2;
     
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.15, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(vol * 0.7, now + 0.02);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
     
     noise.connect(filter);
     filter.connect(noiseGain);
     noiseGain.connect(ctx.destination);
+    if (reverb) {
+      const wetGain = ctx.createGain();
+      wetGain.gain.value = 0.08; // 8% wet reverb
+      noiseGain.connect(reverb);
+      reverb.connect(wetGain);
+      wetGain.connect(ctx.destination);
+    }
     noise.start(now);
     noise.stop(now + 0.4);
 
-    // Magical chord reveal
-    const chordNotes = [523.25, 659.25, 783.99, 1046.50]; // C major spread
+    // Magical chord reveal with reverb
+    const chordNotes = [523.25, 659.25, 783.99, 1046.50];
     chordNotes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + 0.15 + i * 0.03);
-      gain.gain.setValueAtTime(0.12, now + 0.15 + i * 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+      osc.frequency.setValueAtTime(randomPitch(freq), now + 0.15 + i * 0.03);
+      
+      const noteStart = now + 0.15 + i * 0.03;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(vol * 0.55, noteStart + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(now + 0.15 + i * 0.03);
+      if (reverb) {
+        const wetGain = ctx.createGain();
+        wetGain.gain.value = 0.08;
+        gain.connect(reverb);
+        reverb.connect(wetGain);
+        wetGain.connect(ctx.destination);
+      }
+      osc.start(noteStart);
       osc.stop(now + 0.8);
     });
 
     vibrate([30, 20, 60, 20, 40]);
   }, [getAudioContext, vibrate]);
 
-  // 🎉 VICTORIA - fanfarria compacta (1-1.5s total)
+  // 🎉 VICTORIA - fanfarria compacta (1-1.5s total) + REVERB
   const playVictorySound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.VICTORY;
+    const reverb = reverbRef.current;
 
     // === FANFARRIA CORTA (1s máximo) ===
     const fanfareNotes = [
-      { freq: 523.25, time: 0, dur: 0.12 },      // C5 - pickup
-      { freq: 659.25, time: 0.1, dur: 0.12 },    // E5
-      { freq: 783.99, time: 0.2, dur: 0.12 },    // G5
-      { freq: 1046.50, time: 0.35, dur: 0.5 },   // C6 - HOLD final
+      { freq: 523.25, time: 0, dur: 0.12 },
+      { freq: 659.25, time: 0.1, dur: 0.12 },
+      { freq: 783.99, time: 0.2, dur: 0.12 },
+      { freq: 1046.50, time: 0.35, dur: 0.5 },
     ];
 
     fanfareNotes.forEach(({ freq, time, dur }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, now + time);
-      gain.gain.setValueAtTime(0.1, now + time);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + time + dur);
+      osc.frequency.setValueAtTime(randomPitch(freq), now + time);
+      
+      // Smooth envelope
+      gain.gain.setValueAtTime(0, now + time);
+      gain.gain.linearRampToValueAtTime(vol * 0.45, now + time + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + time + dur);
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
+      if (reverb) {
+        const wetGain = ctx.createGain();
+        wetGain.gain.value = 0.06;
+        gain.connect(reverb);
+        reverb.connect(wetGain);
+        wetGain.connect(ctx.destination);
+      }
       osc.start(now + time);
       osc.stop(now + time + dur);
     });
@@ -307,18 +463,22 @@ export const useMysticSounds = () => {
       const chime = ctx.createOscillator();
       const chimeGain = ctx.createGain();
       chime.type = 'sine';
-      const chimeFreq = 1800 + Math.random() * 1200;
-      chime.frequency.setValueAtTime(chimeFreq, now + 0.85 + i * 0.06);
-      chimeGain.gain.setValueAtTime(0.06, now + 0.85 + i * 0.06);
-      chimeGain.gain.exponentialRampToValueAtTime(0.01, now + 1.0 + i * 0.06);
+      const chimeFreq = randomPitch(1800 + Math.random() * 1200);
+      const chimeStart = now + 0.85 + i * 0.06;
+      chime.frequency.setValueAtTime(chimeFreq, chimeStart);
+      
+      chimeGain.gain.setValueAtTime(0, chimeStart);
+      chimeGain.gain.linearRampToValueAtTime(vol * 0.28, chimeStart + 0.008);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0 + i * 0.06);
+      
       chime.connect(chimeGain);
       chimeGain.connect(ctx.destination);
-      chime.start(now + 0.85 + i * 0.06);
+      chime.start(chimeStart);
       chime.stop(now + 1.1 + i * 0.06);
     }
 
-    // === APLAUSOS MUY SUAVES (opcional, bajo volumen) ===
-    for (let i = 0; i < 8; i++) {
+    // === APLAUSOS MUY SUAVES ===
+    for (let i = 0; i < 6; i++) {
       const bufferSize = ctx.sampleRate * 0.04;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -335,12 +495,13 @@ export const useMysticSounds = () => {
       filter.Q.value = 0.5;
       
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.015, now + 0.5 + Math.random() * 0.8);
+      const startTime = now + 0.5 + Math.random() * 0.8;
+      gain.gain.setValueAtTime(vol * 0.07, startTime);
       
       source.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
-      source.start(now + 0.5 + Math.random() * 0.8);
+      source.start(startTime);
     }
 
     vibrate([50, 30, 80]);
@@ -352,85 +513,115 @@ export const useMysticSounds = () => {
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.MATCH; // Softer
 
-    // Soft descending notes
-    const notes = [659.25, 587.33, 523.25, 493.88]; // E5, D5, C5, B4
+    const notes = [659.25, 587.33, 523.25, 493.88];
     
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + i * 0.2);
-      gain.gain.setValueAtTime(0.12, now + i * 0.2);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.2 + 0.4);
+      osc.frequency.setValueAtTime(randomPitch(freq), now + i * 0.2);
+      
+      // Smooth envelope
+      const noteStart = now + i * 0.2;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(vol * 0.55, noteStart + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.4);
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(now + i * 0.2);
-      osc.stop(now + i * 0.2 + 0.4);
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.4);
     });
 
     vibrate([100, 50, 100]);
   }, [getAudioContext, vibrate]);
 
-  // 🎰 Roulette tick - soft bell
+  // 🎰 Roulette tick - soft bell + REVERB for Lucky Spin
   const playTickSound = useCallback((speed: number = 1) => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.TICK;
+    const reverb = reverbRef.current;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
-    // Higher pitch when faster
-    const freq = 1200 + speed * 400;
+    const freq = randomPitch(1200 + speed * 400);
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, now);
     
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    // Smooth envelope
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
     
     osc.connect(gain);
     gain.connect(ctx.destination);
+    if (reverb) {
+      const wetGain = ctx.createGain();
+      wetGain.gain.value = 0.05;
+      gain.connect(reverb);
+      reverb.connect(wetGain);
+      wetGain.connect(ctx.destination);
+    }
     osc.start(now);
     osc.stop(now + 0.05);
   }, [getAudioContext]);
 
-  // 🌟 Milestone/achievement - grand magical moment
+  // 🌟 Milestone/achievement - grand magical moment + REVERB
   const playMilestoneSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.MILESTONE;
+    const reverb = reverbRef.current;
 
-    // Magical chord with shimmer
-    const chord = [523.25, 659.25, 783.99, 1046.50]; // C major
+    const chord = [523.25, 659.25, 783.99, 1046.50];
     
     chord.forEach((freq) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.linearRampToValueAtTime(0.1, now + 0.3);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+      osc.frequency.setValueAtTime(randomPitch(freq), now);
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(vol * 0.7, now + 0.01);
+      gain.gain.linearRampToValueAtTime(vol * 0.45, now + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
+      if (reverb) {
+        const wetGain = ctx.createGain();
+        wetGain.gain.value = 0.08;
+        gain.connect(reverb);
+        reverb.connect(wetGain);
+        wetGain.connect(ctx.destination);
+      }
       osc.start(now);
       osc.stop(now + 1.2);
     });
 
     // Cascading sparkles
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 8; i++) {
       const sparkle = ctx.createOscillator();
       const sparkleGain = ctx.createGain();
       sparkle.type = 'sine';
-      sparkle.frequency.setValueAtTime(1800 + Math.random() * 2000, now + 0.3 + i * 0.08);
-      sparkleGain.gain.setValueAtTime(0.07, now + 0.3 + i * 0.08);
-      sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6 + i * 0.08);
+      const sparkleStart = now + 0.3 + i * 0.08;
+      sparkle.frequency.setValueAtTime(randomPitch(1800 + Math.random() * 2000), sparkleStart);
+      
+      sparkleGain.gain.setValueAtTime(0, sparkleStart);
+      sparkleGain.gain.linearRampToValueAtTime(vol * 0.32, sparkleStart + 0.008);
+      sparkleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6 + i * 0.08);
+      
       sparkle.connect(sparkleGain);
       sparkleGain.connect(ctx.destination);
-      sparkle.start(now + 0.3 + i * 0.08);
+      sparkle.start(sparkleStart);
       sparkle.stop(now + 0.6 + i * 0.08);
     }
 
@@ -443,25 +634,29 @@ export const useMysticSounds = () => {
     if (!ctx) return;
     
     const now = ctx.currentTime;
+    const vol = MASTER_VOLUME * VOLUME.OFFER;
 
-    // Bright fanfare notes
     const notes = [
-      { freq: 783.99, time: 0 },      // G5
-      { freq: 1046.50, time: 0.12 },  // C6
-      { freq: 1318.51, time: 0.24 },  // E6
+      { freq: 783.99, time: 0 },
+      { freq: 1046.50, time: 0.12 },
+      { freq: 1318.51, time: 0.24 },
     ];
 
     notes.forEach(({ freq, time }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + time);
-      gain.gain.setValueAtTime(0.18, now + time);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + time + 0.35);
+      osc.frequency.setValueAtTime(randomPitch(freq), now + time);
+      
+      const noteStart = now + time;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(vol * 0.8, noteStart + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.35);
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(now + time);
-      osc.stop(now + time + 0.35);
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.35);
     });
 
     vibrate([50, 30, 80]);
