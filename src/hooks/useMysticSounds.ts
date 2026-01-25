@@ -45,164 +45,140 @@ export const useMysticSounds = () => {
     }
   }, []);
 
-  // ✨ Magical chime - tile selection (soft bell + sparkle)
+  // 🟢 SELECCIÓN DE GEMA - cristal tocado (50-80ms)
   const playSelectSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Soft bell tone
+    // Click cristal agudo
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, now); // A5 - high, bright
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.frequency.setValueAtTime(1400, now);
+    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.06);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.3);
+    osc.stop(now + 0.08);
 
-    // Add sparkle overtone
-    const sparkle = ctx.createOscillator();
-    const sparkleGain = ctx.createGain();
-    sparkle.type = 'sine';
-    sparkle.frequency.setValueAtTime(1760, now); // A6 - fairy sparkle
-    sparkleGain.gain.setValueAtTime(0.08, now);
-    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    sparkle.connect(sparkleGain);
-    sparkleGain.connect(ctx.destination);
-    sparkle.start(now);
-    sparkle.stop(now + 0.2);
-
-    vibrate(15);
+    vibrate(10);
   }, [getAudioContext, vibrate]);
 
-  // 🎵 Harp arpeggio - match sound (increases with combo)
+  // ✨ MATCH NORMAL - nota arpa simple (100-150ms)
+  // 🔥 COMBO - arpegio corto solo en combo (200-300ms)
   const playMatchSound = useCallback((comboLevel: number = 0) => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Pentatonic scale for magical feel: C, D, E, G, A
-    const baseNotes = [523.25, 587.33, 659.25, 783.99, 880]; // C5, D5, E5, G5, A5
-    const noteCount = Math.min(3 + comboLevel, 5);
-
-    baseNotes.slice(0, noteCount).forEach((freq, i) => {
+    if (comboLevel === 0) {
+      // Match normal: una sola nota de arpa
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
-      // Triangle wave for soft harp-like tone
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq * (1 + comboLevel * 0.1), now + i * 0.06);
-      
-      gain.gain.setValueAtTime(0.2, now + i * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.4);
-      
+      osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(now + i * 0.06);
-      osc.stop(now + i * 0.06 + 0.4);
-    });
-
-    // Add shimmer for higher combos
-    if (comboLevel >= 2) {
-      for (let i = 0; i < comboLevel; i++) {
-        const shimmer = ctx.createOscillator();
-        const shimmerGain = ctx.createGain();
-        shimmer.type = 'sine';
-        shimmer.frequency.setValueAtTime(2000 + Math.random() * 1500, now + 0.2 + i * 0.05);
-        shimmerGain.gain.setValueAtTime(0.06, now + 0.2 + i * 0.05);
-        shimmerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4 + i * 0.05);
-        shimmer.connect(shimmerGain);
-        shimmerGain.connect(ctx.destination);
-        shimmer.start(now + 0.2 + i * 0.05);
-        shimmer.stop(now + 0.4 + i * 0.05);
-      }
+      osc.start(now);
+      osc.stop(now + 0.12);
+      vibrate(15);
+    } else {
+      // Combo: arpegio corto que "canta"
+      const notes = [880, 1100, 1320];
+      const notesToPlay = Math.min(notes.length, 1 + comboLevel);
+      
+      notes.slice(0, notesToPlay).forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq * (1 + comboLevel * 0.05), now + i * 0.05);
+        gain.gain.setValueAtTime(0.2, now + i * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i * 0.05);
+        osc.stop(now + i * 0.05 + 0.1);
+      });
+      vibrate([15, 10, 15]);
     }
-
-    vibrate([20, 10, 20]);
   }, [getAudioContext, vibrate]);
 
-  // 🌸 Soft wind chime - invalid move (gentle, not harsh)
+  // 🚫 MOVIMIENTO INVÁLIDO - seco, no musical (50ms)
   const playInvalidSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Two descending soft tones (like a gentle "nope")
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(440, now); // A4
-    gain1.gain.setValueAtTime(0.12, now);
-    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.2);
+    // "Nope" inmediato - square wave grave
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.05);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.07);
 
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(392, now + 0.1); // G4 - descending
-    gain2.gain.setValueAtTime(0.1, now + 0.1);
-    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.1);
-    osc2.stop(now + 0.3);
-
-    vibrate(30);
+    vibrate(25);
   }, [getAudioContext, vibrate]);
 
-  // ✨ Fairy dust reward sound - magical ascending chimes
+  // 💥 EXPLOSIÓN / ELIMINAR FILA - físico, no musical (150ms)
   const playRewardSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Ascending fairy scale
-    const notes = [659.25, 783.99, 880, 1046.50, 1318.51]; // E5, G5, A5, C6, E6
-    
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + i * 0.08);
-      
-      gain.gain.setValueAtTime(0.15, now + i * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.5);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + i * 0.08);
-      osc.stop(now + i * 0.08 + 0.5);
-    });
-
-    // Add magical sparkles at the end
-    for (let i = 0; i < 6; i++) {
-      const sparkle = ctx.createOscillator();
-      const sparkleGain = ctx.createGain();
-      
-      sparkle.type = 'sine';
-      sparkle.frequency.setValueAtTime(1500 + Math.random() * 2000, now + 0.35 + i * 0.04);
-      
-      sparkleGain.gain.setValueAtTime(0.08, now + 0.35 + i * 0.04);
-      sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.55 + i * 0.04);
-      
-      sparkle.connect(sparkleGain);
-      sparkleGain.connect(ctx.destination);
-      sparkle.start(now + 0.35 + i * 0.04);
-      sparkle.stop(now + 0.55 + i * 0.04);
+    // Ruido blanco filtrado (explosión)
+    const bufferSize = ctx.sampleRate * 0.15;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
     }
+    
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+    
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.2, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.15);
 
-    vibrate([40, 20, 40, 20, 60]);
+    // Subgrave corto (90Hz)
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(90, now);
+    subGain.gain.setValueAtTime(0.25, now);
+    subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.start(now);
+    sub.stop(now + 0.12);
+
+    vibrate([30, 15, 30]);
   }, [getAudioContext, vibrate]);
 
   // 💎 Gem collect - quick magical pop
@@ -293,32 +269,27 @@ export const useMysticSounds = () => {
     vibrate([30, 20, 60, 20, 40]);
   }, [getAudioContext, vibrate]);
 
-  // 🎉 Victory sound - APPLAUSE + CELEBRATION FANFARE
+  // 🎉 VICTORIA - fanfarria compacta (1-1.5s total)
   const playVictorySound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // === FANFARE TRUMPETS (triumphant brass) ===
+    // === FANFARRIA CORTA (1s máximo) ===
     const fanfareNotes = [
-      { freq: 392.00, time: 0, dur: 0.15 },      // G4 - short
-      { freq: 392.00, time: 0.12, dur: 0.15 },   // G4 - short  
-      { freq: 392.00, time: 0.24, dur: 0.15 },   // G4 - short
-      { freq: 523.25, time: 0.4, dur: 0.4 },     // C5 - HOLD
-      { freq: 659.25, time: 0.85, dur: 0.15 },   // E5 - short
-      { freq: 783.99, time: 1.0, dur: 0.15 },    // G5 - short
-      { freq: 1046.50, time: 1.15, dur: 0.8 },   // C6 - FINAL HOLD
+      { freq: 523.25, time: 0, dur: 0.12 },      // C5 - pickup
+      { freq: 659.25, time: 0.1, dur: 0.12 },    // E5
+      { freq: 783.99, time: 0.2, dur: 0.12 },    // G5
+      { freq: 1046.50, time: 0.35, dur: 0.5 },   // C6 - HOLD final
     ];
 
     fanfareNotes.forEach(({ freq, time, dur }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      // Sawtooth for brass-like fanfare
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(freq, now + time);
-      gain.gain.setValueAtTime(0.12, now + time);
-      gain.gain.linearRampToValueAtTime(0.1, now + time + 0.05);
+      gain.gain.setValueAtTime(0.1, now + time);
       gain.gain.exponentialRampToValueAtTime(0.01, now + time + dur);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -326,60 +297,48 @@ export const useMysticSounds = () => {
       osc.stop(now + time + dur);
     });
 
-    // === APPLAUSE (white noise bursts simulating clapping) ===
-    const createClap = (startTime: number, volume: number) => {
-      const bufferSize = ctx.sampleRate * 0.08; // 80ms clap
+    // === CHIMES CORTOS (0.5s) ===
+    for (let i = 0; i < 4; i++) {
+      const chime = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+      chime.type = 'sine';
+      const chimeFreq = 1800 + Math.random() * 1200;
+      chime.frequency.setValueAtTime(chimeFreq, now + 0.85 + i * 0.06);
+      chimeGain.gain.setValueAtTime(0.06, now + 0.85 + i * 0.06);
+      chimeGain.gain.exponentialRampToValueAtTime(0.01, now + 1.0 + i * 0.06);
+      chime.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+      chime.start(now + 0.85 + i * 0.06);
+      chime.stop(now + 1.1 + i * 0.06);
+    }
+
+    // === APLAUSOS MUY SUAVES (opcional, bajo volumen) ===
+    for (let i = 0; i < 8; i++) {
+      const bufferSize = ctx.sampleRate * 0.04;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
-      
-      for (let i = 0; i < bufferSize; i++) {
-        // Filtered noise with envelope
-        const envelope = Math.exp(-i / (bufferSize * 0.15));
-        data[i] = (Math.random() * 2 - 1) * envelope;
+      for (let j = 0; j < bufferSize; j++) {
+        data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (bufferSize * 0.2));
       }
       
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       
-      // Bandpass filter to make it sound like clapping
       const filter = ctx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.value = 2500;
       filter.Q.value = 0.5;
       
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(volume, startTime);
+      gain.gain.setValueAtTime(0.015, now + 0.5 + Math.random() * 0.8);
       
       source.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
-      source.start(startTime);
-    };
-
-    // Crowd applause pattern (random claps over 2 seconds)
-    for (let i = 0; i < 40; i++) {
-      const clapTime = now + 0.3 + Math.random() * 1.8;
-      const clapVolume = 0.03 + Math.random() * 0.04;
-      createClap(clapTime, clapVolume);
+      source.start(now + 0.5 + Math.random() * 0.8);
     }
 
-    // === CELEBRATION CHIME (magical sparkles) ===
-    for (let i = 0; i < 8; i++) {
-      const chime = ctx.createOscillator();
-      const chimeGain = ctx.createGain();
-      chime.type = 'sine';
-      const chimeFreq = 1800 + Math.random() * 1500;
-      chime.frequency.setValueAtTime(chimeFreq, now + 1.5 + i * 0.08);
-      chimeGain.gain.setValueAtTime(0.08, now + 1.5 + i * 0.08);
-      chimeGain.gain.exponentialRampToValueAtTime(0.01, now + 1.8 + i * 0.08);
-      chime.connect(chimeGain);
-      chimeGain.connect(ctx.destination);
-      chime.start(now + 1.5 + i * 0.08);
-      chime.stop(now + 1.8 + i * 0.08);
-    }
-
-    // Strong celebration vibration pattern
-    vibrate([100, 50, 100, 50, 200, 100, 300]);
+    vibrate([50, 30, 80]);
   }, [getAudioContext, vibrate]);
 
   // 😢 Lose sound - gentle, not harsh (descending lullaby)
