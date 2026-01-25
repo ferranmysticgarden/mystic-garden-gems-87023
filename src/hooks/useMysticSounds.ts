@@ -45,20 +45,20 @@ export const useMysticSounds = () => {
     }
   }, []);
 
-  // 🟢 SELECCIÓN DE GEMA - cristal tocado (50-80ms)
+  // 🟢 SELECCIÓN DE GEMA - cristal tocado (50-80ms) - 70-75% volume
   const playSelectSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Click cristal agudo
+    // Click cristal agudo - reduced to 70% of master
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(1400, now);
     osc.frequency.exponentialRampToValueAtTime(2200, now + 0.06);
-    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.setValueAtTime(0.13, now); // 0.18 * 0.72 ≈ 0.13
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -68,8 +68,8 @@ export const useMysticSounds = () => {
     vibrate(10);
   }, [getAudioContext, vibrate]);
 
-  // ✨ MATCH NORMAL - nota arpa simple (100-150ms)
-  // 🔥 COMBO - arpegio corto solo en combo (200-300ms)
+  // ✨ MATCH NORMAL - nota arpa simple (100-150ms) - 70-75% volume
+  // 🔥 COMBO - arpegio corto solo en combo (200-300ms) - progressive volume
   const playMatchSound = useCallback((comboLevel: number = 0) => {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -77,12 +77,12 @@ export const useMysticSounds = () => {
     const now = ctx.currentTime;
 
     if (comboLevel === 0) {
-      // Match normal: una sola nota de arpa
+      // Match normal: una sola nota de arpa - 70% volume
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(880, now);
-      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.setValueAtTime(0.16, now); // 0.22 * 0.72 ≈ 0.16
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -90,7 +90,12 @@ export const useMysticSounds = () => {
       osc.stop(now + 0.12);
       vibrate(15);
     } else {
-      // Combo: arpegio corto que "canta"
+      // Combo: arpegio corto que "canta" - progressive volume
+      // Combo 2: normal (0.16), Combo 3+: +10% per level
+      const baseVolume = 0.16;
+      const volumeBoost = comboLevel >= 2 ? (comboLevel - 1) * 0.1 : 0;
+      const comboVolume = Math.min(baseVolume * (1 + volumeBoost), 0.28); // cap at 0.28
+      
       const notes = [880, 1100, 1320];
       const notesToPlay = Math.min(notes.length, 1 + comboLevel);
       
@@ -99,7 +104,7 @@ export const useMysticSounds = () => {
         const gain = ctx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq * (1 + comboLevel * 0.05), now + i * 0.05);
-        gain.gain.setValueAtTime(0.2, now + i * 0.05);
+        gain.gain.setValueAtTime(comboVolume, now + i * 0.05);
         gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.1);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -133,14 +138,14 @@ export const useMysticSounds = () => {
     vibrate(25);
   }, [getAudioContext, vibrate]);
 
-  // 💥 EXPLOSIÓN / ELIMINAR FILA - físico, no musical (150ms)
+  // 💥 EXPLOSIÓN / ELIMINAR FILA - físico, no musical (150ms) - 90-100% volume (FUERTE)
   const playRewardSound = useCallback(() => {
     const ctx = getAudioContext();
     if (!ctx) return;
     
     const now = ctx.currentTime;
 
-    // Ruido blanco filtrado (explosión)
+    // Ruido blanco filtrado (explosión) - full volume
     const bufferSize = ctx.sampleRate * 0.15;
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -157,7 +162,7 @@ export const useMysticSounds = () => {
     filter.frequency.exponentialRampToValueAtTime(200, now + 0.15);
     
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.2, now);
+    noiseGain.gain.setValueAtTime(0.22, now); // Slightly increased for impact
     noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     
     noise.connect(filter);
@@ -166,12 +171,12 @@ export const useMysticSounds = () => {
     noise.start(now);
     noise.stop(now + 0.15);
 
-    // Subgrave corto (90Hz)
+    // Subgrave corto (90Hz) - full volume for physical feel
     const sub = ctx.createOscillator();
     const subGain = ctx.createGain();
     sub.type = 'sine';
     sub.frequency.setValueAtTime(90, now);
-    subGain.gain.setValueAtTime(0.25, now);
+    subGain.gain.setValueAtTime(0.28, now); // Increased for punch
     subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
     sub.connect(subGain);
     subGain.connect(ctx.destination);
