@@ -39,11 +39,15 @@ export const LEVELS: Level[] = [
   { id: 12, objective: { type: 'collect', target: '🌼', count: 22 }, moves: 20, stars: { one: 22, two: 27, three: 32 }, reward: {} },
   { id: 13, objective: { type: 'score', target: 'points', count: 3000 }, moves: 25, stars: { one: 3000, two: 3500, three: 4000 }, reward: {} },
   { id: 14, objective: { type: 'collect', target: '🌸', count: 25 }, moves: 20, stars: { one: 25, two: 30, three: 35 }, reward: {} },
-  { id: 15, objective: { type: 'collect', target: '🍃', count: 30 }, moves: 25, stars: { one: 30, two: 35, three: 40 }, reward: { gems: 15 } },
   
-  { id: 16, objective: { type: 'score', target: 'points', count: 3500 }, moves: 22, stars: { one: 3500, two: 4000, three: 4500 }, reward: {} },
-  { id: 17, objective: { type: 'collect', target: '🌺', count: 22 }, moves: 20, stars: { one: 22, two: 26, three: 30 }, reward: {} },
-  { id: 18, objective: { type: 'collect', target: '🌼', count: 28 }, moves: 25, stars: { one: 28, two: 32, three: 36 }, reward: {} },
+  // MICRO-MURO DE DIFICULTAD: Niveles 15-18 más difíciles para generar frustración controlada
+  // -3 movimientos y +15% objetivo
+  { id: 15, objective: { type: 'collect', target: '🍃', count: 35 }, moves: 22, stars: { one: 35, two: 40, three: 45 }, reward: { gems: 15 } },
+  { id: 16, objective: { type: 'score', target: 'points', count: 4000 }, moves: 19, stars: { one: 4000, two: 4500, three: 5000 }, reward: {} },
+  { id: 17, objective: { type: 'collect', target: '🌺', count: 26 }, moves: 17, stars: { one: 26, two: 30, three: 34 }, reward: {} },
+  { id: 18, objective: { type: 'collect', target: '🌼', count: 32 }, moves: 20, stars: { one: 32, two: 36, three: 40 }, reward: {} },
+  
+  // Después del muro, se relaja un poco
   { id: 19, objective: { type: 'score', target: 'points', count: 4000 }, moves: 25, stars: { one: 4000, two: 4500, three: 5000 }, reward: {} },
   { id: 20, objective: { type: 'collect', target: '🌸', count: 30 }, moves: 22, stars: { one: 30, two: 35, three: 40 }, reward: { gems: 20 } },
   

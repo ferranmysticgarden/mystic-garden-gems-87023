@@ -138,5 +138,35 @@ export const PRODUCTS: Product[] = [
     gems: 500,
     lives: 20,
     noAdsDays: 1
+  },
+  // STARTER PACK - Irresistible offer for new players (after level 3-4)
+  { 
+    id: 'starter_pack', 
+    nameKey: 'shop.starterPack',
+    name: 'Starter Pack', 
+    price: 0.99, 
+    currency: 'EUR',
+    gems: 500,
+    lives: 10,
+    powerups: 3
+  },
+  // CONTINUE GAME - Emotional offer when losing
+  { 
+    id: 'continue_game', 
+    nameKey: 'shop.continueGame',
+    name: 'Continuar Partida', 
+    price: 0.99, 
+    currency: 'EUR',
+    lives: 1,
+    powerups: 5 // +5 moves
+  },
+  // BUY MOVES - Before losing (0 moves)
+  { 
+    id: 'buy_moves', 
+    nameKey: 'shop.buyMoves',
+    name: 'Comprar Movimientos', 
+    price: 0.99, 
+    currency: 'EUR',
+    powerups: 5
   }
 ];
