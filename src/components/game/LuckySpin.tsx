@@ -37,6 +37,15 @@ export const LuckySpin = () => {
       };
     }
   }, [show]);
+
+  // Lower music even more while spinning
+  useEffect(() => {
+    if (spinning) {
+      backgroundMusic.setScreen('luckyspin_spinning');
+    } else if (show) {
+      backgroundMusic.setScreen('luckyspin');
+    }
+  }, [spinning, show]);
   
   const lastTickRef = useRef(0);
   const animationRef = useRef<number | null>(null);
