@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, X, Sparkles } from 'lucide-react';
+import { Play, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdLimit } from '@/hooks/useAdLimit';
 
 interface RewardedAdsProps {
   onRewardEarned?: (gems: number) => void;
@@ -13,6 +14,7 @@ export const RewardedAds = ({ onRewardEarned }: RewardedAdsProps) => {
   const [showingAd, setShowingAd] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const { user } = useAuth();
+  const { canWatchAd, adsWatchedThisHour, maxAdsPerHour, nextAdAvailableIn, recordAdWatch } = useAdLimit();
 
   useEffect(() => {
     if (showingAd && countdown > 0) {
@@ -24,7 +26,13 @@ export const RewardedAds = ({ onRewardEarned }: RewardedAdsProps) => {
   }, [showingAd, countdown]);
 
   const handleWatchAd = () => {
-    if (!user?.id || loading) return;
+    if (!user?.id || loading || !canWatchAd) return;
+    
+    // Record this ad watch
+    if (!recordAdWatch()) {
+      return; // Limit reached
+    }
+    
     setLoading(true);
     setShowingAd(true);
     setCountdown(5);
@@ -112,30 +120,65 @@ export const RewardedAds = ({ onRewardEarned }: RewardedAdsProps) => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-purple-800/50 to-indigo-800/50 rounded-xl p-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-purple-600 rounded-full p-2">
-          <Play className="w-5 h-5 text-white" />
+    <div className="bg-gradient-to-r from-purple-800/50 to-indigo-800/50 rounded-xl p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-purple-600 rounded-full p-2">
+            <Play className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-white font-semibold">
+              Ver anuncio = 20 gemas 💎
+            </p>
+            <p className="text-purple-200 text-sm">
+              {canWatchAd 
+                ? `${adsWatchedThisHour}/${maxAdsPerHour} usados esta hora`
+                : `Próximo en ${nextAdAvailableIn} min`
+              }
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-white font-semibold">
-            Ver anuncio = 20 gemas 💎
-          </p>
-          <p className="text-purple-200 text-sm">
-            Gana gemas gratis viendo anuncios
-          </p>
-        </div>
+        
+        <Button
+          onClick={handleWatchAd}
+          disabled={loading || !canWatchAd}
+          size="sm"
+          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold disabled:opacity-50"
+        >
+          {!canWatchAd ? (
+            <span className="flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              Límite
+            </span>
+          ) : (
+            <>
+              <Play className="w-4 h-4 mr-1" />
+              Ver ad
+            </>
+          )}
+        </Button>
       </div>
       
-      <Button
-        onClick={handleWatchAd}
-        disabled={loading}
-        size="sm"
-        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold"
-      >
-        <Play className="w-4 h-4 mr-1" />
-        Ver ad
-      </Button>
+      {/* Mensaje cuando se alcanza el límite */}
+      {!canWatchAd && (
+        <div className="mt-3 bg-orange-500/20 rounded-lg p-2 border border-orange-400/30">
+          <p className="text-orange-300 text-xs text-center">
+            ⏰ Máximo {maxAdsPerHour} anuncios por hora. 
+            <span className="font-bold"> ¿Necesitas gemas ahora?</span>
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full mt-1 text-yellow-400 hover:text-yellow-300 text-xs"
+            onClick={() => {
+              // Redirect to shop
+              window.dispatchEvent(new CustomEvent('open-shop'));
+            }}
+          >
+            💎 Ver ofertas especiales
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

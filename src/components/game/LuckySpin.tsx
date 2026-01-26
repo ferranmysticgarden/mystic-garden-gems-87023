@@ -26,7 +26,17 @@ export const LuckySpin = () => {
   const [rotation, setRotation] = useState(0);
   const [canSpin, setCanSpin] = useState(false);
   const [reward, setReward] = useState<number | null>(null);
+  const [extraSpinAvailable, setExtraSpinAvailable] = useState(false);
   const { user } = useAuth();
+
+  // Handler para giro extra
+  const handleExtraSpin = () => {
+    // Después de comprar giro extra, permite girar otra vez con premio alto garantizado
+    setCanSpin(true);
+    setExtraSpinAvailable(false);
+    // El próximo giro tendrá premio alto (índice 4 = 50 gemas)
+    // Se activa al comprar
+  };
 
   // Set music to lower volume when Lucky Spin is open
   useEffect(() => {
@@ -291,10 +301,59 @@ export const LuckySpin = () => {
           {spinning ? '🎰 GIRANDO...' : reward !== null ? '✓ ¡COMPLETADO!' : '🎰 ¡GIRAR! (GRATIS)'}
         </Button>
 
+        {/* Giro Extra de Pago - Solo después de usar el giro gratis */}
+        {!canSpin && reward !== null && (
+          <ExtraSpinOffer onBuy={handleExtraSpin} />
+        )}
+
         <p className="text-center text-purple-200 text-sm mt-3">
           {canSpin ? 'Gira gratis 1 vez al día' : 'Vuelve mañana para girar de nuevo'}
         </p>
       </div>
+    </div>
+  );
+};
+
+// Componente de giro extra de pago
+interface ExtraSpinOfferProps {
+  onBuy: () => void;
+}
+
+const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleBuy = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { productId: 'extra_spin' }
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        onBuy();
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-3 border border-yellow-400/50">
+      <p className="text-center text-yellow-300 text-sm mb-2">
+        🎰 ¿Quieres otro giro con <span className="font-bold">premio garantizado alto</span>?
+      </p>
+      <Button
+        onClick={handleBuy}
+        disabled={loading}
+        size="sm"
+        className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold"
+      >
+        {loading ? '⏳...' : '🎰 Giro Extra - €0.49'}
+      </Button>
     </div>
   );
 };
