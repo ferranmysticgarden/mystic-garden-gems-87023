@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Users, DollarSign, TrendingUp, Calendar } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Profile {
@@ -38,6 +38,10 @@ const PRODUCT_PRICES: Record<string, number> = {
   "no_ads_month": 4.99,
   "no_ads_forever": 9.99,
   "garden_pass": 9.99,
+  "starter_pack": 0.99,
+  "continue_game": 0.99,
+  "buy_moves": 0.99,
+  "quick_life": 0.20,
 };
 
 const PRODUCT_NAMES: Record<string, string> = {
@@ -47,6 +51,10 @@ const PRODUCT_NAMES: Record<string, string> = {
   "no_ads_month": "Sin Anuncios (1 Mes)",
   "no_ads_forever": "Sin Anuncios (Para Siempre)",
   "garden_pass": "Pase de Jardín Mensual",
+  "starter_pack": "Pack Inicial €0.99",
+  "continue_game": "Continuar Partida",
+  "buy_moves": "Comprar Movimientos",
+  "quick_life": "Vida Rápida",
 };
 
 export const AdminDashboard = () => {
@@ -59,80 +67,49 @@ export const AdminDashboard = () => {
     todayRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
-
-    // Subscribe to realtime changes
-    const usersChannel = supabase
-      .channel('profiles-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'profiles'
-        },
-        () => {
-          loadData();
-          toast.success('¡Nuevo usuario registrado!');
-        }
-      )
-      .subscribe();
-
-    const purchasesChannel = supabase
-      .channel('purchases-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'user_purchases'
-        },
-        () => {
-          loadData();
-          toast.success('¡Nuevo pago recibido!');
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(usersChannel);
-      supabase.removeChannel(purchasesChannel);
-    };
   }, []);
 
+  const fetchAdminData = async (dataType: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No session');
+
+    const response = await supabase.functions.invoke('admin-data', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: { dataType },
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to fetch admin data');
+    }
+
+    return response.data?.data;
+  };
+
   const loadData = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      // Load users
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Fetch all data through secure Edge Function
+      const [profilesData, purchasesData] = await Promise.all([
+        fetchAdminData('profiles'),
+        fetchAdminData('purchases'),
+      ]);
 
-      if (profilesError) throw profilesError;
-
-      // Load purchases with profile info
-      const { data: purchasesData, error: purchasesError } = await supabase
-        .from('user_purchases')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (purchasesError) throw purchasesError;
-
-      // Get user emails separately
-      const userIds = [...new Set((purchasesData || []).map(p => p.user_id))];
-      const { data: userProfiles, error: profilesErr } = await supabase
-        .from('profiles')
-        .select('id, email, display_name')
-        .in('id', userIds);
-
-      if (profilesErr) throw profilesErr;
+      // Get user emails for purchases
+      const userIds = [...new Set((purchasesData || []).map((p: Purchase) => p.user_id))];
+      const userProfiles = (profilesData || []).filter((p: Profile) => userIds.includes(p.id));
 
       // Combine purchases with profile data
-      const purchasesWithProfiles = (purchasesData || []).map(purchase => ({
+      const purchasesWithProfiles = (purchasesData || []).map((purchase: Purchase) => ({
         ...purchase,
-        profiles: userProfiles?.find(p => p.id === purchase.user_id) || {
+        profiles: userProfiles.find((p: Profile) => p.id === purchase.user_id) || {
           email: 'Unknown',
           display_name: 'Unknown'
         }
@@ -146,17 +123,17 @@ export const AdminDashboard = () => {
       today.setHours(0, 0, 0, 0);
 
       const todayUsers = (profilesData || []).filter(
-        u => new Date(u.created_at) >= today
+        (u: Profile) => new Date(u.created_at) >= today
       ).length;
 
       const totalRevenue = purchasesWithProfiles.reduce(
-        (sum, p) => sum + (PRODUCT_PRICES[p.product_id] || 0),
+        (sum: number, p: Purchase) => sum + (PRODUCT_PRICES[p.product_id] || 0),
         0
       );
 
       const todayRevenue = purchasesWithProfiles
-        .filter(p => new Date(p.created_at) >= today)
-        .reduce((sum, p) => sum + (PRODUCT_PRICES[p.product_id] || 0), 0);
+        .filter((p: Purchase) => new Date(p.created_at) >= today)
+        .reduce((sum: number, p: Purchase) => sum + (PRODUCT_PRICES[p.product_id] || 0), 0);
 
       setStats({
         totalUsers: profilesData?.length || 0,
@@ -164,8 +141,9 @@ export const AdminDashboard = () => {
         todayUsers,
         todayRevenue,
       });
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+      setError('Error al cargar los datos. Verifica que tienes permisos de administrador.');
       toast.error('Error al cargar los datos');
     } finally {
       setLoading(false);
@@ -176,6 +154,21 @@ export const AdminDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 max-w-md text-center">
+          <ShieldAlert className="w-16 h-16 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Acceso Denegado</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={loadData} variant="outline">
+            Reintentar
+          </Button>
+        </Card>
       </div>
     );
   }
@@ -269,8 +262,8 @@ export const AdminDashboard = () => {
                         {purchase.profiles?.email}
                       </span>
                     </td>
-                    <td className="p-2">{PRODUCT_NAMES[purchase.product_id]}</td>
-                    <td className="p-2">€{PRODUCT_PRICES[purchase.product_id].toFixed(2)}</td>
+                    <td className="p-2">{PRODUCT_NAMES[purchase.product_id] || purchase.product_id}</td>
+                    <td className="p-2">€{(PRODUCT_PRICES[purchase.product_id] || 0).toFixed(2)}</td>
                     <td className="p-2">
                       {purchase.expires_at ? (
                         new Date(purchase.expires_at) > new Date() ? (
