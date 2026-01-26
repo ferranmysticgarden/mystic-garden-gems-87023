@@ -1,6 +1,6 @@
 # COMANDOS COMPLETOS PARA GENERAR AAB FIRMADO
 
-**NO SIMPLIFICAR. NO OMITIR NINGÚN PASO. INCLUIR SIEMPRE EL POWERSHELL.**
+**NO SIMPLIFICAR. NO OMITIR NINGÚN PASO.**
 
 ## Comandos Completos
 
@@ -16,10 +16,6 @@ if exist ".git\index.lock" del /f ".git\index.lock"
 git checkout -- android/app/src/main/AndroidManifest.xml build-android-aab.cmd
 git pull
 
-powershell -Command "(Get-Content 'android\app\build.gradle') -replace 'versionCode \d+', 'versionCode 950' -replace 'versionName \"[^\"]+\"', 'versionName \"9.5.0\"' | Set-Content 'android\app\build.gradle' -Encoding UTF8"
-
-findstr /i "versionCode versionName" android\app\build.gradle
-
 set STORE_PWD=mystic2026
 set KEY_PWD=mystic2026
 
@@ -32,11 +28,9 @@ call build-android-aab.cmd
 2. **taskkill** (4 líneas) - Matar procesos que bloquean archivos
 3. **del .git\index.lock** - Eliminar bloqueo de git si existe
 4. **git checkout** - Descartar cambios locales en archivos críticos
-5. **git pull** - Descargar última versión del código
-6. **powershell** - **CRÍTICO: Parchea versionCode/versionName en build.gradle**
-7. **findstr** - Verificar que la versión se aplicó correctamente
-8. **set STORE_PWD/KEY_PWD** - Configurar contraseñas (evita prompts)
-9. **call build-android-aab.cmd** - Ejecutar script de build
+5. **git pull** - **CRÍTICO: Descarga build-android-aab.cmd con versión 950**
+6. **set STORE_PWD/KEY_PWD** - Configurar contraseñas (evita prompts)
+7. **call build-android-aab.cmd** - Script que automáticamente parchea gradle a 950
 
 ## Versión Actual
 
@@ -49,4 +43,4 @@ call build-android-aab.cmd
 
 ---
 
-**IMPORTANTE:** El paso de PowerShell es OBLIGATORIO. Sin él, usa la versión que tenga Capacitor.
+**IMPORTANTE:** El script build-android-aab.cmd YA parchea automáticamente el gradle. NO añadir pasos manuales de PowerShell.
