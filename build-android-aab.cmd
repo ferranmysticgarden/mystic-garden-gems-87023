@@ -77,13 +77,16 @@ if errorlevel 1 (
 REM --- Step 3.5/4: Patch version ---
 echo [3.5/4] Parcheando version en build.gradle...
 
-if exist "android\app\build.gradle" (
-  set "GRADLE_FILE=android\app\build.gradle"
-  set "GRADLE_KIND=groovy"
+REM IMPORTANTE: Verificar .kts PRIMERO porque Gradle lo usa con prioridad
+if exist "android\app\build.gradle.kts" (
+  set "GRADLE_FILE=android\app\build.gradle.kts"
+  set "GRADLE_KIND=kts"
+  REM Eliminar el groovy viejo si existe para evitar conflictos
+  if exist "android\app\build.gradle" del /f "android\app\build.gradle"
 ) else (
-  if exist "android\app\build.gradle.kts" (
-    set "GRADLE_FILE=android\app\build.gradle.kts"
-    set "GRADLE_KIND=kts"
+  if exist "android\app\build.gradle" (
+    set "GRADLE_FILE=android\app\build.gradle"
+    set "GRADLE_KIND=groovy"
   ) else (
     echo ERROR: No encuentro build.gradle
     pause
