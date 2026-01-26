@@ -94,6 +94,7 @@ if exist "android\app\build.gradle.kts" (
   )
 )
 
+echo Parcheando archivo: %GRADLE_FILE%
 powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\patch-android-gradle.ps1" -GradleFile "%GRADLE_FILE%" -Kind "%GRADLE_KIND%" -AppId "%TARGET_APP_ID%" -VersionCode %TARGET_VERSION_CODE% -VersionName "%TARGET_VERSION_NAME%"
 
 if errorlevel 1 (
@@ -101,6 +102,13 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+
+echo.
+echo === VERIFICACION VERSION ===
+findstr /i "versionCode" "%GRADLE_FILE%"
+echo.
+echo Si no ves 950 arriba, PULSA CTRL+C AHORA
+timeout /t 5
 
 REM --- Step 3.6/4: Ensure MainActivity exists ---
 echo [3.6/4] Verificando MainActivity...
