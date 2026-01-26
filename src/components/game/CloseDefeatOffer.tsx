@@ -37,6 +37,14 @@ export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOf
     }
   };
 
+  // Mensaje emocional basado en cercanía
+  const getEmotionalMessage = () => {
+    if (movesShort === 1) return "¡A 1 movimiento de lograrlo!";
+    if (movesShort === 2) return "¡A 2 movimientos de la victoria!";
+    if (movesShort <= 3) return "¡Tan cerca que casi lo sientes!";
+    return "¡Estabas a punto de conseguirlo!";
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm">
       <div className="relative bg-gradient-to-b from-purple-900 via-indigo-900 to-purple-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-yellow-400 shadow-2xl animate-scale-in">
@@ -48,20 +56,22 @@ export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOf
         </button>
 
         <div className="text-center">
-          {/* Emoji grande emocional */}
-          <div className="text-6xl mb-4">😢</div>
+          {/* Emoji grande emocional - más dramático */}
+          <div className="text-7xl mb-4 animate-pulse">😢</div>
           
-          {/* Mensaje principal - valor visible */}
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Te faltaron solo
+          {/* Mensaje principal - MÁS EMOCIONAL */}
+          <h2 className="text-2xl font-bold text-yellow-400 mb-2">
+            {getEmotionalMessage()}
           </h2>
-          <div className="text-5xl font-bold text-yellow-400 mb-2">
-            {movesShort} movimientos
+          
+          {/* Número grande y visible */}
+          <div className="text-6xl font-bold text-white mb-2">
+            {movesShort} {movesShort === 1 ? 'movimiento' : 'movimientos'}
           </div>
           
-          {/* Valor claro */}
+          {/* Subtext emocional */}
           <p className="text-purple-200 text-lg mb-6">
-            Estuviste tan cerca...
+            Todo tu esfuerzo está ahí...
           </p>
 
           {/* CTA único y claro */}

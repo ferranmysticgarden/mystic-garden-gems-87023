@@ -29,6 +29,12 @@ const PRODUCT_PRICES: Record<string, string> = {
   "buy_moves": "price_1StcfiB6GI8NmIPntLwsg80l",
   // Flash offer
   "flash_offer": "price_1StWrVB6GI8NmIPnn88ftQMe",
+  // Giro extra ruleta €0.49
+  "extra_spin": "price_1Stp3dB6GI8NmIPnUvE2TeHL",
+  // Protección de racha €0.49
+  "streak_protection": "price_1Stp3sB6GI8NmIPnX6qHHkW0",
+  // Pack salvavidas €0.49
+  "lifesaver_pack": "price_1Stp48B6GI8NmIPnqyYtX01T",
 };
 
 serve(async (req) => {
