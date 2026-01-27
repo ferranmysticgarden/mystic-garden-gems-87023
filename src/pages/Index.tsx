@@ -270,6 +270,7 @@ const Index = () => {
         onWin={handleWin}
         onLose={handleLose}
         onBack={() => setScreen('menu')}
+        onShowExitModal={() => setShowExitModal(true)}
       />
     );
   }
