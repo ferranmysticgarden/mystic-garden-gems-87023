@@ -17,9 +17,10 @@ interface GameScreenProps {
   onWin: (stars: number, reward: { gems?: number }) => void;
   onLose: () => void;
   onBack: () => void;
+  onShowExitModal: () => void;
 }
 
-export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) => {
+export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: GameScreenProps) => {
   const { t } = useLanguage();
   const [moves, setMoves] = useState(level.moves);
   const [score, setScore] = useState(0);
@@ -235,6 +236,14 @@ export const GameScreen = ({ level, onWin, onLose, onBack }: GameScreenProps) =>
             <h2 className="text-xl font-bold text-gold">
               {t('game.level')} {level.id}
             </h2>
+            <Button 
+              onClick={onShowExitModal} 
+              variant="ghost" 
+              size="sm"
+              className="text-destructive hover:text-destructive/80"
+            >
+              ✕
+            </Button>
           </div>
           
           <div className="grid grid-cols-3 gap-2 text-center">
