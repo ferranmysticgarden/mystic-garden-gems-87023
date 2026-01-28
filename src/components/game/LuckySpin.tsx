@@ -342,18 +342,29 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   };
 
   return (
-    <div className="mt-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-3 border border-yellow-400/50">
-      <p className="text-center text-yellow-300 text-sm mb-2">
-        🎰 ¿Quieres otro giro con <span className="font-bold">premio garantizado alto</span>?
+    <div className="mt-5 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 border-2 border-yellow-400/60 shadow-lg">
+      <p className="text-center text-yellow-200 text-sm mb-3 font-medium">
+        🎰 ¿Quieres otro giro con <span className="font-bold text-yellow-400">premio garantizado alto</span>?
       </p>
-      <Button
+      <button
         onClick={handleBuy}
         disabled={loading}
-        size="sm"
-        className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold"
+        className="w-full relative font-bold text-slate-900 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 hover:from-yellow-300 hover:via-amber-300 hover:to-orange-400 py-4 px-6 rounded-xl text-lg shadow-xl shadow-yellow-500/40 border-2 border-yellow-300/70 transition-all duration-150 transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
       >
-        {loading ? '⏳...' : '🎰 Giro Extra - €0.49'}
-      </Button>
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer" />
+        </div>
+        
+        <span className="relative flex items-center justify-center gap-2">
+          {loading ? '⏳ Procesando...' : '🎰 Giro Extra - €0.49'}
+        </span>
+        
+        {/* Price badge */}
+        <span className="absolute -top-2 -right-2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-yellow-400">
+          €0.49
+        </span>
+      </button>
     </div>
   );
 };

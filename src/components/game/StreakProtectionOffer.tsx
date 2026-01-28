@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Shield, X, Flame } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
+import { PremiumButton } from '@/components/ui/PremiumButton';
 
 interface StreakProtectionOfferProps {
   currentStreak: number;
@@ -21,7 +21,7 @@ export const StreakProtectionOffer = ({
   onDismiss 
 }: StreakProtectionOfferProps) => {
   const [loading, setLoading] = useState(false);
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
 
   const handleBuy = async () => {
     setLoading(true);
@@ -64,7 +64,7 @@ export const StreakProtectionOffer = ({
       <div className="relative bg-gradient-to-b from-orange-900 via-red-900 to-purple-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-orange-400 shadow-2xl animate-scale-in">
         <button 
           onClick={onDismiss}
-          className="absolute top-3 right-3 text-white/70 hover:text-white"
+          className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />
         </button>
@@ -72,53 +72,51 @@ export const StreakProtectionOffer = ({
         <div className="text-center">
           {/* Icono animado */}
           <div className="relative mb-4">
-            <Flame className="w-16 h-16 mx-auto text-orange-400 animate-pulse" />
-            <div className="absolute -top-2 -right-2 bg-red-500 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold text-sm animate-bounce">
+            <Flame className="w-20 h-20 mx-auto text-orange-400 animate-pulse drop-shadow-lg" />
+            <div className="absolute -top-2 -right-2 bg-red-500 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-lg animate-bounce shadow-lg">
               {currentStreak}
             </div>
           </div>
           
           {/* Mensaje emocional */}
-          <h2 className="text-xl font-bold text-orange-400 mb-2">
+          <h2 className="text-2xl font-bold text-orange-300 mb-2 drop-shadow-lg">
             🔥 {getEmotionalMessage()}
           </h2>
           
-          <p className="text-orange-200 text-sm mb-4">
+          <p className="text-orange-200/90 text-sm mb-5">
             {language === 'es' 
               ? 'Un escudo protegerá tu racha por 24 horas extra'
               : 'A shield will protect your streak for 24 extra hours'}
           </p>
 
-          {/* Oferta */}
-          <div className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 rounded-2xl p-4 mb-4 border border-orange-400/30">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Shield className="w-8 h-8 text-yellow-400" />
-              <span className="text-2xl font-bold text-yellow-400">
+          {/* Oferta destacada */}
+          <div className="bg-gradient-to-r from-orange-500/30 to-yellow-500/30 rounded-2xl p-5 mb-5 border-2 border-orange-400/50 shadow-inner">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <Shield className="w-10 h-10 text-yellow-400 drop-shadow-lg" />
+              <span className="text-2xl font-bold text-white">
                 {language === 'es' ? 'Protección de Racha' : 'Streak Protection'}
               </span>
             </div>
-            <div className="text-4xl font-bold text-white mb-1">€0.49</div>
-            <p className="text-green-400 text-sm">
+            <div className="text-5xl font-black text-white mb-2 drop-shadow-lg">€0.49</div>
+            <p className="text-green-400 font-semibold">
               {language === 'es' ? '+24 horas para reclamar' : '+24 hours to claim'}
             </p>
           </div>
 
-          <Button 
+          <PremiumButton 
             onClick={handleBuy}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-bold py-5 rounded-xl text-xl shadow-lg shadow-orange-500/30 mb-3"
+            loading={loading}
+            variant="orange"
+            size="lg"
+            className="mb-4"
           >
-            {loading ? '⏳...' : (
-              <span className="flex items-center justify-center gap-2">
-                <Shield className="w-5 h-5" />
-                {language === 'es' ? '¡PROTEGER RACHA!' : 'PROTECT STREAK!'}
-              </span>
-            )}
-          </Button>
+            <Shield className="w-6 h-6" />
+            {language === 'es' ? '¡PROTEGER RACHA!' : 'PROTECT STREAK!'}
+          </PremiumButton>
 
           <button 
             onClick={onDismiss}
-            className="w-full text-white/50 hover:text-white text-sm py-2"
+            className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
           >
             {language === 'es' ? 'Dejar que se pierda' : 'Let it be lost'}
           </button>

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Music, Music2 } from 'lucide-react';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
-import { setSoundEnabled, isSoundEnabled } from '@/hooks/useMysticSounds';
+import { setSoundEnabled, isSoundEnabled, playUIClick } from '@/hooks/useMysticSounds';
 
 const SOUND_KEY = 'mystic_sound_enabled';
 const MUSIC_KEY = 'mystic_music_enabled';
@@ -17,6 +17,10 @@ export const AudioControls = () => {
     return saved === null ? true : saved === 'true';
   });
 
+  // Animation states for pop effect
+  const [soundPop, setSoundPop] = useState(false);
+  const [musicPop, setMusicPop] = useState(false);
+
   // Initialize states on mount
   useEffect(() => {
     setSoundEnabled(soundOn);
@@ -30,6 +34,15 @@ export const AudioControls = () => {
     setSoundOn(newState);
     setSoundEnabled(newState);
     localStorage.setItem(SOUND_KEY, String(newState));
+    
+    // Pop animation
+    setSoundPop(true);
+    setTimeout(() => setSoundPop(false), 150);
+    
+    // Play confirmation sound if turning ON
+    if (newState) {
+      setTimeout(() => playUIClick(), 50);
+    }
   };
 
   const toggleMusic = () => {
@@ -41,37 +54,56 @@ export const AudioControls = () => {
       backgroundMusic.mute();
     }
     localStorage.setItem(MUSIC_KEY, String(newState));
+    
+    // Pop animation
+    setMusicPop(true);
+    setTimeout(() => setMusicPop(false), 150);
+    
+    // Play confirmation sound if turning ON (and sound is enabled)
+    if (newState && soundOn) {
+      setTimeout(() => playUIClick(), 50);
+    }
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-3">
       {/* Sound Effects Button */}
       <button
         onClick={toggleSound}
         className={`
-          relative w-11 h-11 rounded-xl flex items-center justify-center
-          transition-all duration-[120ms] ease-out transform hover:scale-105 active:scale-90
+          relative w-14 h-14 rounded-2xl flex items-center justify-center
+          transition-all duration-150 ease-out
+          ${soundPop ? 'scale-125' : 'hover:scale-110 active:scale-95'}
           ${soundOn 
-            ? 'bg-gradient-to-br from-emerald-500/90 to-green-600/90 shadow-lg shadow-emerald-500/30 border border-emerald-400/50' 
-            : 'bg-muted/40 border border-muted-foreground/20 opacity-45'
+            ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 shadow-xl shadow-emerald-500/40 border-2 border-emerald-300/70' 
+            : 'bg-slate-800/80 border-2 border-slate-600/50 opacity-60'
           }
         `}
         aria-label={soundOn ? 'Desactivar sonidos' : 'Activar sonidos'}
       >
         {soundOn ? (
-          <Volume2 className="w-5 h-5 text-white drop-shadow-sm" />
+          <Volume2 className="w-7 h-7 text-white drop-shadow-lg" />
         ) : (
-          <VolumeX className="w-5 h-5 text-muted-foreground" />
+          <VolumeX className="w-7 h-7 text-slate-400" />
         )}
         
-        {/* Glow effect when active */}
+        {/* ON label */}
         {soundOn && (
-          <div className="absolute inset-0 rounded-xl bg-emerald-400/20 animate-pulse" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-300 bg-emerald-900/80 px-1.5 py-0.5 rounded-full">
+            ON
+          </span>
         )}
         
-        {/* Muted diagonal line */}
+        {/* OFF label */}
         {!soundOn && (
-          <div className="absolute w-7 h-0.5 bg-muted-foreground/70 rotate-45 rounded-full" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-500 bg-slate-800/80 px-1.5 py-0.5 rounded-full">
+            OFF
+          </span>
+        )}
+        
+        {/* Glow ring when active */}
+        {soundOn && (
+          <div className="absolute inset-0 rounded-2xl ring-2 ring-emerald-400/50 animate-pulse pointer-events-none" />
         )}
       </button>
 
@@ -79,29 +111,39 @@ export const AudioControls = () => {
       <button
         onClick={toggleMusic}
         className={`
-          relative w-11 h-11 rounded-xl flex items-center justify-center
-          transition-all duration-[120ms] ease-out transform hover:scale-105 active:scale-90
+          relative w-14 h-14 rounded-2xl flex items-center justify-center
+          transition-all duration-150 ease-out
+          ${musicPop ? 'scale-125' : 'hover:scale-110 active:scale-95'}
           ${musicOn 
-            ? 'bg-gradient-to-br from-purple-500/90 to-violet-600/90 shadow-lg shadow-purple-500/30 border border-purple-400/50' 
-            : 'bg-muted/40 border border-muted-foreground/20 opacity-45'
+            ? 'bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 shadow-xl shadow-purple-500/40 border-2 border-purple-300/70' 
+            : 'bg-slate-800/80 border-2 border-slate-600/50 opacity-60'
           }
         `}
         aria-label={musicOn ? 'Desactivar música' : 'Activar música'}
       >
         {musicOn ? (
-          <Music className="w-5 h-5 text-white drop-shadow-sm" />
+          <Music className="w-7 h-7 text-white drop-shadow-lg" />
         ) : (
-          <Music2 className="w-5 h-5 text-muted-foreground" />
+          <Music2 className="w-7 h-7 text-slate-400" />
         )}
         
-        {/* Glow effect when active */}
+        {/* ON label */}
         {musicOn && (
-          <div className="absolute inset-0 rounded-xl bg-purple-400/20 animate-pulse" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-purple-300 bg-purple-900/80 px-1.5 py-0.5 rounded-full">
+            ON
+          </span>
         )}
         
-        {/* Muted diagonal line */}
+        {/* OFF label */}
         {!musicOn && (
-          <div className="absolute w-7 h-0.5 bg-muted-foreground/70 rotate-45 rounded-full" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-500 bg-slate-800/80 px-1.5 py-0.5 rounded-full">
+            OFF
+          </span>
+        )}
+        
+        {/* Glow ring when active */}
+        {musicOn && (
+          <div className="absolute inset-0 rounded-2xl ring-2 ring-purple-400/50 animate-pulse pointer-events-none" />
         )}
       </button>
     </div>
