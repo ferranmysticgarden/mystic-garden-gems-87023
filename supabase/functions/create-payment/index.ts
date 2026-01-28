@@ -35,6 +35,12 @@ const PRODUCT_PRICES: Record<string, string> = {
   "streak_protection": "price_1Stp3sB6GI8NmIPnX6qHHkW0",
   // Pack salvavidas €0.49
   "lifesaver_pack": "price_1Stp48B6GI8NmIPnqyYtX01T",
+  // Duplicar recompensa €0.49
+  "reward_doubler": "price_1SugszB6GI8NmIPn1huYdoVq",
+  // Pack Victoria Segura €2.99
+  "pack_victoria_segura": "price_1SugtDB6GI8NmIPnFsLC42S1",
+  // Pack Racha Infinita €1.99
+  "pack_racha_infinita": "price_1SugtpB6GI8NmIPnrIvDwnsV",
 };
 
 serve(async (req) => {

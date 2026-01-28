@@ -168,5 +168,33 @@ export const PRODUCTS: Product[] = [
     price: 0.99, 
     currency: 'EUR',
     powerups: 5
+  },
+  // REWARD DOUBLER - Post-victory €0.49
+  {
+    id: 'reward_doubler',
+    nameKey: 'shop.rewardDoubler',
+    name: 'Duplicar Recompensa x2',
+    price: 0.49,
+    currency: 'EUR'
+  },
+  // PACK VICTORIA SEGURA - Premium €2.99
+  {
+    id: 'pack_victoria_segura',
+    nameKey: 'shop.packVictoriaSegura',
+    name: 'Pack Victoria Segura',
+    price: 2.99,
+    currency: 'EUR',
+    powerups: 5, // +5 movimientos
+    lives: 3 // boosters / protección
+  },
+  // PACK RACHA INFINITA - Premium €1.99
+  {
+    id: 'pack_racha_infinita',
+    nameKey: 'shop.packRachaInfinita',
+    name: 'Pack Racha Infinita',
+    price: 1.99,
+    currency: 'EUR',
+    lives: 2
+    // + streak protection + 1 spin (handled by webhook)
   }
 ];
