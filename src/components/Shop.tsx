@@ -12,6 +12,7 @@ interface ShopProps {
 
 // Products to show in main shop (exclude special offers)
 const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_ads_forever', 'garden_pass'];
+const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_racha_infinita'];
 const BEST_VALUE_ID = 'gems_300';
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
@@ -23,6 +24,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   };
 
   const shopProducts = PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
+  const premiumPacks = PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
@@ -46,6 +48,109 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
           >
             <X className="w-6 h-6 text-white/70 hover:text-white" />
           </button>
+        </div>
+
+        {/* PREMIUM PACKS SECTION - New! */}
+        {premiumPacks.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+              <span className="text-amber-400 font-bold text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                PACKS EXPERIENCIA
+                <Sparkles className="w-4 h-4" />
+              </span>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {premiumPacks.map((pack) => {
+                const isVictoria = pack.id === 'pack_victoria_segura';
+                
+                return (
+                  <div
+                    key={pack.id}
+                    className={`relative rounded-2xl p-5 transition-all hover:scale-[1.03] ${
+                      isVictoria 
+                        ? 'bg-gradient-to-br from-emerald-600/40 via-green-500/30 to-teal-600/40 border-2 border-emerald-400 shadow-xl shadow-emerald-500/30' 
+                        : 'bg-gradient-to-br from-orange-600/40 via-amber-500/30 to-red-600/40 border-2 border-orange-400 shadow-xl shadow-orange-500/30'
+                    }`}
+                  >
+                    {/* Badge */}
+                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 ${isVictoria ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-orange-400 to-red-400'} px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg`}>
+                      <Crown className="w-4 h-4 text-white" />
+                      <span className="text-white text-sm font-bold">
+                        {isVictoria ? 'VICTORIA SEGURA' : 'RACHA INFINITA'}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 mb-4">
+                      <div className="flex items-center justify-center gap-2 mb-3">
+                        {isVictoria ? (
+                          <>
+                            <span className="text-2xl">🛡️</span>
+                            <span className="text-2xl">⚡</span>
+                            <span className="text-2xl">🎯</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-2xl">🔥</span>
+                            <span className="text-2xl">❤️</span>
+                            <span className="text-2xl">🎰</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      <ul className="text-sm space-y-1.5 text-white/90">
+                        {isVictoria ? (
+                          <>
+                            <li className="flex items-center gap-2">✓ +5 movimientos extra</li>
+                            <li className="flex items-center gap-2">✓ +3 boosters</li>
+                            <li className="flex items-center gap-2">✓ Protección de derrota 1x</li>
+                          </>
+                        ) : (
+                          <>
+                            <li className="flex items-center gap-2">✓ Protección de racha</li>
+                            <li className="flex items-center gap-2">✓ +2 vidas</li>
+                            <li className="flex items-center gap-2">✓ 1 giro extra ruleta</li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+
+                    <Button
+                      onClick={() => handlePurchase(pack.id, pack.name)}
+                      className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg text-lg ${
+                        isVictoria 
+                          ? 'bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 text-slate-900 shadow-emerald-500/40' 
+                          : 'bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white shadow-orange-500/40'
+                      }`}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Procesando...
+                        </>
+                      ) : (
+                        <>
+                          <Crown className="w-5 h-5 mr-2" />
+                          €{pack.price.toFixed(2)}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Separator */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+          <span className="text-purple-300/70 text-xs">GEMAS & PASES</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

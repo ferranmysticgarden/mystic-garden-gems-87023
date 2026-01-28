@@ -1,7 +1,7 @@
 # 💰 ESTADO DEL ROADMAP DE MONETIZACIÓN PSICOLÓGICA
 
-**Última actualización:** 26 Enero 2026  
-**Versión:** 9.2.0 → 9.5.0 (pendiente build)
+**Última actualización:** 28 Enero 2026  
+**Versión:** 9.5.0 → 9.6.0
 
 ---
 
@@ -42,19 +42,33 @@
 
 ---
 
-## 🔄 PENDIENTE - MEDIO PLAZO
+## ✅ COMPLETADO - NUEVO (28 Enero 2026)
 
-### 6. Packs de Experiencia en Tienda
-- **Estado:** ❌ No implementado
-- **Descripción:** Bundles temáticos con badges "MEJOR VALOR"
-  - Pack Victoria Segura: 100💎 + 3🔨 + 3❤️ + boost 10% = €2.49
-  - Pack Racha Infinita: Protección 7 días + 50💎 = €1.99
-  - Pack Concentración: Sin ads 24h + 5 vidas = €0.99
+### 6. Duplicar Recompensa Post-Victoria (€0.49) ✅
+- **Archivo:** `src/components/game/RewardDoubler.tsx` (NUEVO)
+- **Stripe Price ID:** `price_1SugszB6GI8NmIPn1huYdoVq`
+- **Características:**
+  - Modal con temporizador 8 segundos (urgencia)
+  - Visual de cofres x2 animados
+  - Efecto confetti al entrar
+  - Pulsación roja los últimos 3 segundos
 
-### 7. Duplicar Recompensa Post-Victoria (€0.49)
-- **Estado:** ❌ No implementado
-- **Descripción:** Modal "x2 RECOMPENSA" después de ganar nivel
-- **Trigger:** Aparece antes de cerrar pantalla de victoria
+### 7. Packs de Experiencia en Tienda ✅
+- **Archivo:** `src/components/Shop.tsx` (actualizado)
+- **Pack Victoria Segura (€2.99):**
+  - Stripe Price ID: `price_1SugtDB6GI8NmIPnFsLC42S1`
+  - +5 movimientos, +3 boosters, protección derrota 1x
+- **Pack Racha Infinita (€1.99):**
+  - Stripe Price ID: `price_1SugtpB6GI8NmIPnrIvDwnsV`
+  - Protección racha, +2 vidas, 1 giro extra
+
+---
+
+## 🔄 PENDIENTE - INTEGRACIÓN
+
+### Integrar RewardDoubler en flujo de victoria
+- **Estado:** 🟡 Componente listo, pendiente integrar en GameScreen
+- **Trigger:** Después de completar nivel exitosamente
 
 ### 8. Multiplicador de Combo Pagado
 - **Estado:** ❌ No implementado
