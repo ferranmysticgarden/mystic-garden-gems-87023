@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Heart, X, Zap } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
+import { PremiumButton } from '@/components/ui/PremiumButton';
 
 interface LifesaverPackProps {
   onBuy: () => void;
@@ -43,72 +43,71 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
       <div className="relative bg-gradient-to-b from-red-900 via-pink-900 to-purple-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-red-400 shadow-2xl animate-scale-in">
         <button 
           onClick={onDismiss}
-          className="absolute top-3 right-3 text-white/70 hover:text-white"
+          className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />
         </button>
 
         <div className="text-center">
-          {/* Icono corazón roto */}
-          <div className="text-6xl mb-4">💔</div>
+          {/* Icono corazón roto animado */}
+          <div className="text-7xl mb-4 animate-pulse drop-shadow-lg">💔</div>
           
-          <h2 className="text-2xl font-bold text-red-400 mb-2">
+          <h2 className="text-2xl font-bold text-red-300 mb-2 drop-shadow-lg">
             {language === 'es' ? '¡Sin vidas!' : 'No lives!'}
           </h2>
           
-          <p className="text-red-200 mb-4">
+          <p className="text-red-200/90 mb-5">
             {language === 'es' 
               ? 'Pero puedes seguir jugando ahora mismo...'
               : 'But you can keep playing right now...'}
           </p>
 
-          {/* Oferta */}
-          <div className="bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-2xl p-4 mb-4 border border-red-400/30">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Heart className="w-6 h-6 text-red-400 fill-red-400" />
-              <span className="text-xl font-bold text-white">
+          {/* Oferta destacada */}
+          <div className="bg-gradient-to-r from-red-500/30 to-pink-500/30 rounded-2xl p-5 mb-5 border-2 border-red-400/50 shadow-inner">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Heart className="w-8 h-8 text-red-400 fill-red-400 drop-shadow-lg" />
+              <span className="text-2xl font-bold text-white">
                 {language === 'es' ? 'Pack Salvavidas' : 'Lifesaver Pack'}
               </span>
             </div>
             
-            <div className="flex justify-center gap-4 mb-3">
+            {/* Lo que incluye */}
+            <div className="flex justify-center gap-6 mb-4">
               <div className="text-center">
-                <div className="text-2xl">❤️</div>
-                <p className="text-xs text-red-200">+1 vida</p>
+                <div className="text-4xl mb-1">❤️</div>
+                <p className="text-sm font-semibold text-red-200">+1 vida</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl">🎯</div>
-                <p className="text-xs text-red-200">+3 movs</p>
+                <div className="text-4xl mb-1">🎯</div>
+                <p className="text-sm font-semibold text-red-200">+3 movs</p>
               </div>
             </div>
             
-            <div className="text-4xl font-bold text-white">€0.49</div>
-            <p className="text-green-400 text-sm mt-1">
+            <div className="text-5xl font-black text-white drop-shadow-lg">€0.49</div>
+            <p className="text-green-400 font-semibold mt-1">
               {language === 'es' ? '¡Sigue jugando ya!' : 'Keep playing now!'}
             </p>
           </div>
 
-          <Button 
+          <PremiumButton 
             onClick={handleBuy}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 text-white font-bold py-5 rounded-xl text-xl shadow-lg shadow-red-500/30 mb-3"
+            loading={loading}
+            variant="red"
+            size="lg"
+            className="mb-4"
           >
-            {loading ? '⏳...' : (
-              <span className="flex items-center justify-center gap-2">
-                <Heart className="w-5 h-5 fill-current" />
-                {language === 'es' ? '¡REVIVIR AHORA!' : 'REVIVE NOW!'}
-              </span>
-            )}
-          </Button>
+            <Heart className="w-6 h-6 fill-current" />
+            {language === 'es' ? '¡REVIVIR AHORA!' : 'REVIVE NOW!'}
+          </PremiumButton>
 
           <button 
             onClick={onDismiss}
-            className="w-full text-white/50 hover:text-white text-sm py-2"
+            className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
           >
             {language === 'es' ? 'Esperar regeneración' : 'Wait for regeneration'}
           </button>
           
-          <p className="text-red-300/50 text-xs mt-2">
+          <p className="text-red-300/40 text-xs mt-2">
             {language === 'es' ? '⏰ Próxima vida en ~35 min' : '⏰ Next life in ~35 min'}
           </p>
         </div>

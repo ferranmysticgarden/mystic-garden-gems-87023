@@ -25,6 +25,38 @@ export const setSoundEnabled = (enabled: boolean) => {
 
 export const isSoundEnabled = () => globalSoundEnabled;
 
+// Lightweight UI click sound for buttons - standalone function
+export const playUIClick = () => {
+  if (!globalSoundEnabled) return;
+  
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
+    
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+    
+    // Cleanup
+    setTimeout(() => ctx.close(), 200);
+  } catch (e) {
+    // Silently fail if audio not available
+  }
+};
+
 // Volume hierarchy (relative to master)
 const VOLUME = {
   SELECT: 0.6,
