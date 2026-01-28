@@ -1,18 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Volume2, VolumeX, Music, Music2 } from 'lucide-react';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
-import { setSoundEnabled, isSoundEnabled, playUIClick } from '@/hooks/useMysticSounds';
+import { setSoundEnabled, playUIClick } from '@/hooks/useMysticSounds';
 
 const SOUND_KEY = 'mystic_sound_enabled';
 const MUSIC_KEY = 'mystic_music_enabled';
 
 export const AudioControls = () => {
   const [soundOn, setSoundOn] = useState(() => {
+    if (typeof window === 'undefined') return true;
     const saved = localStorage.getItem(SOUND_KEY);
     return saved === null ? true : saved === 'true';
   });
   
   const [musicOn, setMusicOn] = useState(() => {
+    if (typeof window === 'undefined') return true;
     const saved = localStorage.getItem(MUSIC_KEY);
     return saved === null ? true : saved === 'true';
   });
@@ -41,13 +43,20 @@ export const AudioControls = () => {
     
     // Play confirmation sound if turning ON
     if (newState) {
-      setTimeout(() => playUIClick(), 50);
+      setTimeout(() => {
+        try {
+          playUIClick();
+        } catch (e) {
+          // Ignore audio errors
+        }
+      }, 50);
     }
   };
 
   const toggleMusic = () => {
     const newState = !musicOn;
     setMusicOn(newState);
+    
     if (newState) {
       backgroundMusic.unmute();
     } else {
@@ -61,7 +70,13 @@ export const AudioControls = () => {
     
     // Play confirmation sound if turning ON (and sound is enabled)
     if (newState && soundOn) {
-      setTimeout(() => playUIClick(), 50);
+      setTimeout(() => {
+        try {
+          playUIClick();
+        } catch (e) {
+          // Ignore audio errors
+        }
+      }, 50);
     }
   };
 
