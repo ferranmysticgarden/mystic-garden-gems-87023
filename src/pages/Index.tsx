@@ -29,6 +29,7 @@ import { ReviewRequestModal } from '@/components/game/ReviewRequestModal';
 import { ExitConfirmModal } from '@/components/game/ExitConfirmModal';
 import { Day2UnlockBanner } from '@/components/game/Day2UnlockBanner';
 import { FirstWinCelebration } from '@/components/game/FirstWinCelebration';
+import { FirstSessionReward } from '@/components/game/FirstSessionReward';
 import { SharePrompt } from '@/components/game/SharePrompt';
 import { DayCounter } from '@/components/game/DayCounter';
 import { FlashOffer } from '@/components/game/FlashOffer';
@@ -63,6 +64,7 @@ const Index = () => {
     activateUnlimitedLives,
     hasUnlimitedLives,
     getTimeUntilNextLife,
+    setOnLivesFull,
   } = useGameState();
   
   const { 
@@ -99,7 +101,10 @@ const Index = () => {
   
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
-  const { scheduleLivesFullNotification, scheduleStreakReminder } = usePushNotifications();
+  const { scheduleLivesFullNotification, scheduleStreakReminder, sendLivesFullNotification } = usePushNotifications();
+  
+  // State for first session reward
+  const [showFirstSessionReward, setShowFirstSessionReward] = useState(false);
 
   // Auto-show streak calendar if reward available
   useEffect(() => {
@@ -111,12 +116,19 @@ const Index = () => {
     }
   }, [streakData.canClaimToday, user]);
 
-  // Schedule streak reminder if user has a streak
+  // Schedule streak reminder if user has a streak (at 20:30 prime time)
   useEffect(() => {
     if (streakData.currentStreak > 0 && !streakData.canClaimToday) {
       scheduleStreakReminder(streakData.currentStreak);
     }
   }, [streakData.currentStreak, streakData.canClaimToday, scheduleStreakReminder]);
+
+  // Set up notification when lives become full
+  useEffect(() => {
+    setOnLivesFull(() => {
+      sendLivesFullNotification();
+    });
+  }, [setOnLivesFull, sendLivesFullNotification]);
 
   // Music is now auto-started by useBackgroundMusic hook
 
@@ -161,8 +173,13 @@ const Index = () => {
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
-    // Show post-victory offer for harder levels (level 5+)
-    if (currentLevel.id >= 5 && reward.gems && reward.gems > 0) {
+    // Show First Session Reward after level 5 (100 gems + chest)
+    if (currentLevel.id === 5) {
+      setTimeout(() => setShowFirstSessionReward(true), 2500);
+    }
+    
+    // Show post-victory offer for harder levels (level 6+)
+    if (currentLevel.id >= 6 && reward.gems && reward.gems > 0) {
       setLastWinGems(reward.gems);
       setTimeout(() => setShowPostVictoryOffer(true), 1500);
     }
@@ -541,6 +558,19 @@ const Index = () => {
         <FirstWinCelebration 
           levelsCompleted={gameState.completedLevels.length}
           onClose={() => setShowFirstWin(false)}
+        />
+      )}
+
+      {/* First Session Reward - after completing level 5 */}
+      {showFirstSessionReward && (
+        <FirstSessionReward
+          levelJustCompleted={lastCompletedLevel}
+          onClaim={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Regalo de Primera Sesión! +${gems}💎 +${lives}❤️`);
+          }}
+          onClose={() => setShowFirstSessionReward(false)}
         />
       )}
 

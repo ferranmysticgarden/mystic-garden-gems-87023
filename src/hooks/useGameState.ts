@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -103,7 +103,13 @@ export const useGameState = () => {
     saveProgress();
   }, [gameState, user, loading]);
 
-  // Life refill system
+  // Life refill system with notification callback
+  const onLivesFullRef = useRef<(() => void) | null>(null);
+
+  const setOnLivesFull = useCallback((callback: () => void) => {
+    onLivesFullRef.current = callback;
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setGameState((prev) => {
@@ -124,6 +130,12 @@ export const useGameState = () => {
         if (prev.lives < 5 && timeSinceLastRefill >= LIFE_REFILL_TIME) {
           const livesToAdd = Math.floor(timeSinceLastRefill / LIFE_REFILL_TIME);
           const newLives = Math.min(5, prev.lives + livesToAdd);
+          
+          // Trigger notification when lives become full
+          if (newLives === 5 && prev.lives < 5 && onLivesFullRef.current) {
+            onLivesFullRef.current();
+          }
+          
           return {
             ...prev,
             lives: newLives,
@@ -262,5 +274,6 @@ export const useGameState = () => {
     activateUnlimitedLives,
     hasUnlimitedLives,
     getTimeUntilNextLife,
+    setOnLivesFull,
   };
 };

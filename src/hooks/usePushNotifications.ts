@@ -20,8 +20,8 @@ interface NotificationConfig {
 
 const NOTIFICATION_CONFIGS: Record<NotificationType, Omit<NotificationConfig, 'type'>> = {
   lives_full: {
-    title: '❤️ ¡Vidas Llenas!',
-    body: '¡Tus vidas están al máximo! Es el momento perfecto para jugar.',
+    title: '❤️ ¡5 Vidas Listas!',
+    body: '¡Tienes 5 vidas listas! No las desperdicies 🎮',
     icon: '/app-icon-512.png',
   },
   daily_bonus: {
@@ -30,8 +30,8 @@ const NOTIFICATION_CONFIGS: Record<NotificationType, Omit<NotificationConfig, 't
     icon: '/app-icon-512.png',
   },
   streak_reminder: {
-    title: '🔥 ¡No Pierdas Tu Racha!',
-    body: 'Tu racha de {streak} días está en riesgo. ¡Juega hoy!',
+    title: '🔥 ¡URGENTE! Tu racha de {streak} días',
+    body: '⚠️ Tu racha expira en 2 horas. ¡No pierdas {streak} días de progreso!',
     icon: '/app-icon-512.png',
   },
   come_back: {
@@ -131,17 +131,30 @@ export const usePushNotifications = () => {
     return scheduleNotification('daily_bonus', delayMs);
   }, [scheduleNotification]);
 
-  // Schedule streak reminder for evening if user hasn't played
+  // Schedule streak reminder for prime time (20:00-21:00) with urgency
   const scheduleStreakReminder = useCallback((currentStreak: number) => {
     const now = new Date();
+    
+    // Schedule for 20:30 (peak mobile gaming time)
     const reminderTime = new Date(now);
-    reminderTime.setHours(20, 0, 0, 0); // 8 PM
+    reminderTime.setHours(20, 30, 0, 0);
 
-    if (reminderTime <= now) return; // Already past reminder time
+    // If already past 20:30, schedule for 21:30 as fallback
+    if (reminderTime <= now) {
+      reminderTime.setHours(21, 30, 0, 0);
+    }
+    
+    // If still past, don't schedule
+    if (reminderTime <= now) return;
 
     const delayMs = reminderTime.getTime() - now.getTime();
     return scheduleNotification('streak_reminder', delayMs, { streak: currentStreak });
   }, [scheduleNotification]);
+  
+  // Send immediate notification when lives are full
+  const sendLivesFullNotification = useCallback(() => {
+    sendNotification('lives_full');
+  }, [sendNotification]);
 
   return {
     isSupported,
@@ -152,5 +165,6 @@ export const usePushNotifications = () => {
     scheduleLivesFullNotification,
     scheduleDailyBonusReminder,
     scheduleStreakReminder,
+    sendLivesFullNotification,
   };
 };
