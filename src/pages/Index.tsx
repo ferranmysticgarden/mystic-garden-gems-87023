@@ -39,6 +39,7 @@ import { LootChest } from '@/components/game/LootChest';
 import { SpringEvent } from '@/components/game/SpringEvent';
 import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
+import { VisualGarden } from '@/components/game/VisualGarden';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
@@ -344,6 +345,11 @@ const Index = () => {
         {/* Day Counter - "Día X en Mystic Garden" */}
         <DayCounter currentStreak={streakData.currentStreak} />
 
+        {/* Visual Garden - Emotional connection */}
+        <div className="mb-4">
+          <VisualGarden levelsCompleted={gameState.completedLevels.length} />
+        </div>
+
         {/* Progression Bar */}
         <div className="mb-4">
           <ProgressionBar />
@@ -543,13 +549,19 @@ const Index = () => {
         />
       )}
 
-      {/* Day 2-3 Unlock Bonus */}
+      {/* Day 2-3 Unlock Bonus - MEGA REWARD */}
       <Day2UnlockBanner 
         streak={streakData.currentStreak}
-        onClaimReward={(gems, lives) => {
+        onClaimReward={(gems, lives, powerUps) => {
           addGems(gems);
           addLives(lives);
-          toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
+          // Add hammers if included
+          if (powerUps?.hammers) {
+            // Note: Would need to add hammer tracking to gameState
+            toast.success(`¡MEGA REGALO Día ${streakData.currentStreak}! +${gems}💎 +${lives}❤️ +${powerUps.hammers}🔨`);
+          } else {
+            toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
+          }
         }}
       />
 
