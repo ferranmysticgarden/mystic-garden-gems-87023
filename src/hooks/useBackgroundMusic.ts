@@ -53,6 +53,8 @@ class BackgroundMusicManager {
     
     this.audio = new Audio('/audio/background-music.mp3');
     this.audio.loop = true;
+    // Ensure we respect muted state immediately
+    this.audio.muted = this.isMuted;
     this.audio.volume = 0; // Start at 0 for fade-in
     this.isInitialized = true;
 
@@ -98,9 +100,18 @@ class BackgroundMusicManager {
   async play() {
     if (!this.audio) this.initialize();
     if (!this.audio) return;
+    // Always keep the element muted flag in sync
+    this.audio.muted = this.isMuted;
     
     // Don't play if muted
     if (this.isMuted) {
+      // Ensure no sound leaks
+      this.audio.volume = 0;
+      try {
+        this.audio.pause();
+      } catch {
+        // ignore
+      }
       return;
     }
 
@@ -185,25 +196,44 @@ class BackgroundMusicManager {
 
   mute() {
     this.isMuted = true;
-    localStorage.setItem(MUSIC_KEY, 'false');
-    this.fadeToVolume(0, 200);
-    // Also pause to save resources
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(MUSIC_KEY, 'false');
+    }
+
+    // Hard-stop: no fade dependency (fixes browsers where fades don't apply)
+    if (this.fadeInterval) {
+      clearInterval(this.fadeInterval);
+      this.fadeInterval = null;
+    }
+
     if (this.audio) {
-      setTimeout(() => {
-        if (this.isMuted && this.audio) {
-          this.audio.pause();
-        }
-      }, 250);
+      this.audio.muted = true;
+      this.audio.volume = 0;
+      this.currentVolume = 0;
+      try {
+        this.audio.pause();
+      } catch {
+        // ignore
+      }
     }
   }
 
   unmute() {
     this.isMuted = false;
-    localStorage.setItem(MUSIC_KEY, 'true');
-    // Resume playback
-    if (this.audio && this.audio.paused) {
-      this.audio.play().catch(() => {});
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(MUSIC_KEY, 'true');
     }
+
+    if (!this.audio) this.initialize();
+    if (!this.audio) return;
+
+    this.audio.muted = false;
+    // Start from 0 and fade in (user interaction should allow play)
+    this.audio.volume = 0;
+    this.currentVolume = 0;
+    this.audio.play().catch(() => {
+      // Autoplay blocked - will start on next user interaction
+    });
     this.fadeToVolume(this.baseVolume, 200);
   }
 

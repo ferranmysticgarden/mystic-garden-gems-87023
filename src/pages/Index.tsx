@@ -320,10 +320,10 @@ const Index = () => {
             {/* Exit Button - Botón de puerta mejorado */}
             <button
               onClick={() => setShowExitModal(true)}
-              className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-500/20 border-2 border-red-400/50 hover:bg-red-500/40 hover:scale-110 transition-all duration-150"
+              className="w-12 h-12 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 hover:scale-110 transition-all duration-150"
               aria-label="Salir del juego"
             >
-              <DoorOpen className="w-6 h-6 text-red-400" />
+              <DoorOpen className="w-6 h-6 text-destructive" />
             </button>
           </div>
         </div>
