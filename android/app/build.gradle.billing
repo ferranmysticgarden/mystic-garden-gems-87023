@@ -1,0 +1,9 @@
+// Add these dependencies to your android/app/build.gradle file
+// In the dependencies block, add:
+
+dependencies {
+    // ... existing dependencies ...
+    
+    // Google Play Billing Library
+    implementation 'com.android.billingclient:billing:6.1.0'
+}
