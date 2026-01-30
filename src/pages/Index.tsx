@@ -317,16 +317,14 @@ const Index = () => {
             {/* Audio Controls - Sound & Music */}
             <AudioControls />
             
-            {/* Exit Button */}
-            <Button
+            {/* Exit Button - Botón de puerta mejorado */}
+            <button
               onClick={() => setShowExitModal(true)}
-              variant="ghost"
-              size="sm"
-              id="exit-btn"
-              className="text-destructive hover:text-destructive/80"
+              className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-500/20 border-2 border-red-400/50 hover:bg-red-500/40 hover:scale-110 transition-all duration-150"
+              aria-label="Salir del juego"
             >
-              <DoorOpen className="w-5 h-5" />
-            </Button>
+              <DoorOpen className="w-6 h-6 text-red-400" />
+            </button>
           </div>
         </div>
 
@@ -545,6 +543,11 @@ const Index = () => {
       {showExitModal && (
         <ExitConfirmModal 
           onStay={() => setShowExitModal(false)}
+          onExit={() => {
+            // En web: cerrar el modal y hacer signOut
+            setShowExitModal(false);
+            signOut();
+          }}
           streak={streakData.currentStreak}
         />
       )}

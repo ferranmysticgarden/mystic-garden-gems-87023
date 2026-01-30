@@ -23,13 +23,17 @@ export const AudioControls = () => {
   const [soundPop, setSoundPop] = useState(false);
   const [musicPop, setMusicPop] = useState(false);
 
-  // Initialize states on mount
+  // Initialize states on mount - FORCE apply saved state
   useEffect(() => {
     setSoundEnabled(soundOn);
-    if (!musicOn) {
+    
+    // CRITICAL: Apply music state immediately on mount
+    if (musicOn) {
+      backgroundMusic.unmute();
+    } else {
       backgroundMusic.mute();
     }
-  }, []);
+  }, []); // Only run once on mount
 
   const toggleSound = () => {
     const newState = !soundOn;
