@@ -20,6 +20,8 @@ const VOLUME_MAP: Record<Screen, number> = {
 // Volume to return to after victory/defeat
 const POST_EVENT_VOLUME = 0.15;
 
+const MUSIC_KEY = 'mystic_music_enabled';
+
 class BackgroundMusicManager {
   private static instance: BackgroundMusicManager | null = null;
   private audio: HTMLAudioElement | null = null;
@@ -31,7 +33,13 @@ class BackgroundMusicManager {
   private fadeInterval: number | null = null;
   private loopFadeTimeout: number | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Load saved mute state from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(MUSIC_KEY);
+      this.isMuted = saved === 'false'; // Default to NOT muted unless explicitly set to false
+    }
+  }
 
   static getInstance(): BackgroundMusicManager {
     if (!BackgroundMusicManager.instance) {
@@ -90,6 +98,11 @@ class BackgroundMusicManager {
   async play() {
     if (!this.audio) this.initialize();
     if (!this.audio) return;
+    
+    // Don't play if muted
+    if (this.isMuted) {
+      return;
+    }
 
     try {
       // Start with fade-in
@@ -172,11 +185,25 @@ class BackgroundMusicManager {
 
   mute() {
     this.isMuted = true;
+    localStorage.setItem(MUSIC_KEY, 'false');
     this.fadeToVolume(0, 200);
+    // Also pause to save resources
+    if (this.audio) {
+      setTimeout(() => {
+        if (this.isMuted && this.audio) {
+          this.audio.pause();
+        }
+      }, 250);
+    }
   }
 
   unmute() {
     this.isMuted = false;
+    localStorage.setItem(MUSIC_KEY, 'true');
+    // Resume playback
+    if (this.audio && this.audio.paused) {
+      this.audio.play().catch(() => {});
+    }
     this.fadeToVolume(this.baseVolume, 200);
   }
 

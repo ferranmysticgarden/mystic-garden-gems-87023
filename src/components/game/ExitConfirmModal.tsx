@@ -1,18 +1,24 @@
-import { LogOut, Sparkles } from 'lucide-react';
+import { LogOut, DoorOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 
 interface ExitConfirmModalProps {
   onStay: () => void;
+  onExit?: () => void; // Callback para cerrar sesión o volver al inicio
   streak: number;
 }
 
-export const ExitConfirmModal = ({ onStay, streak }: ExitConfirmModalProps) => {
+export const ExitConfirmModal = ({ onStay, onExit, streak }: ExitConfirmModalProps) => {
   const handleExit = async () => {
     if (Capacitor.isNativePlatform()) {
+      // En móvil nativo: cerrar la app
       await App.exitApp();
+    } else if (onExit) {
+      // En web: ejecutar callback de salida
+      onExit();
     } else {
+      // Fallback: cerrar el modal
       onStay();
     }
   };
@@ -67,9 +73,9 @@ export const ExitConfirmModal = ({ onStay, streak }: ExitConfirmModalProps) => {
           <Button
             onClick={handleExit}
             variant="ghost"
-            className="w-full py-3 text-emerald-300/60 hover:text-emerald-300"
+            className="w-full py-3 text-emerald-300/60 hover:text-emerald-300 hover:bg-red-500/20"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <DoorOpen className="w-5 h-5 mr-2" />
             Salir por ahora
           </Button>
         </div>
