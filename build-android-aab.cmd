@@ -254,6 +254,19 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+
+REM --- Step 4.2/4: Verify Billing Library classes exist in AAB ---
+echo [4.2/4] Verificando Billing Library dentro del AAB...
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\verify-aab-billing-library.ps1" -AabPath "%AAB_PATH%"
+if errorlevel 1 (
+  echo.
+  echo ============================================
+  echo FAIL: El AAB NO contiene Billing Library!
+  echo Google Play NO lo detectara.
+  echo ============================================
+  pause
+  exit /b 1
+)
 pushd android
 
 echo ==== AAB generado ====
