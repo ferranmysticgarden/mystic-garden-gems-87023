@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Heart } from 'lucide-react';
+import { usePayment } from '@/hooks/usePayment';
 
 interface ContinueGameOfferProps {
   progressPercent: number;
@@ -15,27 +13,16 @@ export const ContinueGameOffer = ({
   onContinue, 
   onExit 
 }: ContinueGameOfferProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'continue_game' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onContinue();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('continue_game');
+    if (success) {
+      onContinue();
     }
   };
+
+  const price = getPrice('continue_game', '€0.99');
 
   // Emotional message based on progress
   const getMessage = () => {
@@ -75,7 +62,7 @@ export const ContinueGameOffer = ({
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <Heart className="w-6 h-6 fill-current" />
-                Continuar por €0.99
+                Continuar por {price}
               </span>
             )}
           </Button>

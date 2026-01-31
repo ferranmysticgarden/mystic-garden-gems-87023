@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 
 interface CloseDefeatOfferProps {
   movesShort: number; // Cuántos movimientos le faltaron
@@ -15,27 +13,16 @@ interface CloseDefeatOfferProps {
  * Una sola decisión clara: "Por €0.99 termina este nivel ahora"
  */
 export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOfferProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'finish_level' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onBuy();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('finish_level');
+    if (success) {
+      onBuy();
     }
   };
+
+  const price = getPrice('finish_level', '€0.99');
 
   // Mensaje emocional basado en cercanía
   const getEmotionalMessage = () => {
@@ -80,7 +67,7 @@ export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOf
               ¿Terminar este nivel ahora?
             </p>
             <div className="text-4xl font-bold text-yellow-400 mb-1">
-              €0.99
+              {price}
             </div>
             <p className="text-green-400 text-sm">
               +5 movimientos para continuar

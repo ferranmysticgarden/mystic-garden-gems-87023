@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { Heart, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
+import { usePayment } from '@/hooks/usePayment';
 
 interface LifesaverPackProps {
   onBuy: () => void;
@@ -15,28 +13,17 @@ interface LifesaverPackProps {
  * 1 vida + 3 movimientos extra
  */
 export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'lifesaver_pack' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onBuy();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error(language === 'es' ? 'Error al procesar el pago' : 'Payment error');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('lifesaver_pack');
+    if (success) {
+      onBuy();
     }
   };
+
+  const price = getPrice('lifesaver_pack', '€0.49');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm">
@@ -83,7 +70,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
               </div>
             </div>
             
-            <div className="text-5xl font-black text-white drop-shadow-lg">€0.49</div>
+            <div className="text-5xl font-black text-white drop-shadow-lg">{price}</div>
             <p className="text-green-400 font-semibold mt-1">
               {language === 'es' ? '¡Sigue jugando ya!' : 'Keep playing now!'}
             </p>

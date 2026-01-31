@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Zap } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 
 interface BuyMovesOfferProps {
   onBuy: () => void;
@@ -10,7 +9,7 @@ interface BuyMovesOfferProps {
 }
 
 export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
   const [pulse, setPulse] = useState(true);
 
   // Pulsing effect to draw attention
@@ -22,24 +21,13 @@ export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
   }, []);
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'buy_moves' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onBuy();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('buy_moves');
+    if (success) {
+      onBuy();
     }
   };
+
+  const price = getPrice('buy_moves', '€0.99');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -75,7 +63,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
               <Plus className="w-5 h-5 text-green-400" />
               <span className="text-2xl font-bold text-green-400">+5 Movimientos</span>
             </div>
-            <p className="text-white text-3xl font-bold">€0.99</p>
+            <p className="text-white text-3xl font-bold">{price}</p>
           </div>
 
           {/* Buy button */}
