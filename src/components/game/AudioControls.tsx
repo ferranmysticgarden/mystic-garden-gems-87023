@@ -63,6 +63,8 @@ export const AudioControls = () => {
     
     if (newState) {
       backgroundMusic.unmute();
+      // Extra safety: some browsers need an explicit play attempt on the gesture
+      backgroundMusic.play();
     } else {
       backgroundMusic.mute();
     }
