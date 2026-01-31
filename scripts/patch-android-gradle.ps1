@@ -106,10 +106,12 @@ configurations.all {
     if ($content -match '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/') {
       $content = $content -replace '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', $forceBlock
     } else {
-      if ($content -match "apply from:\s*['\"]capacitor\.build\.gradle['\"]") {
+      # IMPORTANT: PowerShell does NOT support \\" escaping inside double-quoted strings.
+      # Use a single-quoted string and escape the single-quote by doubling it.
+      if ($content -match 'apply from:\s*[\''"]capacitor\.build\.gradle[\''"]') {
         $content = [regex]::Replace(
           $content,
-          "(?m)^\s*apply from:\s*['\"]capacitor\.build\.gradle['\"]\s*$",
+          '(?m)^\s*apply from:\s*[\''"]capacitor\.build\.gradle[\''"]\s*$',
           ($forceBlock + "`r`n`r`n" + '$0'),
           1
         )
