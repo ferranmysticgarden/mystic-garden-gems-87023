@@ -51,6 +51,35 @@ try {
         1
       )
     }
+
+    # ============================================
+    # FIX: Force AndroidX versions compatible with AGP 8.2.1 / compileSdk 34
+    # Capacitor v7 pulls newer AndroidX that requires compileSdk 36 + AGP 8.9.1
+    # ============================================
+    $forceBlock = @"
+
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.core:core:1.13.1'
+        force 'androidx.core:core-ktx:1.13.1'
+        force 'androidx.activity:activity:1.9.3'
+        force 'androidx.activity:activity-ktx:1.9.3'
+    }
+}
+"@
+    if ($content -notmatch 'resolutionStrategy') {
+      # Insert before the final "apply from: 'capacitor.build.gradle'" line
+      if ($content -match "apply from:\s*['\`"]capacitor\.build\.gradle['\`"]") {
+        $content = $content -replace "(apply from:\s*['\`"]capacitor\.build\.gradle['\`"])", ($forceBlock + "`r`n`r`n" + '$1')
+        Write-Host 'OK: Bloque resolutionStrategy inyectado (fix AndroidX).'
+      } else {
+        # Fallback: append at end
+        $content = $content + "`r`n" + $forceBlock
+        Write-Host 'OK: Bloque resolutionStrategy añadido al final.'
+      }
+    } else {
+      Write-Host 'OK: resolutionStrategy ya existe.'
+    }
   }
 
   [System.IO.File]::WriteAllText($GradleFile, $content)
