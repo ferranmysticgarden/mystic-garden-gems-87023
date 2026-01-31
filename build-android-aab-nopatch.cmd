@@ -3,6 +3,9 @@ setlocal EnableExtensions
 
 cd /d "%~dp0"
 
+REM Root absoluto del repo (para que los scripts funcionen incluso tras pushd android)
+set "ROOT=%CD%"
+
 echo ==== Mystic Garden: Android AAB build (Release - SIN parche de version) ====
 echo (Usa este script si build-android-aab.cmd falla en el paso 3.5)
 
@@ -51,6 +54,24 @@ echo [3.6/4] Verificando MainActivity...
 powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\ensure-android-mainactivity.ps1" -AppId "com.mysticgarden.game"
 if errorlevel 1 (
   echo ERROR: No pude asegurar MainActivity.
+  pause
+  exit /b 1
+)
+
+REM --- Step 3.62/4: Ensure BILLING permission is present in the manifest ---
+echo [3.62/4] Asegurando permiso BILLING en AndroidManifest...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\ensure-billing-permission.ps1" -ManifestPath "%ROOT%\android\app\src\main\AndroidManifest.xml"
+if errorlevel 1 (
+  echo ERROR: No pude asegurar com.android.vending.BILLING en el AndroidManifest.
+  pause
+  exit /b 1
+)
+
+REM --- Step 3.65/4: Verify BILLING permission is present in the manifest ---
+echo [3.65/4] Verificando permiso BILLING en AndroidManifest...
+findstr /i "com.android.vending.BILLING" "android\app\src\main\AndroidManifest.xml" >nul
+if errorlevel 1 (
+  echo ERROR: No encuentro com.android.vending.BILLING en android\app\src\main\AndroidManifest.xml
   pause
   exit /b 1
 )
@@ -124,7 +145,7 @@ if errorlevel 1 (
 REM --- Step 4.1/4: Verify BILLING permission is present INSIDE the final AAB ---
 echo.
 echo [4.1/4] Verificando BILLING dentro del AAB (bundletool)...
-powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\verify-aab-billing.ps1" -AabPath "%AAB_PATH%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\verify-aab-billing.ps1" -AabPath "%AAB_PATH%"
 if errorlevel 1 (
   echo ERROR: El AAB final NO contiene com.android.vending.BILLING.
   echo NO LO SUBAS a Google Play (bloquea "Productos unicos").

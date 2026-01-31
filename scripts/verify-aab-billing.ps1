@@ -12,7 +12,8 @@ try {
   }
 
   # bundletool jar location (kept in repo folder to make builds deterministic)
-  $bundletoolJar = Join-Path -Path (Get-Location) -ChildPath 'scripts\bundletool.jar'
+  # IMPORTANT: Use PSScriptRoot so it works even if CMD did `pushd android`.
+  $bundletoolJar = Join-Path -Path $PSScriptRoot -ChildPath 'bundletool.jar'
   if (-not (Test-Path -LiteralPath $bundletoolJar)) {
     Write-Host 'INFO: bundletool.jar no encontrado. Descargando...'
     $url = 'https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar'
