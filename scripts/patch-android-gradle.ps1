@@ -30,6 +30,39 @@ try {
         1
       )
     }
+
+    # ============================================
+    # FIX: Force AndroidX versions compatible with AGP 8.2.1 / compileSdk 34
+    # (avoid AndroidX versions that require AGP >= 8.9.1)
+    # ============================================
+    $forceBlockKts = @"
+
+/* MG_FORCE_ANDROIDX_START */
+configurations.all {
+    resolutionStrategy {
+        force("androidx.core:core:1.13.1")
+        force("androidx.core:core-ktx:1.13.1")
+        force("androidx.activity:activity:1.9.3")
+        force("androidx.activity:activity-ktx:1.9.3")
+    }
+}
+/* MG_FORCE_ANDROIDX_END */
+"@
+
+    if ($content -match '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/') {
+      $content = $content -replace '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', $forceBlockKts
+    } else {
+      if ($content -match 'capacitor\.build\.gradle') {
+        $content = [regex]::Replace(
+          $content,
+          '(?m)^.*capacitor\.build\.gradle.*$',
+          ($forceBlockKts + "`r`n`r`n" + '$0'),
+          1
+        )
+      } else {
+        $content = $content + "`r`n" + $forceBlockKts + "`r`n"
+      }
+    }
   } else {
     $content = [regex]::Replace($content, 'namespace\s+"[^"]+"', ('namespace "' + $AppId + '"'), 1)
     $content = [regex]::Replace($content, 'applicationId\s+"[^"]+"', ('applicationId "' + $AppId + '"'), 1)
@@ -54,10 +87,11 @@ try {
 
     # ============================================
     # FIX: Force AndroidX versions compatible with AGP 8.2.1 / compileSdk 34
-    # Capacitor v7 pulls newer AndroidX that requires compileSdk 36 + AGP 8.9.1
+    # (avoid AndroidX versions that require AGP >= 8.9.1)
     # ============================================
     $forceBlock = @"
 
+/* MG_FORCE_ANDROIDX_START */
 configurations.all {
     resolutionStrategy {
         force 'androidx.core:core:1.13.1'
@@ -66,19 +100,22 @@ configurations.all {
         force 'androidx.activity:activity-ktx:1.9.3'
     }
 }
+/* MG_FORCE_ANDROIDX_END */
 "@
-    if ($content -notmatch 'resolutionStrategy') {
-      # Insert before the final "apply from: 'capacitor.build.gradle'" line
-      if ($content -match "apply from:\s*['\`"]capacitor\.build\.gradle['\`"]") {
-        $content = $content -replace "(apply from:\s*['\`"]capacitor\.build\.gradle['\`"])", ($forceBlock + "`r`n`r`n" + '$1')
-        Write-Host 'OK: Bloque resolutionStrategy inyectado (fix AndroidX).'
-      } else {
-        # Fallback: append at end
-        $content = $content + "`r`n" + $forceBlock
-        Write-Host 'OK: Bloque resolutionStrategy añadido al final.'
-      }
+
+    if ($content -match '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/') {
+      $content = $content -replace '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', $forceBlock
     } else {
-      Write-Host 'OK: resolutionStrategy ya existe.'
+      if ($content -match "apply from:\s*['\"]capacitor\.build\.gradle['\"]") {
+        $content = [regex]::Replace(
+          $content,
+          "(?m)^\s*apply from:\s*['\"]capacitor\.build\.gradle['\"]\s*$",
+          ($forceBlock + "`r`n`r`n" + '$0'),
+          1
+        )
+      } else {
+        $content = $content + "`r`n" + $forceBlock + "`r`n"
+      }
     }
   }
 
