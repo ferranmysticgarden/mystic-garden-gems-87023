@@ -103,6 +103,15 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM --- Step 3.55/4: Inject Billing dependency ---
+echo [3.55/4] Inyectando Google Play Billing Library...
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\inject-billing-dependency.ps1" -GradleFile "%GRADLE_FILE%"
+if errorlevel 1 (
+  echo ERROR: No pude inyectar Billing dependency.
+  pause
+  exit /b 1
+)
+
 echo.
 echo === VERIFICACION VERSION ===
 findstr /i "versionCode" "%GRADLE_FILE%"
