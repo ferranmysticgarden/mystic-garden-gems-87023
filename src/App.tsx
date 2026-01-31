@@ -7,6 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { MysticBackground } from "@/components/effects";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
+import { useEdgeToEdge } from "@/hooks/useEdgeToEdge";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import OAuthCallback from "./pages/OAuthCallback";
@@ -20,6 +21,9 @@ const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
 const App = () => {
   // Necesario en móvil nativo: procesa el deep link del callback y cierra el Custom Tab.
   useDeepLinks();
+  
+  // Fix para Android 15+ edge-to-edge (resuelve warnings de Google Play Console)
+  useEdgeToEdge();
 
   return (
     <QueryClientProvider client={queryClient}>
