@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 
 interface PostVictoryOfferProps {
   baseGems: number;
@@ -11,29 +9,18 @@ interface PostVictoryOfferProps {
 }
 
 export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryOfferProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
   const multipliedGems = baseGems * 3;
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'victory_multiplier' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onMultiply(multipliedGems);
-        onClose();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('victory_multiplier');
+    if (success) {
+      onMultiply(multipliedGems);
+      onClose();
     }
   };
+
+  const price = getPrice('victory_multiplier', '€0.99');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -99,7 +86,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
             </div>
             
             <div className="flex items-center justify-center gap-2">
-              <span className="text-3xl font-bold text-yellow-400">€0.99</span>
+              <span className="text-3xl font-bold text-yellow-400">{price}</span>
             </div>
           </div>
 

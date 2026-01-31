@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
+import { usePayment } from '@/hooks/usePayment';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -320,24 +321,13 @@ interface ExtraSpinOfferProps {
 }
 
 const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
+  const price = getPrice('extra_spin', '€0.49');
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'extra_spin' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onBuy();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-    } finally {
-      setLoading(false);
+    const success = await createPayment('extra_spin');
+    if (success) {
+      onBuy();
     }
   };
 
@@ -357,12 +347,12 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
         </div>
         
         <span className="relative flex items-center justify-center gap-2">
-          {loading ? '⏳ Procesando...' : '🎰 Giro Extra - €0.49'}
+          {loading ? '⏳ Procesando...' : `🎰 Giro Extra - ${price}`}
         </span>
         
         {/* Price badge */}
         <span className="absolute -top-2 -right-2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-yellow-400">
-          €0.49
+          {price}
         </span>
       </button>
     </div>

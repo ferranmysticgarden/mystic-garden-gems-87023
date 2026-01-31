@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
+import { usePayment } from '@/hooks/usePayment';
 
 interface ChestType {
   id: string;
@@ -59,11 +60,12 @@ interface LootChestProps {
 
 export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   const { user } = useAuth();
+  const { createPayment, loading: paymentLoading, getPrice } = usePayment();
   const [opening, setOpening] = useState<string | null>(null);
   const [freeChestAvailable, setFreeChestAvailable] = useState(false);
   const [freeChestTimeLeft, setFreeChestTimeLeft] = useState('');
   const [reward, setReward] = useState<{ gems: number; lives: number; noAdsMins: number } | null>(null);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loadingChest, setLoadingChest] = useState<string | null>(null);
 
   // Set music to chest volume when open
   useEffect(() => {
@@ -131,23 +133,20 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
         checkFreeChest();
       }, 2000);
     } else {
-      // Paid chest - use Stripe
-      setLoading(chest.id);
-      try {
-        const { data, error } = await supabase.functions.invoke('create-payment', {
-          body: { productId: `chest_${chest.id}` }
-        });
-
-        if (error) throw error;
-        if (data?.url) {
-          window.open(data.url, '_blank');
-        }
-      } catch (error) {
-        console.error('Payment error:', error);
-        toast.error('Error al procesar el pago');
-      } finally {
-        setLoading(null);
+      // Paid chest - use unified payment
+      setLoadingChest(chest.id);
+      const success = await createPayment(`chest_${chest.id}`);
+      if (success) {
+        // Payment initiated successfully
+        setOpening(chest.id);
+        setTimeout(() => {
+          const rewardResult = getRandomReward(chest);
+          setReward(rewardResult);
+          if (onRewardClaimed) onRewardClaimed(rewardResult.gems, rewardResult.lives);
+          setOpening(null);
+        }, 2000);
       }
+      setLoadingChest(null);
     }
   };
 
@@ -232,10 +231,10 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
                   ) : (
                     <Button
                       onClick={() => handleOpenChest(chest)}
-                      disabled={loading === chest.id}
+                      disabled={loadingChest === chest.id || paymentLoading}
                       className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
                     >
-                      {loading === chest.id ? '...' : `€${chest.price}`}
+                      {loadingChest === chest.id ? '...' : `${getPrice(`chest_${chest.id}`, `€${chest.price}`)}`}
                     </Button>
                   )}
                 </div>
