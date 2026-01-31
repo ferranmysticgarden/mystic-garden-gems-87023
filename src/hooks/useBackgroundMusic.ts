@@ -34,6 +34,17 @@ class BackgroundMusicManager {
   private fadeInterval: number | null = null;
   private loopFadeTimeout: number | null = null;
 
+  private clearTimers() {
+    if (this.fadeInterval) {
+      clearInterval(this.fadeInterval);
+      this.fadeInterval = null;
+    }
+    if (this.loopFadeTimeout) {
+      clearTimeout(this.loopFadeTimeout);
+      this.loopFadeTimeout = null;
+    }
+  }
+
   // Keep a stable listener reference so we can remove/rebind if we recreate the element.
   private handleTimeUpdate = () => {
     const audio = this.audio;
@@ -146,6 +157,9 @@ class BackgroundMusicManager {
       return;
     }
 
+    // Cancel any previous fades that could drag volume back to 0.
+    this.clearTimers();
+
     try {
       // Start with fade-in
       this.audio.volume = 0;
@@ -166,9 +180,7 @@ class BackgroundMusicManager {
   private fadeToVolume(targetVol: number, duration: number) {
     if (!this.audio) return;
 
-    if (this.fadeInterval) {
-      clearInterval(this.fadeInterval);
-    }
+    this.clearTimers();
 
     const startVolume = this.currentVolume;
     const volumeDiff = targetVol - startVolume;
@@ -187,8 +199,7 @@ class BackgroundMusicManager {
       if (currentStep >= steps) {
         this.currentVolume = targetVol;
         if (this.audio) this.audio.volume = targetVol;
-        if (this.fadeInterval) clearInterval(this.fadeInterval);
-        this.fadeInterval = null;
+        this.clearTimers();
       }
     }, 50);
   }
@@ -233,10 +244,7 @@ class BackgroundMusicManager {
     }
 
     // Hard-stop: no fade dependency (fixes browsers where fades don't apply)
-    if (this.fadeInterval) {
-      clearInterval(this.fadeInterval);
-      this.fadeInterval = null;
-    }
+    this.clearTimers();
 
     if (this.audio) {
       this.audio.muted = true;
@@ -250,46 +258,29 @@ class BackgroundMusicManager {
       localStorage.setItem(MUSIC_KEY, 'true');
     }
 
-    if (!this.audio) this.initialize();
+    // IMPORTANT: recreate element on every unmute.
+    // Fixes the common mobile bug: "suena 1 segundo y se para" when currentTime/metadata
+    // can't be reset reliably on a previously used element.
+    this.clearTimers();
+    this.initialize();
+    this.createOrRecreateAudioElement();
     if (!this.audio) return;
 
     // Restore a real audible target volume (setVolume() keeps target=0 while muted)
     this.targetVolume = this.baseVolume;
 
-    // Hard reset first (fixes iOS cases where play() after pause() is ignored)
     this.audio.muted = false;
     this.audio.volume = 0;
     this.currentVolume = 0;
-    try {
-      this.audio.currentTime = 0;
-    } catch {
-      // ignore
-    }
 
-    // Try to resume. If it fails, recreate the element once (still inside user gesture from the toggle).
-    this.audio
-      .play()
+    // Must be called inside the user gesture (the toggle). If blocked, next click/touch will start it.
+    this.audio.play()
       .then(() => {
-        this.fadeToVolume(this.targetVolume, 200);
+        // Short fade so it feels instant but avoids pop.
+        this.fadeToVolume(this.targetVolume, 250);
       })
       .catch(() => {
-        this.createOrRecreateAudioElement();
-        if (!this.audio) return;
-
-        this.audio.muted = false;
-        this.audio.volume = 0;
-        this.currentVolume = 0;
-        try {
-          this.audio.currentTime = 0;
-        } catch {
-          // ignore
-        }
-
-        this.audio.play().then(() => {
-          this.fadeToVolume(this.targetVolume, 200);
-        }).catch(() => {
-          // Autoplay still blocked; will start on next interaction via useBackgroundMusic listeners
-        });
+        // Autoplay blocked; will start on next interaction via useBackgroundMusic listeners.
       });
   }
 
