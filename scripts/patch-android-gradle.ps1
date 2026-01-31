@@ -5,8 +5,9 @@ param(
   [Parameter(Mandatory = $true)] [int] $VersionCode,
   [Parameter(Mandatory = $true)] [string] $VersionName,
   # Capacitor v7 plugins (e.g. @capacitor/app) require minSdk >= 24.
-  # Keep this default so build-android-aab.cmd doesn't need changes.
-  [Parameter(Mandatory = $false)] [int] $MinSdk = 24
+  [Parameter(Mandatory = $false)] [int] $MinSdk = 24,
+  # Google Play requires targetSdk >= 35 as of August 2024
+  [Parameter(Mandatory = $false)] [int] $TargetSdk = 35
 )
 
 try {
@@ -17,6 +18,18 @@ try {
     $content = [regex]::Replace($content, 'applicationId\s*=\s*"[^"]+"', ('applicationId = "' + $AppId + '"'), 1)
     $content = [regex]::Replace($content, 'versionCode\s*=\s*\d+', ('versionCode = ' + $VersionCode), 1)
     $content = [regex]::Replace($content, 'versionName\s*=\s*"[^"]+"', ('versionName = "' + $VersionName + '"'), 1)
+
+    # targetSdk (Google Play requires 35+)
+    $before = $content
+    $content = [regex]::Replace($content, 'targetSdk\s*=\s*\d+', ('targetSdk = ' + $TargetSdk), 1)
+    if ($before -eq $content) {
+      $content = [regex]::Replace(
+        $content,
+        '(defaultConfig\s*\{)',
+        ('$1' + "`r`n        targetSdk = " + $TargetSdk),
+        1
+      )
+    }
 
     # minSdk
     $before = $content
@@ -68,6 +81,21 @@ configurations.all {
     $content = [regex]::Replace($content, 'applicationId\s+"[^"]+"', ('applicationId "' + $AppId + '"'), 1)
     $content = [regex]::Replace($content, 'versionCode\s+\d+', ('versionCode ' + $VersionCode), 1)
     $content = [regex]::Replace($content, 'versionName\s+"[^"]+"', ('versionName "' + $VersionName + '"'), 1)
+
+    # targetSdk (Google Play requires 35+)
+    $before = $content
+    $content = [regex]::Replace($content, 'targetSdk\s+\d+', ('targetSdk ' + $TargetSdk), 1)
+    if ($before -eq $content) {
+      $content = [regex]::Replace($content, 'targetSdkVersion\s+\d+', ('targetSdkVersion ' + $TargetSdk), 1)
+    }
+    if ($before -eq $content) {
+      $content = [regex]::Replace(
+        $content,
+        '(defaultConfig\s*\{)',
+        ('$1' + "`r`n        targetSdk " + $TargetSdk),
+        1
+      )
+    }
 
     # minSdk (support both modern `minSdk 23` and legacy `minSdkVersion 23`)
     $before = $content
