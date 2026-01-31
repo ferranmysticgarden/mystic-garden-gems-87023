@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star, Gift, Clock, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 import confetti from 'canvas-confetti';
 
 interface StarterPackProps {
@@ -14,9 +13,11 @@ interface StarterPackProps {
 export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds (más urgencia)
-  const [loading, setLoading] = useState(false);
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible'>('entering');
   const { user } = useAuth();
+  const { createPayment, loading, getPrice } = usePayment();
+
+  const price = getPrice('starter_pack', '€0.99');
 
   useEffect(() => {
     if (!user?.id) return;
@@ -73,24 +74,11 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
   const handleBuy = async () => {
     if (!user?.id || loading) return;
     
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'starter_pack' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        localStorage.setItem(`starter-pack-${user.id}`, 'true');
-        window.open(data.url, '_blank');
-        setShow(false);
-        onClose();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('starter_pack');
+    if (success) {
+      localStorage.setItem(`starter-pack-${user.id}`, 'true');
+      setShow(false);
+      onClose();
     }
   };
 
@@ -225,7 +213,7 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
                 </div>
                 <div className="text-center">
                   <p className="text-yellow-300 text-xs font-bold">HOY</p>
-                  <span className="text-4xl font-bold text-yellow-400 drop-shadow-lg animate-pulse">€0.99</span>
+                  <span className="text-4xl font-bold text-yellow-400 drop-shadow-lg animate-pulse">{price}</span>
                 </div>
               </div>
               

@@ -3,13 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 
 export const FirstDayOffer = () => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3600);
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { createPayment, loading, getPrice } = usePayment();
+
+  const price = getPrice('mega_pack_inicial', '€0.99');
 
   useEffect(() => {
     if (!user?.id) return;
@@ -56,24 +58,10 @@ export const FirstDayOffer = () => {
   const handleBuy = async () => {
     if (!user?.id || loading) return;
     
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'mega_pack_inicial' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        // Mark as seen before redirect
-        localStorage.setItem(`first-day-offer-${user.id}`, 'true');
-        window.open(data.url, '_blank');
-        setShow(false);
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('mega_pack_inicial');
+    if (success) {
+      localStorage.setItem(`first-day-offer-${user.id}`, 'true');
+      setShow(false);
     }
   };
 
@@ -128,7 +116,7 @@ export const FirstDayOffer = () => {
             
             <div className="flex items-center justify-center gap-3 mb-2">
               <span className="text-gray-400 line-through text-lg">€9.99</span>
-              <span className="text-3xl font-bold text-yellow-400">€0.99</span>
+              <span className="text-3xl font-bold text-yellow-400">{price}</span>
             </div>
             <p className="text-green-400 font-semibold">¡90% de descuento!</p>
           </div>

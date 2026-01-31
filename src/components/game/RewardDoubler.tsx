@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Gift, Sparkles, Timer } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 import confetti from 'canvas-confetti';
 
 interface RewardDoublerProps {
@@ -12,10 +11,12 @@ interface RewardDoublerProps {
 }
 
 export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
   const [countdown, setCountdown] = useState(8);
   const [showPulse, setShowPulse] = useState(false);
   const doubledGems = baseGems * 2;
+
+  const price = getPrice('reward_doubler', '€0.49');
 
   // Countdown timer with urgency
   useEffect(() => {
@@ -47,23 +48,10 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
   }, []);
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'reward_doubler' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onDouble(doubledGems);
-        onClose();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('reward_doubler');
+    if (success) {
+      onDouble(doubledGems);
+      onClose();
     }
   };
 
@@ -143,14 +131,13 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
           </div>
         </div>
 
-        {/* CTA Button */}
         <div className="relative z-10">
           <PremiumButton
             onClick={handleBuy}
             loading={loading}
             variant="gold"
             size="lg"
-            price="€0.49"
+            price={price}
             className="mb-3"
           >
             <Gift className="w-5 h-5 mr-2" />

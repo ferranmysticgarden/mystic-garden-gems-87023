@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { Shield, X, Flame } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
+import { usePayment } from '@/hooks/usePayment';
 
 interface StreakProtectionOfferProps {
   currentStreak: number;
@@ -20,28 +18,17 @@ export const StreakProtectionOffer = ({
   onBuy, 
   onDismiss 
 }: StreakProtectionOfferProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'streak_protection' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onBuy();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error(language === 'es' ? 'Error al procesar el pago' : 'Payment error');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('streak_protection');
+    if (success) {
+      onBuy();
     }
   };
+
+  const price = getPrice('streak_protection', '€0.49');
 
   const getEmotionalMessage = () => {
     if (currentStreak >= 7) {
@@ -97,7 +84,7 @@ export const StreakProtectionOffer = ({
                 {language === 'es' ? 'Protección de Racha' : 'Streak Protection'}
               </span>
             </div>
-            <div className="text-5xl font-black text-white mb-2 drop-shadow-lg">€0.49</div>
+            <div className="text-5xl font-black text-white mb-2 drop-shadow-lg">{price}</div>
             <p className="text-green-400 font-semibold">
               {language === 'es' ? '+24 horas para reclamar' : '+24 hours to claim'}
             </p>

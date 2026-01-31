@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap, X, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePayment } from '@/hooks/usePayment';
 
 interface FlashOfferProps {
   trigger: 'loss' | 'streak_loss';
@@ -12,8 +11,10 @@ interface FlashOfferProps {
 
 export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
   const [timeLeft, setTimeLeft] = useState(7200); // 2 hours in seconds
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { createPayment, loading, getPrice } = usePayment();
+
+  const price = getPrice('flash_offer', '€0.99');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -39,22 +40,9 @@ export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
   const handleBuy = async () => {
     if (!user?.id || loading) return;
     
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'flash_offer' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onClose();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('flash_offer');
+    if (success) {
+      onClose();
     }
   };
 
@@ -109,7 +97,7 @@ export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
             
             <div className="flex items-center justify-center gap-3 mb-2">
               <span className="text-gray-400 line-through text-lg">€4.99</span>
-              <span className="text-4xl font-bold text-yellow-400">€0.99</span>
+              <span className="text-4xl font-bold text-yellow-400">{price}</span>
             </div>
             <p className="text-green-400 font-bold text-lg">¡80% de descuento!</p>
           </div>
