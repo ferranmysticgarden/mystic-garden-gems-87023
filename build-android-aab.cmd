@@ -16,8 +16,8 @@ REM key.properties es opcional: la firma se inyecta por linea de comandos (keyst
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=950"
-set "TARGET_VERSION_NAME=9.5.0"
+set "TARGET_VERSION_CODE=962"
+set "TARGET_VERSION_NAME=9.6.2"
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
@@ -115,6 +115,15 @@ echo [3.6/4] Verificando MainActivity...
 powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\ensure-android-mainactivity.ps1" -AppId "%TARGET_APP_ID%"
 if errorlevel 1 (
   echo ERROR: No pude asegurar MainActivity.
+  pause
+  exit /b 1
+)
+
+REM --- Step 3.7/4: Inject BILLING permission and library ---
+echo [3.7/4] Inyectando BILLING permission y billing library...
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\inject-billing.ps1" -AppId "%TARGET_APP_ID%"
+if errorlevel 1 (
+  echo ERROR: No pude inyectar billing.
   pause
   exit /b 1
 )
@@ -232,8 +241,30 @@ if errorlevel 1 (
   echo OK: AAB firmado correctamente.
 )
 
+REM --- Step 4.1/4: Verify BILLING permission in AAB ---
+echo [4.1/4] Verificando permiso BILLING en AAB...
+popd
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\verify-aab-billing.ps1" -AabPath "%AAB_PATH%"
+if errorlevel 1 (
+  echo.
+  echo ============================================
+  echo FAIL: El AAB NO contiene permiso BILLING!
+  echo Google Play rechazara esta build.
+  echo ============================================
+  pause
+  exit /b 1
+)
+pushd android
+
 echo ==== AAB generado ====
 dir /s /b app\build\outputs\bundle\release\*.aab
+
+echo.
+echo ============================================
+echo OK: AAB listo para subir a Google Play
+echo Version: %TARGET_VERSION_NAME% (code %TARGET_VERSION_CODE%)
+echo Permiso BILLING: Verificado
+echo ============================================
 
 start "" "app\build\outputs\bundle\release"
 
