@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Zap, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { X } from 'lucide-react';
+import { usePayment } from '@/hooks/usePayment';
 
 interface LoseBundleProps {
   onBuy: () => void;
@@ -10,27 +8,16 @@ interface LoseBundleProps {
 }
 
 export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
-  const [loading, setLoading] = useState(false);
+  const { createPayment, loading, getPrice } = usePayment();
 
   const handleBuy = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { productId: 'pack_revancha' }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onBuy();
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Error al procesar el pago');
-    } finally {
-      setLoading(false);
+    const success = await createPayment('pack_revancha');
+    if (success) {
+      onBuy();
     }
   };
+
+  const price = getPrice('pack_revancha', '€0.99');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -69,7 +56,7 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
             
             <div className="flex items-center justify-center gap-3 mb-2">
               <span className="text-gray-400 line-through text-lg">€2.99</span>
-              <span className="text-3xl font-bold text-orange-400">€0.99</span>
+              <span className="text-3xl font-bold text-orange-400">{price}</span>
             </div>
             <p className="text-green-400 font-semibold">¡67% de descuento!</p>
           </div>
