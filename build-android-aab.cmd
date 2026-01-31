@@ -128,6 +128,16 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM --- Step 3.65/4: Verify BILLING permission is present in the manifest ---
+echo [3.65/4] Verificando permiso BILLING en AndroidManifest...
+findstr /i "com.android.vending.BILLING" "android\app\src\main\AndroidManifest.xml" >nul
+if errorlevel 1 (
+  echo ERROR: No encuentro com.android.vending.BILLING en android\app\src\main\AndroidManifest.xml
+  echo Esto bloqueara "Productos unicos" en Google Play.
+  pause
+  exit /b 1
+)
+
 REM --- Step 4/4 ---
 pushd android
 
