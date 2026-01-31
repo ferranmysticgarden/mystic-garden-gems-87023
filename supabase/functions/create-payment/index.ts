@@ -41,6 +41,13 @@ const PRODUCT_PRICES: Record<string, string> = {
   "pack_victoria_segura": "price_1SugtDB6GI8NmIPnFsLC42S1",
   // Pack Racha Infinita €1.99
   "pack_racha_infinita": "price_1SugtpB6GI8NmIPnrIvDwnsV",
+  // NEW PACKS - Multi-tier monetization
+  // Pack Impulso €0.99 - "La mejor opción"
+  "pack_impulso": "price_1Svg2xB6GI8NmIPnvW4nWvNL",
+  // Pack Experiencia €1.99
+  "pack_experiencia": "price_1Svg3LB6GI8NmIPnVBgrydNv",
+  // Pack Victoria Segura Pro €2.99
+  "pack_victoria_segura_pro": "price_1Svg3lB6GI8NmIPnyTnr8PFB",
 };
 
 serve(async (req) => {

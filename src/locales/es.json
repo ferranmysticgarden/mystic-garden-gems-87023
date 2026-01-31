@@ -38,7 +38,10 @@
     "starterPack": "Starter Pack",
     "continueGame": "Continuar Partida",
     "buyMoves": "+5 Movimientos",
-    "purchased": "¡Compra exitosa!"
+    "purchased": "¡Compra exitosa!",
+    "packImpulso": "Pack Impulso",
+    "packExperiencia": "Pack Experiencia",
+    "packVictoriaSeguraPro": "Pack Victoria Segura"
   },
   "powerups": {
     "hammer": "Martillo",

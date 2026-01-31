@@ -196,5 +196,36 @@ export const PRODUCTS: Product[] = [
     currency: 'EUR',
     lives: 2
     // + streak protection + 1 spin (handled by webhook)
+  },
+  // NEW MULTI-TIER PACKS
+  // Pack Impulso €0.99 - "La mejor opción"
+  {
+    id: 'pack_impulso',
+    nameKey: 'shop.packImpulso',
+    name: 'Pack Impulso',
+    price: 0.99,
+    currency: 'EUR',
+    powerups: 5, // +5 movimientos
+    lives: 3 // +3 boosters
+  },
+  // Pack Experiencia €1.99
+  {
+    id: 'pack_experiencia',
+    nameKey: 'shop.packExperiencia',
+    name: 'Pack Experiencia',
+    price: 1.99,
+    currency: 'EUR',
+    lives: 2, // 2 vidas extra
+    // + protección racha + 1 giro (handled by webhook)
+  },
+  // Pack Victoria Segura Pro €2.99
+  {
+    id: 'pack_victoria_segura_pro',
+    nameKey: 'shop.packVictoriaSeguraPro',
+    name: 'Pack Victoria Segura Pro',
+    price: 2.99,
+    currency: 'EUR',
+    powerups: 8, // +8 movimientos
+    // + protección derrota + boosters premium (handled by webhook)
   }
 ];

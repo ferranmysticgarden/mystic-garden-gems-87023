@@ -38,7 +38,10 @@
     "starterPack": "Starter Pack",
     "continueGame": "Continue Game",
     "buyMoves": "+5 Moves",
-    "purchased": "Purchase successful!"
+    "purchased": "Purchase successful!",
+    "packImpulso": "Boost Pack",
+    "packExperiencia": "Experience Pack",
+    "packVictoriaSeguraPro": "Sure Victory Pack"
   },
   "powerups": {
     "hammer": "Hammer",
