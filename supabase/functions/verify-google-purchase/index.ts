@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Product rewards configuration (same as Stripe webhook)
+// Product rewards configuration
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
   "quick_pack": { lives: 3, gems: 20 },
   "gems_100": { gems: 100 },
@@ -21,13 +21,137 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "starter_pack": { gems: 500, lives: 10, powerups: 3 },
   "continue_game": { lives: 1, powerups: 5 },
   "buy_moves": { powerups: 5 },
-  "reward_doubler": { gems: 50 }, // Doubled gems handled separately
+  "reward_doubler": { gems: 50 },
   "pack_victoria_segura": { powerups: 5, lives: 3 },
   "pack_racha_infinita": { lives: 2 },
-  "extra_spin": { gems: 0 }, // Handled in-app
-  "streak_protection": { gems: 0 }, // Handled in-app
+  "extra_spin": { gems: 0 },
+  "streak_protection": { gems: 0 },
   "lifesaver_pack": { lives: 3 },
 };
+
+// Google Play API verification
+async function verifyWithGooglePlay(
+  packageName: string,
+  productId: string,
+  purchaseToken: string,
+  serviceAccountKey: string | null
+): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string }> {
+  
+  // If no service account key, skip verification (development mode)
+  if (!serviceAccountKey) {
+    console.log('[WARN] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - skipping API verification');
+    console.log('[WARN] For production, add the service account JSON as a secret');
+    return { valid: true };
+  }
+
+  try {
+    // Parse service account key
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    
+    // Get access token using service account
+    const tokenResponse = await getGoogleAccessToken(serviceAccount);
+    if (!tokenResponse.access_token) {
+      return { valid: false, error: 'Failed to get access token' };
+    }
+
+    // Call Google Play Developer API
+    const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
+    
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${tokenResponse.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[ERROR] Google Play API error:', response.status, errorText);
+      return { valid: false, error: `Google Play API error: ${response.status}` };
+    }
+
+    const purchaseData = await response.json();
+    console.log('[INFO] Google Play purchase data:', JSON.stringify(purchaseData));
+
+    // Check purchase state (0 = purchased, 1 = canceled, 2 = pending)
+    if (purchaseData.purchaseState !== 0) {
+      return { 
+        valid: false, 
+        purchaseState: purchaseData.purchaseState,
+        error: `Purchase state is ${purchaseData.purchaseState}, not purchased` 
+      };
+    }
+
+    return { 
+      valid: true, 
+      consumptionState: purchaseData.consumptionState,
+      purchaseState: purchaseData.purchaseState 
+    };
+
+  } catch (error) {
+    console.error('[ERROR] Verification error:', error);
+    return { valid: false, error: String(error) };
+  }
+}
+
+// Get Google OAuth access token from service account
+async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token?: string }> {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600; // 1 hour
+
+  // Create JWT header and payload
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/androidpublisher',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: expiry,
+  };
+
+  // Encode and sign JWT
+  const encoder = new TextEncoder();
+  const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const unsignedToken = `${headerB64}.${payloadB64}`;
+
+  // Import private key
+  const pemContents = serviceAccount.private_key
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s/g, '');
+  
+  const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    binaryKey,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  // Sign the token
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    encoder.encode(unsignedToken)
+  );
+
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+  const jwt = `${unsignedToken}.${signatureB64}`;
+
+  // Exchange JWT for access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+
+  return await tokenResponse.json();
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -46,7 +170,11 @@ serve(async (req) => {
 
   try {
     // Authenticate user
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header");
+    }
+    
     const token = authHeader.replace("Bearer ", "");
     const { data: userData } = await supabaseAnonClient.auth.getUser(token);
     const user = userData.user;
@@ -61,12 +189,8 @@ serve(async (req) => {
       throw new Error("Missing purchaseToken or productId");
     }
 
-    console.log(`Verifying Google Play purchase: ${productId}, order: ${orderId}`);
+    console.log(`[INFO] Verifying purchase: product=${productId}, order=${orderId}, user=${user.id}`);
 
-    // In production, verify the purchase with Google Play Developer API
-    // For now, we trust the client (you should add server-side verification)
-    // See: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products/get
-    
     // Check if this purchase was already processed (prevent double-spend)
     const { data: existingPurchase } = await supabaseClient
       .from('user_purchases')
@@ -76,12 +200,36 @@ serve(async (req) => {
       .single();
 
     if (existingPurchase) {
-      console.log('Purchase already processed');
+      console.log('[INFO] Purchase already processed');
       return new Response(JSON.stringify({ success: true, message: 'Already processed' }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
+
+    // Verify with Google Play API (if service account is configured)
+    const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
+    const packageName = "com.mysticgarden.game";
+    
+    const verification = await verifyWithGooglePlay(
+      packageName,
+      productId,
+      purchaseToken,
+      serviceAccountKey
+    );
+
+    if (!verification.valid) {
+      console.error('[ERROR] Purchase verification failed:', verification.error);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: verification.error || 'Purchase verification failed' 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    console.log('[INFO] Purchase verified successfully');
 
     // Get product rewards
     const rewards = PRODUCT_REWARDS[productId];
@@ -119,7 +267,6 @@ serve(async (req) => {
       updates.lives = Math.min(currentLives + rewards.lives, 99);
     }
     if (rewards.powerups) {
-      // Distribute powerups evenly
       const perType = Math.ceil(rewards.powerups / 3);
       updates.hammer_count = currentHammer + perType;
       updates.shuffle_count = currentShuffle + perType;
@@ -167,7 +314,7 @@ serve(async (req) => {
         });
     }
 
-    console.log(`Purchase verified and rewards granted for ${productId}`);
+    console.log(`[INFO] Purchase completed: ${productId} for user ${user.id}`);
 
     return new Response(JSON.stringify({ success: true, rewards }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -175,7 +322,7 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error verifying purchase:", errorMessage);
+    console.error("[ERROR] verify-google-purchase:", errorMessage);
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
