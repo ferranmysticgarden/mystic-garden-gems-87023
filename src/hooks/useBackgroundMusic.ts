@@ -25,6 +25,7 @@ const MUSIC_KEY = 'mystic_music_enabled';
 class BackgroundMusicManager {
   private static instance: BackgroundMusicManager | null = null;
   private audio: HTMLAudioElement | null = null;
+  private readonly src = '/audio/background-music.mp3';
   private currentVolume = 0.22;
   private targetVolume = 0.22;
   private baseVolume = 0.22; // Track base volume for returns
@@ -32,6 +33,38 @@ class BackgroundMusicManager {
   private isInitialized = false;
   private fadeInterval: number | null = null;
   private loopFadeTimeout: number | null = null;
+
+  // Keep a stable listener reference so we can remove/rebind if we recreate the element.
+  private handleTimeUpdate = () => {
+    const audio = this.audio;
+    if (!audio || this.isMuted) return;
+
+    const duration = audio.duration;
+    const currentTime = audio.currentTime;
+    const fadeTime = 1.5;
+
+    if (!isNaN(duration)) {
+      // Fade out near end of loop
+      if (currentTime > duration - fadeTime) {
+        const fadeProgress = (duration - currentTime) / fadeTime;
+        const fadeVolume = this.targetVolume * fadeProgress;
+        audio.volume = Math.max(0, fadeVolume);
+      }
+      // Fade in at start of loop
+      else if (currentTime < fadeTime) {
+        const fadeProgress = currentTime / fadeTime;
+        const fadeVolume = this.targetVolume * fadeProgress;
+        audio.volume = Math.min(this.targetVolume, fadeVolume);
+      }
+      // Normal volume in middle
+      else if (Math.abs(audio.volume - this.targetVolume) > 0.01) {
+        // Only adjust if we're not in a fade transition
+        if (!this.fadeInterval) {
+          audio.volume = this.targetVolume;
+        }
+      }
+    }
+  };
 
   private constructor() {
     // Load saved mute state from localStorage
@@ -48,53 +81,56 @@ class BackgroundMusicManager {
     return BackgroundMusicManager.instance;
   }
 
-  initialize() {
-    if (this.isInitialized) return;
-    
-    this.audio = new Audio('/audio/background-music.mp3');
-    this.audio.loop = true;
-    // Ensure we respect muted state immediately
-    this.audio.muted = this.isMuted;
-    this.audio.volume = 0; // Start at 0 for fade-in
-    this.isInitialized = true;
+  private createOrRecreateAudioElement() {
+    // Clean up previous element (important for iOS/Safari weirdness)
+    if (this.audio) {
+      try {
+        this.audio.removeEventListener('timeupdate', this.handleTimeUpdate);
+      } catch {
+        // ignore
+      }
+      try {
+        this.audio.pause();
+      } catch {
+        // ignore
+      }
+    }
 
-    // Setup loop fade handling
-    this.setupLoopFade();
+    const audio = new Audio(this.src);
+    audio.loop = true;
+    audio.muted = this.isMuted;
+    audio.volume = 0; // always start at 0, we fade in
+
+    audio.addEventListener('timeupdate', this.handleTimeUpdate);
+    this.audio = audio;
   }
 
-  // Fade in/out at loop boundaries (1.5s each) to hide repetition
-  private setupLoopFade() {
-    if (!this.audio) return;
+  initialize() {
+    if (this.isInitialized) return;
 
-    this.audio.addEventListener('timeupdate', () => {
-      if (!this.audio || this.isMuted) return;
-      
-      const duration = this.audio.duration;
-      const currentTime = this.audio.currentTime;
-      const fadeTime = 1.5;
+    this.createOrRecreateAudioElement();
+    this.isInitialized = true;
+  }
 
-      if (!isNaN(duration)) {
-        // Fade out near end of loop
-        if (currentTime > duration - fadeTime) {
-          const fadeProgress = (duration - currentTime) / fadeTime;
-          const fadeVolume = this.targetVolume * fadeProgress;
-          this.audio.volume = Math.max(0, fadeVolume);
-        }
-        // Fade in at start of loop
-        else if (currentTime < fadeTime) {
-          const fadeProgress = currentTime / fadeTime;
-          const fadeVolume = this.targetVolume * fadeProgress;
-          this.audio.volume = Math.min(this.targetVolume, fadeVolume);
-        }
-        // Normal volume in middle
-        else if (Math.abs(this.audio.volume - this.targetVolume) > 0.01) {
-          // Only adjust if we're not in a fade transition
-          if (!this.fadeInterval) {
-            this.audio.volume = this.targetVolume;
-          }
-        }
-      }
-    });
+  private hardStopAndReset() {
+    const audio = this.audio;
+    if (!audio) return;
+
+    try {
+      audio.pause();
+    } catch {
+      // ignore
+    }
+
+    // Reset time so that when we unmute it reliably starts again (Safari/iOS)
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // ignore
+    }
+
+    audio.volume = 0;
+    this.currentVolume = 0;
   }
 
   async play() {
@@ -106,18 +142,14 @@ class BackgroundMusicManager {
     // Don't play if muted
     if (this.isMuted) {
       // Ensure no sound leaks
-      this.audio.volume = 0;
-      try {
-        this.audio.pause();
-      } catch {
-        // ignore
-      }
+      this.hardStopAndReset();
       return;
     }
 
     try {
       // Start with fade-in
       this.audio.volume = 0;
+      this.currentVolume = 0;
       await this.audio.play();
       this.fadeToVolume(this.targetVolume, 1500);
     } catch (e) {
@@ -208,13 +240,7 @@ class BackgroundMusicManager {
 
     if (this.audio) {
       this.audio.muted = true;
-      this.audio.volume = 0;
-      this.currentVolume = 0;
-      try {
-        this.audio.pause();
-      } catch {
-        // ignore
-      }
+      this.hardStopAndReset();
     }
   }
 
@@ -227,14 +253,44 @@ class BackgroundMusicManager {
     if (!this.audio) this.initialize();
     if (!this.audio) return;
 
+    // Restore a real audible target volume (setVolume() keeps target=0 while muted)
+    this.targetVolume = this.baseVolume;
+
+    // Hard reset first (fixes iOS cases where play() after pause() is ignored)
     this.audio.muted = false;
-    // Start from 0 and fade in (user interaction should allow play)
     this.audio.volume = 0;
     this.currentVolume = 0;
-    this.audio.play().catch(() => {
-      // Autoplay blocked - will start on next user interaction
-    });
-    this.fadeToVolume(this.baseVolume, 200);
+    try {
+      this.audio.currentTime = 0;
+    } catch {
+      // ignore
+    }
+
+    // Try to resume. If it fails, recreate the element once (still inside user gesture from the toggle).
+    this.audio
+      .play()
+      .then(() => {
+        this.fadeToVolume(this.targetVolume, 200);
+      })
+      .catch(() => {
+        this.createOrRecreateAudioElement();
+        if (!this.audio) return;
+
+        this.audio.muted = false;
+        this.audio.volume = 0;
+        this.currentVolume = 0;
+        try {
+          this.audio.currentTime = 0;
+        } catch {
+          // ignore
+        }
+
+        this.audio.play().then(() => {
+          this.fadeToVolume(this.targetVolume, 200);
+        }).catch(() => {
+          // Autoplay still blocked; will start on next interaction via useBackgroundMusic listeners
+        });
+      });
   }
 
   toggleMute() {
