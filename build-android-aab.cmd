@@ -16,8 +16,25 @@ REM key.properties es opcional: la firma se inyecta por linea de comandos (keyst
 
 REM --- Build config ---
 set "TARGET_APP_ID=com.mysticgarden.game"
-set "TARGET_VERSION_CODE=970"
-set "TARGET_VERSION_NAME=9.7.0"
+
+REM Puedes sobreescribir estos valores SIN editar el .cmd usando:
+REM   set MG_VERSION_CODE=971
+REM   set MG_VERSION_NAME=9.7.1
+REM   (opcional) set MG_APP_ID=com.mysticgarden.game
+
+if not "%MG_APP_ID%"=="" set "TARGET_APP_ID=%MG_APP_ID%"
+
+if not "%MG_VERSION_CODE%"=="" (
+  set "TARGET_VERSION_CODE=%MG_VERSION_CODE%"
+) else (
+  set "TARGET_VERSION_CODE=971"
+)
+
+if not "%MG_VERSION_NAME%"=="" (
+  set "TARGET_VERSION_NAME=%MG_VERSION_NAME%"
+) else (
+  set "TARGET_VERSION_NAME=9.7.1"
+)
 
 REM --- Step 1/4 ---
 echo [1/4] npm install
@@ -105,9 +122,9 @@ if errorlevel 1 (
 
 echo.
 echo === VERIFICACION VERSION ===
-findstr /i "versionCode" "%GRADLE_FILE%"
+findstr /i "versionCode versionName minSdk" "%GRADLE_FILE%"
 echo.
-echo Si no ves 950 arriba, PULSA CTRL+C AHORA
+echo Si no ves %TARGET_VERSION_CODE% arriba, PULSA CTRL+C AHORA
 timeout /t 5
 
 REM --- Step 3.6/4: Ensure MainActivity exists ---
