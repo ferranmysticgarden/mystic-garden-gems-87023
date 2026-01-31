@@ -7,7 +7,7 @@ import { CloseDefeatOffer } from './game/CloseDefeatOffer';
 import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
 import { BuyMovesOffer } from './game/BuyMovesOffer';
-import { ContinueGameOffer } from './game/ContinueGameOffer';
+import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import confetti from 'canvas-confetti';
@@ -30,7 +30,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
   const [showCloseDefeatOffer, setShowCloseDefeatOffer] = useState(false);
   const [showFlashOffer, setShowFlashOffer] = useState(false);
   const [showBuyMovesOffer, setShowBuyMovesOffer] = useState(false);
-  const [showContinueOffer, setShowContinueOffer] = useState(false);
+  const [showDefeatPacksOffer, setShowDefeatPacksOffer] = useState(false);
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
@@ -119,9 +119,9 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
       setMovesShortBy(movesNeeded);
       setProgressAtLoss(progress);
       
-      // Si llegó al 70%+ del objetivo = mostrar oferta emocional de continuar
-      if (progress >= 70) {
-        setShowContinueOffer(true);
+      // Si llegó al 50%+ del objetivo = mostrar DefeatPacksOffer multi-tier
+      if (progress >= 50) {
+        setShowDefeatPacksOffer(true);
         
         // Si es la primera derrota cercana de la sesión, mostrar Flash Offer después
         if (!hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
@@ -196,20 +196,21 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
     const progress = getProgressPercentage();
     setProgressAtLoss(progress);
     
-    if (progress >= 70) {
-      setShowContinueOffer(true);
+    // Mostrar DefeatPacksOffer si llegó al 50%+
+    if (progress >= 50) {
+      setShowDefeatPacksOffer(true);
     }
   };
 
-  // Handler para continuar partida después de perder (emocional)
-  const handleContinueBuy = () => {
-    setMoves(5);
+  // Handler para compra en DefeatPacksOffer (multi-tier)
+  const handleDefeatPacksBuy = () => {
+    setMoves(5); // Los movimientos dependen del pack pero el básico da +5
     setGameOver(false);
-    setShowContinueOffer(false);
+    setShowDefeatPacksOffer(false);
   };
 
-  const handleContinueExit = () => {
-    setShowContinueOffer(false);
+  const handleDefeatPacksExit = () => {
+    setShowDefeatPacksOffer(false);
     // Mostrar Flash Offer si aplica
     if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
       localStorage.setItem('flash_offer_shown_session', 'true');
@@ -328,17 +329,17 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
           />
         )}
 
-        {/* Continue Game Offer - oferta emocional después de perder */}
-        {showContinueOffer && (
-          <ContinueGameOffer 
+        {/* DefeatPacksOffer - Modal multi-tier después de perder */}
+        {showDefeatPacksOffer && (
+          <DefeatPacksOffer 
             progressPercent={progressAtLoss}
-            onContinue={handleContinueBuy}
-            onExit={handleContinueExit}
+            onPurchase={handleDefeatPacksBuy}
+            onDismiss={handleDefeatPacksExit}
           />
         )}
 
         {/* Game Over Overlay - only show after all offers are dismissed or if won */}
-        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showContinueOffer && !showBuyMovesOffer && (
+        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
               <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>
