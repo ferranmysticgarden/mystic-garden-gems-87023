@@ -22,8 +22,8 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
   useEffect(() => {
     if (!user?.id) return;
 
-    // Trigger después de nivel 3, 4 o 5 (expandido)
-    if (![3, 4, 5].includes(levelJustCompleted)) return;
+    // Trigger después de nivel 2, 3 o 4 (más temprano para captar antes del churn)
+    if (![2, 3, 4].includes(levelJustCompleted)) return;
 
     const hasSeenOffer = localStorage.getItem(`starter-pack-${user.id}`);
     if (!hasSeenOffer) {
