@@ -63,29 +63,6 @@ class MainActivity : BridgeActivity()
     $fqcn = $AppId + '.MainActivity'
     $m = [regex]::Replace($m, 'android:name="[^"]*MainActivity"', ('android:name="' + $fqcn + '"'))
 
-    # Ensure Google Play Billing permission exists (some toolchains/cap sync can rewrite the manifest)
-    $billingPerm = 'com.android.vending.BILLING'
-    $billingLine = '  <uses-permission android:name="' + $billingPerm + '" />'
-    $billingPattern = 'android:name\s*=\s*"' + [regex]::Escape($billingPerm) + '"'
-    if ($m -notmatch $billingPattern) {
-      # Prefer inserting after INTERNET permission if present; otherwise insert before <application>
-      $internetPattern = '(<uses-permission\b[^>]*android:name\s*=\s*"android\.permission\.INTERNET"[^>]*/>)'
-      if ($m -match $internetPattern) {
-        $m = [regex]::Replace($m, $internetPattern, ('$1' + "`r`n" + $billingLine), 1)
-      } else {
-        $appPattern = '(\r?\n\s*)(<application\b)'
-        if ($m -match $appPattern) {
-          $m = [regex]::Replace($m, $appPattern, ("`r`n" + $billingLine + "`r`n`$1$2"), 1)
-        } else {
-          # Fallback: insert right after opening <manifest ...>
-          $m = [regex]::Replace($m, '(<manifest\b[^>]*>)', ('$1' + "`r`n" + $billingLine), 1)
-        }
-      }
-      Write-Host ('OK: Permiso ' + $billingPerm + ' agregado al AndroidManifest.xml')
-    } else {
-      Write-Host ('OK: Permiso ' + $billingPerm + ' ya existia en AndroidManifest.xml')
-    }
-
     # Ensure android:exported="true" (Android 12+) and launchMode="singleTask" (deep links) on MainActivity
     $pattern = '(<activity\b(?:(?!>).)*android:name="[^"]*MainActivity"(?:(?!>).)*)>'
     $re = New-Object System.Text.RegularExpressions.Regex($pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
