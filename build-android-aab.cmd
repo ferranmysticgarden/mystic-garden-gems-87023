@@ -251,6 +251,18 @@ if errorlevel 1 (
   echo OK: AAB firmado correctamente.
 )
 
+REM --- Step 4.1/4: Verify BILLING permission is present INSIDE the final AAB ---
+echo.
+echo [4.1/4] Verificando BILLING dentro del AAB (bundletool)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\verify-aab-billing.ps1" -AabPath "%AAB_PATH%"
+if errorlevel 1 (
+  echo ERROR: El AAB final NO contiene com.android.vending.BILLING.
+  echo NO LO SUBAS a Google Play (bloquea "Productos unicos").
+  popd
+  pause
+  exit /b 1
+)
+
 echo ==== AAB generado ====
 dir /s /b app\build\outputs\bundle\release\*.aab
 
