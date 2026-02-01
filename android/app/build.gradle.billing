@@ -4,6 +4,6 @@
 dependencies {
     // ... existing dependencies ...
     
-    // Google Play Billing Library
-    implementation 'com.android.billingclient:billing:6.1.0'
+    // Google Play Billing Library v7.1.1 (required by Google Play as of Aug 2025)
+    implementation 'com.android.billingclient:billing:7.1.1'
 }

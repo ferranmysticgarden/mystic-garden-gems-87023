@@ -60,8 +60,8 @@ try {
   # ============================================
   # STEP 2: Inject billing library into build.gradle
   # ============================================
-  $billingDep = "implementation 'com.android.billingclient:billing:6.1.0'"
-  $billingDepKts = 'implementation("com.android.billingclient:billing:6.1.0")'
+  $billingDep = "implementation 'com.android.billingclient:billing:7.1.1'"
+  $billingDepKts = 'implementation("com.android.billingclient:billing:7.1.1")'
 
   # Check for Kotlin DSL first
   if (Test-Path -LiteralPath $gradleKtsPath) {

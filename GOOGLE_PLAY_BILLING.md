@@ -10,7 +10,7 @@
 ### Dependencia (añadir manualmente)
 En `android/app/build.gradle`, añadir en `dependencies`:
 ```groovy
-implementation 'com.android.billingclient:billing:6.1.0'
+implementation 'com.android.billingclient:billing:7.1.1'
 ```
 
 ### Frontend
