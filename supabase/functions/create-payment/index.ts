@@ -7,47 +7,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Mapeo de productos del juego a precios de Stripe
+// Mapeo de productos del juego a precios de Stripe (Cuenta: acct_1SqILHPxvUpv2yak)
 const PRODUCT_PRICES: Record<string, string> = {
-  "gems_100": "price_1SOlx6FOm1x8pT7SJ8TaPGpp",
-  "gems_300": "price_1SOlxOFOm1x8pT7SLLhpmfjo",
-  "gems_1200": "price_1SOlxcFOm1x8pT7Su2qVAVIY",
-  "no_ads_month": "price_1SOlxtFOm1x8pT7SqKoeeYTq",
-  "no_ads_forever": "price_1SOly7FOm1x8pT7SypwYMFz9",
-  "garden_pass": "price_1SOlyNFOm1x8pT7SzEKZMpYY",
-  "quick_pack": "price_1SnbakB6GI8NmIPnVmGc39IK",
-  "mega_pack_inicial": "price_1Spc1wB6GI8NmIPnsUGlPqoR",
-  "pack_revancha": "price_1Spc2AB6GI8NmIPnKpsekI9G",
-  "victory_multiplier": "price_1StWrVB6GI8NmIPnn88ftQMe",
-  // Ice-breaker: oferta simple cuando pierde por poco
-  "finish_level": "price_1StbMWB6GI8NmIPn9BMYkgrR",
-  // NEW: Starter Pack - oferta irresistible después de nivel 3-4
-  "starter_pack": "price_1StceHB6GI8NmIPn2RGJWhAA",
-  // NEW: Continuar partida - oferta emocional cuando pierde
-  "continue_game": "price_1StcfKB6GI8NmIPnUYIOAmai",
-  // NEW: Comprar movimientos - antes de perder (0 movs)
-  "buy_moves": "price_1StcfiB6GI8NmIPntLwsg80l",
-  // Flash offer
-  "flash_offer": "price_1StWrVB6GI8NmIPnn88ftQMe",
-  // Giro extra ruleta €0.49
-  "extra_spin": "price_1Stp3dB6GI8NmIPnUvE2TeHL",
-  // Protección de racha €0.49
-  "streak_protection": "price_1Stp3sB6GI8NmIPnX6qHHkW0",
-  // Pack salvavidas €0.49
-  "lifesaver_pack": "price_1Stp48B6GI8NmIPnqyYtX01T",
-  // Duplicar recompensa €0.49
-  "reward_doubler": "price_1SugszB6GI8NmIPn1huYdoVq",
-  // Pack Victoria Segura €2.99
-  "pack_victoria_segura": "price_1SugtDB6GI8NmIPnFsLC42S1",
-  // Pack Racha Infinita €1.99
-  "pack_racha_infinita": "price_1SugtpB6GI8NmIPnrIvDwnsV",
-  // NEW PACKS - Multi-tier monetization
-  // Pack Impulso €0.99 - "La mejor opción"
-  "pack_impulso": "price_1Svg2xB6GI8NmIPnvW4nWvNL",
-  // Pack Experiencia €1.99
-  "pack_experiencia": "price_1Svg3LB6GI8NmIPnVBgrydNv",
-  // Pack Victoria Segura Pro €2.99
-  "pack_victoria_segura_pro": "price_1Svg3lB6GI8NmIPnyTnr8PFB",
+  // Gemas
+  "gems_100": "price_1SwC1uPxvUpv2yaknEvmYMKo",
+  "gems_300": "price_1SwC27PxvUpv2yaknxghKfhG",
+  "gems_1200": "price_1SwC2KPxvUpv2yak5Cf5hvjE",
+  // Sin anuncios
+  "no_ads_month": "price_1SwC2XPxvUpv2yakzLULeJPP",
+  "no_ads_forever": "price_1SwC2pPxvUpv2yakPTbVH6W0",
+  // Suscripción
+  "garden_pass": "price_1SwC3KPxvUpv2yakxDYVKdsx",
+  // Packs principales
+  "quick_pack": "price_1SwC3ePxvUpv2yakitUEtrbt",
+  "mega_pack_inicial": "price_1SwC3sPxvUpv2yakpk9AvEr2",
+  "pack_revancha": "price_1SwC48PxvUpv2yak43bIy9ED",
+  // Ofertas de nivel
+  "victory_multiplier": "price_1SwC4UPxvUpv2yakS90wIhNe",
+  "finish_level": "price_1SwC55PxvUpv2yakaAMufOsE",
+  "starter_pack": "price_1SwC5TPxvUpv2yakU9MsfDZS",
+  "continue_game": "price_1SwC5mPxvUpv2yaks3JEMRJn",
+  "buy_moves": "price_1SwC6DPxvUpv2yakmAgfu34f",
+  "flash_offer": "price_1SwC4UPxvUpv2yakS90wIhNe",
+  // Micro-transacciones €0.49
+  "extra_spin": "price_1SwC6TPxvUpv2yakdDnJpn34",
+  "streak_protection": "price_1SwC6wPxvUpv2yakgnMwxU4N",
+  "lifesaver_pack": "price_1SwC7MPxvUpv2yakTuos0NNw",
+  "reward_doubler": "price_1SwC7bPxvUpv2yakG3PVeCfo",
+  // Experience Packs
+  "pack_victoria_segura": "price_1SwC7xPxvUpv2yakQ0CmX5uN",
+  "pack_racha_infinita": "price_1SwC8APxvUpv2yakGXumP9b1",
+  // Multi-tier packs
+  "pack_impulso": "price_1SwC8OPxvUpv2yakqAuraXxH",
+  "pack_experiencia": "price_1SwC8gPxvUpv2yakRe3NKrI2",
+  "pack_victoria_segura_pro": "price_1SwC99PxvUpv2yakvtPl1F0r",
+  // First day offer
+  "first_day_offer": "price_1SwC9OPxvUpv2yakOtw7E4ue",
 };
 
 serve(async (req) => {
