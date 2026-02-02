@@ -8,6 +8,15 @@ const corsHeaders = {
 
 // Product rewards configuration
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
+  // NEW Google Play catalog (15 products)
+  // Note: Some products (e.g. chests) grant the reward client-side (randomized) after successful verification.
+  // For those, we keep an empty reward object here to avoid double-granting.
+  "chest_wooden": {},
+  "chest_silver": {},
+  "chest_gold": {},
+  "mega_pack_inicial": { gems: 500, lives: 10, powerups: 3, noAdsDays: 1 },
+  "pack_revancha": { gems: 50, lives: 5 },
+
   "quick_pack": { lives: 3, gems: 20 },
   "gems_100": { gems: 100 },
   "gems_300": { gems: 300 },
@@ -189,6 +198,11 @@ serve(async (req) => {
       throw new Error("Missing purchaseToken or productId");
     }
 
+    // Some purchase flows (tests / edge cases) may not provide orderId.
+    // We must still be idempotent to prevent double-processing.
+    const purchaseKey = orderId || purchaseToken;
+    const purchaseRecordId = `gp_${purchaseKey}`;
+
     console.log(`[INFO] Verifying purchase: product=${productId}, order=${orderId}, user=${user.id}`);
 
     // Check if this purchase was already processed (prevent double-spend)
@@ -196,7 +210,7 @@ serve(async (req) => {
       .from('user_purchases')
       .select('id')
       .eq('user_id', user.id)
-      .eq('product_id', `gp_${orderId}`)
+      .eq('product_id', purchaseRecordId)
       .single();
 
     if (existingPurchase) {
@@ -297,7 +311,7 @@ serve(async (req) => {
       .from('user_purchases')
       .insert({
         user_id: user.id,
-        product_id: `gp_${orderId}`,
+        product_id: purchaseRecordId,
         expires_at: rewards.noAdsDays 
           ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
           : null,
