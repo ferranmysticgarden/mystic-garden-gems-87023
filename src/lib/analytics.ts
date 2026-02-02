@@ -1,0 +1,85 @@
+/**
+ * Analytics events for monetization tracking
+ */
+
+type AnalyticsEventName = 
+  | 'first_purchase_offer_shown'
+  | 'first_purchase_completed'
+  | 'defeat_offer_shown'
+  | 'defeat_purchase_completed';
+
+interface EventData {
+  product?: string;
+  price?: number;
+  level?: number;
+  progress?: number;
+}
+
+/**
+ * Emit an analytics event
+ * In production, this would send to your analytics provider (Firebase, Mixpanel, etc.)
+ */
+export const emitAnalyticsEvent = (eventName: AnalyticsEventName, data?: EventData) => {
+  console.log(`[Analytics] ${eventName}`, data || {});
+  
+  // Store in localStorage for debugging
+  const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+  events.push({
+    event: eventName,
+    data,
+    timestamp: new Date().toISOString()
+  });
+  localStorage.setItem('analytics_events', JSON.stringify(events.slice(-100))); // Keep last 100 events
+  
+  // TODO: In production, send to your analytics provider
+  // Example: firebase.analytics().logEvent(eventName, data);
+  // Example: mixpanel.track(eventName, data);
+};
+
+/**
+ * Check if an offer can be shown today (max 1 per session)
+ */
+export const canShowOfferToday = (): boolean => {
+  const offerShownToday = localStorage.getItem('offer_shown_today');
+  const lastOfferDate = localStorage.getItem('last_offer_date');
+  const today = new Date().toDateString();
+  
+  // Reset if it's a new day
+  if (lastOfferDate !== today) {
+    localStorage.removeItem('offer_shown_today');
+    localStorage.setItem('last_offer_date', today);
+    return true;
+  }
+  
+  return !offerShownToday;
+};
+
+/**
+ * Mark that an offer was shown today
+ */
+export const markOfferShown = () => {
+  const today = new Date().toDateString();
+  localStorage.setItem('offer_shown_today', 'true');
+  localStorage.setItem('last_offer_date', today);
+};
+
+/**
+ * Check if welcome offer was already shown/claimed
+ */
+export const hasSeenWelcomeOffer = (): boolean => {
+  // If claimed, never show again
+  if (localStorage.getItem('welcome_offer_claimed')) return true;
+  
+  // If rejected today, don't show again today
+  const rejectedDate = localStorage.getItem('welcome_offer_rejected_date');
+  const today = new Date().toDateString();
+  
+  return rejectedDate === today;
+};
+
+/**
+ * Check if this is the player's first purchase ever
+ */
+export const hasCompletedFirstPurchase = (): boolean => {
+  return localStorage.getItem('first_purchase_completed') === 'true';
+};

@@ -96,7 +96,11 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
         origin: { y: 0.6 }
       });
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
-      // Player ran out of moves - show buy moves offer BEFORE defeat
+      // Player ran out of moves - calculate how close they were
+      const movesNeeded = estimateMovesNeeded();
+      setMovesShortBy(movesNeeded);
+      
+      // Show buy moves offer BEFORE defeat
       if (!hasShownBuyMoves.current) {
         hasShownBuyMoves.current = true;
         setShowBuyMovesOffer(true);
@@ -115,8 +119,6 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
       
       // Calcular qué tan cerca estuvo
       const progress = getProgressPercentage();
-      const movesNeeded = estimateMovesNeeded();
-      setMovesShortBy(movesNeeded);
       setProgressAtLoss(progress);
       
       // Si llegó al 50%+ del objetivo = mostrar DefeatPacksOffer multi-tier
@@ -326,6 +328,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
           <BuyMovesOffer 
             onBuy={handleBuyMovesBuy}
             onDismiss={handleBuyMovesDismiss}
+            movesShort={movesShortBy}
           />
         )}
 

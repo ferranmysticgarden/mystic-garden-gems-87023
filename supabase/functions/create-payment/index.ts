@@ -43,6 +43,8 @@ const PRODUCT_PRICES: Record<string, string> = {
   "pack_victoria_segura_pro": "price_1SwC99PxvUpv2yakvtPl1F0r",
   // First day offer
   "first_day_offer": "price_1SwC9OPxvUpv2yakOtw7E4ue",
+  // Welcome pack - first purchase €0.49
+  "welcome_pack": "price_1SwTaTPxvUpv2yakZ5zWpx4n",
 };
 
 serve(async (req) => {
