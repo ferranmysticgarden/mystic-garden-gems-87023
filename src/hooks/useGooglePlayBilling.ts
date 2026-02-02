@@ -5,26 +5,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Mapeo de IDs de producto a IDs de Google Play
+// SINCRONIZADO con Google Play Console (15 productos activos)
 const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
-  'quick_pack': 'quick_pack',
-  'gems_100': 'gems_100',
-  'gems_300': 'gems_300',
-  'gems_1200': 'gems_1200',
-  'no_ads_month': 'no_ads_month',
-  'no_ads_forever': 'no_ads_forever',
-  'garden_pass': 'garden_pass',
+  // Cofres
+  'chest_gold': 'chest_gold',
+  'chest_silver': 'chest_silver',
+  'chest_wooden': 'chest_wooden',
+  // Packs principales
+  'mega_pack_inicial': 'mega_pack_inicial',
+  'starter_pack': 'starter_pack',
   'flash_offer': 'flash_offer',
+  'pack_revancha': 'pack_revancha',
+  'lifesaver_pack': 'lifesaver_pack',
+  // Ofertas de nivel
   'victory_multiplier': 'victory_multiplier',
   'finish_level': 'finish_level',
-  'starter_pack': 'starter_pack',
   'continue_game': 'continue_game',
   'buy_moves': 'buy_moves',
-  'reward_doubler': 'reward_doubler',
-  'pack_victoria_segura': 'pack_victoria_segura',
-  'pack_racha_infinita': 'pack_racha_infinita',
-  'extra_spin': 'extra_spin',
+  // Micro-transacciones €0.49
   'streak_protection': 'streak_protection',
-  'lifesaver_pack': 'lifesaver_pack',
+  'extra_spin': 'extra_spin',
+  'reward_doubler': 'reward_doubler',
 };
 
 export const useGooglePlayBilling = () => {
