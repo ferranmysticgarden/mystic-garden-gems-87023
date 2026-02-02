@@ -40,6 +40,8 @@ import { SpringEvent } from '@/components/game/SpringEvent';
 import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
+import { WelcomeOffer } from '@/components/game/WelcomeOffer';
+import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
@@ -106,6 +108,9 @@ const Index = () => {
   
   // State for first session reward
   const [showFirstSessionReward, setShowFirstSessionReward] = useState(false);
+  
+  // State for welcome offer (post-level-1)
+  const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
 
   // Auto-show streak calendar if reward available
   useEffect(() => {
@@ -167,10 +172,18 @@ const Index = () => {
     // Show first win celebration for level 1
     if (completedCount === 1) {
       setShowFirstWin(true);
+      
+      // Show Welcome Offer after first win celebration (if not seen and can show today)
+      if (!hasSeenWelcomeOffer() && canShowOfferToday()) {
+        setTimeout(() => {
+          setShowWelcomeOffer(true);
+          markOfferShown();
+        }, 3000); // After first win celebration
+      }
     }
     
-    // Show Starter Pack after level 3 or 4
-    if (currentLevel.id === 3 || currentLevel.id === 4) {
+    // Show Starter Pack after level 3 or 4 (only if welcome offer not active)
+    if ((currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
@@ -573,6 +586,19 @@ const Index = () => {
         <FirstWinCelebration 
           levelsCompleted={gameState.completedLevels.length}
           onClose={() => setShowFirstWin(false)}
+        />
+      )}
+
+      {/* Welcome Offer - €0.49 after level 1 */}
+      {showWelcomeOffer && (
+        <WelcomeOffer
+          onPurchase={() => {
+            // Grant rewards: +5 moves handled by product, +3 boosters
+            addLives(3);
+            toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters, x2 monedas 30 min');
+            setShowWelcomeOffer(false);
+          }}
+          onDismiss={() => setShowWelcomeOffer(false)}
         />
       )}
 

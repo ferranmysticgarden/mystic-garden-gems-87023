@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Zap } from 'lucide-react';
+import { Plus, Zap, Sparkles } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 
 interface BuyMovesOfferProps {
   onBuy: () => void;
   onDismiss: () => void;
+  movesShort?: number; // If 1-2, hide free option (soft paywall)
 }
 
-export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
+export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const [pulse, setPulse] = useState(true);
+
+  // Soft paywall: if player lost by 1-2 moves, hide free exit
+  const isSoftPaywall = movesShort <= 2;
 
   // Pulsing effect to draw attention
   useEffect(() => {
@@ -27,7 +31,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
     }
   };
 
-  const price = getPrice('buy_moves', '€0.99');
+  const price = getPrice('buy_moves', '€0.49');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -46,16 +50,29 @@ export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
 
           {/* Visual representation */}
           <div className="text-6xl mb-4">
-            🎯
+            {isSoftPaywall ? '😢' : '🎯'}
           </div>
 
-          {/* Simple message */}
-          <p className="text-white text-lg mb-2">
-            No es una derrota aún...
-          </p>
-          <p className="text-purple-200 mb-6">
-            ¡Puedes continuar!
-          </p>
+          {/* Emotional message for soft paywall */}
+          {isSoftPaywall ? (
+            <>
+              <p className="text-white text-lg mb-1">
+                ¡A solo <span className="text-yellow-400 font-bold">{movesShort}</span> {movesShort === 1 ? 'movimiento' : 'movimientos'}!
+              </p>
+              <p className="text-purple-200 text-sm mb-4">
+                Todo tu progreso está ahí...
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-white text-lg mb-2">
+                No es una derrota aún...
+              </p>
+              <p className="text-purple-200 mb-4">
+                ¡Puedes continuar!
+              </p>
+            </>
+          )}
 
           {/* The offer */}
           <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 mb-4 border border-green-400/30">
@@ -64,24 +81,44 @@ export const BuyMovesOffer = ({ onBuy, onDismiss }: BuyMovesOfferProps) => {
               <span className="text-2xl font-bold text-green-400">+5 Movimientos</span>
             </div>
             <p className="text-white text-3xl font-bold">{price}</p>
+            <p className="text-purple-300 text-xs mt-1">Menos que un café ☕</p>
           </div>
 
           {/* Buy button */}
           <Button 
             onClick={handleBuy}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-bold py-5 rounded-xl text-lg shadow-lg shadow-green-500/30 mb-3"
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-5 rounded-xl text-lg shadow-lg shadow-yellow-500/30 mb-3"
           >
-            {loading ? '⏳ Procesando...' : '¡SEGUIR JUGANDO!'}
+            {loading ? (
+              '⏳ Procesando...'
+            ) : (
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                {isSoftPaywall ? '¡CONTINUAR!' : '¡SEGUIR JUGANDO!'}
+              </span>
+            )}
           </Button>
 
-          {/* Dismiss */}
-          <button 
-            onClick={onDismiss}
-            className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
-          >
-            Aceptar derrota
-          </button>
+          {/* Dismiss - hidden on soft paywall */}
+          {!isSoftPaywall && (
+            <button 
+              onClick={onDismiss}
+              className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
+            >
+              Aceptar derrota
+            </button>
+          )}
+          
+          {/* Soft paywall: tiny exit that looks like giving up */}
+          {isSoftPaywall && (
+            <button 
+              onClick={onDismiss}
+              className="text-white/20 hover:text-white/40 text-xs transition-colors mt-2"
+            >
+              Perder todo el progreso
+            </button>
+          )}
         </div>
       </div>
     </div>
