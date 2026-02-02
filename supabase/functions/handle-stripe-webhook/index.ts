@@ -20,6 +20,43 @@ const PRODUCT_NAMES: Record<string, string> = {
   "quick_pack": "Pack Rápido (3 Vidas + 20 Gemas)",
   "mega_pack_inicial": "Mega Pack Inicial (500 Gemas + 10 Vidas)",
   "pack_revancha": "Pack Revancha (5 Vidas + 50 Gemas)",
+  "starter_pack": "Starter Pack",
+  "flash_offer": "Pack Relámpago",
+  "continue_game": "Continuar Partida",
+  "buy_moves": "Comprar Movimientos",
+  "finish_level": "Termina Este Nivel",
+  "victory_multiplier": "Multiplicador x3",
+  "reward_doubler": "Duplicar Recompensa x2",
+  "extra_spin": "Giro Extra",
+  "streak_protection": "Protección de Racha",
+  "lifesaver_pack": "Pack Salvavidas",
+  "pack_victoria_segura": "Pack Victoria Segura",
+  "pack_racha_infinita": "Pack Racha Infinita",
+};
+
+// Rewards configuration for all products - synchronized with verify-google-purchase
+const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
+  "gems_100": { gems: 100 },
+  "gems_300": { gems: 300 },
+  "gems_1200": { gems: 1200 },
+  "no_ads_month": { noAdsDays: 30 },
+  "no_ads_forever": { noAdsForever: true },
+  "garden_pass": { gems: 1000, noAdsDays: 30 },
+  "quick_pack": { lives: 3, gems: 20 },
+  "mega_pack_inicial": { gems: 500, lives: 10, powerups: 3, noAdsDays: 1 },
+  "pack_revancha": { gems: 50, lives: 5 },
+  "starter_pack": { gems: 500, lives: 10, powerups: 3 },
+  "flash_offer": { lives: 10, gems: 150 },
+  "continue_game": { lives: 1, powerups: 5 },
+  "buy_moves": { powerups: 5 },
+  "finish_level": { powerups: 5 },
+  "victory_multiplier": { lives: 2 },
+  "reward_doubler": { gems: 50 },
+  "extra_spin": {},
+  "streak_protection": {},
+  "lifesaver_pack": { lives: 3 },
+  "pack_victoria_segura": { powerups: 5, lives: 3 },
+  "pack_racha_infinita": { lives: 2 },
 };
 
 serve(async (req) => {
@@ -27,6 +64,7 @@ serve(async (req) => {
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
   if (!signature || !webhookSecret) {
+    console.error("[ERROR] Missing signature or webhook secret");
     return new Response("Missing signature or webhook secret", { status: 400 });
   }
 
@@ -34,7 +72,7 @@ serve(async (req) => {
     const body = await req.text();
     const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
 
-    console.log("Webhook event received:", event.type);
+    console.log("[INFO] Webhook event received:", event.type);
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -43,123 +81,136 @@ serve(async (req) => {
       const customerEmail = session.customer_details?.email;
       const amountPaid = (session.amount_total || 0) / 100;
 
-      console.log("Payment completed:", {
-        userId,
-        productId,
-        customerEmail,
-        amountPaid,
-      });
+      console.log("[INFO] Payment completed:", { userId, productId, customerEmail, amountPaid });
 
       if (userId && productId) {
-        // Crear cliente de Supabase con service role key para operaciones admin
         const supabaseAdmin = createClient(
           Deno.env.get("SUPABASE_URL") ?? "",
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
           { auth: { persistSession: false } }
         );
 
-        // Calcular fecha de expiración si aplica
-        let expiresAt = null;
-        if (productId === "no_ads_month" || productId === "garden_pass") {
-          expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + 30);
+        // Get rewards for this product
+        const rewards = PRODUCT_REWARDS[productId];
+        if (!rewards) {
+          console.error("[ERROR] Unknown product:", productId);
+          // Still save purchase record even for unknown products
         }
 
-        // Guardar la compra en la base de datos
+        // Calculate expiration date
+        let expiresAt: Date | null = null;
+        if (rewards?.noAdsDays) {
+          expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + rewards.noAdsDays);
+        }
+
+        // Save purchase record
         const { error: purchaseError } = await supabaseAdmin
           .from("user_purchases")
           .insert({
             user_id: userId,
-            product_id: productId,
-            expires_at: expiresAt,
+            product_id: `stripe_${productId}`,
+            expires_at: expiresAt?.toISOString() || null,
           });
 
         if (purchaseError) {
-          console.error("Error saving purchase:", purchaseError);
+          console.error("[ERROR] Error saving purchase:", purchaseError);
         } else {
-          console.log("Purchase saved successfully");
+          console.log("[INFO] Purchase saved successfully");
         }
 
-        // Procesar packs según el producto
-        if (productId === "quick_pack") {
+        // Handle no_ads_forever separately
+        if (rewards?.noAdsForever) {
+          await supabaseAdmin
+            .from("user_purchases")
+            .insert({
+              user_id: userId,
+              product_id: "no_ads_forever",
+              expires_at: null,
+            });
+        }
+
+        // Apply rewards to game_progress
+        if (rewards && (rewards.gems || rewards.lives || rewards.powerups || rewards.noAdsDays)) {
           const { data: progressData, error: progressError } = await supabaseAdmin
             .from("game_progress")
-            .select("lives, gems")
+            .select("gems, lives, hammer_count, shuffle_count, undo_count, unlimited_lives_until")
             .eq("user_id", userId)
             .single();
 
-          if (!progressError && progressData) {
+          if (progressError && progressError.code !== 'PGRST116') {
+            console.error("[ERROR] Error fetching game progress:", progressError);
+          }
+
+          const currentGems = progressData?.gems || 0;
+          const currentLives = progressData?.lives || 5;
+          const currentHammer = progressData?.hammer_count || 0;
+          const currentShuffle = progressData?.shuffle_count || 0;
+          const currentUndo = progressData?.undo_count || 0;
+
+          const updates: Record<string, unknown> = {
+            updated_at: new Date().toISOString(),
+          };
+
+          if (rewards.gems) {
+            updates.gems = currentGems + rewards.gems;
+            console.log(`[INFO] Adding ${rewards.gems} gems -> ${updates.gems}`);
+          }
+          if (rewards.lives) {
+            updates.lives = Math.min(currentLives + rewards.lives, 99);
+            console.log(`[INFO] Adding ${rewards.lives} lives -> ${updates.lives}`);
+          }
+          if (rewards.powerups) {
+            const perType = Math.ceil(rewards.powerups / 3);
+            updates.hammer_count = currentHammer + perType;
+            updates.shuffle_count = currentShuffle + perType;
+            updates.undo_count = currentUndo + perType;
+            console.log(`[INFO] Adding ${perType} of each powerup`);
+          }
+          if (rewards.noAdsDays) {
+            const expireDate = new Date();
+            expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
+            updates.unlimited_lives_until = expireDate.toISOString();
+            console.log(`[INFO] Setting unlimited_lives_until to ${updates.unlimited_lives_until}`);
+          }
+
+          // Update or insert game progress
+          if (progressData) {
             const { error: updateError } = await supabaseAdmin
               .from("game_progress")
-              .update({ 
-                lives: progressData.lives + 3,
-                gems: progressData.gems + 20
-              })
+              .update(updates)
               .eq("user_id", userId);
 
             if (updateError) {
-              console.error("Error updating lives and gems:", updateError);
+              console.error("[ERROR] Error updating game progress:", updateError);
             } else {
-              console.log("Quick pack applied: +3 lives, +20 gems");
+              console.log("[INFO] Game progress updated successfully");
+            }
+          } else {
+            // Create new game progress record
+            const { error: insertError } = await supabaseAdmin
+              .from("game_progress")
+              .insert({
+                user_id: userId,
+                gems: rewards.gems || 0,
+                lives: rewards.lives || 5,
+                hammer_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
+                shuffle_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
+                undo_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
+                unlimited_lives_until: rewards.noAdsDays 
+                  ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
+                  : null,
+              });
+
+            if (insertError) {
+              console.error("[ERROR] Error inserting game progress:", insertError);
+            } else {
+              console.log("[INFO] Game progress created successfully");
             }
           }
         }
 
-        // Mega Pack Inicial: 500 gemas + 10 vidas + 24h sin anuncios
-        if (productId === "mega_pack_inicial") {
-          const { data: progressData, error: progressError } = await supabaseAdmin
-            .from("game_progress")
-            .select("lives, gems")
-            .eq("user_id", userId)
-            .single();
-
-          if (!progressError && progressData) {
-            const unlimitedUntil = new Date();
-            unlimitedUntil.setHours(unlimitedUntil.getHours() + 24);
-
-            const { error: updateError } = await supabaseAdmin
-              .from("game_progress")
-              .update({ 
-                lives: progressData.lives + 10,
-                gems: progressData.gems + 500,
-                unlimited_lives_until: unlimitedUntil.toISOString()
-              })
-              .eq("user_id", userId);
-
-            if (updateError) {
-              console.error("Error updating mega pack:", updateError);
-            } else {
-              console.log("Mega Pack applied: +10 lives, +500 gems, 24h unlimited");
-            }
-          }
-        }
-
-        // Pack Revancha: 5 vidas + 50 gemas
-        if (productId === "pack_revancha") {
-          const { data: progressData, error: progressError } = await supabaseAdmin
-            .from("game_progress")
-            .select("lives, gems")
-            .eq("user_id", userId)
-            .single();
-
-          if (!progressError && progressData) {
-            const { error: updateError } = await supabaseAdmin
-              .from("game_progress")
-              .update({ 
-                lives: progressData.lives + 5,
-                gems: progressData.gems + 50
-              })
-              .eq("user_id", userId);
-
-            if (updateError) {
-              console.error("Error updating pack revancha:", updateError);
-            } else {
-              console.log("Pack Revancha applied: +5 lives, +50 gems");
-            }
-          }
-        }
-
-        // Enviar email al administrador
+        // Send admin notification email
         try {
           await resend.emails.send({
             from: "Mystic Garden <onboarding@resend.dev>",
@@ -180,12 +231,12 @@ serve(async (req) => {
               </div>
             `,
           });
-          console.log("Admin notification email sent");
+          console.log("[INFO] Admin notification email sent");
         } catch (emailError) {
-          console.error("Error sending admin email:", emailError);
+          console.error("[ERROR] Error sending admin email:", emailError);
         }
 
-        // Enviar email de confirmación al cliente
+        // Send customer confirmation email
         if (customerEmail) {
           try {
             await resend.emails.send({
@@ -209,11 +260,13 @@ serve(async (req) => {
                 </div>
               `,
             });
-            console.log("Customer confirmation email sent");
+            console.log("[INFO] Customer confirmation email sent");
           } catch (emailError) {
-            console.error("Error sending customer email:", emailError);
+            console.error("[ERROR] Error sending customer email:", emailError);
           }
         }
+
+        console.log(`[INFO] ✅ Purchase completed: ${productId} for user ${userId}`);
       }
     }
 
@@ -223,7 +276,7 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Webhook error:", errorMessage);
+    console.error("[ERROR] Webhook error:", errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
