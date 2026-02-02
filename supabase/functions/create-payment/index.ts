@@ -27,7 +27,7 @@ const PRODUCT_PRICES: Record<string, string> = {
   "finish_level": "price_1SwC55PxvUpv2yakaAMufOsE",
   "starter_pack": "price_1SwC5TPxvUpv2yakU9MsfDZS",
   "continue_game": "price_1SwC5mPxvUpv2yaks3JEMRJn",
-  "buy_moves": "price_1SwC6DPxvUpv2yakmAgfu34f",
+  "buy_moves": "price_1SwUBtPxvUpv2yakym57qTzo", // €0.49 soft paywall
   "flash_offer": "price_1SwC4UPxvUpv2yakS90wIhNe",
   // Micro-transacciones €0.49
   "extra_spin": "price_1SwC6TPxvUpv2yakdDnJpn34",
