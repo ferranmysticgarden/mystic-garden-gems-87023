@@ -32,7 +32,7 @@ export const LEVELS: Level[] = [
   { id: 7, objective: { type: 'score', target: 'points', count: 1000 }, moves: 23, stars: { one: 1000, two: 1300, three: 1600 }, reward: {} },
   { id: 8, objective: { type: 'collect', target: '🌸', count: 10 }, moves: 22, stars: { one: 10, two: 12, three: 14 }, reward: {} },
   { id: 9, objective: { type: 'collect', target: '🍃', count: 12 }, moves: 23, stars: { one: 12, two: 14, three: 17 }, reward: {} },
-  { id: 10, objective: { type: 'score', target: 'points', count: 1400 }, moves: 25, stars: { one: 1400, two: 1700, three: 2000 }, reward: { gems: 10 } },
+  { id: 10, objective: { type: 'score', target: 'points', count: 1400 }, moves: 22, stars: { one: 1400, two: 1700, three: 2000 }, reward: { gems: 10 } },
   
   // Niveles 11-12: Continúa el challenge
   { id: 11, objective: { type: 'collect', target: '🌺', count: 20 }, moves: 19, stars: { one: 20, two: 24, three: 28 }, reward: {} },

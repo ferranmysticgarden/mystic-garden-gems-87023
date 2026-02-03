@@ -7,6 +7,7 @@ import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { usePurchaseGate } from '@/hooks/usePurchaseGate';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
@@ -111,6 +112,9 @@ const Index = () => {
   
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
+
+  // Purchase gate - bloquea shop hasta primera compra
+  const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
 
   // Auto-show streak calendar if reward available
   useEffect(() => {
@@ -407,14 +411,17 @@ const Index = () => {
               {t('menu.levels')}
             </Button>
             
-            <Button
-              onClick={() => setScreen('shop')}
-              variant="outline"
-              className="hover:scale-105 transition-transform"
-            >
-              <ShoppingBag className="w-5 h-5 mr-2" />
-              {t('menu.shop')}
-            </Button>
+            {/* Shop button - OCULTO si no ha comprado */}
+            {!isShopLocked && (
+              <Button
+                onClick={() => setScreen('shop')}
+                variant="outline"
+                className="hover:scale-105 transition-transform"
+              >
+                <ShoppingBag className="w-5 h-5 mr-2" />
+                {t('menu.shop')}
+              </Button>
+            )}
           </div>
 
           {/* Battle Pass Button */}
@@ -455,14 +462,17 @@ const Index = () => {
               <span className="text-blue-400 font-semibold text-sm">Misiones</span>
             </Button>
 
-            <Button
-              onClick={() => setShowLootChest(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
-            >
-              <Gift className="w-5 h-5 mr-2 text-amber-400" />
-              <span className="text-amber-400 font-semibold text-sm">Cofres</span>
-            </Button>
+            {/* Loot Chest - OCULTO si no ha comprado */}
+            {!isShopLocked && (
+              <Button
+                onClick={() => setShowLootChest(true)}
+                variant="outline"
+                className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
+              >
+                <Gift className="w-5 h-5 mr-2 text-amber-400" />
+                <span className="text-amber-400 font-semibold text-sm">Cofres</span>
+              </Button>
+            )}
           </div>
 
           {/* Player Rank Display */}
@@ -477,8 +487,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Shop Modal */}
-      {screen === 'shop' && (
+      {/* Shop Modal - BLOQUEADO si no ha comprado */}
+      {screen === 'shop' && !isShopLocked && (
         <Shop
           onClose={() => setScreen('menu')}
           onPurchase={handlePurchase}
@@ -515,8 +525,8 @@ const Index = () => {
       {/* First Day Offer */}
       <FirstDayOffer />
 
-      {/* Starter Pack - aparece después de nivel 3-4 */}
-      {showStarterPack && (
+      {/* Starter Pack - OCULTO si no ha comprado (bloqueamos packs) */}
+      {showStarterPack && !isShopLocked && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}
           onClose={() => setShowStarterPack(false)}
@@ -655,8 +665,8 @@ const Index = () => {
         />
       )}
 
-      {/* Loot Chest Modal */}
-      {showLootChest && (
+      {/* Loot Chest Modal - BLOQUEADO si no ha comprado */}
+      {showLootChest && !isShopLocked && (
         <LootChest 
           onClose={() => setShowLootChest(false)}
           onRewardClaimed={(gems, lives) => {

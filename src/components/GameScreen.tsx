@@ -8,10 +8,11 @@ import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
 import { BuyMovesOffer } from './game/BuyMovesOffer';
 import { DefeatPacksOffer } from './game/DefeatPacksOffer';
+import { Level10Paywall } from './game/Level10Paywall';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
+import { usePurchaseGate } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
-
 interface GameScreenProps {
   level: Level;
   onWin: (stars: number, reward: { gems?: number }) => void;
@@ -31,12 +32,16 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
   const [showFlashOffer, setShowFlashOffer] = useState(false);
   const [showBuyMovesOffer, setShowBuyMovesOffer] = useState(false);
   const [showDefeatPacksOffer, setShowDefeatPacksOffer] = useState(false);
+  const [showLevel10Paywall, setShowLevel10Paywall] = useState(false);
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
+  
+  // Hook para verificar si ya compró
+  const { hasPurchasedOnce } = usePurchaseGate();
   
   // Use mystical fairy sounds
   const { playVictorySound, playLoseSound } = useMysticSounds();
@@ -100,7 +105,13 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
-      // Show buy moves offer BEFORE defeat
+      // MURO NIVEL 10: Si es nivel 10 y NO ha comprado nunca, mostrar paywall forzado
+      if (level.id === 10 && !hasPurchasedOnce) {
+        setShowLevel10Paywall(true);
+        return; // No mostrar nada más - solo el paywall forzado
+      }
+      
+      // Show buy moves offer BEFORE defeat (para otros niveles)
       if (!hasShownBuyMoves.current) {
         hasShownBuyMoves.current = true;
         setShowBuyMovesOffer(true);
@@ -131,7 +142,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
         }
       }
     }
-  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded]);
+  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded, hasPurchasedOnce]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
@@ -218,6 +229,13 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
       localStorage.setItem('flash_offer_shown_session', 'true');
       setShowFlashOffer(true);
     }
+  };
+
+  // Handler para compra exitosa en Level10Paywall
+  const handleLevel10Purchase = () => {
+    setMoves(5); // +5 movimientos
+    setShowLevel10Paywall(false);
+    // El nivel continúa - no es game over
   };
 
   const getProgress = () => {
@@ -338,7 +356,12 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
             progressPercent={progressAtLoss}
             onPurchase={handleDefeatPacksBuy}
             onDismiss={handleDefeatPacksExit}
-          />
+        />
+        )}
+
+        {/* Level 10 Paywall - FORZADO, no se puede cerrar */}
+        {showLevel10Paywall && (
+          <Level10Paywall onPurchaseSuccess={handleLevel10Purchase} />
         )}
 
         {/* Game Over Overlay - only show after all offers are dismissed or if won */}
