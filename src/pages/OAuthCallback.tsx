@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const DEEPLINK_CALLBACK_BASE = 'com.mysticgarden.game://callback';
+const ANDROID_PACKAGE = 'com.mysticgarden.game';
 
 const setMeta = (name: string, content: string) => {
   let el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
@@ -61,6 +62,18 @@ export default function OAuthCallback() {
     return null;
   }, [parsed]);
 
+  const androidIntentUrl = useMemo(() => {
+    // En Chrome/Custom Tabs en Android, a veces el scheme directo se bloquea sin gesto.
+    // El formato intent:// suele abrir la app de forma más consistente.
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (!isAndroid) return null;
+    if (!parsed.code) return null;
+    return (
+      `intent://callback?code=${encodeURIComponent(parsed.code)}` +
+      `#Intent;scheme=${ANDROID_PACKAGE};package=${ANDROID_PACKAGE};end`
+    );
+  }, [parsed.code]);
+
   useEffect(() => {
     document.title = 'Callback de acceso | Mystic Garden';
     setMeta('description', 'Finalizando inicio de sesión de Mystic Garden. Volviendo a la app automáticamente.');
@@ -82,12 +95,29 @@ export default function OAuthCallback() {
     setStatus('ready');
 
     // Intento automático lo más inmediato posible (mejor UX, menos tiempo visible en navegador)
+    // 1) Android: intent:// (más fiable)
+    // 2) Fallback: deep link normal
     const id = window.setTimeout(() => {
-      window.location.replace(deepLinkUrl);
+      const primary = androidIntentUrl ?? deepLinkUrl;
+      const fallback = androidIntentUrl ? deepLinkUrl : null;
+
+      // Primer intento
+      window.location.replace(primary);
+
+      // Segundo intento (fallback) si el navegador bloqueó el primero
+      if (fallback) {
+        window.setTimeout(() => {
+          try {
+            window.location.href = fallback;
+          } catch {
+            // ignore
+          }
+        }, 450);
+      }
     }, 0);
 
     return () => window.clearTimeout(id);
-  }, [deepLinkUrl, parsed.error]);
+  }, [androidIntentUrl, deepLinkUrl, parsed.error]);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 relative z-10">
@@ -115,7 +145,22 @@ export default function OAuthCallback() {
             type="button"
             className="w-full gradient-gold shadow-gold text-lg py-6"
             onClick={() => {
-              if (deepLinkUrl) window.location.href = deepLinkUrl;
+              if (!deepLinkUrl) return;
+              // En Android intent:// puede abrir más consistente.
+              const isAndroid = /Android/i.test(navigator.userAgent);
+              if (isAndroid && androidIntentUrl) {
+                window.location.href = androidIntentUrl;
+                // fallback por si el intent fuese bloqueado
+                window.setTimeout(() => {
+                  try {
+                    window.location.href = deepLinkUrl;
+                  } catch {
+                    // ignore
+                  }
+                }, 450);
+                return;
+              }
+              window.location.href = deepLinkUrl;
             }}
             disabled={!deepLinkUrl}
           >
