@@ -322,7 +322,7 @@ interface ExtraSpinOfferProps {
 
 const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
-  const price = getPrice('extra_spin', '€0.49');
+  const price = getPrice('extra_spin', '€0.50');
 
   const handleBuy = async () => {
     const success = await createPayment('extra_spin');

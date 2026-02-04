@@ -31,7 +31,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
     }
   };
 
-  const price = getPrice('buy_moves', '€0.49');
+  const price = getPrice('buy_moves', '€0.50');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">

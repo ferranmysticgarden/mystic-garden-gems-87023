@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 // Mapeo de productos del juego a precios de Stripe (Cuenta: acct_1SqILHPxvUpv2yak)
+// IMPORTANTE: Stripe requiere mínimo €0.50 para checkout sessions
 const PRODUCT_PRICES: Record<string, string> = {
   // Gemas
   "gems_100": "price_1SwC1uPxvUpv2yaknEvmYMKo",
@@ -27,13 +28,14 @@ const PRODUCT_PRICES: Record<string, string> = {
   "finish_level": "price_1SwC55PxvUpv2yakaAMufOsE",
   "starter_pack": "price_1SwC5TPxvUpv2yakU9MsfDZS",
   "continue_game": "price_1SwC5mPxvUpv2yaks3JEMRJn",
-  "buy_moves": "price_1SwUBtPxvUpv2yakym57qTzo", // €0.49 soft paywall
   "flash_offer": "price_1SwC4UPxvUpv2yakS90wIhNe",
-  // Micro-transacciones €0.49
-  "extra_spin": "price_1SwC6TPxvUpv2yakdDnJpn34",
-  "streak_protection": "price_1SwC6wPxvUpv2yakgnMwxU4N",
-  "lifesaver_pack": "price_1SwC7MPxvUpv2yakTuos0NNw",
-  "reward_doubler": "price_1SwC7bPxvUpv2yakG3PVeCfo",
+  // Micro-transacciones €0.50 (mínimo Stripe)
+  "buy_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",           // €0.50 - Continuar Nivel
+  "welcome_pack": "price_1Sx2g2PxvUpv2yakNxaBeR3a",        // €0.50 - Pack Bienvenida
+  "extra_spin": "price_1Sx2gcPxvUpv2yakAQHL5UKW",          // €0.50 - Giro Extra
+  "streak_protection": "price_1Sx2gxPxvUpv2yak7WnJE3Eo",   // €0.50 - Protección Racha
+  "lifesaver_pack": "price_1Sx2hKPxvUpv2yakkBJPimfq",      // €0.50 - Pack Salvavidas
+  "reward_doubler": "price_1Sx2hYPxvUpv2yaknaIPYKzW",      // €0.50 - Duplicador
   // Experience Packs
   "pack_victoria_segura": "price_1SwC7xPxvUpv2yakQ0CmX5uN",
   "pack_racha_infinita": "price_1SwC8APxvUpv2yakGXumP9b1",
@@ -43,8 +45,6 @@ const PRODUCT_PRICES: Record<string, string> = {
   "pack_victoria_segura_pro": "price_1SwC99PxvUpv2yakvtPl1F0r",
   // First day offer
   "first_day_offer": "price_1SwC9OPxvUpv2yakOtw7E4ue",
-  // Welcome pack - first purchase €0.49
-  "welcome_pack": "price_1SwTaTPxvUpv2yakZ5zWpx4n",
 };
 
 serve(async (req) => {

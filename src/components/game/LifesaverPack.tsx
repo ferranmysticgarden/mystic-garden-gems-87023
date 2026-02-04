@@ -23,7 +23,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
     }
   };
 
-  const price = getPrice('lifesaver_pack', '€0.49');
+  const price = getPrice('lifesaver_pack', '€0.50');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm">

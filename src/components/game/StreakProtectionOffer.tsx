@@ -28,7 +28,7 @@ export const StreakProtectionOffer = ({
     }
   };
 
-  const price = getPrice('streak_protection', '€0.49');
+  const price = getPrice('streak_protection', '€0.50');
 
   const getEmotionalMessage = () => {
     if (currentStreak >= 7) {

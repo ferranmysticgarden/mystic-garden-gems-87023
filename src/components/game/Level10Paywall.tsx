@@ -68,7 +68,7 @@ export const Level10Paywall = ({ onPurchaseSuccess }: Level10PaywallProps) => {
             </>
           ) : (
             <>
-              Continuar por 0,49 €
+              Continuar por 0,50 €
             </>
           )}
         </Button>
