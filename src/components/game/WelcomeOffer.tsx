@@ -57,7 +57,7 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
     onDismiss();
   };
 
-  const price = getPrice('welcome_pack', '€0.49');
+  const price = getPrice('welcome_pack', '€0.50');
 
   if (!visible) return null;
 

@@ -16,7 +16,7 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
   const [showPulse, setShowPulse] = useState(false);
   const doubledGems = baseGems * 2;
 
-  const price = getPrice('reward_doubler', '€0.49');
+  const price = getPrice('reward_doubler', '€0.50');
 
   // Countdown timer with urgency
   useEffect(() => {
