@@ -6,13 +6,18 @@ type AnalyticsEventName =
   | 'first_purchase_offer_shown'
   | 'first_purchase_completed'
   | 'defeat_offer_shown'
-  | 'defeat_purchase_completed';
+   | 'defeat_purchase_completed'
+   | 'level10_popup_shown'
+   | 'level10_purchase_success'
+   | 'level10_popup_closed';
 
 interface EventData {
   product?: string;
   price?: number;
   level?: number;
   progress?: number;
+   movesShort?: number;
+   countdown?: number;
 }
 
 /**
@@ -83,3 +88,26 @@ export const hasSeenWelcomeOffer = (): boolean => {
 export const hasCompletedFirstPurchase = (): boolean => {
   return localStorage.getItem('first_purchase_completed') === 'true';
 };
+ 
+ /**
+  * Emit Level 10 specific analytics event
+  * Critical for tracking conversion funnel
+  */
+ export const emitLevel10Event = (
+   eventName: 'level10_popup_shown' | 'level10_purchase_success' | 'level10_popup_closed',
+   data?: { progress?: number; movesShort?: number; countdown?: number }
+ ) => {
+   console.log(`[Level10 Analytics] ${eventName}`, data || {});
+   
+   // Store in localStorage for debugging
+   const events = JSON.parse(localStorage.getItem('level10_events') || '[]');
+   events.push({
+     event: eventName,
+     data,
+     timestamp: new Date().toISOString()
+   });
+   localStorage.setItem('level10_events', JSON.stringify(events.slice(-50))); // Keep last 50 events
+   
+   // También emitir al analytics general
+   emitAnalyticsEvent(eventName, { level: 10, ...data });
+ };

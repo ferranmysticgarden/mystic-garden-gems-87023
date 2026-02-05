@@ -32,7 +32,10 @@ export const LEVELS: Level[] = [
   { id: 7, objective: { type: 'score', target: 'points', count: 1000 }, moves: 23, stars: { one: 1000, two: 1300, three: 1600 }, reward: {} },
   { id: 8, objective: { type: 'collect', target: '🌸', count: 10 }, moves: 22, stars: { one: 10, two: 12, three: 14 }, reward: {} },
   { id: 9, objective: { type: 'collect', target: '🍃', count: 12 }, moves: 23, stars: { one: 12, two: 14, three: 17 }, reward: {} },
-  { id: 10, objective: { type: 'score', target: 'points', count: 1400 }, moves: 22, stars: { one: 1400, two: 1700, three: 2000 }, reward: { gems: 10 } },
+   // NIVEL 10: MURO DE CONVERSIÓN - Diseñado para perder por 1-2 movimientos (90-98% progreso)
+   // Objetivo 1300 puntos con solo 18 movimientos = promedio ~72 pts/mov necesarios
+   // El jugador promedio hace ~65 pts/mov, así que llegará a ~1170 (90% del objetivo)
+   { id: 10, objective: { type: 'score', target: 'points', count: 1300 }, moves: 18, stars: { one: 1300, two: 1600, three: 1900 }, reward: { gems: 10 } },
   
   // Niveles 11-12: Continúa el challenge
   { id: 11, objective: { type: 'collect', target: '🌺', count: 20 }, moves: 19, stars: { one: 20, two: 24, three: 28 }, reward: {} },

@@ -131,6 +131,10 @@ export const GameScreen = ({
           collected,
           productId: 'buy_moves',
         });
+         // Guardar progreso para el popup
+         const progress = getProgressPercentage();
+         setProgressAtLoss(progress);
+         setMovesShortBy(movesNeeded);
         setShowLevel10Paywall(true);
         return; // No mostrar nada más - solo el paywall forzado
       }
@@ -261,6 +265,21 @@ export const GameScreen = ({
     setShowLevel10Paywall(false);
     // El nivel continúa - no es game over
   };
+ 
+   // Handler para cerrar Level10Paywall SIN pagar
+   // Va a pantalla de derrota estándar, NO al menú
+   const handleLevel10Dismiss = () => {
+     setShowLevel10Paywall(false);
+     setGameOver(true);
+     setWon(false);
+     
+     if (!hasPlayedEndSound.current) {
+       hasPlayedEndSound.current = true;
+       backgroundMusic.setScreen('defeat');
+       playLoseSound();
+     }
+     // NO mostrar otras ofertas - derrota limpia
+   };
 
   const getProgress = () => {
     if (level.objective.type === 'score') {
@@ -385,7 +404,12 @@ export const GameScreen = ({
 
         {/* Level 10 Paywall - FORZADO, no se puede cerrar */}
         {showLevel10Paywall && (
-          <Level10Paywall onPurchaseSuccess={handleLevel10Purchase} />
+         <Level10Paywall 
+           onPurchaseSuccess={handleLevel10Purchase}
+           onDismiss={handleLevel10Dismiss}
+           movesShort={movesShortBy}
+           progressPercent={progressAtLoss}
+         />
         )}
 
         {/* Game Over Overlay - only show after all offers are dismissed or if won */}
