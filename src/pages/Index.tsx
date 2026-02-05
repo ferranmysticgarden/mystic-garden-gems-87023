@@ -3,6 +3,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuth } from '@/hooks/useAuth';
 import { usePurchases } from '@/hooks/usePurchases';
+import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
@@ -115,6 +116,41 @@ const Index = () => {
 
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
+  
+  // Estado de pago pendiente (para restaurar después de Stripe)
+  const { pendingState, paymentSuccess, clearPendingState } = usePendingPurchase();
+  
+  // Estado para restaurar el juego después de pago
+  const [restoredGameState, setRestoredGameState] = useState<{
+    moves: number;
+    score: number;
+    collected: Record<string, number>;
+  } | null>(null);
+
+  // Detectar pago exitoso y restaurar estado del nivel
+  useEffect(() => {
+    if (paymentSuccess && pendingState) {
+      console.log('[Index] Pago exitoso detectado, restaurando nivel:', pendingState.levelId);
+      
+      // Seleccionar el nivel donde estaba
+      selectLevel(pendingState.levelId);
+      
+      // Guardar estado para pasar a GameScreen
+      setRestoredGameState({
+        moves: 5, // +5 movimientos comprados
+        score: pendingState.score,
+        collected: pendingState.collected,
+      });
+      
+      // Cambiar a pantalla de juego
+      setScreen('game');
+      
+      // Limpiar estado pendiente
+      clearPendingState();
+      
+      toast.success('¡Pago completado! +5 movimientos');
+    }
+  }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState]);
 
   // Auto-show streak calendar if reward available
   useEffect(() => {
@@ -299,13 +335,27 @@ const Index = () => {
   }
 
   if (screen === 'game') {
+    // Si hay estado restaurado, pasarlo al GameScreen
+    const restoredProps = restoredGameState ? {
+      initialMoves: restoredGameState.moves,
+      initialScore: restoredGameState.score,
+      initialCollected: restoredGameState.collected,
+    } : {};
+    
     return (
       <GameScreen
         level={currentLevel}
-        onWin={handleWin}
-        onLose={handleLose}
+        onWin={(stars, reward) => {
+          setRestoredGameState(null); // Limpiar estado restaurado
+          handleWin(stars, reward);
+        }}
+        onLose={() => {
+          setRestoredGameState(null); // Limpiar estado restaurado
+          handleLose();
+        }}
         onBack={() => setScreen('menu')}
         onShowExitModal={() => setShowExitModal(true)}
+        {...restoredProps}
       />
     );
   }

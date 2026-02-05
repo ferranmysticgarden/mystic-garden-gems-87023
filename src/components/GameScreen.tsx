@@ -13,19 +13,34 @@ import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePurchaseGate } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
+import { usePendingPurchase } from '@/hooks/usePendingPurchase';
+
 interface GameScreenProps {
   level: Level;
   onWin: (stars: number, reward: { gems?: number }) => void;
   onLose: () => void;
   onBack: () => void;
   onShowExitModal: () => void;
+  // Para restaurar estado después de pago
+  initialMoves?: number;
+  initialScore?: number;
+  initialCollected?: Record<string, number>;
 }
 
-export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: GameScreenProps) => {
+export const GameScreen = ({ 
+  level, 
+  onWin, 
+  onLose, 
+  onBack, 
+  onShowExitModal,
+  initialMoves,
+  initialScore,
+  initialCollected,
+}: GameScreenProps) => {
   const { t } = useLanguage();
-  const [moves, setMoves] = useState(level.moves);
-  const [score, setScore] = useState(0);
-  const [collected, setCollected] = useState<Record<string, number>>({});
+  const [moves, setMoves] = useState(initialMoves ?? level.moves);
+  const [score, setScore] = useState(initialScore ?? 0);
+  const [collected, setCollected] = useState<Record<string, number>>(initialCollected ?? {});
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [showCloseDefeatOffer, setShowCloseDefeatOffer] = useState(false);
@@ -42,6 +57,7 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
   
   // Hook para verificar si ya compró
   const { hasPurchasedOnce } = usePurchaseGate();
+  const { savePendingState } = usePendingPurchase();
   
   // Use mystical fairy sounds
   const { playVictorySound, playLoseSound } = useMysticSounds();
@@ -107,6 +123,14 @@ export const GameScreen = ({ level, onWin, onLose, onBack, onShowExitModal }: Ga
       
       // MURO NIVEL 10: Si es nivel 10 y NO ha comprado nunca, mostrar paywall forzado
       if (level.id === 10 && !hasPurchasedOnce) {
+        // Guardar estado ANTES de mostrar el paywall
+        savePendingState({
+          levelId: level.id,
+          moves: 0,
+          score,
+          collected,
+          productId: 'buy_moves',
+        });
         setShowLevel10Paywall(true);
         return; // No mostrar nada más - solo el paywall forzado
       }
