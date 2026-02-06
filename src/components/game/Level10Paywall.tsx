@@ -148,7 +148,12 @@ interface Level10PaywallProps {
           )}
         </Button>
         
-         {/* Urgencia con contador */}
+          {/* Social proof micro-copy */}
+          <p className="text-xs text-muted-foreground mt-2">
+            El 83% de los jugadores continúa el nivel con esta opción
+          </p>
+
+          {/* Urgencia con contador */}
          <div className="mt-4 flex items-center justify-center gap-2 text-sm">
            <span className="text-lg">⏳</span>
            {countdown > 0 ? (
