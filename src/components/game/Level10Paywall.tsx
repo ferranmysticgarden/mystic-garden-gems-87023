@@ -130,23 +130,31 @@ interface Level10PaywallProps {
            </p>
          </div>
         
-         {/* Botón CTA */}
-        <Button
-          onClick={handleBuy}
-          disabled={isLoading}
-           className="w-full py-5 text-lg font-bold gradient-gold shadow-gold text-foreground rounded-2xl transition-all hover:scale-105"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-              Procesando...
-            </>
-          ) : (
-            <>
-              Continuar por 0,50 €
-            </>
-          )}
-        </Button>
+          {/* Anclaje de pérdida */}
+          <p className="text-xs text-muted-foreground mb-3">
+            Si sales ahora, este progreso se perderá
+          </p>
+
+          {/* Botón CTA */}
+         <Button
+           onClick={handleBuy}
+           disabled={isLoading}
+            className="w-full py-5 text-lg font-bold gradient-gold shadow-gold text-foreground rounded-2xl transition-all hover:scale-105"
+         >
+           {isLoading ? (
+             <>
+               <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+               Procesando...
+             </>
+           ) : (
+             'Terminar este nivel'
+           )}
+         </Button>
+
+          {/* Precio visible debajo del botón */}
+          <p className="text-sm text-muted-foreground mt-2">
+            0,50 € · menos que un café
+          </p>
         
           {/* Social proof micro-copy */}
           <p className="text-xs text-muted-foreground mt-2">
