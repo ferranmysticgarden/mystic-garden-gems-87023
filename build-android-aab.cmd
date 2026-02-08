@@ -82,6 +82,14 @@ if not exist "android\gradlew.bat" (
   )
 )
 
+REM --- Step 3.2.1/4: Ensure gradle.properties has required flags ---
+echo [3.2.1/4] Configurando gradle.properties...
+(
+  echo org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
+  echo android.useAndroidX=true
+  echo android.enableJetifier=true
+) > android\gradle.properties
+
 REM --- Step 3.3/4: Generate Android icons ---
 echo [3.3/4] Generando iconos Android...
 powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\generate-android-icons.ps1"
