@@ -4,14 +4,14 @@ param(
   [Parameter(Mandatory = $true)] [string] $AppId,
   [Parameter(Mandatory = $true)] [int] $VersionCode,
   [Parameter(Mandatory = $true)] [string] $VersionName,
-  # Capacitor v7 plugins (e.g. @capacitor/app) require minSdk >= 24.
   [Parameter(Mandatory = $false)] [int] $MinSdk = 24,
-  # Google Play requires targetSdk >= 35 as of August 2024
   [Parameter(Mandatory = $false)] [int] $TargetSdk = 35
 )
 
 try {
-  $content = Get-Content -LiteralPath $GradleFile -Raw -ErrorAction Stop
+  # LINE-BY-LINE reading to avoid out-of-memory on low-RAM PCs
+  $lines = Get-Content -LiteralPath $GradleFile -ErrorAction Stop
+  $content = $lines -join "`r`n"
 
   if ($Kind -eq 'kts') {
     $content = [regex]::Replace($content, 'namespace\s*=\s*"[^"]+"', ('namespace = "' + $AppId + '"'), 1)
@@ -19,36 +19,22 @@ try {
     $content = [regex]::Replace($content, 'versionCode\s*=\s*\d+', ('versionCode = ' + $VersionCode), 1)
     $content = [regex]::Replace($content, 'versionName\s*=\s*"[^"]+"', ('versionName = "' + $VersionName + '"'), 1)
 
-    # targetSdk (Google Play requires 35+)
+    # targetSdk
     $before = $content
     $content = [regex]::Replace($content, 'targetSdk\s*=\s*\d+', ('targetSdk = ' + $TargetSdk), 1)
     if ($before -eq $content) {
-      $content = [regex]::Replace(
-        $content,
-        '(defaultConfig\s*\{)',
-        ('$1' + "`r`n        targetSdk = " + $TargetSdk),
-        1
-      )
+      $content = [regex]::Replace($content, '(defaultConfig\s*\{)', ('$1' + "`r`n        targetSdk = " + $TargetSdk), 1)
     }
 
     # minSdk
     $before = $content
     $content = [regex]::Replace($content, 'minSdk\s*=\s*\d+', ('minSdk = ' + $MinSdk), 1)
     if ($before -eq $content) {
-      # Fallback: inject into defaultConfig block if not present
-      $content = [regex]::Replace(
-        $content,
-        '(defaultConfig\s*\{)',
-        ('$1' + "`r`n        minSdk = " + $MinSdk),
-        1
-      )
+      $content = [regex]::Replace($content, '(defaultConfig\s*\{)', ('$1' + "`r`n        minSdk = " + $MinSdk), 1)
     }
 
-    # ============================================
-    # FIX: Force AndroidX versions compatible with AGP 8.2.1 / compileSdk 34
-    # (avoid AndroidX versions that require AGP >= 8.9.1)
-    # ============================================
-    $forceBlockKts = @"
+    # Force AndroidX versions
+    $forceBlock = @"
 
 /* MG_FORCE_ANDROIDX_START */
 configurations.all {
@@ -62,61 +48,40 @@ configurations.all {
 /* MG_FORCE_ANDROIDX_END */
 "@
 
-    if ($content -match '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/') {
-      $content = $content -replace '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', $forceBlockKts
-    } else {
-      if ($content -match 'capacitor\.build\.gradle') {
-        $content = [regex]::Replace(
-          $content,
-          '(?m)^.*capacitor\.build\.gradle.*$',
-          ($forceBlockKts + "`r`n`r`n" + '$0'),
-          1
-        )
-      } else {
-        $content = $content + "`r`n" + $forceBlockKts + "`r`n"
-      }
-    }
+    # Remove old block if exists
+    $content = [regex]::Replace($content, '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', '')
+
+    # Append at end
+    $content = $content.TrimEnd() + "`r`n" + $forceBlock + "`r`n"
+
   } else {
+    # Groovy DSL
     $content = [regex]::Replace($content, 'namespace\s+"[^"]+"', ('namespace "' + $AppId + '"'), 1)
     $content = [regex]::Replace($content, 'applicationId\s+"[^"]+"', ('applicationId "' + $AppId + '"'), 1)
     $content = [regex]::Replace($content, 'versionCode\s+\d+', ('versionCode ' + $VersionCode), 1)
     $content = [regex]::Replace($content, 'versionName\s+"[^"]+"', ('versionName "' + $VersionName + '"'), 1)
 
-    # targetSdk (Google Play requires 35+)
+    # targetSdk
     $before = $content
     $content = [regex]::Replace($content, 'targetSdk\s+\d+', ('targetSdk ' + $TargetSdk), 1)
     if ($before -eq $content) {
       $content = [regex]::Replace($content, 'targetSdkVersion\s+\d+', ('targetSdkVersion ' + $TargetSdk), 1)
     }
     if ($before -eq $content) {
-      $content = [regex]::Replace(
-        $content,
-        '(defaultConfig\s*\{)',
-        ('$1' + "`r`n        targetSdk " + $TargetSdk),
-        1
-      )
+      $content = [regex]::Replace($content, '(defaultConfig\s*\{)', ('$1' + "`r`n        targetSdk " + $TargetSdk), 1)
     }
 
-    # minSdk (support both modern `minSdk 23` and legacy `minSdkVersion 23`)
+    # minSdk
     $before = $content
     $content = [regex]::Replace($content, 'minSdk\s+\d+', ('minSdk ' + $MinSdk), 1)
     if ($before -eq $content) {
       $content = [regex]::Replace($content, 'minSdkVersion\s+\d+', ('minSdkVersion ' + $MinSdk), 1)
     }
     if ($before -eq $content) {
-      # Fallback: inject into defaultConfig block if not present
-      $content = [regex]::Replace(
-        $content,
-        '(defaultConfig\s*\{)',
-        ('$1' + "`r`n        minSdk " + $MinSdk),
-        1
-      )
+      $content = [regex]::Replace($content, '(defaultConfig\s*\{)', ('$1' + "`r`n        minSdk " + $MinSdk), 1)
     }
 
-    # ============================================
-    # FIX: Force AndroidX versions compatible with AGP 8.2.1 / compileSdk 34
-    # (avoid AndroidX versions that require AGP >= 8.9.1)
-    # ============================================
+    # Force AndroidX versions
     $forceBlock = @"
 
 /* MG_FORCE_ANDROIDX_START */
@@ -131,22 +96,11 @@ configurations.all {
 /* MG_FORCE_ANDROIDX_END */
 "@
 
-    if ($content -match '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/') {
-      $content = $content -replace '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', $forceBlock
-    } else {
-      # IMPORTANT: PowerShell does NOT support \\" escaping inside double-quoted strings.
-      # Use a single-quoted string and escape the single-quote by doubling it.
-      if ($content -match 'apply from:\s*[\''"]capacitor\.build\.gradle[\''"]') {
-        $content = [regex]::Replace(
-          $content,
-          '(?m)^\s*apply from:\s*[\''"]capacitor\.build\.gradle[\''"]\s*$',
-          ($forceBlock + "`r`n`r`n" + '$0'),
-          1
-        )
-      } else {
-        $content = $content + "`r`n" + $forceBlock + "`r`n"
-      }
-    }
+    # Remove old block if exists
+    $content = [regex]::Replace($content, '(?s)/\* MG_FORCE_ANDROIDX_START \*/.*?/\* MG_FORCE_ANDROIDX_END \*/', '')
+
+    # Append at end
+    $content = $content.TrimEnd() + "`r`n" + $forceBlock + "`r`n"
   }
 
   [System.IO.File]::WriteAllText($GradleFile, $content)

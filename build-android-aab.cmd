@@ -224,7 +224,7 @@ REM - Si no, pide por consola.
 if "%STORE_PWD%"=="" set /p STORE_PWD="Contrasena keystore: "
 if "%KEY_PWD%"=="" set /p KEY_PWD="Contrasena key: "
 
-call gradlew.bat :app:clean :app:bundleRelease ^
+call gradlew.bat clean :app:bundleRelease ^
   -Pandroid.injected.signing.store.file="%STORE_PATH%" ^
   -Pandroid.injected.signing.store.password="%STORE_PWD%" ^
   -Pandroid.injected.signing.key.alias="mystic-garden" ^

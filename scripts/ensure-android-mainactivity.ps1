@@ -15,13 +15,11 @@ try {
   $manifestPath = Join-Path -Path $androidRoot -ChildPath 'app\src\main\AndroidManifest.xml'
   $javaRoot = Join-Path -Path $androidRoot -ChildPath 'app\src\main\java'
 
-  # Build path for the target package
   $pkgPath = ($AppId -split '\.') -join '\'
   $targetDir = Join-Path -Path $javaRoot -ChildPath $pkgPath
   Ensure-Dir $targetDir
 
   $mainActivityJava = Join-Path -Path $targetDir -ChildPath 'MainActivity.java'
-  $mainActivityKt = Join-Path -Path $targetDir -ChildPath 'MainActivity.kt'
 
   $javaContent = @"
 package $AppId;
@@ -31,15 +29,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {}
 "@
 
-  $kotlinContent = @"
-package $AppId
-
-import com.getcapacitor.BridgeActivity
-
-class MainActivity : BridgeActivity()
-"@
-
-  # --- STEP 1: Delete ALL existing MainActivity files from any package ---
+  # --- STEP 1: Delete ALL existing MainActivity files ---
   Write-Host 'Buscando y eliminando MainActivity existentes...'
   $existingMainActivities = Get-ChildItem -Path $javaRoot -Recurse -Include 'MainActivity.java','MainActivity.kt' -ErrorAction SilentlyContinue
   foreach ($f in $existingMainActivities) {
@@ -47,42 +37,38 @@ class MainActivity : BridgeActivity()
     Remove-Item -LiteralPath $f.FullName -Force
   }
 
-  # --- STEP 2: Create MainActivity in correct package ---
+  # --- STEP 2: Create MainActivity ---
   Write-Host ('Creando MainActivity en: ' + $targetDir)
   [System.IO.File]::WriteAllText($mainActivityJava, $javaContent)
   Write-Host ('OK: MainActivity.java creado en ' + $mainActivityJava)
 
-  # --- STEP 3: Update AndroidManifest.xml ---
+  # --- STEP 3: Update AndroidManifest.xml (LINE-BY-LINE) ---
   if (Test-Path -LiteralPath $manifestPath) {
-    $m = Get-Content -LiteralPath $manifestPath -Raw
+    $mLines = Get-Content -LiteralPath $manifestPath
+    $m = $mLines -join "`r`n"
 
-    # Replace package attribute in manifest tag
     $m = [regex]::Replace($m, 'package="[^"]+"', ('package="' + $AppId + '"'))
 
-    # Normalize launcher activity name to use FQCN (fully qualified class name)
     $fqcn = $AppId + '.MainActivity'
     $m = [regex]::Replace($m, 'android:name="[^"]*MainActivity"', ('android:name="' + $fqcn + '"'))
 
-    # Ensure android:exported="true" (Android 12+) and launchMode="singleTask" (deep links) on MainActivity
+    # Ensure exported and launchMode
     $pattern = '(<activity\b(?:(?!>).)*android:name="[^"]*MainActivity"(?:(?!>).)*)>'
     $re = New-Object System.Text.RegularExpressions.Regex($pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $evaluator = [System.Text.RegularExpressions.MatchEvaluator]{
       param($match)
       $tag = $match.Value
-
       if ($tag -notmatch 'android:exported\s*=') {
         $tag = ($tag -replace '>$', ' android:exported="true">')
       }
-
       if ($tag -notmatch 'android:launchMode\s*=') {
         $tag = ($tag -replace '>$', ' android:launchMode="singleTask">')
       }
-
       return $tag
     }
     $m = $re.Replace($m, $evaluator, 1)
 
-    # Ensure deep link intent-filter for OAuth callback (so the browser returns to the app)
+    # Deep link intent-filter
     $scheme = $AppId
     $schemePattern = 'android:scheme\s*=\s*"' + [regex]::Escape($scheme) + '"'
     if ($m -notmatch $schemePattern) {
@@ -94,7 +80,6 @@ class MainActivity : BridgeActivity()
           <data android:scheme="$scheme" android:host="callback" />
         </intent-filter>
 "@
-
       $actPattern = '(<activity\b(?:(?!</activity>).)*android:name="[^"]*MainActivity"(?:(?!</activity>).)*?)(</activity>)'
       $actRe = New-Object System.Text.RegularExpressions.Regex($actPattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
       $actEval = [System.Text.RegularExpressions.MatchEvaluator]{
@@ -116,7 +101,7 @@ class MainActivity : BridgeActivity()
     Write-Host ('WARN: No existe AndroidManifest.xml aun en: ' + $manifestPath)
   }
 
-  # --- STEP 4: Verify the file exists ---
+  # --- STEP 4: Verify ---
   if (Test-Path -LiteralPath $mainActivityJava) {
     Write-Host 'VERIFICACION: MainActivity.java existe correctamente.'
     Get-Content -LiteralPath $mainActivityJava | Write-Host
