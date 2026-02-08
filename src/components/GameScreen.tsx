@@ -9,6 +9,8 @@ import { ComboMultiplier } from './game/ComboMultiplier';
 import { BuyMovesOffer } from './game/BuyMovesOffer';
 import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { Level10Paywall } from './game/Level10Paywall';
+import { Level6Offer } from './game/Level6Offer';
+import { emitAnalyticsEvent } from '@/lib/analytics';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePurchaseGate } from '@/hooks/usePurchaseGate';
@@ -48,6 +50,7 @@ export const GameScreen = ({
   const [showBuyMovesOffer, setShowBuyMovesOffer] = useState(false);
   const [showDefeatPacksOffer, setShowDefeatPacksOffer] = useState(false);
   const [showLevel10Paywall, setShowLevel10Paywall] = useState(false);
+  const [showLevel6Offer, setShowLevel6Offer] = useState(false);
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
@@ -138,6 +141,18 @@ export const GameScreen = ({
          setMovesShortBy(movesNeeded);
         setShowLevel10Paywall(true);
         return; // No mostrar nada más - solo el paywall forzado
+      }
+      
+      // OFERTA NIVEL 6: primera derrota con ≥80% progreso
+      const level6AlreadyShown = localStorage.getItem('level6_offer_dismissed') === 'true';
+      if (level.id === 6 && !level6AlreadyShown) {
+        const progress = getProgressPercentage();
+        if (progress >= 80) {
+          setProgressAtLoss(progress);
+          emitAnalyticsEvent('level6_popup_shown');
+          setShowLevel6Offer(true);
+          return; // No mostrar nada más - solo la oferta nivel 6
+        }
       }
       
       // Show buy moves offer BEFORE defeat (para otros niveles)
@@ -284,6 +299,27 @@ export const GameScreen = ({
      // NO mostrar otras ofertas - derrota limpia
    };
 
+  // Handler para compra exitosa en Level6Offer
+  const handleLevel6Purchase = () => {
+    setMoves(3); // +3 movimientos
+    setShowLevel6Offer(false);
+    // El nivel continúa - no es game over
+  };
+
+  // Handler para cerrar Level6Offer SIN pagar
+  const handleLevel6Dismiss = () => {
+    setShowLevel6Offer(false);
+    setGameOver(true);
+    setWon(false);
+    
+    if (!hasPlayedEndSound.current) {
+      hasPlayedEndSound.current = true;
+      backgroundMusic.setScreen('defeat');
+      playLoseSound();
+    }
+    // Derrota normal, sin otra oferta inmediata
+  };
+
   const getProgress = () => {
     if (level.objective.type === 'score') {
       return `${score} / ${level.objective.count}`;
@@ -405,6 +441,14 @@ export const GameScreen = ({
         />
         )}
 
+        {/* Level 6 Offer - oferta neutra primera derrota cercana */}
+        {showLevel6Offer && (
+          <Level6Offer
+            onBuy={handleLevel6Purchase}
+            onDismiss={handleLevel6Dismiss}
+          />
+        )}
+
         {/* Level 10 Paywall - FORZADO, no se puede cerrar */}
         {showLevel10Paywall && (
          <Level10Paywall 
@@ -416,7 +460,7 @@ export const GameScreen = ({
         )}
 
         {/* Game Over Overlay - only show after all offers are dismissed or if won */}
-        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && (
+        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
               <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>
