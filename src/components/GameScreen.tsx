@@ -121,8 +121,9 @@ export const GameScreen = ({
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
-      // MURO NIVEL 10: Si es nivel 10 y NO ha comprado nunca, mostrar paywall forzado
-      if (level.id === 10 && !hasPurchasedOnce) {
+      // MURO NIVEL 10: Solo en la PRIMERA derrota (si no ha comprado y no se ha mostrado antes)
+      const paywallAlreadyShown = localStorage.getItem('level10_paywall_dismissed') === 'true';
+      if (level.id === 10 && !hasPurchasedOnce && !paywallAlreadyShown) {
         // Guardar estado ANTES de mostrar el paywall
         savePendingState({
           levelId: level.id,
@@ -269,6 +270,8 @@ export const GameScreen = ({
    // Handler para cerrar Level10Paywall SIN pagar
    // Va a pantalla de derrota estándar, NO al menú
    const handleLevel10Dismiss = () => {
+     // Marcar como mostrado para NO volver a mostrarlo en reintentos
+     localStorage.setItem('level10_paywall_dismissed', 'true');
      setShowLevel10Paywall(false);
      setGameOver(true);
      setWon(false);
