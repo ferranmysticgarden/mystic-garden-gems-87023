@@ -15,15 +15,15 @@ try {
   # ============================================
   if (Test-Path -LiteralPath $manifestPath) {
     Write-Host 'Leyendo AndroidManifest.xml...'
-    $manifest = Get-Content -LiteralPath $manifestPath -Raw
+    # LINE-BY-LINE to avoid memory issues
+    $manifestLines = Get-Content -LiteralPath $manifestPath
+    $manifest = $manifestLines -join "`r`n"
 
     $billingPermission = 'com.android.vending.BILLING'
     $adIdPermission = 'com.google.android.gms.permission.AD_ID'
 
-    # Check and inject BILLING permission
     if ($manifest -notmatch [regex]::Escape($billingPermission)) {
       Write-Host 'Inyectando permiso BILLING...'
-      # Insert after INTERNET permission or after opening manifest tag
       if ($manifest -match '<uses-permission android:name="android.permission.INTERNET"') {
         $manifest = $manifest -replace `
           '(<uses-permission android:name="android.permission.INTERNET"\s*/?>)', `
@@ -38,7 +38,6 @@ try {
       Write-Host 'OK: Permiso BILLING ya existe.'
     }
 
-    # Check and inject AD_ID permission
     if ($manifest -notmatch [regex]::Escape($adIdPermission)) {
       Write-Host 'Inyectando permiso AD_ID...'
       if ($manifest -match [regex]::Escape($billingPermission)) {
@@ -63,57 +62,42 @@ try {
   $billingDep = "implementation 'com.android.billingclient:billing:7.1.1'"
   $billingDepKts = 'implementation("com.android.billingclient:billing:7.1.1")'
 
-  # Check for Kotlin DSL first
-  if (Test-Path -LiteralPath $gradleKtsPath) {
-    Write-Host 'Leyendo build.gradle.kts...'
-    $gradle = Get-Content -LiteralPath $gradleKtsPath -Raw
+  # Determine which file to use
+  $useKts = Test-Path -LiteralPath $gradleKtsPath
+  $activeGradlePath = if ($useKts) { $gradleKtsPath } else { $gradlePath }
+  $activeDep = if ($useKts) { $billingDepKts } else { $billingDep }
+  $label = if ($useKts) { 'build.gradle.kts' } else { 'build.gradle' }
+
+  if (Test-Path -LiteralPath $activeGradlePath) {
+    Write-Host ('Leyendo ' + $label + '...')
+    # LINE-BY-LINE to avoid memory issues
+    $gradleLines = Get-Content -LiteralPath $activeGradlePath
+    $gradle = $gradleLines -join "`r`n"
 
     if ($gradle -notmatch 'com\.android\.billingclient') {
-      Write-Host 'Inyectando billing library en build.gradle.kts...'
-      # Find dependencies block and add billing
+      Write-Host ('Inyectando billing library en ' + $label + '...')
       if ($gradle -match 'dependencies\s*\{') {
-        $gradle = $gradle -replace '(dependencies\s*\{)', ('$1' + "`r`n    " + $billingDepKts)
+        $gradle = $gradle -replace '(dependencies\s*\{)', ('$1' + "`r`n    " + $activeDep)
         Write-Host 'OK: Billing library inyectada.'
       } else {
-        Write-Host 'WARN: No encontre bloque dependencies en build.gradle.kts'
+        Write-Host ('WARN: No encontre bloque dependencies en ' + $label)
       }
     } else {
-      Write-Host 'OK: Billing library ya existe en build.gradle.kts'
+      Write-Host ('OK: Billing library ya existe en ' + $label)
     }
 
-    [System.IO.File]::WriteAllText($gradleKtsPath, $gradle, (New-Object System.Text.UTF8Encoding($false)))
-  }
-  # Check for Groovy DSL
-  elseif (Test-Path -LiteralPath $gradlePath) {
-    Write-Host 'Leyendo build.gradle...'
-    $gradle = Get-Content -LiteralPath $gradlePath -Raw
-
-    if ($gradle -notmatch 'com\.android\.billingclient') {
-      Write-Host 'Inyectando billing library en build.gradle...'
-      # Find dependencies block and add billing
-      if ($gradle -match 'dependencies\s*\{') {
-        $gradle = $gradle -replace '(dependencies\s*\{)', ('$1' + "`r`n    " + $billingDep)
-        Write-Host 'OK: Billing library inyectada.'
-      } else {
-        Write-Host 'WARN: No encontre bloque dependencies en build.gradle'
-      }
-    } else {
-      Write-Host 'OK: Billing library ya existe en build.gradle'
-    }
-
-    [System.IO.File]::WriteAllText($gradlePath, $gradle, (New-Object System.Text.UTF8Encoding($false)))
-  }
-  else {
-    throw 'No encontre build.gradle ni build.gradle.kts'
+    [System.IO.File]::WriteAllText($activeGradlePath, $gradle, (New-Object System.Text.UTF8Encoding($false)))
+  } else {
+    throw ('No encontre ' + $label)
   }
 
   # ============================================
-  # STEP 3: Verification
+  # STEP 3: Verification (re-read line-by-line)
   # ============================================
   Write-Host ''
   Write-Host '=== VERIFICACION BILLING ==='
   
-  $manifestCheck = Get-Content -LiteralPath $manifestPath -Raw
+  $manifestCheck = (Get-Content -LiteralPath $manifestPath) -join "`r`n"
   if ($manifestCheck -match [regex]::Escape($billingPermission)) {
     Write-Host 'PASS: AndroidManifest.xml contiene permiso BILLING'
   } else {
@@ -121,12 +105,12 @@ try {
     exit 1
   }
 
-  $gradleCheckPath = if (Test-Path $gradleKtsPath) { $gradleKtsPath } else { $gradlePath }
-  $gradleCheck = Get-Content -LiteralPath $gradleCheckPath -Raw
+  # Re-read the SAME file we just wrote to (not the other one)
+  $gradleCheck = (Get-Content -LiteralPath $activeGradlePath) -join "`r`n"
   if ($gradleCheck -match 'com\.android\.billingclient') {
-    Write-Host 'PASS: build.gradle contiene billing library'
+    Write-Host ('PASS: ' + $label + ' contiene billing library')
   } else {
-    Write-Host 'FAIL: build.gradle NO contiene billing library'
+    Write-Host ('FAIL: ' + $label + ' NO contiene billing library')
     exit 1
   }
 
