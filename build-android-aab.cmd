@@ -94,21 +94,35 @@ if errorlevel 1 (
 REM --- Step 3.5/4: Patch version ---
 echo [3.5/4] Parcheando version en build.gradle...
 
-REM IMPORTANTE: Verificar .kts PRIMERO porque Gradle lo usa con prioridad
+REM Detectar gradle file (kts tiene prioridad)
+set "GRADLE_FILE="
+set "GRADLE_KIND="
+
 if exist "android\app\build.gradle.kts" (
   set "GRADLE_FILE=android\app\build.gradle.kts"
   set "GRADLE_KIND=kts"
-  REM Eliminar el groovy viejo si existe para evitar conflictos
-  if exist "android\app\build.gradle" del /f "android\app\build.gradle"
-) else (
-  if exist "android\app\build.gradle" (
+)
+if "%GRADLE_FILE%"=="" if exist "android\app\build.gradle" (
+  set "GRADLE_FILE=android\app\build.gradle"
+  set "GRADLE_KIND=groovy"
+)
+if "%GRADLE_FILE%"=="" (
+  echo ERROR: No encuentro build.gradle ni build.gradle.kts
+  echo Ejecutando cap sync para regenerar...
+  call npx cap sync android
+  if exist "android\app\build.gradle.kts" (
+    set "GRADLE_FILE=android\app\build.gradle.kts"
+    set "GRADLE_KIND=kts"
+  )
+  if exist "android\app\build.gradle" if "%GRADLE_FILE%"=="" (
     set "GRADLE_FILE=android\app\build.gradle"
     set "GRADLE_KIND=groovy"
-  ) else (
-    echo ERROR: No encuentro build.gradle
-    pause
-    exit /b 1
   )
+)
+if "%GRADLE_FILE%"=="" (
+  echo ERROR FATAL: No se pudo generar build.gradle
+  pause
+  exit /b 1
 )
 
 echo Parcheando archivo: %GRADLE_FILE%
