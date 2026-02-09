@@ -11,13 +11,13 @@ const firebaseConfig = {
   measurementId: "G-Q7E8266574"
 };
 
-const app = initializeApp(firebaseConfig);
-
 let analytics: Analytics | null = null;
+
 try {
+  const app = initializeApp(firebaseConfig);
   analytics = getAnalytics(app);
 } catch (e) {
-  console.warn("[Firebase] Analytics not available in this environment", e);
+  console.warn("[Firebase] Firebase/Analytics not available in this environment", e);
 }
 
 export { analytics };
