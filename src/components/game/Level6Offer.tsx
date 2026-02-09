@@ -4,8 +4,6 @@ import { Progress } from '@/components/ui/progress';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { emitAnalyticsEvent } from '@/lib/analytics';
-import { logEvent } from 'firebase/analytics';
-import { analytics } from '@/lib/firebase';
 
 interface Level6OfferProps {
   onBuy: () => void;
@@ -21,16 +19,9 @@ interface Level6OfferProps {
 export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6OfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
 
-  // Emitir evento al renderizarse (garantiza que Firebase lo recibe)
+  // Emitir evento al renderizarse
   useEffect(() => {
-    // Debug temporal — eliminar tras confirmar en Firebase Realtime
-    if (analytics) {
-      try {
-        logEvent(analytics, 'debug_level6_reached');
-      } catch (e) {
-        console.warn('[Level6] debug event failed', e);
-      }
-    }
+    emitAnalyticsEvent('debug_level6_reached');
     emitAnalyticsEvent('level6_popup_shown', { level: 6, progress: progressPercent });
   }, [progressPercent]);
 
