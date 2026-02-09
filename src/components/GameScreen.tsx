@@ -446,6 +446,7 @@ export const GameScreen = ({
           <Level6Offer
             onBuy={handleLevel6Purchase}
             onDismiss={handleLevel6Dismiss}
+            progressPercent={progressAtLoss}
           />
         )}
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { emitAnalyticsEvent } from '@/lib/analytics';
@@ -7,6 +7,7 @@ import { emitAnalyticsEvent } from '@/lib/analytics';
 interface Level6OfferProps {
   onBuy: () => void;
   onDismiss: () => void;
+  progressPercent?: number;
 }
 
 /**
@@ -14,7 +15,7 @@ interface Level6OfferProps {
  * Se muestra solo en la PRIMERA derrota con ≥80% de progreso.
  * Recompensa: +3 movimientos por €0.50
  */
-export const Level6Offer = ({ onBuy, onDismiss }: Level6OfferProps) => {
+export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6OfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
 
   const handleBuy = async () => {
@@ -55,10 +56,25 @@ export const Level6Offer = ({ onBuy, onDismiss }: Level6OfferProps) => {
             Estuviste muy cerca
           </h2>
 
-          {/* Subtítulo */}
-          <p className="text-purple-200 text-sm mb-5">
-            Con unos pocos movimientos más lo superas
+          {/* Refuerzo emocional */}
+          <p className="text-purple-300/90 text-xs mb-3 italic">
+            Ya has hecho casi todo el trabajo
           </p>
+
+          {/* Barra de progreso visual */}
+          <div className="mb-5">
+            <div className="flex justify-between text-xs text-purple-300 mb-1">
+              <span>Tu progreso</span>
+              <span className="font-bold text-amber-400">{Math.round(progressPercent)}%</span>
+            </div>
+            <Progress 
+              value={progressPercent} 
+              className="h-4 bg-white/10 border border-white/10 [&>div]:bg-gradient-to-r [&>div]:from-emerald-500 [&>div]:to-amber-400"
+            />
+            <p className="text-purple-200 text-sm mt-2">
+              Con unos pocos movimientos más lo superas
+            </p>
+          </div>
 
           {/* Beneficio */}
           <div className="bg-white/10 rounded-xl p-4 mb-5">
