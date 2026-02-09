@@ -1,6 +1,9 @@
 /**
  * Analytics events for monetization tracking
+ * Firebase Analytics integration — real logEvent() calls
  */
+import { logEvent } from "firebase/analytics";
+import { analytics } from "./firebase";
 
 type AnalyticsEventName = 
   | 'first_purchase_offer_shown'
@@ -24,24 +27,28 @@ interface EventData {
 }
 
 /**
- * Emit an analytics event
- * In production, this would send to your analytics provider (Firebase, Mixpanel, etc.)
+ * Emit an analytics event to Firebase Analytics
  */
 export const emitAnalyticsEvent = (eventName: AnalyticsEventName, data?: EventData) => {
   console.log(`[Analytics] ${eventName}`, data || {});
   
-  // Store in localStorage for debugging
+  // Send to Firebase Analytics
+  if (analytics) {
+    try {
+      logEvent(analytics, eventName, data || {});
+    } catch (e) {
+      console.warn("[Analytics] Failed to send event", e);
+    }
+  }
+  
+  // Keep localStorage for local debugging
   const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
   events.push({
     event: eventName,
     data,
     timestamp: new Date().toISOString()
   });
-  localStorage.setItem('analytics_events', JSON.stringify(events.slice(-100))); // Keep last 100 events
-  
-  // TODO: In production, send to your analytics provider
-  // Example: firebase.analytics().logEvent(eventName, data);
-  // Example: mixpanel.track(eventName, data);
+  localStorage.setItem('analytics_events', JSON.stringify(events.slice(-100)));
 };
 
 /**
@@ -96,21 +103,21 @@ export const hasCompletedFirstPurchase = (): boolean => {
   * Emit Level 10 specific analytics event
   * Critical for tracking conversion funnel
   */
- export const emitLevel10Event = (
-   eventName: 'level10_popup_shown' | 'level10_purchase_success' | 'level10_popup_closed',
-   data?: { progress?: number; movesShort?: number; countdown?: number }
- ) => {
-   console.log(`[Level10 Analytics] ${eventName}`, data || {});
-   
-   // Store in localStorage for debugging
-   const events = JSON.parse(localStorage.getItem('level10_events') || '[]');
-   events.push({
-     event: eventName,
-     data,
-     timestamp: new Date().toISOString()
-   });
-   localStorage.setItem('level10_events', JSON.stringify(events.slice(-50))); // Keep last 50 events
-   
-   // También emitir al analytics general
-   emitAnalyticsEvent(eventName, { level: 10, ...data });
- };
+export const emitLevel10Event = (
+    eventName: 'level10_popup_shown' | 'level10_purchase_success' | 'level10_popup_closed',
+    data?: { progress?: number; movesShort?: number; countdown?: number }
+  ) => {
+    console.log(`[Level10 Analytics] ${eventName}`, data || {});
+    
+    // localStorage for local debugging
+    const events = JSON.parse(localStorage.getItem('level10_events') || '[]');
+    events.push({
+      event: eventName,
+      data,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('level10_events', JSON.stringify(events.slice(-50)));
+    
+    // Emitir al analytics general (que ahora envía a Firebase)
+    emitAnalyticsEvent(eventName, { level: 10, ...data });
+  };
