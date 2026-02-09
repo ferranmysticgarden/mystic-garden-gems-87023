@@ -15,7 +15,8 @@ type AnalyticsEventName =
    | 'level10_popup_closed'
    | 'level6_popup_shown'
    | 'level6_purchase_success'
-   | 'level6_popup_closed';
+   | 'level6_popup_closed'
+   | 'debug_level6_reached';
 
 interface EventData {
   product?: string;
