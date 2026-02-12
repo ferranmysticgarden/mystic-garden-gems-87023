@@ -28,6 +28,10 @@ if not "%MG_VERSION_CODE%"=="" (
   set "TARGET_VERSION_CODE=%MG_VERSION_CODE%"
 ) else (
   set "TARGET_VERSION_CODE=999"
+)
+
+if not "%MG_VERSION_NAME%"=="" (
+  set "TARGET_VERSION_NAME=%MG_VERSION_NAME%"
 ) else (
   set "TARGET_VERSION_NAME=9.9.9"
 )
