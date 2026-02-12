@@ -4,6 +4,9 @@ import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
 
+// Guard para evitar que el mismo código se intercambie dos veces
+let lastProcessedCode: string | null = null;
+
 export const useDeepLinks = () => {
   useEffect(() => {
     // Solo ejecutar en plataformas nativas
@@ -23,6 +26,13 @@ export const useDeepLinks = () => {
         const code = parsed.searchParams.get('code') ?? hashParams.get('code');
 
         if (code) {
+          // Evitar procesar el mismo código dos veces (previene crash por doble intercambio)
+          if (code === lastProcessedCode) {
+            console.warn('[DeepLinks] Código ya procesado, ignorando duplicado');
+            return;
+          }
+          lastProcessedCode = code;
+
           // Cerrar el navegador lo antes posible para evitar que se quede visible
           Browser.close().catch(() => {});
 
