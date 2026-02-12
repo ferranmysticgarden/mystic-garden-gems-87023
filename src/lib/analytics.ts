@@ -1,9 +1,8 @@
 /**
  * Analytics events for monetization tracking
- * Firebase Analytics integration — real logEvent() calls
+ * Firebase Analytics integration — lazy loading to prevent Android crashes
  */
-import { logEvent } from "firebase/analytics";
-import { analytics } from "./firebase";
+import { ensureFirebase } from "./firebase";
 
 type AnalyticsEventName = 
   | 'first_purchase_offer_shown'
@@ -28,19 +27,22 @@ interface EventData {
 }
 
 /**
- * Emit an analytics event to Firebase Analytics
+ * Emit an analytics event to Firebase Analytics (lazy loaded)
  */
 export const emitAnalyticsEvent = (eventName: AnalyticsEventName, data?: EventData) => {
   console.log(`[Analytics] ${eventName}`, data || {});
   
-  // Send to Firebase Analytics
-  if (analytics) {
-    try {
-      logEvent(analytics, eventName, data || {});
-    } catch (e) {
-      console.warn("[Analytics] Failed to send event", e);
+  // Send to Firebase Analytics (lazy init — won't crash app)
+  ensureFirebase().then(async (analyticsInstance) => {
+    if (analyticsInstance) {
+      try {
+        const { logEvent } = await import("firebase/analytics");
+        logEvent(analyticsInstance, eventName, data || {});
+      } catch (e) {
+        console.warn("[Analytics] Failed to send event", e);
+      }
     }
-  }
+  }).catch(() => {});
   
   // Keep localStorage for local debugging
   const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
@@ -119,6 +121,6 @@ export const emitLevel10Event = (
     });
     localStorage.setItem('level10_events', JSON.stringify(events.slice(-50)));
     
-    // Emitir al analytics general (que ahora envía a Firebase)
+    // Emitir al analytics general (que ahora envía a Firebase lazy)
     emitAnalyticsEvent(eventName, { level: 10, ...data });
   };

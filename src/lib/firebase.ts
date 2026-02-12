@@ -1,5 +1,4 @@
-import { initializeApp } from "firebase/app";
-import { getAnalytics, type Analytics } from "firebase/analytics";
+import type { Analytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDwPa1a7RIBIEXUwoEnWi2qXF9zI4TCup0",
@@ -12,12 +11,33 @@ const firebaseConfig = {
 };
 
 let analytics: Analytics | null = null;
+let _initPromise: Promise<void> | null = null;
 
-try {
-  const app = initializeApp(firebaseConfig);
-  analytics = getAnalytics(app);
-} catch (e) {
-  console.warn("[Firebase] Firebase/Analytics not available in this environment", e);
-}
+/**
+ * Lazy initialization — Firebase se carga SOLO cuando se necesita,
+ * nunca al arrancar la app. Esto evita crashes en Android WebView.
+ */
+const ensureFirebase = async (): Promise<Analytics | null> => {
+  if (analytics) return analytics;
+  if (_initPromise) {
+    await _initPromise;
+    return analytics;
+  }
 
-export { analytics };
+  _initPromise = (async () => {
+    try {
+      const { initializeApp } = await import("firebase/app");
+      const { getAnalytics } = await import("firebase/analytics");
+      const app = initializeApp(firebaseConfig);
+      analytics = getAnalytics(app);
+    } catch (e) {
+      console.warn("[Firebase] Firebase/Analytics not available in this environment", e);
+      analytics = null;
+    }
+  })();
+
+  await _initPromise;
+  return analytics;
+};
+
+export { analytics, ensureFirebase };
