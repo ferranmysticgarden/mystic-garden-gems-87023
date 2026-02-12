@@ -9,6 +9,8 @@ type AppErrorBoundaryProps = {
 type AppErrorBoundaryState = {
   hasError: boolean;
   errorMessage?: string;
+  errorStack?: string;
+  componentStack?: string;
 };
 
 export class AppErrorBoundary extends React.Component<
@@ -21,12 +23,15 @@ export class AppErrorBoundary extends React.Component<
 
   static getDerivedStateFromError(error: unknown): AppErrorBoundaryState {
     const message = error instanceof Error ? error.message : "Error inesperado";
-    return { hasError: true, errorMessage: message };
+    const stack = error instanceof Error ? error.stack : undefined;
+    return { hasError: true, errorMessage: message, errorStack: stack };
   }
 
-  componentDidCatch(error: unknown) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     // Keep minimal: avoid leaking sensitive data; still useful for debugging.
     console.error("App crashed:", error);
+    console.error("Component stack:", errorInfo?.componentStack);
+    this.setState({ componentStack: errorInfo?.componentStack || undefined });
   }
 
   private handleReload = () => {
@@ -47,9 +52,30 @@ export class AppErrorBoundary extends React.Component<
           </header>
 
           {this.state.errorMessage && (
-            <pre className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-3 mb-4 border border-border">
-              {this.state.errorMessage}
-            </pre>
+            <div className="mb-3">
+              <p className="text-xs font-bold text-destructive mb-1">Error:</p>
+              <pre className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-3 border border-border break-all">
+                {this.state.errorMessage}
+              </pre>
+            </div>
+          )}
+
+          {this.state.errorStack && (
+            <details className="mb-3">
+              <summary className="text-xs font-bold text-muted-foreground cursor-pointer">Stack trace (pulsa para ver)</summary>
+              <pre className="text-[10px] whitespace-pre-wrap bg-muted/40 rounded-lg p-2 mt-1 border border-border break-all max-h-40 overflow-y-auto">
+                {this.state.errorStack}
+              </pre>
+            </details>
+          )}
+
+          {this.state.componentStack && (
+            <details className="mb-3">
+              <summary className="text-xs font-bold text-muted-foreground cursor-pointer">Componente (pulsa para ver)</summary>
+              <pre className="text-[10px] whitespace-pre-wrap bg-muted/40 rounded-lg p-2 mt-1 border border-border break-all max-h-40 overflow-y-auto">
+                {this.state.componentStack}
+              </pre>
+            </details>
           )}
 
           <div className="flex gap-3">
