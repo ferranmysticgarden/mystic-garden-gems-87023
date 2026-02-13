@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
  import { emitLevel10Event } from '@/lib/analytics';
+import { ensureFirebase } from '@/lib/firebase';
 
 interface Level10PaywallProps {
   onPurchaseSuccess: () => void;
@@ -29,6 +30,15 @@ interface Level10PaywallProps {
    // Emitir evento al mostrar
    useEffect(() => {
      emitLevel10Event('level10_popup_shown', { progress: progressPercent, movesShort });
+
+     // DEBUG DIRECTO — eliminar después de verificar en Firebase Realtime
+     ensureFirebase().then(async (inst) => {
+       if (inst) {
+         const { logEvent } = await import("firebase/analytics");
+         logEvent(inst, "debug_level10_direct" as any);
+         console.log("[DEBUG] debug_level10_direct sent directly to Firebase");
+       }
+     }).catch(() => {});
    }, [progressPercent, movesShort]);
  
    // Contador regresivo de urgencia
