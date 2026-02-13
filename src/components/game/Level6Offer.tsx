@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { emitAnalyticsEvent } from '@/lib/analytics';
-import { ensureFirebase } from '@/lib/firebase';
+import { Capacitor } from '@capacitor/core';
 
 interface Level6OfferProps {
   onBuy: () => void;
@@ -25,14 +25,14 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
     emitAnalyticsEvent('debug_level6_reached');
     emitAnalyticsEvent('level6_popup_shown', { level: 6, progress: progressPercent });
 
-    // DEBUG DIRECTO — eliminar después de verificar en Firebase Realtime
-    ensureFirebase().then(async (inst) => {
-      if (inst) {
-        const { logEvent } = await import("firebase/analytics");
-        logEvent(inst, "debug_level6_direct" as any);
-        console.log("[DEBUG] debug_level6_direct sent directly to Firebase");
-      }
-    }).catch(() => {});
+    // DEBUG DIRECTO — nativo o web
+    if (Capacitor.isNativePlatform()) {
+      import("@capacitor-firebase/analytics").then(({ FirebaseAnalytics }) => {
+        FirebaseAnalytics.logEvent({ name: "debug_level6_direct", params: {} })
+          .then(() => console.log("[DEBUG] debug_level6_direct sent via NATIVE"))
+          .catch(() => {});
+      }).catch(() => {});
+    }
   }, [progressPercent]);
 
   const handleBuy = async () => {

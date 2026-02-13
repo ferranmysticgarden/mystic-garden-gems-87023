@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
  import { emitLevel10Event } from '@/lib/analytics';
-import { ensureFirebase } from '@/lib/firebase';
+import { Capacitor } from '@capacitor/core';
 
 interface Level10PaywallProps {
   onPurchaseSuccess: () => void;
@@ -31,14 +31,14 @@ interface Level10PaywallProps {
    useEffect(() => {
      emitLevel10Event('level10_popup_shown', { progress: progressPercent, movesShort });
 
-     // DEBUG DIRECTO — eliminar después de verificar en Firebase Realtime
-     ensureFirebase().then(async (inst) => {
-       if (inst) {
-         const { logEvent } = await import("firebase/analytics");
-         logEvent(inst, "debug_level10_direct" as any);
-         console.log("[DEBUG] debug_level10_direct sent directly to Firebase");
-       }
-     }).catch(() => {});
+     // DEBUG DIRECTO — nativo o web
+     if (Capacitor.isNativePlatform()) {
+       import("@capacitor-firebase/analytics").then(({ FirebaseAnalytics }) => {
+         FirebaseAnalytics.logEvent({ name: "debug_level10_direct", params: {} })
+           .then(() => console.log("[DEBUG] debug_level10_direct sent via NATIVE"))
+           .catch(() => {});
+       }).catch(() => {});
+     }
    }, [progressPercent, movesShort]);
  
    // Contador regresivo de urgencia
