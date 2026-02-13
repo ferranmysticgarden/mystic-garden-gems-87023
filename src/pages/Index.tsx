@@ -43,6 +43,7 @@ import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
+import { Level4Reward } from '@/components/game/Level4Reward';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
@@ -113,6 +114,9 @@ const Index = () => {
   
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
+
+  // State for level 4 micro-reward
+  const [showLevel4Reward, setShowLevel4Reward] = useState(false);
 
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
@@ -222,6 +226,11 @@ const Index = () => {
       }
     }
     
+    // Level 4 micro-reward (once only)
+    if (currentLevel.id === 4 && !localStorage.getItem('level4_reward_claimed')) {
+      setTimeout(() => setShowLevel4Reward(true), 1500);
+    }
+
     // Show Starter Pack after level 3 or 4 (only if welcome offer not active)
     if ((currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
       setTimeout(() => setShowStarterPack(true), 2000);
@@ -674,6 +683,17 @@ const Index = () => {
           onClose={() => setShowFirstSessionReward(false)}
         />
       )}
+
+      {/* Level 4 Micro-Reward - emotional gift */}
+      <Level4Reward
+        open={showLevel4Reward}
+        onClaim={() => {
+          addGems(50);
+          localStorage.setItem('level4_reward_claimed', 'true');
+          setShowLevel4Reward(false);
+          toast.success('¡+50 gemas! 💎🌸');
+        }}
+      />
 
       {/* Share Prompt - after 5 games or 1 day */}
       <SharePrompt 
