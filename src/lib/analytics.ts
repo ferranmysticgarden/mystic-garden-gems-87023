@@ -1,7 +1,8 @@
 /**
  * Analytics events for monetization tracking
- * Firebase Analytics integration — lazy loading to prevent Android crashes
+ * Native Firebase Analytics on Android, JS SDK on web
  */
+import { Capacitor } from "@capacitor/core";
 import { ensureFirebase } from "./firebase";
 
 type AnalyticsEventName = 
@@ -32,17 +33,26 @@ interface EventData {
 export const emitAnalyticsEvent = (eventName: AnalyticsEventName, data?: EventData) => {
   console.log(`[Analytics] ${eventName}`, data || {});
   
-  // Send to Firebase Analytics (lazy init — won't crash app)
-  ensureFirebase().then(async (analyticsInstance) => {
-    if (analyticsInstance) {
-      try {
-        const { logEvent } = await import("firebase/analytics");
-        logEvent(analyticsInstance, eventName, data || {});
-      } catch (e) {
-        console.warn("[Analytics] Failed to send event", e);
+  if (Capacitor.isNativePlatform()) {
+    // Native Android/iOS — use Capacitor plugin (no JS SDK needed)
+    import("@capacitor-firebase/analytics").then(({ FirebaseAnalytics }) => {
+      FirebaseAnalytics.logEvent({ name: eventName, params: data || {} })
+        .then(() => console.log(`[Analytics Native] ${eventName} sent`))
+        .catch((e: any) => console.warn("[Analytics Native] Failed", e));
+    }).catch((e) => console.warn("[Analytics] Native plugin not available", e));
+  } else {
+    // Web — use Firebase JS SDK (lazy loaded)
+    ensureFirebase().then(async (analyticsInstance) => {
+      if (analyticsInstance) {
+        try {
+          const { logEvent } = await import("firebase/analytics");
+          logEvent(analyticsInstance, eventName, data || {});
+        } catch (e) {
+          console.warn("[Analytics] Failed to send event", e);
+        }
       }
-    }
-  }).catch(() => {});
+    }).catch(() => {});
+  }
   
   // Keep localStorage for local debugging
   const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
@@ -121,6 +131,6 @@ export const emitLevel10Event = (
     });
     localStorage.setItem('level10_events', JSON.stringify(events.slice(-50)));
     
-    // Emitir al analytics general (que ahora envía a Firebase lazy)
+    // Emit via unified analytics (native or web)
     emitAnalyticsEvent(eventName, { level: 10, ...data });
   };
