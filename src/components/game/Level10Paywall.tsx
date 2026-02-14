@@ -26,18 +26,25 @@ interface Level10PaywallProps {
   const { createPayment, loading } = usePayment();
   const [purchasing, setPurchasing] = useState(false);
    const [countdown, setCountdown] = useState(15);
+
+  console.log("LEVEL10 POPUP RENDER");
  
    // Emitir evento al mostrar
    useEffect(() => {
+     console.log("[Level10] useEffect fired — about to emit analytics");
+     console.log("[Level10] about to emit level10_popup_shown");
      emitLevel10Event('level10_popup_shown', { progress: progressPercent, movesShort });
 
      // DEBUG DIRECTO — nativo o web
      if (Capacitor.isNativePlatform()) {
+       console.log("[Level10] Native platform detected — firing debug_level10_direct");
        import("@capacitor-firebase/analytics").then(({ FirebaseAnalytics }) => {
          FirebaseAnalytics.logEvent({ name: "debug_level10_direct", params: {} })
-           .then(() => console.log("[DEBUG] debug_level10_direct sent via NATIVE"))
-           .catch(() => {});
-       }).catch(() => {});
+           .then(() => console.log("[DEBUG] debug_level10_direct sent via NATIVE OK"))
+           .catch((e: any) => console.error("[DEBUG] debug_level10_direct FAILED", e));
+       }).catch((e) => console.error("[Level10] Native plugin import FAILED", e));
+     } else {
+       console.log("[Level10] Web platform — native event skipped");
      }
    }, [progressPercent, movesShort]);
  
