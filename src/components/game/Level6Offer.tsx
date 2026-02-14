@@ -20,18 +20,25 @@ interface Level6OfferProps {
 export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6OfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
 
+  console.log("LEVEL6 POPUP RENDER");
+
   // Emitir evento al renderizarse
   useEffect(() => {
+    console.log("[Level6] useEffect fired — about to emit analytics");
     emitAnalyticsEvent('debug_level6_reached');
+    console.log("[Level6] about to emit level6_popup_shown");
     emitAnalyticsEvent('level6_popup_shown', { level: 6, progress: progressPercent });
 
     // DEBUG DIRECTO — nativo o web
     if (Capacitor.isNativePlatform()) {
+      console.log("[Level6] Native platform detected — firing debug_level6_direct");
       import("@capacitor-firebase/analytics").then(({ FirebaseAnalytics }) => {
         FirebaseAnalytics.logEvent({ name: "debug_level6_direct", params: {} })
-          .then(() => console.log("[DEBUG] debug_level6_direct sent via NATIVE"))
-          .catch(() => {});
-      }).catch(() => {});
+          .then(() => console.log("[DEBUG] debug_level6_direct sent via NATIVE OK"))
+          .catch((e: any) => console.error("[DEBUG] debug_level6_direct FAILED", e));
+      }).catch((e) => console.error("[Level6] Native plugin import FAILED", e));
+    } else {
+      console.log("[Level6] Web platform — native event skipped");
     }
   }, [progressPercent]);
 
