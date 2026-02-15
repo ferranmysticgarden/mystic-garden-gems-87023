@@ -18,15 +18,20 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
   'flash_offer': 'flash_offer',
   'pack_revancha': 'pack_revancha',
   'lifesaver_pack': 'lifesaver_pack',
+  'welcome_pack': 'welcome_pack',
   // Ofertas de nivel
   'victory_multiplier': 'victory_multiplier',
   'finish_level': 'finish_level',
   'continue_game': 'continue_game',
   'buy_moves': 'buy_moves',
-  // Micro-transacciones €0.49
+  // Micro-transacciones €0.49-€0.50
   'streak_protection': 'streak_protection',
   'extra_spin': 'extra_spin',
   'reward_doubler': 'reward_doubler',
+  // Multi-tier packs
+  'pack_impulso': 'pack_impulso',
+  'pack_experiencia': 'pack_experiencia',
+  'pack_victoria_segura_pro': 'pack_victoria_segura_pro',
 };
 
 export const useGooglePlayBilling = () => {

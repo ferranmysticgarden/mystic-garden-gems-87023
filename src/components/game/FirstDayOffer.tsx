@@ -4,6 +4,7 @@ import { Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface FirstDayOfferProps {
   levelJustCompleted?: number;
@@ -72,6 +73,9 @@ export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
     
     const success = await createPayment('mega_pack_inicial');
     if (success) {
+      console.log('[PURCHASE] success confirmed via FirstDayOffer');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`first-day-offer-${user.id}`, 'true');
       setShow(false);
     }

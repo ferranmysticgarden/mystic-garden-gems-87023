@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Gift, Sparkles, Timer } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
 
 interface RewardDoublerProps {
@@ -50,6 +51,9 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
   const handleBuy = async () => {
     const success = await createPayment('reward_doubler');
     if (success) {
+      console.log('[PURCHASE] success confirmed via RewardDoubler');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onDouble(doubledGems);
       onClose();
     }

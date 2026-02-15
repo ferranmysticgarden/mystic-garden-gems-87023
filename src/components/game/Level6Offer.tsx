@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { emitAnalyticsEvent } from '@/lib/analytics';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface Level6OfferProps {
   onBuy: () => void;
@@ -32,6 +33,9 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
   const handleBuy = async () => {
     const success = await createPayment('buy_moves');
     if (success) {
+      console.log('[PURCHASE] success confirmed via Level6Offer');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       emitAnalyticsEvent('level6_purchase_success');
       localStorage.setItem('level6_offer_dismissed', 'true');
       localStorage.setItem('first_purchase_completed', 'true');

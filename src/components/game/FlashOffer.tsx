@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, X, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface FlashOfferProps {
   trigger: 'loss' | 'streak_loss';
@@ -42,6 +43,9 @@ export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
     
     const success = await createPayment('flash_offer');
     if (success) {
+      console.log('[PURCHASE] success confirmed via FlashOffer');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onClose();
     }
   };

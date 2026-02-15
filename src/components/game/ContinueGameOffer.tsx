@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface ContinueGameOfferProps {
   progressPercent: number;
@@ -18,6 +19,9 @@ export const ContinueGameOffer = ({
   const handleBuy = async () => {
     const success = await createPayment('continue_game');
     if (success) {
+      console.log('[PURCHASE] success confirmed via ContinueGameOffer');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onContinue();
     }
   };

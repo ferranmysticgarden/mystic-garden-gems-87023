@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface PostVictoryOfferProps {
   baseGems: number;
@@ -15,6 +16,9 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
   const handleBuy = async () => {
     const success = await createPayment('victory_multiplier');
     if (success) {
+      console.log('[PURCHASE] success confirmed via PostVictoryOffer');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onMultiply(multipliedGems);
       onClose();
     }

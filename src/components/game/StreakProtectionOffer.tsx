@@ -2,6 +2,7 @@ import { Shield, X, Flame } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface StreakProtectionOfferProps {
   currentStreak: number;
@@ -24,6 +25,9 @@ export const StreakProtectionOffer = ({
   const handleBuy = async () => {
     const success = await createPayment('streak_protection');
     if (success) {
+      console.log('[PURCHASE] success confirmed via StreakProtection');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };
