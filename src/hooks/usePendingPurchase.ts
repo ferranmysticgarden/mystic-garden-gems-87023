@@ -1,4 +1,5 @@
  import { useState, useEffect, useCallback } from 'react';
+ import { dispatchPurchaseCompleted } from './usePurchaseGate';
  
  /**
   * Interface para el estado guardado del juego antes de pagar
@@ -28,14 +29,19 @@
      const urlParams = new URLSearchParams(window.location.search);
      const paymentStatus = urlParams.get('payment');
      
-     if (paymentStatus === 'success') {
-       // Cargar estado guardado
-       const savedState = loadPendingState();
-       if (savedState) {
-         setPendingState(savedState);
-         setPaymentSuccess(true);
-         console.log('[PendingPurchase] Estado restaurado tras pago:', savedState);
-       }
+      if (paymentStatus === 'success') {
+        // Marcar purchase gate como desbloqueado (Stripe path)
+        console.log('[PURCHASE] success confirmed via Stripe redirect');
+        dispatchPurchaseCompleted();
+        console.log('[PURCHASE] gate unlocked');
+        
+        // Cargar estado guardado
+        const savedState = loadPendingState();
+        if (savedState) {
+          setPendingState(savedState);
+          setPaymentSuccess(true);
+          console.log('[PendingPurchase] Estado restaurado tras pago:', savedState);
+        }
        
        // Limpiar URL sin recargar
        const newUrl = window.location.pathname;

@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useGooglePlayBilling } from './useGooglePlayBilling';
 import { toast } from 'sonner';
+import { dispatchPurchaseCompleted } from './usePurchaseGate';
 
 /**
  * Hook unificado de pagos:
@@ -41,9 +42,9 @@ export const usePayment = () => {
       if (error) throw error;
 
       if (data?.url) {
-        // Open Stripe Checkout in new tab
         window.open(data.url, '_blank');
         toast.success('Redirigiendo a la pasarela de pago...');
+        // Stripe: gate se desbloquea al volver con ?payment=success
         return true;
       }
 
