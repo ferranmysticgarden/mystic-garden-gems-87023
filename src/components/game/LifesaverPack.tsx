@@ -2,6 +2,7 @@ import { Heart, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface LifesaverPackProps {
   onBuy: () => void;
@@ -19,6 +20,9 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
   const handleBuy = async () => {
     const success = await createPayment('lifesaver_pack');
     if (success) {
+      console.log('[PURCHASE] success confirmed via LifesaverPack');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };

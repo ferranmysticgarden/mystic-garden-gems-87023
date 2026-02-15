@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star, Gift, Clock, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
 
 interface StarterPackProps {
@@ -76,6 +77,9 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
     
     const success = await createPayment('starter_pack');
     if (success) {
+      console.log('[PURCHASE] success confirmed via StarterPack');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`starter-pack-${user.id}`, 'true');
       setShow(false);
       onClose();

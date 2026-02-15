@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface CloseDefeatOfferProps {
   movesShort: number; // Cuántos movimientos le faltaron
@@ -18,6 +19,9 @@ export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOf
   const handleBuy = async () => {
     const success = await createPayment('finish_level');
     if (success) {
+      console.log('[PURCHASE] success confirmed via CloseDefeatOffer');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };

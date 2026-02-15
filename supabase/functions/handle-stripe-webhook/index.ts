@@ -32,6 +32,10 @@ const PRODUCT_NAMES: Record<string, string> = {
   "lifesaver_pack": "Pack Salvavidas",
   "pack_victoria_segura": "Pack Victoria Segura",
   "pack_racha_infinita": "Pack Racha Infinita",
+  "welcome_pack": "Pack Bienvenida",
+  "pack_impulso": "Pack Impulso",
+  "pack_experiencia": "Pack Experiencia",
+  "pack_victoria_segura_pro": "Pack Victoria Segura Pro",
 };
 
 // Rewards configuration for all products - synchronized with verify-google-purchase
@@ -57,6 +61,10 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "lifesaver_pack": { lives: 3 },
   "pack_victoria_segura": { powerups: 5, lives: 3 },
   "pack_racha_infinita": { lives: 2 },
+  "welcome_pack": { powerups: 5, lives: 3 },
+  "pack_impulso": { powerups: 5, lives: 3 },
+  "pack_experiencia": { lives: 2 },
+  "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
 };
 
 serve(async (req) => {

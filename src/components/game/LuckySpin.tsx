@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -327,6 +328,9 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   const handleBuy = async () => {
     const success = await createPayment('extra_spin');
     if (success) {
+      console.log('[PURCHASE] success confirmed via ExtraSpin');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };
