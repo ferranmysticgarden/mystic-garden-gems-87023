@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import GooglePlayBilling, { ProductDetails, PurchaseResult } from '@/plugins/GooglePlayBilling';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { dispatchPurchaseCompleted } from './usePurchaseGate';
 
 // Mapeo de IDs de producto a IDs de Google Play
 // SINCRONIZADO con Google Play Console (15 productos activos)
@@ -96,6 +97,9 @@ export const useGooglePlayBilling = () => {
         return false;
       }
 
+      console.log('[PURCHASE] success confirmed via Google Play');
+      dispatchPurchaseCompleted();
+      console.log('[PURCHASE] gate unlocked');
       toast.success('¡Compra completada!');
       return true;
     } catch (error) {
