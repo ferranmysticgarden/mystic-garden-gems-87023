@@ -65,6 +65,11 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
+  // First day offer
+  "first_day_offer": { powerups: 5, lives: 3 },
+  // Cofres (rewards are random, granted client-side)
+  "chest_silver": {},
+  "chest_gold": {},
 };
 
 serve(async (req) => {

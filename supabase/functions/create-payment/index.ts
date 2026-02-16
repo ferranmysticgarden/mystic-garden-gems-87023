@@ -45,6 +45,9 @@ const PRODUCT_PRICES: Record<string, string> = {
   "pack_victoria_segura_pro": "price_1SwC99PxvUpv2yakvtPl1F0r",
   // First day offer
   "first_day_offer": "price_1SwC9OPxvUpv2yakOtw7E4ue",
+  // Cofres (web)
+  "chest_silver": "price_1T1Q8KPxvUpv2yakThqAtlyy",
+  "chest_gold": "price_1T1Q8ZPxvUpv2yak0AU20DiC",
 };
 
 serve(async (req) => {
