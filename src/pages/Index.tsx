@@ -231,8 +231,8 @@ const Index = () => {
       setTimeout(() => setShowLevel4Reward(true), 1500);
     }
 
-    // Show Starter Pack after level 3 or 4 (only if welcome offer not active)
-    if ((currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
+    // Show Starter Pack after level 2, 3 or 4 (only if welcome offer not active)
+    if ((currentLevel.id === 2 || currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
@@ -584,8 +584,8 @@ const Index = () => {
       {/* First Day Offer */}
       <FirstDayOffer />
 
-      {/* Starter Pack - OCULTO si no ha comprado (bloqueamos packs) */}
-      {showStarterPack && !isShopLocked && (
+      {/* Starter Pack - SIEMPRE visible (es herramienta de conversión temprana) */}
+      {showStarterPack && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}
           onClose={() => setShowStarterPack(false)}
