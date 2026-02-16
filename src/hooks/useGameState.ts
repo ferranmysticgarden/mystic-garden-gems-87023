@@ -92,7 +92,7 @@ export const useGameState = () => {
             shuffle_count: gameState.shuffles,
             last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
             unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
-          });
+          }, { onConflict: 'user_id' });
 
         if (error) throw error;
       } catch (error) {
