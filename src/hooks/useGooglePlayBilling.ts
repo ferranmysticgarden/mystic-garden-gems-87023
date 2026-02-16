@@ -18,7 +18,7 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
   'flash_offer': 'flash_offer',
   'pack_revancha': 'pack_revancha',
   'lifesaver_pack': 'lifesaver_pack',
-  'welcome_pack': 'welcome_pack',
+  'welcome_pack': 'welcomepack',           // Google Play: sin guion bajo
   // Ofertas de nivel
   'victory_multiplier': 'victory_multiplier',
   'finish_level': 'finish_level',
@@ -28,10 +28,10 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
   'streak_protection': 'streak_protection',
   'extra_spin': 'extra_spin',
   'reward_doubler': 'reward_doubler',
-  // Multi-tier packs
-  'pack_impulso': 'pack_impulso',
-  'pack_experiencia': 'pack_experiencia',
-  'pack_victoria_segura_pro': 'pack_victoria_segura_pro',
+  // Multi-tier packs (Google Play: sin guion bajo)
+  'pack_impulso': 'packimpulso',
+  'pack_experiencia': 'packexperiencia',
+  'pack_victoria_segura_pro': 'packvictoriasegura',  // Google Play ID
 };
 
 export const useGooglePlayBilling = () => {
