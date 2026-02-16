@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { emitAnalyticsEvent } from '@/lib/analytics';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface Level6OfferProps {
@@ -22,13 +20,7 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
 
   console.log("LEVEL6 POPUP RENDER");
 
-  // Emitir eventos al montar — TODO centralizado via emitAnalyticsEvent
-  useEffect(() => {
-    console.log("[Level6] useEffect fired — emitting all events via analytics.ts");
-    emitAnalyticsEvent('debug_level6_reached');
-    emitAnalyticsEvent('level6_popup_shown', { level: 6, progress: progressPercent });
-    emitAnalyticsEvent('debug_level6_direct');
-  }, [progressPercent]);
+  // Analytics movidos a GameScreen.tsx (componente estable) para Android
 
   const handleBuy = async () => {
     const success = await createPayment('buy_moves');
@@ -36,7 +28,6 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
       console.log('[PURCHASE] success confirmed via Level6Offer');
       dispatchPurchaseCompleted();
       console.log('[PURCHASE] gate unlocked');
-      emitAnalyticsEvent('level6_purchase_success');
       localStorage.setItem('level6_offer_dismissed', 'true');
       localStorage.setItem('first_purchase_completed', 'true');
       onBuy();
@@ -44,7 +35,6 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
   };
 
   const handleDismiss = () => {
-    emitAnalyticsEvent('level6_popup_closed');
     localStorage.setItem('level6_offer_dismissed', 'true');
     onDismiss();
   };

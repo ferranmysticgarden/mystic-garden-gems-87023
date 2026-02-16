@@ -17,6 +17,9 @@ type AnalyticsEventName =
   | 'level6_popup_shown'
   | 'level6_purchase_success'
   | 'level6_popup_closed'
+  | 'buy_moves_offer_shown'
+  | 'defeat_pack_shown'
+  | 'flash_offer_shown'
   | 'debug_level6_reached'
   | 'debug_level6_direct'
   | 'debug_level10_direct';
@@ -36,7 +39,7 @@ interface EventData {
  * Web: usa Firebase JS SDK (lazy loaded).
  */
 export const emitAnalyticsEvent = (eventName: AnalyticsEventName, data?: EventData) => {
-  console.log(`[ANALYTICS] Preparing: ${eventName}`, data || {});
+  console.log(`[ANALYTICS SEND] ${eventName}`, data || {});
   
   if (Capacitor.isNativePlatform()) {
     // ── ANDROID NATIVO ──

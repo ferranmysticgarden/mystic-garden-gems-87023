@@ -139,6 +139,7 @@ export const GameScreen = ({
          const progress = getProgressPercentage();
          setProgressAtLoss(progress);
          setMovesShortBy(movesNeeded);
+        emitAnalyticsEvent('level10_popup_shown', { level: 10, progress, movesShort: movesNeeded });
         setShowLevel10Paywall(true);
         return; // No mostrar nada más - solo el paywall forzado
       }
@@ -149,7 +150,7 @@ export const GameScreen = ({
         const progress = getProgressPercentage();
         if (progress >= 80) {
           setProgressAtLoss(progress);
-          emitAnalyticsEvent('level6_popup_shown');
+          emitAnalyticsEvent('level6_popup_shown', { level: 6, progress });
           setShowLevel6Offer(true);
           return; // No mostrar nada más - solo la oferta nivel 6
         }
@@ -158,6 +159,7 @@ export const GameScreen = ({
       // Show buy moves offer BEFORE defeat (para otros niveles)
       if (!hasShownBuyMoves.current) {
         hasShownBuyMoves.current = true;
+        emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
         setShowBuyMovesOffer(true);
         return; // Don't end game yet - give chance to buy moves
       }
@@ -178,6 +180,7 @@ export const GameScreen = ({
       
       // Si llegó al 50%+ del objetivo = mostrar DefeatPacksOffer multi-tier
       if (progress >= 50) {
+        emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
         setShowDefeatPacksOffer(true);
         
         // Si es la primera derrota cercana de la sesión, mostrar Flash Offer después
@@ -255,6 +258,7 @@ export const GameScreen = ({
     
     // Mostrar DefeatPacksOffer si llegó al 50%+
     if (progress >= 50) {
+      emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
       setShowDefeatPacksOffer(true);
     }
   };
@@ -271,6 +275,7 @@ export const GameScreen = ({
     // Mostrar Flash Offer si aplica
     if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
       localStorage.setItem('flash_offer_shown_session', 'true');
+      emitAnalyticsEvent('flash_offer_shown', { level: level.id });
       setShowFlashOffer(true);
     }
   };
