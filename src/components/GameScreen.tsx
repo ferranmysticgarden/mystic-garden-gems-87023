@@ -54,6 +54,7 @@ export const GameScreen = ({
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
+  const [showNearWinMessage, setShowNearWinMessage] = useState(false);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
@@ -124,69 +125,77 @@ export const GameScreen = ({
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
-      // MURO NIVEL 10: Solo en la PRIMERA derrota (si no ha comprado y no se ha mostrado antes)
-      const paywallAlreadyShown = localStorage.getItem('level10_paywall_dismissed') === 'true';
-      if (level.id === 10 && !hasPurchasedOnce && !paywallAlreadyShown) {
-        // Guardar estado ANTES de mostrar el paywall
-        savePendingState({
-          levelId: level.id,
-          moves: 0,
-          score,
-          collected,
-          productId: 'buy_moves',
-        });
-         // Guardar progreso para el popup
-         const progress = getProgressPercentage();
-         setProgressAtLoss(progress);
-         setMovesShortBy(movesNeeded);
-        emitAnalyticsEvent('level10_popup_shown', { level: 10, progress, movesShort: movesNeeded });
-        setShowLevel10Paywall(true);
-        return; // No mostrar nada más - solo el paywall forzado
-      }
-      
-      // OFERTA NIVEL 6: primera derrota con ≥80% progreso
-      const level6AlreadyShown = localStorage.getItem('level6_offer_dismissed') === 'true';
-      if (level.id === 6 && !level6AlreadyShown) {
-        const progress = getProgressPercentage();
-        if (progress >= 80) {
-          setProgressAtLoss(progress);
-          emitAnalyticsEvent('level6_popup_shown', { level: 6, progress });
-          setShowLevel6Offer(true);
-          return; // No mostrar nada más - solo la oferta nivel 6
-        }
-      }
-      
-      // Show buy moves offer BEFORE defeat (para otros niveles)
-      if (!hasShownBuyMoves.current) {
-        hasShownBuyMoves.current = true;
-        emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
-        setShowBuyMovesOffer(true);
-        return; // Don't end game yet - give chance to buy moves
-      }
-      
-      // If already shown buy moves, now it's game over
-      setGameOver(true);
-      setWon(false);
-      
-      if (!hasPlayedEndSound.current) {
-        hasPlayedEndSound.current = true;
-        backgroundMusic.setScreen('defeat');
-        playLoseSound();
-      }
-      
-      // Calcular qué tan cerca estuvo
       const progress = getProgressPercentage();
-      setProgressAtLoss(progress);
-      
-      // Si llegó al 50%+ del objetivo = mostrar DefeatPacksOffer multi-tier
-      if (progress >= 50) {
-        emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
-        setShowDefeatPacksOffer(true);
-        
-        // Si es la primera derrota cercana de la sesión, mostrar Flash Offer después
-        if (!hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
-          hasShownFlashOffer.current = true;
+
+      // Helper: lógica que decide qué oferta mostrar
+      const showDefeatOffer = () => {
+        // MURO NIVEL 10
+        const paywallAlreadyShown = localStorage.getItem('level10_paywall_dismissed') === 'true';
+        if (level.id === 10 && !hasPurchasedOnce && !paywallAlreadyShown) {
+          savePendingState({
+            levelId: level.id,
+            moves: 0,
+            score,
+            collected,
+            productId: 'buy_moves',
+          });
+          setProgressAtLoss(progress);
+          setMovesShortBy(movesNeeded);
+          emitAnalyticsEvent('level10_popup_shown', { level: 10, progress, movesShort: movesNeeded });
+          setShowLevel10Paywall(true);
+          return;
         }
+
+        // OFERTA NIVEL 6
+        const level6AlreadyShown = localStorage.getItem('level6_offer_dismissed') === 'true';
+        if (level.id === 6 && !level6AlreadyShown) {
+          if (progress >= 80) {
+            setProgressAtLoss(progress);
+            emitAnalyticsEvent('level6_popup_shown', { level: 6, progress });
+            setShowLevel6Offer(true);
+            return;
+          }
+        }
+
+        // Buy moves offer BEFORE defeat (otros niveles)
+        if (!hasShownBuyMoves.current) {
+          hasShownBuyMoves.current = true;
+          emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
+          setShowBuyMovesOffer(true);
+          return;
+        }
+
+        // Game over final
+        setGameOver(true);
+        setWon(false);
+
+        if (!hasPlayedEndSound.current) {
+          hasPlayedEndSound.current = true;
+          backgroundMusic.setScreen('defeat');
+          playLoseSound();
+        }
+
+        setProgressAtLoss(progress);
+
+        if (progress >= 50) {
+          emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
+          setShowDefeatPacksOffer(true);
+
+          if (!hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
+            hasShownFlashOffer.current = true;
+          }
+        }
+      };
+
+      // MICRO-VICTORIA EMOCIONAL: si progreso >= 80%, mostrar mensaje 1s antes de oferta
+      if (progress >= 80) {
+        setShowNearWinMessage(true);
+        setTimeout(() => {
+          setShowNearWinMessage(false);
+          showDefeatOffer();
+        }, 1000);
+      } else {
+        showDefeatOffer();
       }
     }
   }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded, hasPurchasedOnce]);
@@ -407,6 +416,17 @@ export const GameScreen = ({
             disabled={gameOver}
           />
         </div>
+
+        {/* Near Win Emotional Message */}
+        {showNearWinMessage && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none">
+            <div className="text-center animate-scale-in">
+              <div className="text-7xl mb-3">😱</div>
+              <h2 className="text-3xl font-bold text-yellow-400 drop-shadow-lg">¡Casi lo logras!</h2>
+              <p className="text-xl text-white/90 mt-2">Estuviste MUY cerca...</p>
+            </div>
+          </div>
+        )}
 
         {/* Combo Multiplier */}
         <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
