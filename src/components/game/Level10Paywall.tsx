@@ -3,7 +3,6 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
-import { emitLevel10Event, emitAnalyticsEvent } from '@/lib/analytics';
 
 interface Level10PaywallProps {
   onPurchaseSuccess: () => void;
@@ -28,12 +27,7 @@ export const Level10Paywall = ({
 
   console.log("LEVEL10 POPUP RENDER");
 
-  // Emitir eventos al montar — TODO centralizado via analytics.ts
-  useEffect(() => {
-    console.log("[Level10] useEffect fired — emitting all events via analytics.ts");
-    emitLevel10Event('level10_popup_shown', { progress: progressPercent, movesShort });
-    emitAnalyticsEvent('debug_level10_direct');
-  }, [progressPercent, movesShort]);
+  // Analytics movidos a GameScreen.tsx (componente estable) para Android
 
   // Contador regresivo de urgencia
   useEffect(() => {
@@ -58,7 +52,6 @@ export const Level10Paywall = ({
       const success = await createPayment('buy_moves');
       if (success) {
         dispatchPurchaseCompleted();
-        emitLevel10Event('level10_purchase_success', { progress: progressPercent });
         onPurchaseSuccess();
       }
     } catch (error) {
@@ -69,7 +62,6 @@ export const Level10Paywall = ({
   };
 
   const handleClose = () => {
-    emitLevel10Event('level10_popup_closed', { progress: progressPercent, countdown });
     onDismiss();
   };
 

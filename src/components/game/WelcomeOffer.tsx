@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Sparkles, Zap, Coins } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { emitAnalyticsEvent } from '@/lib/analytics';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
 
@@ -21,8 +20,7 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Emit analytics event
-    emitAnalyticsEvent('first_purchase_offer_shown');
+    // Analytics movidos a GameScreen/Index (componente estable) para Android
     
     // Celebrate entry
     setTimeout(() => {
@@ -42,8 +40,6 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
       console.log('[PURCHASE] success confirmed via WelcomeOffer');
       dispatchPurchaseCompleted();
       console.log('[PURCHASE] gate unlocked');
-      emitAnalyticsEvent('first_purchase_completed', { product: 'welcome_pack', price: 0.49 });
-      
       localStorage.setItem('welcome_offer_claimed', 'true');
       localStorage.setItem('first_purchase_completed', 'true');
       
