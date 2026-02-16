@@ -40,6 +40,11 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
+  // Google Play aliases (IDs sin guion bajo usados en Google Play Console)
+  "welcomepack": { powerups: 5, lives: 3 },
+  "packimpulso": { powerups: 5, lives: 3 },
+  "packexperiencia": { lives: 2 },
+  "packvictoriasegura": { powerups: 8, lives: 3 },
 };
 
 // Google Play API verification
