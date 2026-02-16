@@ -606,8 +606,8 @@ const Index = () => {
         />
       )}
 
-      {/* Push Notification Prompt */}
-      <NotificationPrompt onClose={() => {}} />
+      {/* Push Notification Prompt - after level 2+ victory */}
+      <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />
 
       {/* Come Back Banner for returning users */}
       <ComeBackBanner 
