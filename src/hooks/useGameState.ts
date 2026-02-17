@@ -36,9 +36,14 @@ export const useGameState = () => {
   // Load game progress from database
   useEffect(() => {
     if (!user) {
+      setGameState(INITIAL_STATE);
       setLoading(false);
       return;
     }
+
+    // CRITICAL: Set loading=true BEFORE async load to prevent
+    // the save effect from overwriting DB data with INITIAL_STATE
+    setLoading(true);
 
     const loadProgress = async () => {
       try {
@@ -46,9 +51,9 @@ export const useGameState = () => {
           .from('game_progress')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
 
         if (data) {
           setGameState({
