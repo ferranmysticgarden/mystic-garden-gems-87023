@@ -31,13 +31,39 @@ export const LuckySpin = () => {
   const [extraSpinAvailable, setExtraSpinAvailable] = useState(false);
   const { user } = useAuth();
 
+  // Detect pending extra_spin purchase from Stripe redirect
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    
+    if (paymentStatus === 'success') {
+      // Check if the pending purchase was an extra_spin
+      try {
+        const saved = localStorage.getItem('pending_purchase_state');
+        if (saved) {
+          const state = JSON.parse(saved);
+          if (state.productId === 'extra_spin') {
+            console.log('[LUCKY_SPIN] Extra spin detected from Stripe redirect');
+            setExtraSpinAvailable(true);
+            setCanSpin(true);
+            setShow(true);
+            setReward(null); // Reset reward to allow new spin
+            localStorage.removeItem('pending_purchase_state');
+          }
+        }
+      } catch (e) {
+        console.error('[LUCKY_SPIN] Error checking pending purchase:', e);
+      }
+    }
+  }, [user?.id]);
+
   // Handler para giro extra
   const handleExtraSpin = () => {
-    // Después de comprar giro extra, permite girar otra vez con premio alto garantizado
     setCanSpin(true);
     setExtraSpinAvailable(false);
-    // El próximo giro tendrá premio alto (índice 4 = 50 gemas)
-    // Se activa al comprar
+    setReward(null);
   };
 
   // Set music to lower volume when Lucky Spin is open
@@ -326,6 +352,16 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   const price = getPrice('extra_spin', '€0.50');
 
   const handleBuy = async () => {
+    // Save pending state so LuckySpin can detect it on return from Stripe
+    localStorage.setItem('pending_purchase_state', JSON.stringify({
+      productId: 'extra_spin',
+      timestamp: Date.now(),
+      levelId: 0,
+      moves: 0,
+      score: 0,
+      collected: {},
+    }));
+    
     const success = await createPayment('extra_spin');
     if (success) {
       console.log('[PURCHASE] success confirmed via ExtraSpin');
