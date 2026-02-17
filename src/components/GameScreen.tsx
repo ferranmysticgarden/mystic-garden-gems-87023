@@ -177,7 +177,7 @@ export const GameScreen = ({
 
         setProgressAtLoss(progress);
 
-        if (progress >= 50) {
+        if (progress >= 40) {
           emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
           setShowDefeatPacksOffer(true);
 
@@ -265,8 +265,8 @@ export const GameScreen = ({
     const progress = getProgressPercentage();
     setProgressAtLoss(progress);
     
-    // Mostrar DefeatPacksOffer si llegó al 50%+
-    if (progress >= 50) {
+    // Mostrar DefeatPacksOffer si llegó al 40%+
+    if (progress >= 40) {
       emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
       setShowDefeatPacksOffer(true);
     }
