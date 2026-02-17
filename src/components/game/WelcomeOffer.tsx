@@ -18,6 +18,7 @@ interface WelcomeOfferProps {
 export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const [visible, setVisible] = useState(false);
+  const [canDismiss, setCanDismiss] = useState(false);
 
   useEffect(() => {
     // Analytics movidos a GameScreen/Index (componente estable) para Android
@@ -32,6 +33,11 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
         colors: ['#FFD700', '#FFA500', '#FF69B4']
       });
     }, 300);
+
+    // Delay dismiss button 3 seconds to reduce impulsive closes
+    setTimeout(() => {
+      setCanDismiss(true);
+    }, 3300);
   }, []);
 
   const handleBuy = async () => {
@@ -67,13 +73,15 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-orange-500 to-pink-500 rounded-3xl blur-xl opacity-40 animate-pulse" />
         
         <div className="relative bg-gradient-to-b from-purple-900 via-indigo-900 to-purple-900 rounded-3xl p-6 border-4 border-yellow-400 shadow-2xl animate-scale-in">
-          {/* Close button - pequeño y discreto */}
-          <button 
-            onClick={handleDismiss}
-            className="absolute top-3 right-3 text-white/40 hover:text-white/60 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Close button - aparece después de 3 segundos */}
+          {canDismiss && (
+            <button 
+              onClick={handleDismiss}
+              className="absolute top-3 right-3 text-white/40 hover:text-white/60 transition-colors animate-fade-in"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
 
           <div className="text-center">
             {/* Badge */}
@@ -140,13 +148,15 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
               Oferta especial de inicio
             </p>
 
-            {/* Dismiss text - muy pequeño */}
-            <button 
-              onClick={handleDismiss}
-              className="text-white/30 hover:text-white/50 text-xs mt-4 transition-colors"
-            >
-              Ahora no
-            </button>
+            {/* Dismiss text - aparece después de 3 segundos */}
+            {canDismiss && (
+              <button 
+                onClick={handleDismiss}
+                className="text-white/30 hover:text-white/50 text-xs mt-4 transition-colors animate-fade-in"
+              >
+                Ahora no
+              </button>
+            )}
           </div>
         </div>
       </div>

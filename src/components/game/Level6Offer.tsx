@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
@@ -14,13 +15,28 @@ interface Level6OfferProps {
  * Oferta ligera y neutra para el nivel 6.
  * Se muestra solo en la PRIMERA derrota con ≥80% de progreso.
  * Recompensa: +3 movimientos por €0.50
+ * Incluye timer de urgencia de 5 minutos.
  */
 export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6OfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
 
   console.log("LEVEL6 POPUP RENDER");
 
   // Analytics movidos a GameScreen.tsx (componente estable) para Android
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          handleDismiss();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleBuy = async () => {
     const success = await createPayment('buy_moves');
@@ -41,6 +57,14 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
 
   const price = getPrice('buy_moves', '€0.50');
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const isUrgent = timeLeft < 60;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
       <div className="relative bg-gradient-to-b from-indigo-900 via-purple-900 to-indigo-900 rounded-2xl p-6 max-w-sm mx-4 border-2 border-purple-400/50 shadow-2xl animate-scale-in">
@@ -60,6 +84,18 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
           <h2 className="text-xl font-semibold text-white mb-1">
             Estuviste muy cerca
           </h2>
+
+          {/* Timer de urgencia */}
+          <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 mb-3 transition-all ${
+            isUrgent 
+              ? 'bg-red-600/80 animate-pulse border border-red-400' 
+              : 'bg-black/40 border border-white/10'
+          }`}>
+            <Clock className={`w-3.5 h-3.5 ${isUrgent ? 'text-white animate-bounce' : 'text-amber-300'}`} />
+            <span className={`font-mono font-bold text-sm ${isUrgent ? 'text-white' : 'text-amber-300'}`}>
+              {formatTime(timeLeft)}
+            </span>
+          </div>
 
           {/* Refuerzo emocional */}
           <p className="text-purple-300/90 text-xs mb-3 italic">

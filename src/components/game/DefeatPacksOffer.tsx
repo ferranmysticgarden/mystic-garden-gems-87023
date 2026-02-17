@@ -48,6 +48,7 @@ export const DefeatPacksOffer = ({
     if (progressPercent >= 90) return "¡Estabas a un paso de la victoria!";
     if (progressPercent >= 70) return "¡Tan cerca de conseguirlo!";
     if (progressPercent >= 50) return "¡No te rindas ahora!";
+    if (progressPercent >= 40) return "¡Buen intento! Un poco más y lo consigues";
     return "¡Vuelve más fuerte!";
   };
 
