@@ -1,14 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno&no-check";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2025-08-27.basil",
-});
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const ADMIN_EMAIL = "fcanamases@gmail.com";
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[WEBHOOK] ${step}${detailsStr}`);
+};
 
 const PRODUCT_NAMES: Record<string, string> = {
   "gems_100": "100 Gemas",
@@ -36,9 +33,11 @@ const PRODUCT_NAMES: Record<string, string> = {
   "pack_impulso": "Pack Impulso",
   "pack_experiencia": "Pack Experiencia",
   "pack_victoria_segura_pro": "Pack Victoria Segura Pro",
+  "first_day_offer": "Oferta Primer Día",
+  "chest_silver": "Cofre Plata",
+  "chest_gold": "Cofre Oro",
 };
 
-// Rewards configuration for all products - synchronized with verify-google-purchase
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
   "gems_100": { gems: 100 },
   "gems_300": { gems: 300 },
@@ -65,27 +64,34 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
-  // First day offer
   "first_day_offer": { powerups: 5, lives: 3 },
-  // Cofres (rewards are random, granted client-side)
   "chest_silver": {},
   "chest_gold": {},
 };
 
 serve(async (req) => {
-  const signature = req.headers.get("stripe-signature");
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const signature = req.headers.get("stripe-signature");
+
+  logStep("Webhook received", { hasSignature: !!signature, hasSecret: !!webhookSecret, hasStripeKey: !!stripeKey });
 
   if (!signature || !webhookSecret) {
-    console.error("[ERROR] Missing signature or webhook secret");
+    logStep("ERROR: Missing signature or webhook secret");
     return new Response("Missing signature or webhook secret", { status: 400 });
   }
 
+  if (!stripeKey) {
+    logStep("ERROR: Missing STRIPE_SECRET_KEY");
+    return new Response("Missing Stripe key", { status: 500 });
+  }
+
   try {
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const body = await req.text();
     const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
 
-    console.log("[INFO] Webhook event received:", event.type);
+    logStep("Event verified", { type: event.type });
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -94,7 +100,7 @@ serve(async (req) => {
       const customerEmail = session.customer_details?.email;
       const amountPaid = (session.amount_total || 0) / 100;
 
-      console.log("[INFO] Payment completed:", { userId, productId, customerEmail, amountPaid });
+      logStep("Payment completed", { userId, productId, customerEmail, amountPaid });
 
       if (userId && productId) {
         const supabaseAdmin = createClient(
@@ -103,14 +109,10 @@ serve(async (req) => {
           { auth: { persistSession: false } }
         );
 
-        // Get rewards for this product
         const rewards = PRODUCT_REWARDS[productId];
-        if (!rewards) {
-          console.error("[ERROR] Unknown product:", productId);
-          // Still save purchase record even for unknown products
-        }
+        logStep("Rewards lookup", { productId, rewards });
 
-        // Calculate expiration date
+        // Calculate expiration
         let expiresAt: Date | null = null;
         if (rewards?.noAdsDays) {
           expiresAt = new Date();
@@ -127,12 +129,12 @@ serve(async (req) => {
           });
 
         if (purchaseError) {
-          console.error("[ERROR] Error saving purchase:", purchaseError);
+          logStep("ERROR saving purchase", { error: purchaseError.message });
         } else {
-          console.log("[INFO] Purchase saved successfully");
+          logStep("Purchase saved successfully");
         }
 
-        // Handle no_ads_forever separately
+        // Handle no_ads_forever
         if (rewards?.noAdsForever) {
           await supabaseAdmin
             .from("user_purchases")
@@ -149,10 +151,10 @@ serve(async (req) => {
             .from("game_progress")
             .select("gems, lives, hammer_count, shuffle_count, undo_count, unlimited_lives_until")
             .eq("user_id", userId)
-            .single();
+            .maybeSingle();
 
-          if (progressError && progressError.code !== 'PGRST116') {
-            console.error("[ERROR] Error fetching game progress:", progressError);
+          if (progressError) {
+            logStep("ERROR fetching game progress", { error: progressError.message });
           }
 
           const currentGems = progressData?.gems || 0;
@@ -167,27 +169,25 @@ serve(async (req) => {
 
           if (rewards.gems) {
             updates.gems = currentGems + rewards.gems;
-            console.log(`[INFO] Adding ${rewards.gems} gems -> ${updates.gems}`);
+            logStep(`Adding ${rewards.gems} gems -> ${updates.gems}`);
           }
           if (rewards.lives) {
             updates.lives = Math.min(currentLives + rewards.lives, 99);
-            console.log(`[INFO] Adding ${rewards.lives} lives -> ${updates.lives}`);
+            logStep(`Adding ${rewards.lives} lives -> ${updates.lives}`);
           }
           if (rewards.powerups) {
             const perType = Math.ceil(rewards.powerups / 3);
             updates.hammer_count = currentHammer + perType;
             updates.shuffle_count = currentShuffle + perType;
             updates.undo_count = currentUndo + perType;
-            console.log(`[INFO] Adding ${perType} of each powerup`);
+            logStep(`Adding ${perType} of each powerup`);
           }
           if (rewards.noAdsDays) {
             const expireDate = new Date();
             expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
             updates.unlimited_lives_until = expireDate.toISOString();
-            console.log(`[INFO] Setting unlimited_lives_until to ${updates.unlimited_lives_until}`);
           }
 
-          // Update or insert game progress
           if (progressData) {
             const { error: updateError } = await supabaseAdmin
               .from("game_progress")
@@ -195,12 +195,11 @@ serve(async (req) => {
               .eq("user_id", userId);
 
             if (updateError) {
-              console.error("[ERROR] Error updating game progress:", updateError);
+              logStep("ERROR updating game progress", { error: updateError.message });
             } else {
-              console.log("[INFO] Game progress updated successfully");
+              logStep("✅ Game progress updated");
             }
           } else {
-            // Create new game progress record
             const { error: insertError } = await supabaseAdmin
               .from("game_progress")
               .insert({
@@ -216,70 +215,37 @@ serve(async (req) => {
               });
 
             if (insertError) {
-              console.error("[ERROR] Error inserting game progress:", insertError);
+              logStep("ERROR inserting game progress", { error: insertError.message });
             } else {
-              console.log("[INFO] Game progress created successfully");
+              logStep("✅ Game progress created");
             }
           }
         }
 
-        // Send admin notification email
+        // Send admin notification
         try {
-          await resend.emails.send({
-            from: "Mystic Garden <onboarding@resend.dev>",
-            to: [ADMIN_EMAIL],
-            subject: "💰 ¡Nuevo pago recibido!",
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #10B981;">Nuevo Pago Recibido 💰</h1>
-                <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <h2 style="color: #374151; margin-top: 0;">Detalles del Pago</h2>
-                  <p><strong>Producto:</strong> ${PRODUCT_NAMES[productId] || productId}</p>
-                  <p><strong>Monto:</strong> €${amountPaid.toFixed(2)}</p>
-                  <p><strong>Email del cliente:</strong> ${customerEmail}</p>
-                  <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</p>
-                  ${expiresAt ? `<p><strong>Expira:</strong> ${expiresAt.toLocaleString('es-ES')}</p>` : ''}
-                </div>
-                <p style="color: #6B7280;">Session ID: ${session.id}</p>
-              </div>
-            `,
-          });
-          console.log("[INFO] Admin notification email sent");
-        } catch (emailError) {
-          console.error("[ERROR] Error sending admin email:", emailError);
-        }
-
-        // Send customer confirmation email
-        if (customerEmail) {
-          try {
-            await resend.emails.send({
-              from: "Mystic Garden <onboarding@resend.dev>",
-              to: [customerEmail],
-              subject: "¡Gracias por tu compra! 🎉",
-              html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h1 style="color: #4F46E5;">¡Compra Confirmada! 🎉</h1>
-                  <p>Gracias por tu compra en Mystic Garden.</p>
-                  <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h2 style="color: #374151; margin-top: 0;">Detalles de tu Compra</h2>
-                    <p><strong>Producto:</strong> ${PRODUCT_NAMES[productId] || productId}</p>
-                    <p><strong>Monto:</strong> €${amountPaid.toFixed(2)}</p>
-                    <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</p>
-                  </div>
-                  <p>Tu compra está activa y lista para usar. ¡Disfruta del juego!</p>
-                  <p style="color: #6B7280; font-size: 14px; margin-top: 30px;">
-                    El equipo de Mystic Garden
-                  </p>
-                </div>
-              `,
+          const resendKey = Deno.env.get("RESEND_API_KEY");
+          if (resendKey) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${resendKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                from: "Mystic Garden <onboarding@resend.dev>",
+                to: ["fcanamases@gmail.com"],
+                subject: `💰 ¡Pago: ${PRODUCT_NAMES[productId] || productId} - €${amountPaid.toFixed(2)}!`,
+                html: `<h1>💰 Pago Recibido</h1><p>Producto: ${PRODUCT_NAMES[productId] || productId}</p><p>Monto: €${amountPaid.toFixed(2)}</p><p>Email: ${customerEmail}</p>`,
+              }),
             });
-            console.log("[INFO] Customer confirmation email sent");
-          } catch (emailError) {
-            console.error("[ERROR] Error sending customer email:", emailError);
+            logStep("Admin email sent");
           }
+        } catch (emailError) {
+          logStep("ERROR sending email", { error: String(emailError) });
         }
 
-        console.log(`[INFO] ✅ Purchase completed: ${productId} for user ${userId}`);
+        logStep(`✅ Purchase completed: ${productId} for user ${userId}`);
       }
     }
 
@@ -289,13 +255,10 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("[ERROR] Webhook error:", errorMessage);
+    logStep("ERROR", { message: errorMessage });
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
 });

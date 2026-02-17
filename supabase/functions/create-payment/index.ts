@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno&no-check";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 // Mapeo de productos del juego a precios de Stripe (Cuenta: acct_1SqILHPxvUpv2yak)
-// IMPORTANTE: Stripe requiere mínimo €0.50 para checkout sessions
 const PRODUCT_PRICES: Record<string, string> = {
   // Gemas
   "gems_100": "price_1SwC1uPxvUpv2yaknEvmYMKo",
@@ -30,12 +29,12 @@ const PRODUCT_PRICES: Record<string, string> = {
   "continue_game": "price_1SwC5mPxvUpv2yaks3JEMRJn",
   "flash_offer": "price_1SwC4UPxvUpv2yakS90wIhNe",
   // Micro-transacciones €0.50 (mínimo Stripe)
-  "buy_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",           // €0.50 - Continuar Nivel
-  "welcome_pack": "price_1Sx2g2PxvUpv2yakNxaBeR3a",        // €0.50 - Pack Bienvenida
-  "extra_spin": "price_1Sx2gcPxvUpv2yakAQHL5UKW",          // €0.50 - Giro Extra
-  "streak_protection": "price_1Sx2gxPxvUpv2yak7WnJE3Eo",   // €0.50 - Protección Racha
-  "lifesaver_pack": "price_1Sx2hKPxvUpv2yakkBJPimfq",      // €0.50 - Pack Salvavidas
-  "reward_doubler": "price_1Sx2hYPxvUpv2yaknaIPYKzW",      // €0.50 - Duplicador
+  "buy_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
+  "welcome_pack": "price_1Sx2g2PxvUpv2yakNxaBeR3a",
+  "extra_spin": "price_1Sx2gcPxvUpv2yakAQHL5UKW",
+  "streak_protection": "price_1Sx2gxPxvUpv2yak7WnJE3Eo",
+  "lifesaver_pack": "price_1Sx2hKPxvUpv2yakkBJPimfq",
+  "reward_doubler": "price_1Sx2hYPxvUpv2yaknaIPYKzW",
   // Experience Packs
   "pack_victoria_segura": "price_1SwC7xPxvUpv2yakQ0CmX5uN",
   "pack_racha_infinita": "price_1SwC8APxvUpv2yakGXumP9b1",
@@ -55,58 +54,66 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-  );
-
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    // 1. Validate env vars
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    
+    console.log("[DEBUG] SUPABASE_URL present:", !!supabaseUrl, "length:", supabaseUrl?.length);
+    console.log("[DEBUG] SUPABASE_ANON_KEY present:", !!supabaseAnonKey);
+    console.log("[DEBUG] STRIPE_SECRET_KEY present:", !!stripeKey, "prefix:", stripeKey?.substring(0, 7));
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error(`Missing Supabase config: URL=${!!supabaseUrl}, KEY=${!!supabaseAnonKey}`);
+    }
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+
+    // 2. Auth
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header");
+    
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+    console.log("[INFO] User authenticated:", user.email);
 
+    // 3. Product lookup
     const { productId } = await req.json();
     const priceId = PRODUCT_PRICES[productId];
-    
-    if (!priceId) {
-      throw new Error(`Product ${productId} not found`);
-    }
+    if (!priceId) throw new Error(`Product ${productId} not found`);
+    console.log("[INFO] Creating payment for product:", productId, "price:", priceId);
 
-    console.log("Creating payment for product:", productId, "price:", priceId);
+    // 4. Create Stripe session
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
-
-    // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
+    let customerId: string | undefined;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
     }
+    console.log("[INFO] Customer lookup done, existing:", !!customerId);
 
-    // Create checkout session
+    const origin = req.headers.get("origin") || "https://mystic-garden-gems-87023.lovable.app";
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/?payment=success`,
-      cancel_url: `${req.headers.get("origin")}/?payment=cancel`,
+      success_url: `${origin}/?payment=success`,
+      cancel_url: `${origin}/?payment=cancel`,
       metadata: {
         user_id: user.id,
         product_id: productId,
       },
     });
 
-    console.log("Payment session created:", session.id);
+    console.log("[INFO] ✅ Payment session created:", session.id);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -114,7 +121,7 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error creating payment:", errorMessage);
+    console.error("[ERROR] ❌ create-payment failed:", errorMessage);
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
