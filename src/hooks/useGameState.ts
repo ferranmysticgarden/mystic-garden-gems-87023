@@ -33,17 +33,22 @@ export const useGameState = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
 
+  // Track if we've loaded from DB at least once
+  const hasLoadedRef = useRef(false);
+
   // Load game progress from database
   useEffect(() => {
     if (!user) {
       setGameState(INITIAL_STATE);
       setLoading(false);
+      hasLoadedRef.current = false;
       return;
     }
 
     // CRITICAL: Set loading=true BEFORE async load to prevent
     // the save effect from overwriting DB data with INITIAL_STATE
     setLoading(true);
+    hasLoadedRef.current = false;
 
     const loadProgress = async () => {
       try {
@@ -68,6 +73,7 @@ export const useGameState = () => {
             unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
           });
         }
+        hasLoadedRef.current = true;
       } catch (error) {
         console.error('Error loading game progress:', error);
       } finally {
@@ -80,7 +86,7 @@ export const useGameState = () => {
 
   // Save to database whenever state changes
   useEffect(() => {
-    if (!user || loading) return;
+    if (!user || loading || !hasLoadedRef.current) return;
 
     const saveProgress = async () => {
       try {
