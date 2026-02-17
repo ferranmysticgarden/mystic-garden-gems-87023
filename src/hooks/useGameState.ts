@@ -79,6 +79,12 @@ export const useGameState = () => {
 
     const saveProgress = async () => {
       try {
+        console.log('[SAVE] Saving progress:', {
+          level: gameState.currentLevel,
+          completed: gameState.completedLevels,
+          gems: gameState.gems,
+          lives: gameState.lives,
+        });
         const { error } = await supabase
           .from('game_progress')
           .upsert({
@@ -94,9 +100,14 @@ export const useGameState = () => {
             unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
           }, { onConflict: 'user_id' });
 
-        if (error) throw error;
+        if (error) {
+          console.error('[SAVE] ❌ FAILED:', error.message, error.code);
+          throw error;
+        } else {
+          console.log('[SAVE] ✅ OK - level:', gameState.currentLevel, 'completed:', gameState.completedLevels);
+        }
       } catch (error) {
-        console.error('Error saving game progress:', error);
+        console.error('[SAVE] ❌ Error saving game progress:', error);
       }
     };
 
@@ -181,11 +192,13 @@ export const useGameState = () => {
   }, []);
 
   const completeLevel = useCallback((levelId: number, reward: { gems?: number }) => {
+    console.log('[GAME] ✅ completeLevel called! levelId:', levelId, 'reward:', reward);
     setGameState((prev) => {
       const newCompletedLevels = prev.completedLevels.includes(levelId)
         ? prev.completedLevels
         : [...prev.completedLevels, levelId];
       
+      console.log('[GAME] State update: currentLevel', prev.currentLevel, '→', levelId + 1, 'completed:', newCompletedLevels);
       return {
         ...prev,
         currentLevel: levelId + 1,
