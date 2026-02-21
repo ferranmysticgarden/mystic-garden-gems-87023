@@ -13,7 +13,7 @@ interface Level6OfferProps {
 
 /**
  * Oferta ligera y neutra para el nivel 6.
- * Se muestra solo en la PRIMERA derrota con ≥80% de progreso.
+ * Se muestra solo en la PRIMERA derrota con ≥50% de progreso.
  * Recompensa: +3 movimientos por €0.50
  * Incluye timer de urgencia de 5 minutos.
  */

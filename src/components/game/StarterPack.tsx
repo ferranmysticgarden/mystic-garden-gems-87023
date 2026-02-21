@@ -26,8 +26,12 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
     // Trigger después de nivel 2, 3 o 4 (más temprano para captar antes del churn)
     if (![2, 3, 4].includes(levelJustCompleted)) return;
 
-    const hasSeenOffer = localStorage.getItem(`starter-pack-${user.id}`);
-    if (!hasSeenOffer) {
+    // Reaparece cada 3 sesiones en vez de mostrarse solo 1 vez
+    const seenCount = parseInt(localStorage.getItem(`starter-pack-count-${user.id}`) || '0', 10);
+    const hasBought = localStorage.getItem(`starter-pack-${user.id}`) === 'true';
+    if (!hasBought && seenCount % 3 === 0) {
+        // Incrementar contador de sesiones
+      localStorage.setItem(`starter-pack-count-${user.id}`, String(seenCount + 1));
       // Delay para que aparezca después de la celebración
       const timer = setTimeout(() => {
         setShow(true);
@@ -35,6 +39,9 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
         triggerCelebration();
       }, 2500);
       return () => clearTimeout(timer);
+    } else if (!hasBought) {
+      // Incrementar contador aunque no mostremos
+      localStorage.setItem(`starter-pack-count-${user.id}`, String(seenCount + 1));
     }
   }, [levelJustCompleted, user?.id]);
 

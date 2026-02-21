@@ -94,11 +94,11 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
             <div className="text-6xl mb-3 animate-bounce">🎁</div>
 
             <h2 className="text-2xl font-bold text-white mb-2">
-              ¡Increíble primera victoria!
+              ¡Casi lo tenías! 😤
             </h2>
             
             <p className="text-purple-200 mb-4">
-              Solo ahora - oferta exclusiva
+              Te faltó muy poco — esta ayuda te lo garantiza
             </p>
 
             {/* Benefits list */}
