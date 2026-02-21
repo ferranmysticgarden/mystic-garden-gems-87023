@@ -216,29 +216,11 @@ const Index = () => {
     // Show first win celebration for level 1
     if (completedCount === 1) {
       setShowFirstWin(true);
-      
-      // Show Welcome Offer after first win celebration (if not seen and can show today)
-      if (!hasSeenWelcomeOffer() && canShowOfferToday()) {
-        setTimeout(() => {
-          setShowWelcomeOffer(true);
-          markOfferShown();
-        }, 3000); // After first win celebration
-      }
-    }
-    
-    // Level 4 micro-reward (once only)
-    if (currentLevel.id === 4 && !localStorage.getItem('level4_reward_claimed')) {
-      setTimeout(() => setShowLevel4Reward(true), 1500);
     }
 
     // Show Starter Pack after level 2, 3 or 4 (only if welcome offer not active)
     if ((currentLevel.id === 2 || currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
       setTimeout(() => setShowStarterPack(true), 2000);
-    }
-    
-    // Show First Session Reward after level 5 (100 gems + chest)
-    if (currentLevel.id === 5) {
-      setTimeout(() => setShowFirstSessionReward(true), 2500);
     }
     
     // Show post-victory offer for harder levels (level 6+)
@@ -264,9 +246,17 @@ const Index = () => {
       }
       return newCount;
     });
+
+    // Show Welcome Offer on level 3+ defeat (if not seen)
+    if (currentLevel.id >= 3 && !hasSeenWelcomeOffer() && canShowOfferToday()) {
+      setTimeout(() => {
+        setShowWelcomeOffer(true);
+        markOfferShown();
+      }, 1500);
+    }
     
     setScreen('menu');
-  }, [t]);
+  }, [t, currentLevel.id]);
 
   const handleSelectLevel = (levelId: number) => {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
@@ -470,8 +460,7 @@ const Index = () => {
               {t('menu.levels')}
             </Button>
             
-            {/* Shop button - OCULTO si no ha comprado */}
-            {!isShopLocked && (
+            {/* Shop button - SIEMPRE VISIBLE para generar deseo */}
               <Button
                 onClick={() => setScreen('shop')}
                 variant="outline"
@@ -480,7 +469,6 @@ const Index = () => {
                 <ShoppingBag className="w-5 h-5 mr-2" />
                 {t('menu.shop')}
               </Button>
-            )}
           </div>
 
           {/* Battle Pass Button */}
@@ -521,8 +509,7 @@ const Index = () => {
               <span className="text-blue-400 font-semibold text-sm">Misiones</span>
             </Button>
 
-            {/* Loot Chest - OCULTO si no ha comprado */}
-            {!isShopLocked && (
+            {/* Loot Chest - SIEMPRE VISIBLE */}
               <Button
                 onClick={() => setShowLootChest(true)}
                 variant="outline"
@@ -531,7 +518,6 @@ const Index = () => {
                 <Gift className="w-5 h-5 mr-2 text-amber-400" />
                 <span className="text-amber-400 font-semibold text-sm">Cofres</span>
               </Button>
-            )}
           </div>
 
           {/* Player Rank Display */}
@@ -546,8 +532,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Shop Modal - BLOQUEADO si no ha comprado */}
-      {screen === 'shop' && !isShopLocked && (
+      {/* Shop Modal - SIEMPRE ACCESIBLE */}
+      {screen === 'shop' && (
         <Shop
           onClose={() => setScreen('menu')}
           onPurchase={handlePurchase}
@@ -671,29 +657,8 @@ const Index = () => {
         />
       )}
 
-      {/* First Session Reward - after completing level 5 */}
-      {showFirstSessionReward && (
-        <FirstSessionReward
-          levelJustCompleted={lastCompletedLevel}
-          onClaim={(gems, lives) => {
-            addGems(gems);
-            addLives(lives);
-            toast.success(`¡Regalo de Primera Sesión! +${gems}💎 +${lives}❤️`);
-          }}
-          onClose={() => setShowFirstSessionReward(false)}
-        />
-      )}
-
-      {/* Level 4 Micro-Reward - emotional gift */}
-      <Level4Reward
-        open={showLevel4Reward}
-        onClaim={() => {
-          addGems(50);
-          localStorage.setItem('level4_reward_claimed', 'true');
-          setShowLevel4Reward(false);
-          toast.success('¡+50 gemas! 💎🌸');
-        }}
-      />
+      {/* First Session Reward ELIMINADO - ya no damos 100 gemas gratis */}
+      {/* Level 4 Micro-Reward ELIMINADO - ya no damos 50 gemas gratis */}
 
       {/* Share Prompt - after 5 games or 1 day */}
       <SharePrompt 
@@ -735,8 +700,8 @@ const Index = () => {
         />
       )}
 
-      {/* Loot Chest Modal - BLOQUEADO si no ha comprado */}
-      {showLootChest && !isShopLocked && (
+      {/* Loot Chest Modal - SIEMPRE ACCESIBLE */}
+      {showLootChest && (
         <LootChest 
           onClose={() => setShowLootChest(false)}
           onRewardClaimed={(gems, lives) => {

@@ -149,7 +149,7 @@ export const GameScreen = ({
         // OFERTA NIVEL 6
         const level6AlreadyShown = localStorage.getItem('level6_offer_dismissed') === 'true';
         if (level.id === 6 && !level6AlreadyShown) {
-          if (progress >= 80) {
+          if (progress >= 50) {
             setProgressAtLoss(progress);
             emitAnalyticsEvent('level6_popup_shown', { level: 6, progress });
             setShowLevel6Offer(true);
