@@ -657,8 +657,28 @@ const Index = () => {
         />
       )}
 
-      {/* First Session Reward ELIMINADO - ya no damos 100 gemas gratis */}
-      {/* Level 4 Micro-Reward ELIMINADO - ya no damos 50 gemas gratis */}
+      {/* First Session Reward - dopamina temprana para retención */}
+      <FirstSessionReward 
+        levelJustCompleted={lastCompletedLevel}
+        onClaim={(gems, lives) => {
+          addGems(gems);
+          addLives(lives);
+          toast.success(`¡Bienvenido! +${gems}💎 +${lives}❤️`);
+        }}
+        onClose={() => {}}
+      />
+
+      {/* Level 4 Micro-Reward - refuerzo de progresión */}
+      {showLevel4Reward && (
+        <Level4Reward 
+          open={showLevel4Reward}
+          onClaim={() => {
+            addGems(50);
+            toast.success(`¡Nivel 4 completado! +50💎`);
+            setShowLevel4Reward(false);
+          }}
+        />
+      )}
 
       {/* Share Prompt - after 5 games or 1 day */}
       <SharePrompt 

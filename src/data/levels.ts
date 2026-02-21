@@ -20,9 +20,9 @@ export const LEVELS: Level[] = [
   // Niveles 1-5: MUY FÁCILES - enganchar al jugador
   { id: 1, objective: { type: 'score', target: 'points', count: 500 }, moves: 30, stars: { one: 500, two: 800, three: 1000 }, reward: {} },
   { id: 2, objective: { type: 'collect', target: '🌸', count: 5 }, moves: 25, stars: { one: 5, two: 7, three: 10 }, reward: {} },
-  { id: 3, objective: { type: 'collect', target: '🍃', count: 6 }, moves: 18, stars: { one: 6, two: 8, three: 10 }, reward: {} },
+  { id: 3, objective: { type: 'collect', target: '🍃', count: 6 }, moves: 22, stars: { one: 6, two: 8, three: 10 }, reward: {} },
   { id: 4, objective: { type: 'score', target: 'points', count: 700 }, moves: 28, stars: { one: 700, two: 1000, three: 1300 }, reward: {} },
-  { id: 5, objective: { type: 'collect', target: '🌺', count: 6 }, moves: 20, stars: { one: 6, two: 8, three: 10 }, reward: {} },
+  { id: 5, objective: { type: 'collect', target: '🌺', count: 6 }, moves: 22, stars: { one: 6, two: 8, three: 10 }, reward: { gems: 5 } },
   
   // Nivel 6: Transición - todavía ganable pero ajustado
   { id: 6, objective: { type: 'collect', target: '🌼', count: 9 }, moves: 25, stars: { one: 9, two: 11, three: 13 }, reward: {} },
