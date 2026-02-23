@@ -44,6 +44,7 @@ import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
 import { Level4Reward } from '@/components/game/Level4Reward';
+import { LoginPrompt } from '@/components/game/LoginPrompt';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
@@ -118,6 +119,9 @@ const Index = () => {
   // State for level 4 micro-reward
   const [showLevel4Reward, setShowLevel4Reward] = useState(false);
 
+  // State for login prompt (guest mode)
+  const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | null>(null);
+
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
   
@@ -179,6 +183,27 @@ const Index = () => {
       sendLivesFullNotification();
     });
   }, [setOnLivesFull, sendLivesFullNotification]);
+
+  // Listen for login requests from payment hooks (guest trying to buy)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setShowLoginPrompt(detail?.reason || 'purchase');
+    };
+    window.addEventListener('request_login', handler);
+    return () => window.removeEventListener('request_login', handler);
+  }, []);
+
+  // Prompt save progress after level 5 for guests
+  useEffect(() => {
+    if (!user && gameState.completedLevels.length === 5) {
+      const prompted = localStorage.getItem('save_progress_prompted');
+      if (!prompted) {
+        setTimeout(() => setShowLoginPrompt('save_progress'), 2000);
+        localStorage.setItem('save_progress_prompted', 'true');
+      }
+    }
+  }, [user, gameState.completedLevels.length]);
 
   // Music is now auto-started by useBackgroundMusic hook
 
@@ -329,9 +354,7 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return <AuthPage onAuthSuccess={() => {}} />;
-  }
+  // NO auth wall — guests play immediately!
 
   if (screen === 'game') {
     // Si hay estado restaurado, pasarlo al GameScreen
@@ -377,15 +400,32 @@ const Index = () => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
             <User className="w-4 h-4" />
-            <span className="text-sm">{user.email?.split('@')[0]}</span>
+            <span className="text-sm">
+              {user ? user.email?.split('@')[0] : 'Invitado'}
+            </span>
+            {!user && (
+              <button
+                onClick={() => setShowLoginPrompt('save_progress')}
+                className="text-xs text-primary underline ml-1"
+              >
+                Guardar
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {/* Audio Controls - Sound & Music */}
             <AudioControls />
             
-            {/* Exit Button - Botón de puerta mejorado */}
+            {/* Exit Button */}
             <button
-              onClick={() => setShowExitModal(true)}
+              onClick={() => {
+                if (user) {
+                  setShowExitModal(true);
+                } else {
+                  // Guest: just show exit modal without signOut
+                  setShowExitModal(true);
+                }
+              }}
               className="w-12 h-12 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 hover:scale-110 transition-all duration-150"
               aria-label="Salir del juego"
             >
@@ -612,11 +652,22 @@ const Index = () => {
         <ExitConfirmModal 
           onStay={() => setShowExitModal(false)}
           onExit={() => {
-            // En web: cerrar el modal y hacer signOut
             setShowExitModal(false);
-            signOut();
+            if (user) signOut();
           }}
           streak={streakData.currentStreak}
+        />
+      )}
+
+      {/* Login Prompt - for guest users needing auth */}
+      {showLoginPrompt && (
+        <LoginPrompt
+          reason={showLoginPrompt}
+          onClose={() => setShowLoginPrompt(null)}
+          onSuccess={() => {
+            setShowLoginPrompt(null);
+            toast.success('¡Cuenta creada! Tu progreso se ha guardado en la nube ☁️');
+          }}
         />
       )}
 

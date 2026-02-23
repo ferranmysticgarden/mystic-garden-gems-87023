@@ -26,27 +26,50 @@ const INITIAL_STATE: GameState = {
   unlimitedLivesUntil: null,
 };
 
-const LIFE_REFILL_TIME = 35 * 60 * 1000; // 35 minutes - más tiempo para que duela esperar
+const LOCAL_STORAGE_KEY = 'mystic_guest_progress';
+const LIFE_REFILL_TIME = 35 * 60 * 1000; // 35 minutes
+
+/** Load guest progress from localStorage */
+const loadLocalProgress = (): GameState | null => {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+};
+
+/** Save guest progress to localStorage */
+const saveLocalProgress = (state: GameState) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+  } catch {}
+};
 
 export const useGameState = () => {
   const { user } = useAuth();
-  const [gameState, setGameState] = useState<GameState>(INITIAL_STATE);
+  const [gameState, setGameState] = useState<GameState>(() => {
+    // On first render, load from localStorage immediately (guest mode)
+    return loadLocalProgress() || INITIAL_STATE;
+  });
   const [loading, setLoading] = useState(true);
 
   // Track if we've loaded from DB at least once
   const hasLoadedRef = useRef(false);
 
-  // Load game progress from database
+  // Load game progress — from DB if logged in, from localStorage if guest
   useEffect(() => {
     if (!user) {
-      setGameState(INITIAL_STATE);
+      // Guest mode: load from localStorage (already done in useState init)
+      const local = loadLocalProgress();
+      if (local) {
+        setGameState(local);
+      }
       setLoading(false);
-      hasLoadedRef.current = false;
+      hasLoadedRef.current = true;
       return;
     }
 
-    // CRITICAL: Set loading=true BEFORE async load to prevent
-    // the save effect from overwriting DB data with INITIAL_STATE
+    // Logged in: load from DB
     setLoading(true);
     hasLoadedRef.current = false;
 
@@ -61,7 +84,7 @@ export const useGameState = () => {
         if (error) throw error;
 
         if (data) {
-          setGameState({
+          const dbState: GameState = {
             lives: data.lives,
             gems: data.gems,
             currentLevel: data.current_level,
@@ -71,7 +94,39 @@ export const useGameState = () => {
             shuffles: data.shuffle_count,
             lastLifeRefill: new Date(data.last_life_refill).getTime(),
             unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
-          });
+          };
+
+          // Merge: if guest played further, keep the better progress
+          const local = loadLocalProgress();
+          if (local && local.currentLevel > dbState.currentLevel) {
+            // Guest progress is ahead — merge it
+            const merged: GameState = {
+              ...dbState,
+              currentLevel: Math.max(dbState.currentLevel, local.currentLevel),
+              completedLevels: [...new Set([...dbState.completedLevels, ...local.completedLevels])],
+              gems: dbState.gems + local.gems,
+              lives: Math.max(dbState.lives, local.lives),
+              hammers: dbState.hammers + local.hammers,
+              undos: dbState.undos + local.undos,
+              shuffles: dbState.shuffles + local.shuffles,
+            };
+            setGameState(merged);
+            // Clear guest progress after merge
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            console.log('[GAME] ✅ Guest progress merged with cloud');
+          } else {
+            setGameState(dbState);
+            // Clear local since DB is ahead
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+          }
+        } else {
+          // No DB data — check if there's guest progress to migrate
+          const local = loadLocalProgress();
+          if (local) {
+            setGameState(local);
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            console.log('[GAME] ✅ Guest progress migrated to new account');
+          }
         }
         hasLoadedRef.current = true;
       } catch (error) {
@@ -84,45 +139,50 @@ export const useGameState = () => {
     loadProgress();
   }, [user]);
 
-  // Save to database whenever state changes
+  // Save progress whenever state changes
   useEffect(() => {
-    if (!user || loading || !hasLoadedRef.current) return;
+    if (loading || !hasLoadedRef.current) return;
 
-    const saveProgress = async () => {
-      try {
-        console.log('[SAVE] Saving progress:', {
-          level: gameState.currentLevel,
-          completed: gameState.completedLevels,
-          gems: gameState.gems,
-          lives: gameState.lives,
-        });
-        const { error } = await supabase
-          .from('game_progress')
-          .upsert({
-            user_id: user.id,
-            lives: gameState.lives,
+    if (user) {
+      // Save to DB
+      const saveProgress = async () => {
+        try {
+          console.log('[SAVE] Saving progress:', {
+            level: gameState.currentLevel,
+            completed: gameState.completedLevels,
             gems: gameState.gems,
-            current_level: gameState.currentLevel,
-            completed_levels: gameState.completedLevels,
-            hammer_count: gameState.hammers,
-            undo_count: gameState.undos,
-            shuffle_count: gameState.shuffles,
-            last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
-            unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
-          }, { onConflict: 'user_id' });
+            lives: gameState.lives,
+          });
+          const { error } = await supabase
+            .from('game_progress')
+            .upsert({
+              user_id: user.id,
+              lives: gameState.lives,
+              gems: gameState.gems,
+              current_level: gameState.currentLevel,
+              completed_levels: gameState.completedLevels,
+              hammer_count: gameState.hammers,
+              undo_count: gameState.undos,
+              shuffle_count: gameState.shuffles,
+              last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
+              unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
+            }, { onConflict: 'user_id' });
 
-        if (error) {
-          console.error('[SAVE] ❌ FAILED:', error.message, error.code);
-          throw error;
-        } else {
-          console.log('[SAVE] ✅ OK - level:', gameState.currentLevel, 'completed:', gameState.completedLevels);
+          if (error) {
+            console.error('[SAVE] ❌ FAILED:', error.message, error.code);
+            throw error;
+          } else {
+            console.log('[SAVE] ✅ OK - level:', gameState.currentLevel, 'completed:', gameState.completedLevels);
+          }
+        } catch (error) {
+          console.error('[SAVE] ❌ Error saving game progress:', error);
         }
-      } catch (error) {
-        console.error('[SAVE] ❌ Error saving game progress:', error);
-      }
-    };
-
-    saveProgress();
+      };
+      saveProgress();
+    } else {
+      // Guest: save to localStorage
+      saveLocalProgress(gameState);
+    }
   }, [gameState, user, loading]);
 
   // Life refill system with notification callback
@@ -138,22 +198,18 @@ export const useGameState = () => {
         const now = Date.now();
         const timeSinceLastRefill = now - prev.lastLifeRefill;
         
-        // Check unlimited lives
         if (prev.unlimitedLivesUntil && now < prev.unlimitedLivesUntil) {
-          return prev; // Don't refill when unlimited
+          return prev;
         }
         
-        // Remove expired unlimited lives
         if (prev.unlimitedLivesUntil && now >= prev.unlimitedLivesUntil) {
           return { ...prev, unlimitedLivesUntil: null };
         }
         
-        // Refill lives
         if (prev.lives < 5 && timeSinceLastRefill >= LIFE_REFILL_TIME) {
           const livesToAdd = Math.floor(timeSinceLastRefill / LIFE_REFILL_TIME);
           const newLives = Math.min(5, prev.lives + livesToAdd);
           
-          // Trigger notification when lives become full
           if (newLives === 5 && prev.lives < 5 && onLivesFullRef.current) {
             onLivesFullRef.current();
           }
@@ -167,7 +223,7 @@ export const useGameState = () => {
         
         return prev;
       });
-    }, 1000); // Check every second
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -175,7 +231,7 @@ export const useGameState = () => {
   const loseLife = useCallback(() => {
     setGameState((prev) => {
       if (prev.unlimitedLivesUntil && Date.now() < prev.unlimitedLivesUntil) {
-        return prev; // Don't lose life when unlimited
+        return prev;
       }
       return { ...prev, lives: Math.max(0, prev.lives - 1) };
     });
@@ -277,7 +333,7 @@ export const useGameState = () => {
     if (hasUnlimitedLives() || gameState.lives >= 5) return 0;
     const timeSinceLastRefill = Date.now() - gameState.lastLifeRefill;
     const timeUntilNext = LIFE_REFILL_TIME - (timeSinceLastRefill % LIFE_REFILL_TIME);
-    return Math.ceil(timeUntilNext / 1000); // Return in seconds
+    return Math.ceil(timeUntilNext / 1000);
   }, [gameState.lastLifeRefill, gameState.lives, hasUnlimitedLives]);
 
   return {
