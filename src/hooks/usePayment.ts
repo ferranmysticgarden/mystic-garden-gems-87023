@@ -31,7 +31,8 @@ export const usePayment = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error('Debes iniciar sesión para realizar una compra');
+        // Guest user — dispatch event so Index shows LoginPrompt
+        window.dispatchEvent(new CustomEvent('request_login', { detail: { reason: 'purchase' } }));
         return false;
       }
 
