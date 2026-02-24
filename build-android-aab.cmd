@@ -55,17 +55,11 @@ if errorlevel 1 (
 )
 
 REM --- Step 3/4 ---
-echo [3/4] npx cap sync android
-call npx cap sync android
-if errorlevel 1 (
-  echo ERROR: npx cap sync android fallo.
-  pause
-  exit /b 1
-)
+echo [3/4] Preparando plataforma Android...
 
-REM --- Step 3.1/4: Ensure Android platform exists ---
+REM Si falta Android (o esta corrupto), regenerar ANTES de sync
 if not exist "android\gradlew.bat" (
-  echo [3.1/4] Android no encontrado o corrupto. Regenerando plataforma...
+  echo [3/4] Android no encontrado o corrupto. Regenerando plataforma...
   if exist "android" rmdir /s /q "android"
   call npx cap add android
   if errorlevel 1 (
@@ -73,7 +67,20 @@ if not exist "android\gradlew.bat" (
     pause
     exit /b 1
   )
-  echo [3.2/4] npx cap sync android (tras regenerar)
+)
+
+echo [3.1/4] npx cap sync android
+call npx cap sync android
+if errorlevel 1 (
+  echo WARN: npx cap sync android fallo. Reintentando con regeneracion completa...
+  if exist "android" rmdir /s /q "android"
+  call npx cap add android
+  if errorlevel 1 (
+    echo ERROR: npx cap add android fallo en reintento.
+    pause
+    exit /b 1
+  )
+
   call npx cap sync android
   if errorlevel 1 (
     echo ERROR: npx cap sync android fallo tras regenerar.
