@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import OAuthCallback from "./pages/OAuthCallback";
 import VideoTool from "./pages/VideoTool";
+import ProductLanding from "./pages/ProductLanding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => {
               <Route path="/admin" element={<Admin />} />
               <Route path="/callback" element={<OAuthCallback />} />
               <Route path="/video-tool" element={<VideoTool />} />
+              <Route path="/product" element={<ProductLanding />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

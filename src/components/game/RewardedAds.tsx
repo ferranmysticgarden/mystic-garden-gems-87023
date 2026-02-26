@@ -21,7 +21,7 @@ const getDiscountedPrice = (level: number): { price: string; discount: number; l
   return { price: '34,99', discount: 0, label: 'Precio Base' };
 };
 
-const LANDING_URL = ''; // Se rellenará cuando el usuario pase la URL
+const LANDING_URL_BASE = '/product'; // Landing page interna
 
 export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsProps) => {
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,7 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
   };
 
   const openProductLink = async () => {
-    const url = LANDING_URL || 'https://example.com'; // fallback
+    const url = `${window.location.origin}${LANDING_URL_BASE}?level=${currentLevel}`;
     try {
       if (Capacitor.isNativePlatform()) {
         const { Browser } = await import('@capacitor/browser');
