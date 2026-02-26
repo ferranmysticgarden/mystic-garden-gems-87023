@@ -103,6 +103,69 @@ export type Database = {
           },
         ]
       }
+      product_orders: {
+        Row: {
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          player_level: number
+          price_paid: number
+          product_name: string
+          shipping_address: string
+          shipping_city: string
+          shipping_country: string
+          shipping_postal_code: string
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          player_level?: number
+          price_paid: number
+          product_name: string
+          shipping_address: string
+          shipping_city: string
+          shipping_country?: string
+          shipping_postal_code: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          player_level?: number
+          price_paid?: number
+          product_name?: string
+          shipping_address?: string
+          shipping_city?: string
+          shipping_country?: string
+          shipping_postal_code?: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
