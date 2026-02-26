@@ -568,7 +568,7 @@ const Index = () => {
 
         {/* Rewarded Ads Section */}
         <div className="mb-4">
-          <RewardedAds onRewardEarned={handleRewardedAdEarned} />
+          <RewardedAds onRewardEarned={handleRewardedAdEarned} currentLevel={gameState.currentLevel} />
         </div>
       </div>
 
