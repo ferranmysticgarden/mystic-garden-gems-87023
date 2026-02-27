@@ -1,36 +1,78 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Sparkles, AlertCircle, ExternalLink, Tag } from 'lucide-react';
+import { Play, Sparkles, AlertCircle, Gem, Zap, Shield, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdLimit } from '@/hooks/useAdLimit';
-import { Capacitor } from '@capacitor/core';
-import hologramFanImg from '@/assets/hologram-fan-product.png';
 
 interface RewardedAdsProps {
   onRewardEarned?: (gems: number) => void;
   currentLevel?: number;
 }
 
-/** Pricing tiers based on player level */
-const getDiscountedPrice = (level: number): { price: string; discount: number; label: string } => {
-  if (level >= 15) return { price: '27,99', discount: 20, label: '🏆 Precio VIP' };
-  if (level >= 10) return { price: '28,99', discount: 17, label: '⭐ Precio Premium' };
-  if (level >= 5) return { price: '30,99', discount: 11, label: '🔥 Precio Pro' };
-  if (level >= 2) return { price: '32,99', discount: 6, label: '🌱 Descuento Jugador' };
-  return { price: '34,99', discount: 0, label: 'Precio Base' };
-};
+const AD_REWARD = 10; // Reduced from 20
 
-const LANDING_URL_BASE = '/product'; // Landing page interna
+/** Rotating promo packs shown in the fullscreen ad */
+const PROMO_PACKS = [
+  {
+    id: 'starter_pack',
+    title: '🌟 Starter Pack',
+    subtitle: '¡La mejor oferta para empezar!',
+    price: '€0,99',
+    oldPrice: '€4,99',
+    discount: 80,
+    benefits: ['500 Gemas 💎', '10 Vidas ❤️', '3 Power-ups ⚡'],
+    gradient: 'from-amber-500/80 to-orange-600/80',
+    border: 'border-amber-400/40',
+  },
+  {
+    id: 'gems_300',
+    title: '💎 Mega Pack Gemas',
+    subtitle: '¡El más popular!',
+    price: '€3,99',
+    oldPrice: '€7,99',
+    discount: 50,
+    benefits: ['300 Gemas 💎', 'Valor x2', 'Desbloquea la tienda'],
+    gradient: 'from-purple-500/80 to-indigo-600/80',
+    border: 'border-purple-400/40',
+  },
+  {
+    id: 'welcome_pack',
+    title: '🎁 Pack Bienvenida',
+    subtitle: '¡Solo para nuevos jugadores!',
+    price: '€0,49',
+    oldPrice: '€1,99',
+    discount: 75,
+    benefits: ['+5 Movimientos 🎯', '+3 Boosters 🚀', 'x2 Monedas 30min'],
+    gradient: 'from-emerald-500/80 to-teal-600/80',
+    border: 'border-emerald-400/40',
+  },
+  {
+    id: 'pack_impulso',
+    title: '🔥 Pack Impulso',
+    subtitle: '¡Supera cualquier nivel!',
+    price: '€0,99',
+    oldPrice: '€2,99',
+    discount: 67,
+    benefits: ['+5 Movimientos 🎯', '+3 Boosters 🚀', 'Victoria asegurada'],
+    gradient: 'from-rose-500/80 to-pink-600/80',
+    border: 'border-rose-400/40',
+  },
+];
 
 export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsProps) => {
   const [loading, setLoading] = useState(false);
   const [showingAd, setShowingAd] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [promoIndex, setPromoIndex] = useState(0);
   const { user } = useAuth();
   const { canWatchAd, adsWatchedThisHour, maxAdsPerHour, nextAdAvailableIn, recordAdWatch } = useAdLimit();
 
-  const { price, discount, label } = getDiscountedPrice(currentLevel);
+  // Rotate promo each time ad is shown
+  useEffect(() => {
+    const stored = parseInt(localStorage.getItem('promo_rotation_index') || '0');
+    setPromoIndex(stored % PROMO_PACKS.length);
+  }, []);
 
   useEffect(() => {
     if (showingAd && countdown > 0) {
@@ -47,11 +89,13 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
     setLoading(true);
     setShowingAd(true);
     setCountdown(5);
+    // Advance rotation for next time
+    const nextIndex = (promoIndex + 1) % PROMO_PACKS.length;
+    localStorage.setItem('promo_rotation_index', String(nextIndex));
   };
 
   const completeAdWatch = async () => {
     if (!user?.id) return;
-    const reward = 20;
 
     const { data: gameState } = await supabase
       .from('game_progress')
@@ -62,113 +106,85 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
     if (gameState) {
       await supabase
         .from('game_progress')
-        .update({ gems: (gameState.gems || 0) + reward })
+        .update({ gems: (gameState.gems || 0) + AD_REWARD })
         .eq('user_id', user.id);
     }
 
-    onRewardEarned?.(reward);
+    onRewardEarned?.(AD_REWARD);
     setShowingAd(false);
     setLoading(false);
   };
 
-  const openProductLink = async () => {
-    const url = `${window.location.origin}${LANDING_URL_BASE}?level=${currentLevel}`;
-    try {
-      if (Capacitor.isNativePlatform()) {
-        const { Browser } = await import('@capacitor/browser');
-        await Browser.open({ url });
-      } else {
-        window.open(url, '_blank');
-      }
-    } catch {
-      window.open(url, '_blank');
-    }
+  const openShop = () => {
+    window.dispatchEvent(new CustomEvent('open-shop'));
   };
 
-  // ─── Fullscreen Ad Modal ───
+  const promo = PROMO_PACKS[promoIndex];
+
+  // ─── Fullscreen Ad Modal — Game Pack Promo ───
   if (showingAd) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md p-4 text-center" onClick={openProductLink}>
-          {/* Product Image */}
-          <div className="mb-4 relative">
-            <img
-              src={hologramFanImg}
-              alt="3D Hologram Fan"
-              className="w-48 h-48 object-contain mx-auto rounded-2xl drop-shadow-[0_0_30px_rgba(0,200,255,0.4)]"
-            />
-            {discount > 0 && (
-              <span className="absolute top-0 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce">
-                -{discount}%
-              </span>
-            )}
+      <div className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center">
+        <div className="w-full max-w-sm p-5 text-center" onClick={openShop}>
+          
+          {/* Badge */}
+          <div className="mb-3">
+            <span className="bg-red-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg animate-pulse">
+              🔥 OFERTA LIMITADA · -{promo.discount}%
+            </span>
           </div>
 
-          {/* Product Title */}
-          <h2 className="text-2xl font-bold text-white mb-1">
-            3D Hologram Fan 🔮
-          </h2>
-          <p className="text-cyan-300 text-sm mb-4">
-            Proyector holográfico WiFi · iOS & Android
+          {/* Pack Card */}
+          <div className={`bg-gradient-to-br ${promo.gradient} ${promo.border} border-2 rounded-3xl p-6 mb-4 shadow-2xl`}>
+            <h2 className="text-3xl font-bold text-white mb-1">
+              {promo.title}
+            </h2>
+            <p className="text-white/80 text-sm mb-4">
+              {promo.subtitle}
+            </p>
+
+            {/* Benefits */}
+            <div className="space-y-2 mb-4">
+              {promo.benefits.map((b, i) => (
+                <div key={i} className="bg-black/20 rounded-xl py-2 px-4 text-white font-medium text-sm">
+                  {b}
+                </div>
+              ))}
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-white/40 line-through text-lg">{promo.oldPrice}</span>
+              <span className="text-4xl font-black text-white drop-shadow-lg">{promo.price}</span>
+            </div>
+          </div>
+
+          {/* Social proof */}
+          <p className="text-white/50 text-xs mb-2">
+            ⭐ 73% de jugadores eligen este pack
           </p>
 
-          {/* Price Card */}
-          <div className="bg-gradient-to-br from-cyan-900/60 to-purple-900/60 border border-cyan-500/30 rounded-2xl p-4 mb-4">
-            <p className="text-cyan-400 text-xs font-semibold mb-1 uppercase tracking-wider">
-              {label}
-            </p>
-            {discount > 0 && (
-              <p className="text-white/40 line-through text-sm">€34,99</p>
-            )}
-            <p className="text-3xl font-bold text-white">
-              €{price}
-            </p>
-            <p className="text-emerald-400 text-xs mt-1">
-              {discount > 0
-                ? `¡Ahorraste €${(34.99 - parseFloat(price.replace(',', '.'))).toFixed(2).replace('.', ',')}!`
-                : 'Sube de nivel para desbloquear descuentos 🎮'}
-            </p>
-          </div>
-
-          {/* Level Progress */}
-          {currentLevel < 20 && (
-            <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
-              <div className="flex items-center justify-between text-xs text-white/60 mb-1">
-                <span>Nivel {currentLevel}</span>
-                <span>Siguiente descuento: Nivel {currentLevel < 5 ? 5 : currentLevel < 10 ? 10 : currentLevel < 15 ? 15 : 20}</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full transition-all"
-                  style={{
-                    width: `${Math.min((currentLevel / 20) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
           {/* CTA */}
-          <p className="text-white/50 text-xs mb-2 flex items-center justify-center gap-1">
-            <ExternalLink className="w-3 h-3" /> Toca para ver el producto
+          <p className="text-yellow-400/80 text-xs font-semibold flex items-center justify-center gap-1">
+            <Sparkles className="w-3 h-3" /> Toca para ir a la tienda
           </p>
         </div>
 
         {/* Countdown + Progress */}
         <div className="absolute bottom-16 left-0 right-0 px-8">
           <div className="flex flex-col items-center gap-2 mb-3">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 flex items-center justify-center animate-pulse shadow-lg shadow-cyan-500/30">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-yellow-500 to-orange-600 flex items-center justify-center animate-pulse shadow-lg shadow-orange-500/30">
               <span className="text-2xl font-bold text-white">{countdown}</span>
             </div>
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 transition-all duration-1000 rounded-full"
+              className="h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 transition-all duration-1000 rounded-full"
               style={{ width: `${((5 - countdown) / 5) * 100}%` }}
             />
           </div>
           <p className="text-center text-xs text-white/40 mt-2">
-            +20 💎 al finalizar
+            +{AD_REWARD} 💎 al finalizar
           </p>
         </div>
       </div>
@@ -177,17 +193,17 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
 
   // ─── Inline Banner ───
   return (
-    <div className="bg-gradient-to-r from-cyan-900/50 to-purple-900/50 rounded-xl p-4 border border-cyan-500/20">
+    <div className="bg-gradient-to-r from-amber-900/50 to-orange-900/50 rounded-xl p-4 border border-amber-500/20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-cyan-600 rounded-full p-2">
+          <div className="bg-amber-600 rounded-full p-2">
             <Play className="w-5 h-5 text-white" />
           </div>
           <div>
             <p className="text-white font-semibold text-sm">
-              Ver anuncio = 20 💎 + Descuento 🔮
+              Ver anuncio = {AD_REWARD} 💎
             </p>
-            <p className="text-cyan-200/70 text-xs">
+            <p className="text-amber-200/70 text-xs">
               {canWatchAd
                 ? `${adsWatchedThisHour}/${maxAdsPerHour} usados esta hora`
                 : `Próximo en ${nextAdAvailableIn} min`}
@@ -199,7 +215,7 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
           onClick={handleWatchAd}
           disabled={loading || !canWatchAd}
           size="sm"
-          className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold disabled:opacity-50"
+          className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold disabled:opacity-50"
         >
           {!canWatchAd ? (
             <span className="flex items-center gap-1">
@@ -226,7 +242,7 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
             variant="ghost"
             size="sm"
             className="w-full mt-1 text-yellow-400 hover:text-yellow-300 text-xs"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-shop'))}
+            onClick={openShop}
           >
             💎 Ver ofertas especiales
           </Button>
