@@ -14,10 +14,10 @@ interface RewardedAdsProps {
 
 /** Pricing tiers based on player level */
 const getDiscountedPrice = (level: number): { price: string; discount: number; label: string } => {
-  if (level >= 20) return { price: '29,00', discount: 17, label: '🏆 Precio VIP' };
-  if (level >= 15) return { price: '30,49', discount: 13, label: '⭐ Precio Premium' };
-  if (level >= 10) return { price: '31,49', discount: 10, label: '🔥 Precio Pro' };
-  if (level >= 5) return { price: '32,99', discount: 6, label: '🌱 Descuento Jugador' };
+  if (level >= 15) return { price: '27,99', discount: 20, label: '🏆 Precio VIP' };
+  if (level >= 10) return { price: '28,99', discount: 17, label: '⭐ Precio Premium' };
+  if (level >= 5) return { price: '30,99', discount: 11, label: '🔥 Precio Pro' };
+  if (level >= 2) return { price: '32,99', discount: 6, label: '🌱 Descuento Jugador' };
   return { price: '34,99', discount: 0, label: 'Precio Base' };
 };
 
