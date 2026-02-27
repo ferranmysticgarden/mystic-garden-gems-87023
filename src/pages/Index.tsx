@@ -42,6 +42,7 @@ import { SpringEvent } from '@/components/game/SpringEvent';
 import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
+import { DiscountUnlockBanner } from '@/components/game/DiscountUnlockBanner';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
 import { Level4Reward } from '@/components/game/Level4Reward';
 import { LoginPrompt } from '@/components/game/LoginPrompt';
@@ -785,6 +786,9 @@ const Index = () => {
 
       {/* Spring Event Banner */}
       <SpringEvent onClose={() => setShowSpringEvent(false)} />
+
+      {/* Discount Unlock Banner - when player reaches new tier */}
+      <DiscountUnlockBanner currentLevel={gameState.currentLevel} />
     </div>
   );
 };
