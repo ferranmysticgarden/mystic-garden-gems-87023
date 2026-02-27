@@ -249,8 +249,8 @@ const Index = () => {
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
-    // Show post-victory offer for harder levels (level 6+)
-    if (currentLevel.id >= 6 && reward.gems && reward.gems > 0) {
+    // Show post-victory offer after ANY level win (level 1+)
+    if (reward.gems && reward.gems > 0) {
       setLastWinGems(reward.gems);
       setTimeout(() => setShowPostVictoryOffer(true), 1500);
     }
@@ -273,8 +273,8 @@ const Index = () => {
       return newCount;
     });
 
-    // Show Welcome Offer on level 3+ defeat (if not seen)
-    if (currentLevel.id >= 3 && !hasSeenWelcomeOffer() && canShowOfferToday()) {
+    // Show Welcome Offer on ANY level defeat (level 1+) (if not seen)
+    if (!hasSeenWelcomeOffer() && canShowOfferToday()) {
       setTimeout(() => {
         setShowWelcomeOffer(true);
         markOfferShown();

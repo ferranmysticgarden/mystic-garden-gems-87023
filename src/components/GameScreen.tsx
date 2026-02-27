@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
 import { LEVELS, Level } from '@/data/levels';
 import { CloseDefeatOffer } from './game/CloseDefeatOffer';
+import { GemsBanner } from './game/GemsBanner';
 import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
 import { BuyMovesOffer } from './game/BuyMovesOffer';
@@ -406,6 +407,9 @@ export const GameScreen = ({
             </div>
           </div>
         </div>
+
+        {/* Gems Purchase Banner - persistent during gameplay */}
+        <GemsBanner />
 
         {/* Board */}
         <div className="flex-1 flex items-center justify-center">
