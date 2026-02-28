@@ -52,7 +52,7 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
     const success = await createPayment('reward_doubler');
     if (success) {
       console.log('[PURCHASE] success confirmed via RewardDoubler');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('reward_doubler');
       console.log('[PURCHASE] gate unlocked');
       onDouble(doubledGems);
       onClose();

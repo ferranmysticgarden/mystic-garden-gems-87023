@@ -139,7 +139,7 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
       const success = await createPayment(`chest_${chest.id}`);
       if (success) {
         console.log('[PURCHASE] success confirmed via LootChest');
-        dispatchPurchaseCompleted();
+        dispatchPurchaseCompleted(`chest_${chest.id}`);
         console.log('[PURCHASE] gate unlocked');
         // Payment initiated successfully
         setOpening(chest.id);

@@ -24,7 +24,7 @@ export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
   const handleBuy = async () => {
     const success = await createPayment('welcome_pack');
     if (success) {
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('welcome_pack');
       localStorage.setItem('first_purchase_completed', 'true');
       onPurchased?.();
     }

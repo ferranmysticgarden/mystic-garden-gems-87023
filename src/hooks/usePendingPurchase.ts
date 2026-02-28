@@ -32,7 +32,7 @@
       if (paymentStatus === 'success') {
         // Marcar purchase gate como desbloqueado (Stripe path)
         console.log('[PURCHASE] success confirmed via Stripe redirect');
-        dispatchPurchaseCompleted();
+        dispatchPurchaseCompleted('stripe_redirect');
         console.log('[PURCHASE] gate unlocked');
         
         // Cargar estado guardado

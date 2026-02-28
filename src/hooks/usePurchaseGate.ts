@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { emitAnalyticsEvent } from '@/lib/analytics';
 
 const PURCHASE_FLAG_KEY = 'mystic_has_purchased_once';
 
@@ -35,7 +36,11 @@ export const usePurchaseGate = () => {
 };
 
 // Función helper para disparar el evento global
-export const dispatchPurchaseCompleted = () => {
+export const dispatchPurchaseCompleted = (productId?: string) => {
   localStorage.setItem(PURCHASE_FLAG_KEY, 'true');
+  localStorage.setItem('first_purchase_completed', 'true');
   window.dispatchEvent(new Event('first_purchase_completed'));
+  
+  // Emit to Firebase/Google Ads so campaigns can optimize
+  emitAnalyticsEvent('first_purchase_completed', { product: productId });
 };

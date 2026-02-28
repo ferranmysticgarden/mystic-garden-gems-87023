@@ -74,7 +74,7 @@ export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
     const success = await createPayment('mega_pack_inicial');
     if (success) {
       console.log('[PURCHASE] success confirmed via FirstDayOffer');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('mega_pack_inicial');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`first-day-offer-${user.id}`, 'true');
       setShow(false);

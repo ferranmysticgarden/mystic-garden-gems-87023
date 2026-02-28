@@ -51,7 +51,7 @@ export const Level10Paywall = ({
     try {
       const success = await createPayment('buy_moves');
       if (success) {
-        dispatchPurchaseCompleted();
+        dispatchPurchaseCompleted('buy_moves');
         onPurchaseSuccess();
       }
     } catch (error) {

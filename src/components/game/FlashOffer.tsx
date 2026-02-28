@@ -44,7 +44,7 @@ export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
     const success = await createPayment('flash_offer');
     if (success) {
       console.log('[PURCHASE] success confirmed via FlashOffer');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('flash_offer');
       console.log('[PURCHASE] gate unlocked');
       onClose();
     }

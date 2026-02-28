@@ -30,7 +30,7 @@ export const DefeatPacksOffer = ({
       const success = await createPayment(productId);
       if (success) {
         console.log('[PURCHASE] success confirmed via DefeatPacksOffer');
-        dispatchPurchaseCompleted();
+        dispatchPurchaseCompleted(productId);
         console.log('[PURCHASE] gate unlocked');
         toast.success('¡Compra procesada!');
         onPurchase();

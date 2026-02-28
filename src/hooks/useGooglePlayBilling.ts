@@ -103,7 +103,7 @@ export const useGooglePlayBilling = () => {
       }
 
       console.log('[PURCHASE] success confirmed via Google Play');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted(purchase.productId);
       console.log('[PURCHASE] gate unlocked');
       toast.success('¡Compra completada!');
       return true;
