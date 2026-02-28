@@ -83,9 +83,9 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   }, [user?.id]);
 
   const checkFreeChest = () => {
-    if (!user?.id) return;
+    const odId = user?.id || 'guest';
     
-    const lastClaim = localStorage.getItem(`free-chest-${user.id}`);
+    const lastClaim = localStorage.getItem(`free-chest-${odId}`);
     if (!lastClaim) {
       setFreeChestAvailable(true);
       setFreeChestTimeLeft('');
@@ -116,12 +116,12 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   };
 
   const handleOpenChest = async (chest: ChestType) => {
-    if (!user?.id) return;
+    const odId = user?.id || 'guest';
 
     if (chest.price === 'free') {
       if (!freeChestAvailable) return;
       
-      localStorage.setItem(`free-chest-${user.id}`, new Date().toISOString());
+      localStorage.setItem(`free-chest-${odId}`, new Date().toISOString());
       setOpening(chest.id);
       
       setTimeout(() => {
