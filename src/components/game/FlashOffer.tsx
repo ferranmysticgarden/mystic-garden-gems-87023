@@ -39,7 +39,7 @@ export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
   };
 
   const handleBuy = async () => {
-    if (!user?.id || loading) return;
+    if (loading) return;
     
     const success = await createPayment('flash_offer');
     if (success) {
