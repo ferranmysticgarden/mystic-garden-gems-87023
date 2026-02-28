@@ -31,15 +31,14 @@ export const LuckySpin = () => {
   const [extraSpinAvailable, setExtraSpinAvailable] = useState(false);
   const { user } = useAuth();
 
+  const odId = user?.id || 'guest';
+
   // Detect pending extra_spin purchase from Stripe redirect
   useEffect(() => {
-    if (!user?.id) return;
-    
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     
     if (paymentStatus === 'success') {
-      // Check if the pending purchase was an extra_spin
       try {
         const saved = localStorage.getItem('pending_purchase_state');
         if (saved) {
@@ -49,7 +48,7 @@ export const LuckySpin = () => {
             setExtraSpinAvailable(true);
             setCanSpin(true);
             setShow(true);
-            setReward(null); // Reset reward to allow new spin
+            setReward(null);
             localStorage.removeItem('pending_purchase_state');
           }
         }
@@ -57,7 +56,7 @@ export const LuckySpin = () => {
         console.error('[LUCKY_SPIN] Error checking pending purchase:', e);
       }
     }
-  }, [user?.id]);
+  }, []);
 
   // Handler para giro extra
   const handleExtraSpin = () => {
@@ -115,10 +114,8 @@ export const LuckySpin = () => {
     
     setRotation(currentRotation);
 
-    // Calculate current speed (derivative of eased progress)
-    const speed = 1 - progress; // Simplified speed calculation
+    const speed = 1 - progress;
     
-    // Play tick sound when crossing segment boundary
     const currentSegment = Math.floor(currentRotation / SEGMENT_ANGLE);
     if (currentSegment !== lastTickRef.current && speed > 0.05) {
       lastTickRef.current = currentSegment;
@@ -128,11 +125,9 @@ export const LuckySpin = () => {
     if (progress < 1) {
       animationRef.current = requestAnimationFrame(animate);
     } else {
-      // Animation complete
       setSpinning(false);
       playVictorySound();
       
-      // Trigger confetti
       confetti({
         particleCount: 100,
         spread: 70,
@@ -142,10 +137,8 @@ export const LuckySpin = () => {
   }, [playTickSound, playVictorySound]);
 
   useEffect(() => {
-    if (!user?.id) return;
-
     const checkAvailability = async () => {
-      const lastSpin = localStorage.getItem(`last-spin-${user.id}`);
+      const lastSpin = localStorage.getItem(`last-spin-${odId}`);
       if (!lastSpin) {
         setCanSpin(true);
         setShow(true);
@@ -163,23 +156,18 @@ export const LuckySpin = () => {
     };
 
     checkAvailability();
-  }, [user?.id]);
+  }, [odId]);
 
   const handleSpin = async () => {
-    if (!canSpin || spinning || !user?.id) return;
+    if (!canSpin || spinning) return;
 
     setSpinning(true);
     setReward(null);
     
     const randomIndex = Math.floor(Math.random() * REWARDS.length);
     
-    // Calculate target: 3-4 full rotations + landing on the segment
-    // We need to land so the pointer (at top) points to the segment
-    // Pointer is at 0°, so segment 0 is at top when rotation is 0
-    // To land on segment N, we rotate so segment N is at top
-    const fullRotations = 360 * (3 + Math.random()); // 3-4 rotations
+    const fullRotations = 360 * (3 + Math.random());
     const segmentOffset = randomIndex * SEGMENT_ANGLE;
-    // Add half segment to land in center
     const targetAngle = fullRotations + (360 - segmentOffset) + SEGMENT_ANGLE / 2;
     
     startRotationRef.current = rotation;
@@ -187,29 +175,30 @@ export const LuckySpin = () => {
     startTimeRef.current = 0;
     lastTickRef.current = Math.floor(rotation / SEGMENT_ANGLE);
     
-    // Start animation
     animationRef.current = requestAnimationFrame(animate);
 
-    // Save reward after animation
     setTimeout(async () => {
       const wonReward = REWARDS[randomIndex];
       
-      const { data: gameState } = await supabase
-        .from('game_progress')
-        .select('gems')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (gameState) {
-        await supabase
+      // Only save to DB if authenticated
+      if (user?.id) {
+        const { data: gameState } = await supabase
           .from('game_progress')
-          .update({
-            gems: (gameState.gems || 0) + wonReward.gems
-          })
-          .eq('user_id', user.id);
+          .select('gems')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (gameState) {
+          await supabase
+            .from('game_progress')
+            .update({
+              gems: (gameState.gems || 0) + wonReward.gems
+            })
+            .eq('user_id', user.id);
+        }
       }
 
-      localStorage.setItem(`last-spin-${user.id}`, new Date().toISOString());
+      localStorage.setItem(`last-spin-${odId}`, new Date().toISOString());
       
       setReward(wonReward.gems);
       setCanSpin(false);
@@ -250,7 +239,6 @@ export const LuckySpin = () => {
 
         {/* Wheel container */}
         <div className="relative w-64 h-64 mx-auto mb-6">
-          {/* Wheel with segments */}
           <div 
             className="w-full h-full rounded-full border-8 border-yellow-400 overflow-hidden shadow-xl"
             style={{ 
@@ -352,7 +340,6 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   const price = getPrice('extra_spin', '€0.50');
 
   const handleBuy = async () => {
-    // Save pending state so LuckySpin can detect it on return from Stripe
     localStorage.setItem('pending_purchase_state', JSON.stringify({
       productId: 'extra_spin',
       timestamp: Date.now(),
