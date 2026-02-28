@@ -16,27 +16,24 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
   const [showGlow, setShowGlow] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(0);
 
-  // MEGA rewards for Day 2 - 4x improvement!
   const MEGA_GEMS = 200;
   const MEGA_LIVES = 5;
   const MEGA_HAMMERS = 3;
 
-  useEffect(() => {
-    if (!user?.id) return;
+  const odId = user?.id || 'guest';
 
-    const day2ClaimedKey = `day2-mega-claimed-${user.id}`;
+  useEffect(() => {
+    const day2ClaimedKey = `day2-mega-claimed-${odId}`;
     const alreadyClaimed = localStorage.getItem(day2ClaimedKey);
 
     if ((streak === 2 || streak === 3) && !alreadyClaimed) {
       const timer = setTimeout(() => {
         setShow(true);
-        // Dramatic entrance animation phases
         setTimeout(() => setAnimationPhase(1), 200);
         setTimeout(() => setAnimationPhase(2), 600);
         setTimeout(() => setAnimationPhase(3), 1000);
         setTimeout(() => setShowGlow(true), 1200);
         
-        // MEGA entrance confetti - golden shower!
         const duration = 3000;
         const end = Date.now() + duration;
         
@@ -59,18 +56,11 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [streak, user?.id]);
+  }, [streak, odId]);
 
   const handleClaim = () => {
-    if (!user?.id) return;
-
     setClaiming(true);
     
-    // ULTRA MEGA confetti explosion
-    const duration = 3000;
-    const end = Date.now() + duration;
-    
-    // Central burst
     confetti({
       particleCount: 150,
       spread: 100,
@@ -79,7 +69,8 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
       scalar: 1.5,
     });
     
-    // Side cannons
+    const duration = 3000;
+    const end = Date.now() + duration;
     const frame = () => {
       confetti({
         particleCount: 5,
@@ -102,7 +93,7 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
     };
     frame();
 
-    localStorage.setItem(`day2-mega-claimed-${user.id}`, 'true');
+    localStorage.setItem(`day2-mega-claimed-${odId}`, 'true');
     
     setTimeout(() => {
       onClaimReward(MEGA_GEMS, MEGA_LIVES, { hammers: MEGA_HAMMERS });
@@ -111,10 +102,7 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
   };
 
   const handleDismiss = () => {
-    if (user?.id) {
-      // Mark as claimed so it doesn't show again
-      localStorage.setItem(`day2-mega-claimed-${user.id}`, 'true');
-    }
+    localStorage.setItem(`day2-mega-claimed-${odId}`, 'true');
     setShow(false);
   };
 
@@ -123,7 +111,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg p-4 animate-in fade-in duration-700">
       <div className={`relative bg-gradient-to-b from-purple-900 via-indigo-900 to-purple-950 rounded-3xl p-6 max-w-sm w-full border-4 border-yellow-400 shadow-2xl transition-all duration-700 ${animationPhase >= 1 ? 'scale-100 opacity-100' : 'scale-50 opacity-0'} ${showGlow ? 'shadow-yellow-500/60 shadow-2xl' : ''}`}>
-        {/* Animated glow rings */}
         {showGlow && (
           <>
             <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-yellow-400/30 via-orange-400/30 to-yellow-400/30 animate-pulse blur-xl" />
@@ -131,14 +118,12 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
           </>
         )}
         
-        {/* Close button - small and subtle */}
         <div className="relative flex justify-end">
           <button onClick={handleDismiss} className="text-white/30 hover:text-white/60 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* MEGA Crown Header */}
         <div className={`relative text-center mb-4 transition-all duration-500 ${animationPhase >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <div className="flex justify-center items-center gap-1 mb-3">
             <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 animate-pulse" />
@@ -160,15 +145,12 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
           </p>
         </div>
 
-        {/* MEGA Reward Display - 3 columns */}
         <div className={`relative bg-black/50 rounded-2xl p-4 mb-5 border-2 border-yellow-400/60 overflow-hidden transition-all duration-500 ${animationPhase >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          {/* Sparkle overlay */}
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
             <Sparkles className="w-40 h-40 text-yellow-400/10 animate-spin" style={{ animationDuration: '10s' }} />
           </div>
           
           <div className="relative grid grid-cols-3 gap-3">
-            {/* GEMS */}
             <div className="text-center animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.5s' }}>
               <div className="bg-gradient-to-b from-blue-500/30 to-purple-500/30 rounded-xl p-3 border border-blue-400/40">
                 <div className="text-4xl font-black text-white drop-shadow-lg">{MEGA_GEMS}</div>
@@ -177,7 +159,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
               </div>
             </div>
             
-            {/* LIVES */}
             <div className="text-center animate-bounce" style={{ animationDelay: '100ms', animationDuration: '1.5s' }}>
               <div className="bg-gradient-to-b from-red-500/30 to-pink-500/30 rounded-xl p-3 border border-red-400/40">
                 <div className="text-4xl font-black text-white drop-shadow-lg">{MEGA_LIVES}</div>
@@ -186,7 +167,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
               </div>
             </div>
             
-            {/* POWER-UPS */}
             <div className="text-center animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1.5s' }}>
               <div className="bg-gradient-to-b from-amber-500/30 to-orange-500/30 rounded-xl p-3 border border-amber-400/40">
                 <div className="text-4xl font-black text-white drop-shadow-lg">{MEGA_HAMMERS}</div>
@@ -196,7 +176,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
             </div>
           </div>
           
-          {/* Value indicator */}
           <div className="mt-3 text-center">
             <span className="text-white/60 text-xs">Valor real: </span>
             <span className="text-white/40 line-through text-sm">€4.99</span>
@@ -204,7 +183,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
           </div>
         </div>
 
-        {/* Emotional message */}
         <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-3 mb-4 border border-green-400/30">
           <p className="text-center text-green-200 text-sm">
             🌱 <span className="font-semibold">Tu jardín te esperaba...</span><br/>
@@ -212,7 +190,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
           </p>
         </div>
 
-        {/* CTA */}
         <Button
           onClick={handleClaim}
           disabled={claiming}
@@ -222,7 +199,6 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
           {claiming ? '✨ ¡ABRIENDO REGALO! ✨' : '🎁 ¡RECLAMAR TODO!'}
         </Button>
 
-        {/* Anti-dismiss psychology */}
         <p className="text-center text-white/40 text-xs mt-4">
           Este regalo solo aparece <span className="text-yellow-400">UNA VEZ</span>
         </p>

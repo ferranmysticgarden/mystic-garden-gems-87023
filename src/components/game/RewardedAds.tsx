@@ -10,7 +10,7 @@ interface RewardedAdsProps {
   currentLevel?: number;
 }
 
-const AD_REWARD = 10; // Reduced from 20
+const AD_REWARD = 10;
 
 /** Rotating promo packs shown in the fullscreen ad */
 const PROMO_PACKS = [
@@ -84,7 +84,7 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
   }, [showingAd, countdown]);
 
   const handleWatchAd = () => {
-    if (!user?.id || loading || !canWatchAd) return;
+    if (loading || !canWatchAd) return;
     if (!recordAdWatch()) return;
     setLoading(true);
     setShowingAd(true);
@@ -95,19 +95,20 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
   };
 
   const completeAdWatch = async () => {
-    if (!user?.id) return;
-
-    const { data: gameState } = await supabase
-      .from('game_progress')
-      .select('gems')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (gameState) {
-      await supabase
+    // Only save to DB if authenticated
+    if (user?.id) {
+      const { data: gameState } = await supabase
         .from('game_progress')
-        .update({ gems: (gameState.gems || 0) + AD_REWARD })
-        .eq('user_id', user.id);
+        .select('gems')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (gameState) {
+        await supabase
+          .from('game_progress')
+          .update({ gems: (gameState.gems || 0) + AD_REWARD })
+          .eq('user_id', user.id);
+      }
     }
 
     onRewardEarned?.(AD_REWARD);

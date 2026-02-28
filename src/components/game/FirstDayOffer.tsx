@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
@@ -17,40 +16,47 @@ export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
 
   const price = getPrice('mega_pack_inicial', '€0.99');
+  const odId = user?.id || 'guest';
 
   useEffect(() => {
-    if (!user?.id) return;
-
-    // Mostrar después de nivel 1 O si cuenta es nueva (< 2 horas)
+    // Mostrar después de nivel 1 O si es nuevo (guest o auth)
     const checkEligibility = async () => {
-      const hasSeenOffer = localStorage.getItem(`first-day-offer-${user.id}`);
+      const hasSeenOffer = localStorage.getItem(`first-day-offer-${odId}`);
       if (hasSeenOffer) return;
 
       // Si acaba de completar nivel 1, mostrar inmediatamente
       if (levelJustCompleted === 1) {
-        setTimeout(() => setShow(true), 1500); // Delay para que no sea abrupto
+        setTimeout(() => setShow(true), 1500);
         return;
       }
 
-      // Fallback: mostrar si cuenta es muy nueva (< 2 horas)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .eq('id', user.id)
-        .maybeSingle();
+      // For guests: show after level 1 only (no profile check needed)
+      if (!user?.id) return;
 
-      if (!profile?.created_at) return;
+      // Fallback for authenticated: mostrar si cuenta es muy nueva (< 2 horas)
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('created_at')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      const accountAge = Date.now() - new Date(profile.created_at).getTime();
-      const twoHours = 2 * 60 * 60 * 1000;
+        if (!profile?.created_at) return;
 
-      if (accountAge < twoHours) {
-        setShow(true);
+        const accountAge = Date.now() - new Date(profile.created_at).getTime();
+        const twoHours = 2 * 60 * 60 * 1000;
+
+        if (accountAge < twoHours) {
+          setShow(true);
+        }
+      } catch (e) {
+        console.error('[FirstDayOffer] Error checking eligibility:', e);
       }
     };
 
     checkEligibility();
-  }, [user?.id, levelJustCompleted]);
+  }, [odId, levelJustCompleted, user?.id]);
 
   useEffect(() => {
     if (!show) return;
@@ -69,21 +75,20 @@ export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
   }, [show]);
 
   const handleBuy = async () => {
-    if (!user?.id || loading) return;
+    if (loading) return;
     
     const success = await createPayment('mega_pack_inicial');
     if (success) {
       console.log('[PURCHASE] success confirmed via FirstDayOffer');
       dispatchPurchaseCompleted('mega_pack_inicial');
       console.log('[PURCHASE] gate unlocked');
-      localStorage.setItem(`first-day-offer-${user.id}`, 'true');
+      localStorage.setItem(`first-day-offer-${odId}`, 'true');
       setShow(false);
     }
   };
 
   const handleDismiss = () => {
-    if (!user?.id) return;
-    localStorage.setItem(`first-day-offer-${user.id}`, 'true');
+    localStorage.setItem(`first-day-offer-${odId}`, 'true');
     setShow(false);
   };
 
