@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
+import { emitAnalyticsEvent } from '@/lib/analytics';
 
 interface GemsBannerProps {
   onPurchased?: () => void;
@@ -9,6 +11,15 @@ interface GemsBannerProps {
 export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const price = getPrice('welcome_pack', '€0.50');
+  const hasTracked = useRef(false);
+
+  // Track offer impression once
+  useEffect(() => {
+    if (!hasTracked.current && localStorage.getItem('first_purchase_completed') !== 'true') {
+      hasTracked.current = true;
+      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'gems_banner' });
+    }
+  }, []);
 
   const handleBuy = async () => {
     const success = await createPayment('welcome_pack');
