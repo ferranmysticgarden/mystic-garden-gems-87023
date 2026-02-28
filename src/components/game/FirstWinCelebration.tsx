@@ -13,10 +13,10 @@ export const FirstWinCelebration = ({ levelsCompleted, onClose }: FirstWinCelebr
   const { user } = useAuth();
   const [show, setShow] = useState(false);
 
-  useEffect(() => {
-    if (!user?.id) return;
+  const odId = user?.id || 'guest';
 
-    const firstWinKey = `first-win-celebrated-${user.id}`;
+  useEffect(() => {
+    const firstWinKey = `first-win-celebrated-${odId}`;
     const alreadyCelebrated = localStorage.getItem(firstWinKey);
 
     // Show after first level completion
@@ -25,7 +25,6 @@ export const FirstWinCelebration = ({ levelsCompleted, onClose }: FirstWinCelebr
         setShow(true);
         localStorage.setItem(firstWinKey, 'true');
         
-        // Celebration confetti
         confetti({
           particleCount: 100,
           spread: 70,
@@ -35,7 +34,7 @@ export const FirstWinCelebration = ({ levelsCompleted, onClose }: FirstWinCelebr
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [levelsCompleted, user?.id]);
+  }, [levelsCompleted, odId]);
 
   const handleContinue = () => {
     setShow(false);
