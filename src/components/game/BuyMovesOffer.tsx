@@ -29,7 +29,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
     const success = await createPayment('buy_moves');
     if (success) {
       console.log('[PURCHASE] success confirmed via BuyMovesOffer');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('buy_moves');
       console.log('[PURCHASE] gate unlocked');
       onBuy();
     }

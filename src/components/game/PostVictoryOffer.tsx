@@ -17,7 +17,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
     const success = await createPayment('victory_multiplier');
     if (success) {
       console.log('[PURCHASE] success confirmed via PostVictoryOffer');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('victory_multiplier');
       console.log('[PURCHASE] gate unlocked');
       onMultiply(multipliedGems);
       onClose();

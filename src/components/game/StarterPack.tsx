@@ -85,7 +85,7 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
     const success = await createPayment('starter_pack');
     if (success) {
       console.log('[PURCHASE] success confirmed via StarterPack');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('starter_pack');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`starter-pack-${user.id}`, 'true');
       setShow(false);

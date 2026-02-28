@@ -21,7 +21,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
     const success = await createPayment('lifesaver_pack');
     if (success) {
       console.log('[PURCHASE] success confirmed via LifesaverPack');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('lifesaver_pack');
       console.log('[PURCHASE] gate unlocked');
       onBuy();
     }

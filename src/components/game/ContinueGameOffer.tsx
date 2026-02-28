@@ -20,7 +20,7 @@ export const ContinueGameOffer = ({
     const success = await createPayment('continue_game');
     if (success) {
       console.log('[PURCHASE] success confirmed via ContinueGameOffer');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('continue_game');
       console.log('[PURCHASE] gate unlocked');
       onContinue();
     }

@@ -365,7 +365,7 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
     const success = await createPayment('extra_spin');
     if (success) {
       console.log('[PURCHASE] success confirmed via ExtraSpin');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('extra_spin');
       console.log('[PURCHASE] gate unlocked');
       onBuy();
     }

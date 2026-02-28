@@ -26,7 +26,7 @@ export const StreakProtectionOffer = ({
     const success = await createPayment('streak_protection');
     if (success) {
       console.log('[PURCHASE] success confirmed via StreakProtection');
-      dispatchPurchaseCompleted();
+      dispatchPurchaseCompleted('streak_protection');
       console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
