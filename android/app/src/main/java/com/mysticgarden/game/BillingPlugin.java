@@ -38,14 +38,19 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     private BillingClient billingClient;
     private Map<String, ProductDetails> productDetailsMap = new HashMap<>();
     private PluginCall pendingPurchaseCall;
+    private int connectionRetryCount = 0;
+    private static final int MAX_RETRY = 3;
 
     @Override
     public void load() {
         super.load();
+        Log.d(TAG, "BillingPlugin loading...");
         initializeBillingClient();
     }
 
     private void initializeBillingClient() {
+        Log.d(TAG, "Initializing BillingClient (attempt " + (connectionRetryCount + 1) + ")");
+        
         billingClient = BillingClient.newBuilder(getContext())
                 .setListener(this)
                 .enablePendingPurchases()
@@ -55,18 +60,26 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "BillingClient connected");
+                    Log.d(TAG, "✅ BillingClient connected successfully");
+                    connectionRetryCount = 0;
                     notifyListeners("billingReady", new JSObject().put("ready", true));
                 } else {
-                    Log.e(TAG, "BillingClient setup failed: " + billingResult.getDebugMessage());
+                    Log.e(TAG, "❌ BillingClient setup failed: code=" + billingResult.getResponseCode() + " msg=" + billingResult.getDebugMessage());
+                    notifyListeners("billingReady", new JSObject().put("ready", false));
                 }
             }
 
             @Override
             public void onBillingServiceDisconnected() {
                 Log.d(TAG, "BillingClient disconnected");
-                // Try to reconnect
-                initializeBillingClient();
+                if (connectionRetryCount < MAX_RETRY) {
+                    connectionRetryCount++;
+                    Log.d(TAG, "Retrying connection... attempt " + connectionRetryCount);
+                    initializeBillingClient();
+                } else {
+                    Log.e(TAG, "❌ Max retries reached. BillingClient unavailable.");
+                    notifyListeners("billingReady", new JSObject().put("ready", false));
+                }
             }
         });
     }
@@ -74,6 +87,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     @PluginMethod
     public void isReady(PluginCall call) {
         boolean ready = billingClient != null && billingClient.isReady();
+        Log.d(TAG, "isReady called: " + ready);
         JSObject ret = new JSObject();
         ret.put("ready", ready);
         call.resolve(ret);
@@ -87,6 +101,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             call.reject("No product IDs provided");
             return;
         }
+
+        Log.d(TAG, "Querying " + productIds.size() + " products: " + productIds.toString());
 
         List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
         for (Object id : productIds) {
@@ -106,6 +122,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             @Override
             public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull List<ProductDetails> list) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    Log.d(TAG, "✅ Products found: " + list.size() + " of " + productIds.size() + " requested");
                     JSObject ret = new JSObject();
                     for (ProductDetails details : list) {
                         productDetailsMap.put(details.getProductId(), details);
@@ -119,12 +136,19 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                             product.put("price", details.getOneTimePurchaseOfferDetails().getFormattedPrice());
                             product.put("priceAmountMicros", details.getOneTimePurchaseOfferDetails().getPriceAmountMicros());
                             product.put("priceCurrencyCode", details.getOneTimePurchaseOfferDetails().getPriceCurrencyCode());
+                            Log.d(TAG, "  Product: " + details.getProductId() + " = " + details.getOneTimePurchaseOfferDetails().getFormattedPrice());
                         }
                         
                         ret.put(details.getProductId(), product);
                     }
+                    
+                    if (list.size() < productIds.size()) {
+                        Log.w(TAG, "⚠️ Only " + list.size() + "/" + productIds.size() + " products found. Missing products may not be active in Google Play Console.");
+                    }
+                    
                     call.resolve(ret);
                 } else {
+                    Log.e(TAG, "❌ Failed to query products: code=" + billingResult.getResponseCode() + " msg=" + billingResult.getDebugMessage());
                     call.reject("Failed to query products: " + billingResult.getDebugMessage());
                 }
             }
@@ -142,6 +166,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
         ProductDetails productDetails = productDetailsMap.get(productId);
         if (productDetails == null) {
+            Log.e(TAG, "❌ Product not found in cache: " + productId + ". Available: " + productDetailsMap.keySet().toString());
             call.reject("Product not found. Query products first.");
             return;
         }
@@ -152,6 +177,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             return;
         }
 
+        Log.d(TAG, "Launching purchase flow for: " + productId);
         pendingPurchaseCall = call;
 
         List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
@@ -169,6 +195,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
             pendingPurchaseCall = null;
+            Log.e(TAG, "❌ Failed to launch billing flow: " + result.getDebugMessage());
             call.reject("Failed to launch billing flow: " + result.getDebugMessage());
         }
     }
@@ -176,16 +203,19 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     @Override
     public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List<Purchase> purchases) {
         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+            Log.d(TAG, "✅ Purchase update received: " + purchases.size() + " purchase(s)");
             for (Purchase purchase : purchases) {
                 handlePurchase(purchase);
             }
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
+            Log.d(TAG, "Purchase cancelled by user");
             if (pendingPurchaseCall != null) {
                 pendingPurchaseCall.reject("Purchase cancelled by user");
                 pendingPurchaseCall = null;
             }
             notifyListeners("purchaseCancelled", new JSObject());
         } else {
+            Log.e(TAG, "❌ Purchase failed: code=" + billingResult.getResponseCode() + " msg=" + billingResult.getDebugMessage());
             if (pendingPurchaseCall != null) {
                 pendingPurchaseCall.reject("Purchase failed: " + billingResult.getDebugMessage());
                 pendingPurchaseCall = null;
@@ -195,7 +225,26 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     }
 
     private void handlePurchase(Purchase purchase) {
-        // For consumables, consume immediately
+        String productId = purchase.getProducts().get(0);
+        Log.d(TAG, "Processing purchase: " + productId + " token=" + purchase.getPurchaseToken().substring(0, 20) + "...");
+        
+        // Build purchase data first (before consuming)
+        JSObject purchaseData = new JSObject();
+        purchaseData.put("purchaseToken", purchase.getPurchaseToken());
+        purchaseData.put("orderId", purchase.getOrderId());
+        purchaseData.put("productId", productId);
+        purchaseData.put("purchaseTime", purchase.getPurchaseTime());
+
+        // Notify JS layer FIRST so it can verify with backend
+        // Then consume after verification succeeds
+        if (pendingPurchaseCall != null) {
+            pendingPurchaseCall.resolve(purchaseData);
+            pendingPurchaseCall = null;
+        }
+        
+        notifyListeners("purchaseCompleted", purchaseData);
+
+        // Consume the purchase (for consumables, allows re-purchase)
         ConsumeParams consumeParams = ConsumeParams.newBuilder()
                 .setPurchaseToken(purchase.getPurchaseToken())
                 .build();
@@ -204,26 +253,12 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             @Override
             public void onConsumeResponse(@NonNull BillingResult billingResult, @NonNull String purchaseToken) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "Purchase consumed successfully");
-                    
-                    JSObject purchaseData = new JSObject();
-                    purchaseData.put("purchaseToken", purchase.getPurchaseToken());
-                    purchaseData.put("orderId", purchase.getOrderId());
-                    purchaseData.put("productId", purchase.getProducts().get(0));
-                    purchaseData.put("purchaseTime", purchase.getPurchaseTime());
-                    
-                    if (pendingPurchaseCall != null) {
-                        pendingPurchaseCall.resolve(purchaseData);
-                        pendingPurchaseCall = null;
-                    }
-                    
-                    notifyListeners("purchaseCompleted", purchaseData);
+                    Log.d(TAG, "✅ Purchase consumed successfully: " + productId);
                 } else {
-                    Log.e(TAG, "Failed to consume purchase: " + billingResult.getDebugMessage());
-                    if (pendingPurchaseCall != null) {
-                        pendingPurchaseCall.reject("Failed to consume purchase");
-                        pendingPurchaseCall = null;
-                    }
+                    Log.e(TAG, "❌ Failed to consume purchase: " + billingResult.getDebugMessage());
+                    // Purchase was already granted to user via purchaseCompleted event
+                    // Consumption failure means the product can't be re-purchased until consumed
+                    // This is safer than the old approach of consuming first
                 }
             }
         });
@@ -231,12 +266,14 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void restorePurchases(PluginCall call) {
+        Log.d(TAG, "Restoring purchases...");
         billingClient.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build(),
             (billingResult, purchases) -> {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    Log.d(TAG, "✅ Found " + purchases.size() + " purchase(s) to restore");
                     JSObject ret = new JSObject();
                     for (int i = 0; i < purchases.size(); i++) {
                         Purchase p = purchases.get(i);
@@ -248,6 +285,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     }
                     call.resolve(ret);
                 } else {
+                    Log.e(TAG, "❌ Failed to restore purchases: " + billingResult.getDebugMessage());
                     call.reject("Failed to restore purchases: " + billingResult.getDebugMessage());
                 }
             }

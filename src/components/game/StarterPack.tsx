@@ -21,27 +21,25 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
   const price = getPrice('starter_pack', '€0.99');
 
   useEffect(() => {
-    if (!user?.id) return;
-
     // Trigger después de nivel 2, 3 o 4 (más temprano para captar antes del churn)
     if (![2, 3, 4].includes(levelJustCompleted)) return;
 
+    // Use a stable ID: user.id for logged-in, 'guest' for guests
+    const odId = user?.id || 'guest';
+
     // Reaparece cada 3 sesiones en vez de mostrarse solo 1 vez
-    const seenCount = parseInt(localStorage.getItem(`starter-pack-count-${user.id}`) || '0', 10);
-    const hasBought = localStorage.getItem(`starter-pack-${user.id}`) === 'true';
+    const seenCount = parseInt(localStorage.getItem(`starter-pack-count-${odId}`) || '0', 10);
+    const hasBought = localStorage.getItem(`starter-pack-${odId}`) === 'true';
     if (!hasBought && seenCount % 3 === 0) {
-        // Incrementar contador de sesiones
-      localStorage.setItem(`starter-pack-count-${user.id}`, String(seenCount + 1));
+      localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
       // Delay para que aparezca después de la celebración
       const timer = setTimeout(() => {
         setShow(true);
-        // Confetti dramático al aparecer
         triggerCelebration();
       }, 2500);
       return () => clearTimeout(timer);
     } else if (!hasBought) {
-      // Incrementar contador aunque no mostremos
-      localStorage.setItem(`starter-pack-count-${user.id}`, String(seenCount + 1));
+      localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
     }
   }, [levelJustCompleted, user?.id]);
 
@@ -80,23 +78,23 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
   };
 
   const handleBuy = async () => {
-    if (!user?.id || loading) return;
+    if (loading) return;
     
     const success = await createPayment('starter_pack');
     if (success) {
+      const odId = user?.id || 'guest';
       console.log('[PURCHASE] success confirmed via StarterPack');
       dispatchPurchaseCompleted('starter_pack');
       console.log('[PURCHASE] gate unlocked');
-      localStorage.setItem(`starter-pack-${user.id}`, 'true');
+      localStorage.setItem(`starter-pack-${odId}`, 'true');
       setShow(false);
       onClose();
     }
   };
 
   const handleDismiss = () => {
-    if (user?.id) {
-      localStorage.setItem(`starter-pack-${user.id}`, 'true');
-    }
+    const odId = user?.id || 'guest';
+    localStorage.setItem(`starter-pack-${odId}`, 'true');
     setShow(false);
     onClose();
   };
