@@ -22,12 +22,20 @@ export const usePayment = () => {
 
     try {
       // Android → Google Play Billing
-      if (isAndroid && googlePlayBilling.isAvailable) {
-        const success = await googlePlayBilling.purchase(productId);
-        return success;
+      if (isAndroid) {
+        if (googlePlayBilling.isAvailable) {
+          const success = await googlePlayBilling.purchase(productId);
+          return success;
+        }
+        
+        // Google Play Billing NO está disponible en Android
+        // NO caer a Stripe — los guests no pueden pagar por Stripe
+        console.error('[PAYMENT] Google Play Billing not available on Android. Purchase blocked.');
+        toast.error('Compras no disponibles ahora. Reinicia la app e inténtalo de nuevo.');
+        return false;
       }
 
-      // Web → Stripe
+      // Web → Stripe (solo plataforma web)
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -45,7 +53,6 @@ export const usePayment = () => {
       if (data?.url) {
         window.open(data.url, '_blank');
         toast.success('Redirigiendo a la pasarela de pago...');
-        // Stripe: gate se desbloquea al volver con ?payment=success
         return true;
       }
 
