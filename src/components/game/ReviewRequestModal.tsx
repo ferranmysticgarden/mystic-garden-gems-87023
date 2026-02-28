@@ -12,13 +12,12 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
   const { user } = useAuth();
   const [show, setShow] = useState(false);
 
+  const odId = user?.id || 'guest';
+
   useEffect(() => {
-    if (!user?.id) return;
-    
-    const reviewAskedKey = `review-asked-${user.id}`;
+    const reviewAskedKey = `review-asked-${odId}`;
     const alreadyAsked = localStorage.getItem(reviewAskedKey);
     
-    // Show after 3 games, only once
     if (gamesPlayed >= 3 && !alreadyAsked) {
       const timer = setTimeout(() => {
         setShow(true);
@@ -26,10 +25,9 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [gamesPlayed, user?.id]);
+  }, [gamesPlayed, odId]);
 
   const handleReview = () => {
-    // Open Play Store for review
     if (Capacitor.isNativePlatform()) {
       window.open('market://details?id=com.mysticgarden.game', '_system');
     } else {
@@ -39,10 +37,7 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
   };
 
   const handleLater = () => {
-    // Reset so it can show again after more games
-    if (user?.id) {
-      localStorage.removeItem(`review-asked-${user.id}`);
-    }
+    localStorage.removeItem(`review-asked-${odId}`);
     setShow(false);
   };
 
@@ -51,7 +46,6 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-gradient-to-b from-emerald-900 via-teal-900 to-blue-900 rounded-3xl p-6 max-w-sm w-full border-4 border-emerald-400/50 shadow-2xl animate-in zoom-in-95 duration-300">
-        {/* Stars animation */}
         <div className="flex justify-center gap-1 mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
             <Star 
@@ -62,7 +56,6 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
           ))}
         </div>
         
-        {/* Simple, friendly question */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-emerald-300 mb-3">
             ¿Te gusta Mystic Garden? 🌸
@@ -73,7 +66,6 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
           </p>
         </div>
 
-        {/* Two clear options - no pressure */}
         <div className="space-y-3">
           <Button
             onClick={handleReview}

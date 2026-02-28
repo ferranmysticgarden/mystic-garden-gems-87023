@@ -21,32 +21,47 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
   const [isPremium, setIsPremium] = useState(false);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!user?.id) return;
+  const odId = user?.id || 'guest';
 
+  useEffect(() => {
     const loadProgress = async () => {
-      const hasPremium = localStorage.getItem(`battle-pass-premium-${user.id}`);
+      const hasPremium = localStorage.getItem(`battle-pass-premium-${odId}`);
       setIsPremium(!!hasPremium);
 
-      const { data: gameState } = await supabase
-        .from('game_progress')
-        .select('completed_levels')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Only load from DB if authenticated
+      if (user?.id) {
+        const { data: gameState } = await supabase
+          .from('game_progress')
+          .select('completed_levels')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      if (gameState) {
-        const completedCount = gameState.completed_levels?.length || 0;
-        const tier = Math.min(Math.floor(completedCount / 10) + 1, 5);
-        setCurrentTier(tier);
+        if (gameState) {
+          const completedCount = gameState.completed_levels?.length || 0;
+          const tier = Math.min(Math.floor(completedCount / 10) + 1, 5);
+          setCurrentTier(tier);
+        }
+      } else {
+        // Guest: try to get progress from localStorage
+        try {
+          const guestProgress = localStorage.getItem('mystic_guest_progress');
+          if (guestProgress) {
+            const parsed = JSON.parse(guestProgress);
+            const completedCount = parsed.completedLevels?.length || 0;
+            const tier = Math.min(Math.floor(completedCount / 10) + 1, 5);
+            setCurrentTier(tier);
+          }
+        } catch (e) {
+          // ignore
+        }
       }
     };
 
     loadProgress();
-  }, [user?.id]);
+  }, [odId, user?.id]);
 
   const handleBuyPremium = () => {
-    if (!user?.id) return;
-    localStorage.setItem(`battle-pass-premium-${user.id}`, 'true');
+    localStorage.setItem(`battle-pass-premium-${odId}`, 'true');
     setIsPremium(true);
   };
 

@@ -13,13 +13,12 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
 
-  useEffect(() => {
-    if (!user?.id) return;
+  const odId = user?.id || 'guest';
 
-    const sharePromptKey = `share-prompt-shown-${user.id}`;
+  useEffect(() => {
+    const sharePromptKey = `share-prompt-shown-${odId}`;
     const alreadyShown = localStorage.getItem(sharePromptKey);
 
-    // Show after 5 games OR 1 day played, only once
     if ((gamesPlayed >= 5 || daysPlayed >= 1) && !alreadyShown) {
       const timer = setTimeout(() => {
         setShow(true);
@@ -27,7 +26,7 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [gamesPlayed, daysPlayed, user?.id]);
+  }, [gamesPlayed, daysPlayed, odId]);
 
   const handleShare = async () => {
     const shareData = {
@@ -40,7 +39,6 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
       if (navigator.share && Capacitor.isNativePlatform()) {
         await navigator.share(shareData);
       } else {
-        // Fallback: copy to clipboard
         await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
         alert('¡Enlace copiado! Compártelo con tus amigos 💚');
       }
@@ -60,14 +58,12 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-gradient-to-b from-pink-900 via-purple-900 to-indigo-900 rounded-3xl p-6 max-w-sm w-full border-4 border-pink-400/50 shadow-2xl animate-in zoom-in-95 duration-300">
-        {/* Close button */}
         <div className="flex justify-end mb-2">
           <button onClick={handleDismiss} className="text-white/50 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Emotional appeal - not marketing */}
         <div className="text-center mb-6">
           <div className="flex justify-center gap-2 mb-4">
             <Heart className="w-8 h-8 text-pink-400 fill-pink-400 animate-pulse" />
@@ -84,7 +80,6 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
           </p>
         </div>
 
-        {/* Buttons */}
         <div className="space-y-3">
           <Button
             onClick={handleShare}
