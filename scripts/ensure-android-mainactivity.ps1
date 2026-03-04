@@ -24,9 +24,17 @@ try {
   $javaContent = @"
 package $AppId;
 
+import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
-public class MainActivity extends BridgeActivity {}
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        // Register custom plugins before super.onCreate
+        registerPlugin(BillingPlugin.class);
+        super.onCreate(savedInstanceState);
+    }
+}
 "@
 
   # --- STEP 1: Delete ALL existing MainActivity files ---
@@ -41,6 +49,26 @@ public class MainActivity extends BridgeActivity {}
   Write-Host ('Creando MainActivity en: ' + $targetDir)
   [System.IO.File]::WriteAllText($mainActivityJava, $javaContent)
   Write-Host ('OK: MainActivity.java creado en ' + $mainActivityJava)
+
+  # --- STEP 2.5: Copy BillingPlugin.java from src/native/ (survives android/ deletion) ---
+  $billingPluginTarget = Join-Path -Path $targetDir -ChildPath 'BillingPlugin.java'
+  $billingPluginSource = Join-Path -Path (Get-Location) -ChildPath 'src\native\BillingPlugin.java'
+
+  if (Test-Path -LiteralPath $billingPluginSource) {
+    Write-Host ('Copiando BillingPlugin.java desde src/native/ a ' + $targetDir)
+    Copy-Item -LiteralPath $billingPluginSource -Destination $billingPluginTarget -Force
+    Write-Host 'OK: BillingPlugin.java copiado correctamente.'
+  } elseif (Test-Path -LiteralPath $billingPluginTarget) {
+    Write-Host 'OK: BillingPlugin.java ya existe en destino.'
+  } else {
+    throw 'ERROR CRITICO: No se encuentra BillingPlugin.java ni en src/native/ ni en android/. Las compras NO funcionaran!'
+  }
+
+  # Verify BillingPlugin exists
+  if (-not (Test-Path -LiteralPath $billingPluginTarget)) {
+    throw 'ERROR CRITICO: BillingPlugin.java no existe tras copia. Abortando.'
+  }
+  Write-Host 'OK: BillingPlugin.java verificado.'
 
   # --- STEP 3: Update AndroidManifest.xml (LINE-BY-LINE) ---
   if (Test-Path -LiteralPath $manifestPath) {
@@ -103,8 +131,24 @@ public class MainActivity extends BridgeActivity {}
 
   # --- STEP 4: Verify ---
   if (Test-Path -LiteralPath $mainActivityJava) {
-    Write-Host 'VERIFICACION: MainActivity.java existe correctamente.'
-    Get-Content -LiteralPath $mainActivityJava | Write-Host
+    Write-Host ''
+    Write-Host '=== VERIFICACION MAINACTIVITY ==='
+    $content = Get-Content -LiteralPath $mainActivityJava -Raw
+    Write-Host $content
+    
+    if ($content -match 'registerPlugin\(BillingPlugin\.class\)') {
+      Write-Host 'PASS: MainActivity registra BillingPlugin correctamente'
+    } else {
+      throw 'FAIL CRITICO: MainActivity NO registra BillingPlugin! Las compras NO funcionaran!'
+    }
+    
+    if (Test-Path -LiteralPath (Join-Path -Path $targetDir -ChildPath 'BillingPlugin.java')) {
+      Write-Host 'PASS: BillingPlugin.java existe en el directorio de la app'
+    } else {
+      throw 'FAIL CRITICO: BillingPlugin.java NO existe! Las compras NO funcionaran!'
+    }
+    
+    Write-Host '=== FIN VERIFICACION ==='
   } else {
     throw 'ERROR: MainActivity.java no se creo correctamente!'
   }
