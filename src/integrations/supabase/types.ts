@@ -35,6 +35,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_events: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          event_data: Json | null
+          event_name: string
+          id: string
+          platform: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          event_data?: Json | null
+          event_name: string
+          id?: string
+          platform?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          event_data?: Json | null
+          event_name?: string
+          id?: string
+          platform?: string | null
+        }
+        Relationships: []
+      }
       game_progress: {
         Row: {
           completed_levels: number[]
