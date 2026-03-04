@@ -129,7 +129,30 @@ public class MainActivity extends BridgeActivity {
     Write-Host ('WARN: No existe AndroidManifest.xml aun en: ' + $manifestPath)
   }
 
-  # --- STEP 4: Verify ---
+  # --- STEP 4: Copy google-services.json ---
+  $gsTarget = Join-Path -Path $androidRoot -ChildPath 'app\google-services.json'
+  $gsSources = @(
+    'C:\Users\PC\Downloads\google-services.json',
+    (Join-Path -Path (Get-Location) -ChildPath 'google-services.json')
+  )
+  $gsCopied = $false
+  foreach ($gs in $gsSources) {
+    if (Test-Path -LiteralPath $gs) {
+      Copy-Item -LiteralPath $gs -Destination $gsTarget -Force
+      Write-Host ('OK: google-services.json copiado desde ' + $gs)
+      $gsCopied = $true
+      break
+    }
+  }
+  if (-not $gsCopied) {
+    if (Test-Path -LiteralPath $gsTarget) {
+      Write-Host 'OK: google-services.json ya existe en android/app/.'
+    } else {
+      Write-Host 'WARN: google-services.json NO encontrado. Firebase Analytics no funcionara en Android.'
+    }
+  }
+
+  # --- STEP 5: Verify ---
   if (Test-Path -LiteralPath $mainActivityJava) {
     Write-Host ''
     Write-Host '=== VERIFICACION MAINACTIVITY ==='
