@@ -26,6 +26,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +97,13 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void queryProducts(PluginCall call) {
-        List<String> productIds = call.getArray("productIds").toList();
+        List<String> productIds;
+        try {
+            productIds = call.getArray("productIds").toList();
+        } catch (JSONException e) {
+            call.reject("Error parsing productIds", e.getMessage());
+            return;
+        }
         
         if (productIds == null || productIds.isEmpty()) {
             call.reject("No product IDs provided");
