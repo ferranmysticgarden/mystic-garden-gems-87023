@@ -4,6 +4,7 @@ import GooglePlayBilling, { ProductDetails, PurchaseResult } from '@/plugins/Goo
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
+import { trackEvent } from '@/lib/trackEvent';
 
 // Mapeo de IDs de producto a IDs de Google Play
 // SINCRONIZADO con Google Play Console (15 productos activos)
@@ -49,15 +50,20 @@ export const useGooglePlayBilling = () => {
         // Check if billing is ready
         const { ready } = await GooglePlayBilling.isReady();
         setIsReady(ready);
+        
+        // Track billing status to Supabase for diagnostics
+        trackEvent('billing_status', { ready, products_loaded: 0 });
 
         if (ready) {
           // Query all products
           const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
           const productDetails = await GooglePlayBilling.queryProducts({ productIds });
           setProducts(productDetails);
+          trackEvent('billing_status', { ready: true, products_loaded: Object.keys(productDetails).length });
         }
       } catch (error) {
         console.error('Error setting up billing:', error);
+        trackEvent('billing_error', { error: String(error) });
       }
     };
 

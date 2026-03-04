@@ -47,6 +47,7 @@ import { WelcomeOffer } from '@/components/game/WelcomeOffer';
 import { Level4Reward } from '@/components/game/Level4Reward';
 import { LoginPrompt } from '@/components/game/LoginPrompt';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/trackEvent';
 import { Button } from '@/components/ui/button';
 import { LEVELS } from '@/data/levels';
 import { PRODUCTS } from '@/data/products';
@@ -247,6 +248,7 @@ const Index = () => {
     // Show Starter Pack after level 2, 3 or 4 (only if welcome offer not active)
     if ((currentLevel.id === 2 || currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: currentLevel.id });
+      trackEvent('offer_shown', { product: 'starter_pack', level: currentLevel.id });
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
@@ -254,6 +256,7 @@ const Index = () => {
     if (reward.gems && reward.gems > 0) {
       setLastWinGems(reward.gems);
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'victory_multiplier', level: currentLevel.id });
+      trackEvent('offer_shown', { product: 'victory_multiplier', level: currentLevel.id });
       setTimeout(() => setShowPostVictoryOffer(true), 1500);
     }
     
@@ -279,6 +282,7 @@ const Index = () => {
     if (!hasSeenWelcomeOffer() && canShowOfferToday()) {
       setTimeout(() => {
         emitAnalyticsEvent('first_purchase_offer_shown', { product: 'welcome_pack', level: currentLevel.id });
+        trackEvent('offer_shown', { product: 'welcome_pack', level: currentLevel.id });
         setShowWelcomeOffer(true);
         markOfferShown();
       }, 1500);

@@ -3,27 +3,35 @@ import { Sparkles } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import { emitAnalyticsEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface GemsBannerProps {
   onPurchased?: () => void;
 }
 
 export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
-  const { createPayment, loading, getPrice } = usePayment();
+  const { createPayment, loading, getPrice, isGooglePlayAvailable, isAndroid } = usePayment();
   const price = getPrice('welcome_pack', '€0.50');
   const hasTracked = useRef(false);
 
-  // Track offer impression once
+  // Track offer impression once — to BOTH Firebase and Supabase
   useEffect(() => {
     if (!hasTracked.current && localStorage.getItem('first_purchase_completed') !== 'true') {
       hasTracked.current = true;
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'gems_banner' });
+      // Direct to DB — bypasses broken native Firebase plugin
+      trackEvent('offer_shown', { 
+        product: 'gems_banner',
+        billing_available: isAndroid ? isGooglePlayAvailable : 'web',
+      });
     }
-  }, []);
+  }, [isAndroid, isGooglePlayAvailable]);
 
   const handleBuy = async () => {
+    trackEvent('purchase_attempt', { product: 'welcome_pack', billing_available: isAndroid ? isGooglePlayAvailable : 'web' });
     const success = await createPayment('welcome_pack');
     if (success) {
+      trackEvent('purchase_success', { product: 'welcome_pack' });
       dispatchPurchaseCompleted('welcome_pack');
       localStorage.setItem('first_purchase_completed', 'true');
       onPurchased?.();
