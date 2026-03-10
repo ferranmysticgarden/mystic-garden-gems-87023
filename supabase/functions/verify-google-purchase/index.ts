@@ -43,6 +43,14 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "packimpulso": { powerups: 5, lives: 3 },
   "packexperiencia": { lives: 2 },
   "packvictoriasegura": { powerups: 8, lives: 3 },
+  // 7 nuevos productos (10 mar 2026)
+  "quickpack": { lives: 3, gems: 20 },
+  "gems100": { gems: 100 },
+  "gems300": { gems: 300 },
+  "gems1200": { gems: 1200 },
+  "noadsmonth": { noAdsDays: 30 },
+  "noadsforever": { noAdsForever: true },
+  "gardenpass": { gems: 1000, noAdsDays: 30 },
 };
 
 // Google Play API verification
