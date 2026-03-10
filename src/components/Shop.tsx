@@ -3,7 +3,7 @@ import { PRODUCTS } from '@/data/products';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { usePayment } from '@/hooks/usePayment';
 
 interface ShopProps {
   onClose: () => void;

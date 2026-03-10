@@ -1,6 +1,6 @@
 import { Gem, Heart } from 'lucide-react';
 import { Button } from './ui/button';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { usePayment } from '@/hooks/usePayment';
 
 interface NoLivesModalProps {
   gems: number;
