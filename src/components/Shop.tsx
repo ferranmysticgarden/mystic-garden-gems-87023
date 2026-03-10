@@ -3,7 +3,7 @@ import { PRODUCTS } from '@/data/products';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { usePayment } from '@/hooks/usePayment';
 
 interface ShopProps {
   onClose: () => void;
@@ -17,7 +17,7 @@ const BEST_VALUE_ID = 'gems_300';
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
-  const { createPayment, loading } = useStripePayment();
+  const { createPayment, loading } = usePayment();
 
   const handlePurchase = async (productId: string, productName: string) => {
     await createPayment(productId);

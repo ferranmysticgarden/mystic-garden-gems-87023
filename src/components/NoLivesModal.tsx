@@ -1,6 +1,6 @@
 import { Gem, Heart } from 'lucide-react';
 import { Button } from './ui/button';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { usePayment } from '@/hooks/usePayment';
 
 interface NoLivesModalProps {
   gems: number;
@@ -10,7 +10,7 @@ interface NoLivesModalProps {
 }
 
 export const NoLivesModal = ({ gems, onUseGems, onClose, onQuickLifePurchased }: NoLivesModalProps) => {
-  const { createPayment, loading } = useStripePayment();
+  const { createPayment, loading } = usePayment();
 
   const handleQuickPackPurchase = async () => {
     await createPayment('quick_pack');
