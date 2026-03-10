@@ -33,6 +33,14 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
   'pack_impulso': 'packimpulso',
   'pack_experiencia': 'packexperiencia',
   'pack_victoria_segura_pro': 'packvictoriasegura',  // Google Play ID
+  // 7 nuevos productos (10 mar 2026) — Google Play: sin guion bajo
+  'quick_pack': 'quickpack',
+  'gems_100': 'gems100',
+  'gems_300': 'gems300',
+  'gems_1200': 'gems1200',
+  'no_ads_month': 'noadsmonth',
+  'no_ads_forever': 'noadsforever',
+  'garden_pass': 'gardenpass',
 };
 
 export const useGooglePlayBilling = () => {
