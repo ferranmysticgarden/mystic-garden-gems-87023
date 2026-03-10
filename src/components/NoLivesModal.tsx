@@ -10,7 +10,7 @@ interface NoLivesModalProps {
 }
 
 export const NoLivesModal = ({ gems, onUseGems, onClose, onQuickLifePurchased }: NoLivesModalProps) => {
-  const { createPayment, loading } = useStripePayment();
+  const { createPayment, loading } = usePayment();
 
   const handleQuickPackPurchase = async () => {
     await createPayment('quick_pack');
