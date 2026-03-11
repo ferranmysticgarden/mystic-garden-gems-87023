@@ -52,15 +52,27 @@ export const useGooglePlayBilling = () => {
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (retryCount = 0): Promise<Record<string, ProductDetails>> => {
     const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
-    const productDetails = await GooglePlayBilling.queryProducts({ productIds });
-    setProducts(productDetails);
-    trackEvent('billing_status', {
-      ready: Object.keys(productDetails).length > 0,
-      products_loaded: Object.keys(productDetails).length,
-    });
-    return productDetails;
+    try {
+      const productDetails = await GooglePlayBilling.queryProducts({ productIds });
+      setProducts(productDetails);
+      trackEvent('billing_status', {
+        ready: Object.keys(productDetails).length > 0,
+        products_loaded: Object.keys(productDetails).length,
+      });
+      return productDetails;
+    } catch (error) {
+      console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
+      trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
+      // Retry up to 2 times with delay for "internal error" / "disconnected"
+      if (retryCount < 2) {
+        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+        return loadProducts(retryCount + 1);
+      }
+      setProducts({});
+      return {};
+    }
   }, []);
 
   useEffect(() => {
