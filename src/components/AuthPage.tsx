@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +24,18 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        onAuthSuccess();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [onAuthSuccess]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

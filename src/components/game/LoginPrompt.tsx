@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Shield, Cloud, Gift } from 'lucide-react';
 import { AuthPage } from '@/components/AuthPage';
+import { lovable } from '@/integrations/lovable';
+import { toast } from 'sonner';
 
 interface LoginPromptProps {
   reason: 'purchase' | 'save_progress' | 'general';
@@ -88,6 +90,28 @@ export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) =>
             className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-5 rounded-xl text-lg"
           >
             Crear cuenta / Iniciar sesión
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mt-3 text-base py-5"
+            onClick={async () => {
+              try {
+                const { error } = await lovable.auth.signInWithOAuth('google', {
+                  redirect_uri: window.location.origin,
+                  extraParams: {
+                    prompt: 'select_account',
+                  },
+                });
+
+                if (error) throw error;
+              } catch (error: any) {
+                toast.error(error.message || 'Error al iniciar sesión con Google');
+              }
+            }}
+          >
+            Continuar con Google
           </Button>
 
           <button
