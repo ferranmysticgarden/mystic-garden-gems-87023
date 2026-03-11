@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.verify-google-purchase]
 verify_jwt = false
+
+[functions.notify-admin-push]
+verify_jwt = false
