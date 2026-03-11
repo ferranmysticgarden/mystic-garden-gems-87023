@@ -202,6 +202,25 @@ serve(async (req) => {
 
     console.log(`[INFO] Verifying purchase: product=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
+    const { error: auditInsertError } = await supabaseClient
+      .from('app_events')
+      .insert({
+        event_name: 'gp_verify_started',
+        event_data: {
+          productId,
+          orderId: orderId || null,
+          purchaseTokenPrefix: purchaseToken.slice(0, 12),
+          isGuest,
+          userId,
+        },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
+
+    if (auditInsertError) {
+      console.error('[WARN] Failed to audit gp_verify_started:', auditInsertError.message);
+    }
+
     // Verify with Google Play API (ALWAYS — this is the real security check)
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
     const packageName = "com.mysticgarden.game";
