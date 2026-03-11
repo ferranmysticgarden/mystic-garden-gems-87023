@@ -383,9 +383,45 @@ serve(async (req) => {
           });
       }
 
+      const { error: auditGrantedError } = await supabaseClient
+        .from('app_events')
+        .insert({
+          event_name: 'gp_purchase_granted',
+          event_data: {
+            productId,
+            orderId: orderId || null,
+            isGuest: false,
+            userId,
+            rewards,
+          },
+          platform: 'android',
+          device_id: purchaseToken.slice(0, 24),
+        });
+
+      if (auditGrantedError) {
+        console.error('[WARN] Failed to audit gp_purchase_granted:', auditGrantedError.message);
+      }
+
       console.log(`[INFO] ✅ Purchase completed (authenticated): ${productId} for user ${userId}`);
     } else {
       // Guest purchase: Google Play verified it, rewards will be applied client-side
+      const { error: auditGuestError } = await supabaseClient
+        .from('app_events')
+        .insert({
+          event_name: 'gp_purchase_guest_verified',
+          event_data: {
+            productId,
+            orderId: orderId || null,
+            isGuest: true,
+          },
+          platform: 'android',
+          device_id: purchaseToken.slice(0, 24),
+        });
+
+      if (auditGuestError) {
+        console.error('[WARN] Failed to audit gp_purchase_guest_verified:', auditGuestError.message);
+      }
+
       console.log(`[INFO] ✅ Purchase verified (guest): ${productId} — rewards applied client-side`);
     }
 
