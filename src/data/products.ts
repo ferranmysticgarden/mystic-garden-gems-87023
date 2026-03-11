@@ -108,7 +108,7 @@ export const PRODUCTS: Product[] = [
     id: 'extra_moves', 
     nameKey: 'shop.extraMoves',
     name: 'Última Oportunidad', 
-    price: 0.49, 
+    price: 0.50, 
     currency: 'EUR',
     powerups: 5
   },
