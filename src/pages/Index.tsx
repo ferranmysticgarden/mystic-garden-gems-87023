@@ -515,12 +515,25 @@ const Index = () => {
 
           <Button
             onClick={handlePlayClick}
-            className="w-full gradient-gold shadow-gold text-xl py-6 hover:scale-105 transition-all mb-4"
+            className="w-full gradient-gold shadow-gold text-xl py-6 hover:scale-105 transition-all mb-3"
             id="play-game-btn"
           >
             <Play className="w-6 h-6 mr-2" />
             {t('game.play')}
           </Button>
+
+          <Button
+            onClick={() => setScreen('shop')}
+            variant="outline"
+            className="w-full mb-2 hover:scale-105 active:scale-95 transition-transform duration-100"
+          >
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            Abrir tienda
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground mb-4">
+            Si quieres comprar, pulsa <span className="font-semibold text-foreground">Abrir tienda</span> o el botón de <span className="font-semibold text-foreground">💎 gemas</span> arriba.
+          </p>
 
           {/* Botones secundarios - SOLO después de nivel 2 */}
           {!isNewUser && (
