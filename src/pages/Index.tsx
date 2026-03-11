@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useBackButton } from '@/hooks/useBackButton';
 import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuth } from '@/hooks/useAuth';
@@ -126,7 +127,22 @@ const Index = () => {
 
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
-  
+
+  // Android back button: navegar hacia atrás por pantallas
+  useBackButton(useCallback(() => {
+    if (screen === 'shop' || screen === 'levels') {
+      setScreen('menu');
+      return false;
+    }
+    if (screen === 'game') {
+      setShowExitModal(true);
+      return false;
+    }
+    // En menú principal: mostrar confirmación de salida
+    setShowExitModal(true);
+    return false;
+  }, [screen, setScreen]));
+
   // Estado de pago pendiente (para restaurar después de Stripe)
   const { pendingState, paymentSuccess, clearPendingState } = usePendingPurchase();
   
@@ -438,7 +454,7 @@ const Index = () => {
                   setShowExitModal(true);
                 }
               }}
-              className="w-12 h-12 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 hover:scale-110 transition-all duration-150"
+              className="w-12 h-12 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 active:scale-95 transition-transform duration-100"
               aria-label="Salir del juego"
             >
               <DoorOpen className="w-6 h-6 text-destructive" />
@@ -513,7 +529,7 @@ const Index = () => {
                 <Button
                   onClick={() => setScreen('levels')}
                   variant="outline"
-                  className="hover:scale-105 transition-transform"
+                  className="hover:scale-105 active:scale-95 transition-transform duration-100"
                 >
                   <Grid3x3 className="w-5 h-5 mr-2" />
                   {t('menu.levels')}
@@ -522,7 +538,7 @@ const Index = () => {
                 <Button
                   onClick={() => setScreen('shop')}
                   variant="outline"
-                  className="hover:scale-105 transition-transform"
+                  className="hover:scale-105 active:scale-95 transition-transform duration-100"
                 >
                   <ShoppingBag className="w-5 h-5 mr-2" />
                   {t('menu.shop')}

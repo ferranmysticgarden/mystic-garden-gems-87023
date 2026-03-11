@@ -356,7 +356,7 @@ export const GameScreen = ({
             </h2>
             <button 
               onClick={onShowExitModal} 
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 hover:scale-110 transition-all duration-150"
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 active:scale-90 transition-transform duration-100"
               aria-label="Salir del nivel"
             >
               <span className="text-destructive text-xl font-bold">✕</span>
