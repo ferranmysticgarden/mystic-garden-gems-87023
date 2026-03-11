@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGooglePlayBilling } from './useGooglePlayBilling';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
+import { trackEvent } from '@/lib/trackEvent';
+import { toast } from 'sonner';
+import { dispatchPurchaseCompleted } from './usePurchaseGate';
 
 /**
  * Hook unificado de pagos:
