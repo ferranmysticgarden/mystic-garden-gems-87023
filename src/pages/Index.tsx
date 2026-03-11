@@ -304,6 +304,7 @@ const Index = () => {
       loseLife();
       setScreen('game');
     } else {
+      trackEvent('no_lives_modal_shown', { trigger: 'level_select' });
       setShowNoLivesModal(true);
     }
   };
