@@ -408,8 +408,8 @@ export const GameScreen = ({
           </div>
         </div>
 
-        {/* Gems Purchase Banner - persistent during gameplay */}
-        <GemsBanner />
+        {/* Gems Purchase Banner - SOLO nivel 5+ (no distraer en niveles tempranos) */}
+        {level.id >= 5 && <GemsBanner />}
 
         {/* Board */}
         <div className="flex-1 flex items-center justify-center">
