@@ -234,6 +234,28 @@ serve(async (req) => {
 
     if (!verification.valid) {
       console.error('[ERROR] Purchase verification failed:', verification.error);
+
+      const { error: auditFailError } = await supabaseClient
+        .from('app_events')
+        .insert({
+          event_name: 'gp_verify_failed',
+          event_data: {
+            productId,
+            orderId: orderId || null,
+            error: verification.error || 'Purchase verification failed',
+            purchaseState: verification.purchaseState ?? null,
+            consumptionState: verification.consumptionState ?? null,
+            isGuest,
+            userId,
+          },
+          platform: 'android',
+          device_id: purchaseToken.slice(0, 24),
+        });
+
+      if (auditFailError) {
+        console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
+      }
+
       return new Response(JSON.stringify({ 
         success: false, 
         error: verification.error || 'Purchase verification failed' 
@@ -244,6 +266,26 @@ serve(async (req) => {
     }
 
     console.log('[INFO] Purchase verified successfully with Google Play');
+
+    const { error: auditVerifiedError } = await supabaseClient
+      .from('app_events')
+      .insert({
+        event_name: 'gp_verify_ok',
+        event_data: {
+          productId,
+          orderId: orderId || null,
+          purchaseState: verification.purchaseState ?? null,
+          consumptionState: verification.consumptionState ?? null,
+          isGuest,
+          userId,
+        },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
+
+    if (auditVerifiedError) {
+      console.error('[WARN] Failed to audit gp_verify_ok:', auditVerifiedError.message);
+    }
 
     // Get product rewards
     const rewards = PRODUCT_REWARDS[productId];
