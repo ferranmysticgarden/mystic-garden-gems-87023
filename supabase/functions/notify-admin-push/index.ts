@@ -16,12 +16,15 @@ serve(async (req) => {
   try {
     const { title, message, priority, tags } = await req.json();
 
+    const safeTitle = (title || "Mystic Garden").replace(/[^\x20-\x7E]/g, '');
+    const safeTags = (tags || "video_game").replace(/[^\x20-\x7E,]/g, '');
+
     const res = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
       method: "POST",
       headers: {
-        "Title": title || "Mystic Garden",
+        "Title": safeTitle,
         "Priority": priority || "default",
-        "Tags": tags || "video_game",
+        "Tags": safeTags,
       },
       body: message || "Nuevo evento",
     });
