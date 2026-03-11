@@ -35,9 +35,9 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
                 className={`
                   gradient-card shadow-card rounded-xl p-3
                   flex flex-col items-center justify-center gap-1
-                  transition-all duration-300 min-h-[100px]
+                  min-h-[100px]
                   ${isUnlocked 
-                    ? 'hover:scale-105 hover:shadow-gold cursor-pointer' 
+                    ? 'hover:scale-105 active:scale-95 transition-transform duration-150 cursor-pointer' 
                     : 'opacity-50 cursor-not-allowed'
                   }
                 `}
