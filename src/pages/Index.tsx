@@ -162,15 +162,15 @@ const Index = () => {
     }
   }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState]);
 
-  // Auto-show streak calendar if reward available
+  // Auto-show streak calendar if reward available — SOLO después de nivel 2
   useEffect(() => {
-    if (streakData.canClaimToday && user) {
+    if (streakData.canClaimToday && user && gameState.completedLevels.length >= 2) {
       const timer = setTimeout(() => {
         setShowStreakCalendar(true);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [streakData.canClaimToday, user]);
+  }, [streakData.canClaimToday, user, gameState.completedLevels.length]);
 
   // Schedule streak reminder if user has a streak (at 20:30 prime time)
   useEffect(() => {

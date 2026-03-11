@@ -39,11 +39,15 @@ export const Tutorial = ({ onComplete }: TutorialProps) => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    // Tutorial DESACTIVADO — los usuarios abandonan antes de jugar
+    // El nivel 1 es autoexplicativo (30 movimientos, objetivo sencillo)
     const hasSeenTutorial = localStorage.getItem('tutorial-completed');
     if (!hasSeenTutorial) {
-      setShow(true);
+      // Auto-completar sin mostrar
+      localStorage.setItem('tutorial-completed', 'true');
+      onComplete();
     }
-  }, []);
+  }, [onComplete]);
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
