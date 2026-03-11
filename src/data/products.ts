@@ -174,7 +174,7 @@ export const PRODUCTS: Product[] = [
     id: 'welcome_pack',
     nameKey: 'shop.welcomePack',
     name: 'Pack Bienvenida',
-    price: 0.49,
+    price: 0.50,
     currency: 'EUR',
     powerups: 5, // +5 movimientos
     lives: 3 // +3 boosters (representado como vidas)
