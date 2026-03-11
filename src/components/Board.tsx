@@ -250,12 +250,10 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
       if (matches.length > 0) {
         removeMatches(board, matches);
       } else if (!hasValidMoves(board)) {
-        // No matches and no valid moves - auto shuffle!
         setIsShuffling(true);
         setShowShuffleMessage(true);
         playShuffleSound();
         
-        // Animate all tiles
         const allTiles = new Set<string>();
         for (let r = 0; r < BOARD_SIZE; r++) {
           for (let c = 0; c < BOARD_SIZE; c++) {
@@ -264,20 +262,15 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
         }
         setAnimatingTiles(allTiles);
         
-        // After animation, shuffle and reset
         setTimeout(() => {
           const shuffledBoard = shuffleBoard(board);
           setBoard(shuffledBoard);
           setAnimatingTiles(new Set());
           setIsShuffling(false);
-          
-          // Hide message after a bit more time
-          setTimeout(() => {
-            setShowShuffleMessage(false);
-          }, 800);
-        }, 600);
+          setTimeout(() => setShowShuffleMessage(false), 500);
+        }, 350);
       }
-    }, 500);
+    }, 200);
 
     return () => clearTimeout(timeoutId);
   }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping, isShuffling, hasValidMoves, shuffleBoard, disabled, playShuffleSound]);
