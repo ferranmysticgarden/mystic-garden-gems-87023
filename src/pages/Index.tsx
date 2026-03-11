@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useBackButton } from '@/hooks/useBackButton';
 import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -10,6 +11,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { usePurchaseGate } from '@/hooks/usePurchaseGate';
+import { lovable } from '@/integrations/lovable';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
@@ -123,7 +125,7 @@ const Index = () => {
   const [showLevel4Reward, setShowLevel4Reward] = useState(false);
 
   // State for login prompt (guest mode)
-  const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | 'general' | null>(null);
 
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
@@ -369,6 +371,26 @@ const Index = () => {
     toast.success(`¡Ganaste ${gems} gemas! 💎`);
   };
 
+  const handleDirectGoogleSignIn = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        setShowLoginPrompt('general');
+        return;
+      }
+
+      const { error } = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+        extraParams: {
+          prompt: 'select_account',
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || 'Error al iniciar sesión con Google');
+    }
+  };
+
   if (authLoading || gameLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -534,6 +556,16 @@ const Index = () => {
           <p className="text-center text-xs text-muted-foreground mb-4">
             Si quieres comprar, pulsa <span className="font-semibold text-foreground">Abrir tienda</span> o el botón de <span className="font-semibold text-foreground">💎 gemas</span> arriba.
           </p>
+
+          {!user && (
+            <Button
+              onClick={handleDirectGoogleSignIn}
+              variant="outline"
+              className="w-full mb-4 hover:scale-105 active:scale-95 transition-transform duration-100"
+            >
+              Continuar con Google
+            </Button>
+          )}
 
           {/* Botones secundarios - SOLO después de nivel 2 */}
           {!isNewUser && (
