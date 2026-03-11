@@ -245,15 +245,15 @@ const Index = () => {
       setShowFirstWin(true);
     }
 
-    // Show Starter Pack after level 2, 3 or 4 (only if welcome offer not active)
-    if ((currentLevel.id === 2 || currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
-      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: currentLevel.id });
-      trackEvent('offer_shown', { product: 'starter_pack', level: currentLevel.id });
+    // Show Starter Pack ONLY after level 3 win (única oferta temprana)
+    if (currentLevel.id === 3) {
+      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: 3 });
+      trackEvent('offer_shown', { product: 'starter_pack', level: 3 });
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
-    // Show post-victory offer after ANY level win (level 1+)
-    if (reward.gems && reward.gems > 0) {
+    // Show post-victory offer ONLY after level 5+ win (no distracciones tempranas)
+    if (currentLevel.id >= 5 && reward.gems && reward.gems > 0) {
       setLastWinGems(reward.gems);
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'victory_multiplier', level: currentLevel.id });
       trackEvent('offer_shown', { product: 'victory_multiplier', level: currentLevel.id });
