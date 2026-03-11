@@ -232,7 +232,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
       
       setBoard(newBoard);
       onMatch(matchedTiles, matches.length);
-    }, 300);
+    }, 150);
 
     return newBoard;
   }, [onMatch]);
