@@ -371,6 +371,26 @@ const Index = () => {
     toast.success(`¡Ganaste ${gems} gemas! 💎`);
   };
 
+  const handleDirectGoogleSignIn = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        setShowLoginPrompt('general');
+        return;
+      }
+
+      const { error } = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+        extraParams: {
+          prompt: 'select_account',
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || 'Error al iniciar sesión con Google');
+    }
+  };
+
   if (authLoading || gameLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
