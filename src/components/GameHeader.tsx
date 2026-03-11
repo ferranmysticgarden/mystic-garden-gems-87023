@@ -59,10 +59,9 @@ export const GameHeader = ({ lives, gems, hasUnlimitedLives, timeUntilNextLife, 
         <button
           onClick={onShopClick}
           className="flex items-center gap-2 gradient-gold shadow-gold rounded-xl px-4 py-3 hover:scale-105 transition-transform border border-accent/30"
+          aria-label="Abrir tienda"
+          title="Abrir tienda"
         >
-          <span className="text-2xl">💎</span>
-          <span className="text-xl font-bold text-accent-foreground">{gems}</span>
-        </button>
 
       </div>
     </header>
