@@ -364,10 +364,12 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
             <Tile
               key={`${rowIndex}-${colIndex}`}
               tile={tile}
+              row={rowIndex}
+              col={colIndex}
               isSelected={selected?.row === rowIndex && selected?.col === colIndex}
               isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
               isTarget={targetTile === tile}
-              onClick={() => handleTileClick(rowIndex, colIndex)}
+              onTileClick={handleTileClick}
             />
           ))
         )}
