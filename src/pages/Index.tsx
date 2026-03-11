@@ -49,6 +49,7 @@ import { DiscountUnlockBanner } from '@/components/game/DiscountUnlockBanner';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
 import { Level4Reward } from '@/components/game/Level4Reward';
 import { LoginPrompt } from '@/components/game/LoginPrompt';
+import { signInWithGoogleWeb } from '@/lib/googleAuth';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from '@/lib/analytics';
 import { trackEvent } from '@/lib/trackEvent';
 import { Button } from '@/components/ui/button';

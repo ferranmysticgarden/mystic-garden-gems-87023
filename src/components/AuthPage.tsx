@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable';
+import { signInWithGoogleWeb } from '@/lib/googleAuth';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
