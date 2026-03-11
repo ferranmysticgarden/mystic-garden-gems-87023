@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import GooglePlayBilling, { ProductDetails, PurchaseResult } from '@/plugins/GooglePlayBilling';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +19,7 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
   'flash_offer': 'flash_offer',
   'pack_revancha': 'pack_revancha',
   'lifesaver_pack': 'lifesaver_pack',
-  'welcome_pack': 'welcomepack',           // Google Play: sin guion bajo
+  'welcome_pack': 'welcomepack',
   // Ofertas de nivel
   'victory_multiplier': 'victory_multiplier',
   'finish_level': 'finish_level',
@@ -32,7 +32,7 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
   // Multi-tier packs (Google Play: sin guion bajo)
   'pack_impulso': 'packimpulso',
   'pack_experiencia': 'packexperiencia',
-  'pack_victoria_segura_pro': 'packvictoriasegura',  // Google Play ID
+  'pack_victoria_segura_pro': 'packvictoriasegura',
   // 7 nuevos productos (10 mar 2026) — Google Play: sin guion bajo
   'quick_pack': 'quickpack',
   'gems_100': 'gems100',
@@ -47,62 +47,110 @@ export const useGooglePlayBilling = () => {
   const [isReady, setIsReady] = useState(false);
   const [products, setProducts] = useState<Record<string, ProductDetails>>({});
   const [loading, setLoading] = useState(false);
+  const processedTokensRef = useRef(new Set<string>());
 
   const isAndroid = Capacitor.getPlatform() === 'android';
+  const hasLoadedProducts = Object.keys(products).length > 0;
+
+  const loadProducts = useCallback(async () => {
+    const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
+    const productDetails = await GooglePlayBilling.queryProducts({ productIds });
+    setProducts(productDetails);
+    trackEvent('billing_status', {
+      ready: Object.keys(productDetails).length > 0,
+      products_loaded: Object.keys(productDetails).length,
+    });
+    return productDetails;
+  }, []);
 
   useEffect(() => {
     if (!isAndroid) return;
 
     const setupBilling = async () => {
       try {
-        // Check if billing is ready
         const { ready } = await GooglePlayBilling.isReady();
         setIsReady(ready);
-        
-        // Track billing status to Supabase for diagnostics
-        trackEvent('billing_status', { ready, products_loaded: 0 });
 
-        if (ready) {
-          // Query all products
-          const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
-          const productDetails = await GooglePlayBilling.queryProducts({ productIds });
-          setProducts(productDetails);
-          trackEvent('billing_status', { ready: true, products_loaded: Object.keys(productDetails).length });
+        if (!ready) {
+          setProducts({});
+          trackEvent('billing_status', { ready: false, products_loaded: 0 });
+          return;
         }
+
+        await loadProducts();
       } catch (error) {
         console.error('Error setting up billing:', error);
-        trackEvent('billing_error', { error: String(error) });
+        setProducts({});
+        trackEvent('billing_error', { error: String(error), phase: 'setup' });
       }
     };
 
     setupBilling();
 
-    // Listen for billing ready event
     const readyListener = GooglePlayBilling.addListener('billingReady', async ({ ready }) => {
       setIsReady(ready);
-      if (ready) {
-        const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
-        const productDetails = await GooglePlayBilling.queryProducts({ productIds });
-        setProducts(productDetails);
+
+      if (!ready) {
+        setProducts({});
+        trackEvent('billing_status', { ready: false, products_loaded: 0 });
+        return;
+      }
+
+      try {
+        await loadProducts();
+      } catch (error) {
+        console.error('Error loading products after billingReady:', error);
+        setProducts({});
+        trackEvent('billing_error', { error: String(error), phase: 'billingReady' });
       }
     });
 
-    // Listen for purchase completed
     const purchaseListener = GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
       console.log('Purchase completed:', purchase);
       await verifyAndProcessPurchase(purchase);
     });
 
+    const cancelListener = GooglePlayBilling.addListener('purchaseCancelled', () => {
+      trackEvent('purchase_cancelled', { platform: 'android' });
+    });
+
+    const errorListener = GooglePlayBilling.addListener('purchaseError', ({ error }) => {
+      trackEvent('purchase_error', { platform: 'android', error });
+    });
+
     return () => {
       readyListener.then(l => l.remove());
       purchaseListener.then(l => l.remove());
+      cancelListener.then(l => l.remove());
+      errorListener.then(l => l.remove());
     };
-  }, [isAndroid]);
+  }, [isAndroid, loadProducts]);
 
-  const verifyAndProcessPurchase = async (purchase: PurchaseResult) => {
+  const verifyAndProcessPurchase = useCallback(async (purchase: PurchaseResult) => {
+    const purchaseToken = purchase.purchaseToken;
+
+    if (!purchaseToken) {
+      trackEvent('purchase_verification_failed', {
+        platform: 'android',
+        product: purchase.productId,
+        reason: 'missing_purchase_token',
+      });
+      return false;
+    }
+
+    if (processedTokensRef.current.has(purchaseToken)) {
+      return true;
+    }
+
+    processedTokensRef.current.add(purchaseToken);
+
     try {
-      // Verify purchase on server and grant items
-      const { error } = await supabase.functions.invoke('verify-google-purchase', {
+      trackEvent('purchase_verification_started', {
+        platform: 'android',
+        product: purchase.productId,
+      });
+
+      const { data, error } = await supabase.functions.invoke('verify-google-purchase', {
         body: {
           purchaseToken: purchase.purchaseToken,
           productId: purchase.productId,
@@ -111,22 +159,35 @@ export const useGooglePlayBilling = () => {
       });
 
       if (error) {
-        console.error('Error verifying purchase:', error);
-        toast.error('Error al verificar la compra');
-        return false;
+        throw error;
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Purchase verification failed');
       }
 
       console.log('[PURCHASE] success confirmed via Google Play');
+      trackEvent('purchase_verified', {
+        platform: 'android',
+        product: purchase.productId,
+        guest: Boolean(data?.isGuest),
+      });
       dispatchPurchaseCompleted(purchase.productId);
       console.log('[PURCHASE] gate unlocked');
       toast.success('¡Compra completada!');
       return true;
     } catch (error) {
+      processedTokensRef.current.delete(purchaseToken);
       console.error('Error processing purchase:', error);
+      trackEvent('purchase_verification_failed', {
+        platform: 'android',
+        product: purchase.productId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       toast.error('Error al procesar la compra');
       return false;
     }
-  };
+  }, []);
 
   const purchase = useCallback(async (productId: string): Promise<boolean> => {
     if (!isAndroid) {
@@ -136,32 +197,56 @@ export const useGooglePlayBilling = () => {
 
     if (!isReady) {
       toast.error('Sistema de pagos no disponible');
+      trackEvent('purchase_blocked', { platform: 'android', product: productId, reason: 'billing_not_ready' });
       return false;
     }
 
     const googlePlayProductId = GOOGLE_PLAY_PRODUCT_IDS[productId];
     if (!googlePlayProductId) {
       toast.error('Producto no encontrado');
+      trackEvent('purchase_blocked', { platform: 'android', product: productId, reason: 'unknown_product_mapping' });
       return false;
     }
 
     setLoading(true);
     try {
+      let cachedProducts = products;
+
+      if (!cachedProducts[googlePlayProductId]) {
+        cachedProducts = await loadProducts();
+      }
+
+      if (!cachedProducts[googlePlayProductId]) {
+        toast.error('El producto aún no está listo. Inténtalo de nuevo en unos segundos.');
+        trackEvent('purchase_blocked', {
+          platform: 'android',
+          product: productId,
+          google_product_id: googlePlayProductId,
+          reason: 'product_not_loaded',
+        });
+        return false;
+      }
+
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
-      await verifyAndProcessPurchase(result);
-      return true;
+      return await verifyAndProcessPurchase(result);
     } catch (error: any) {
       if (error.message?.includes('cancelled')) {
         toast.info('Compra cancelada');
+        trackEvent('purchase_cancelled', { platform: 'android', product: productId });
       } else {
         console.error('Purchase error:', error);
         toast.error('Error al realizar la compra');
+        trackEvent('purchase_error', {
+          platform: 'android',
+          product: productId,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
       return false;
     } finally {
       setLoading(false);
     }
-  }, [isAndroid, isReady]);
+  }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase]);
 
   const getProductPrice = useCallback((productId: string): string | null => {
     const googlePlayProductId = GOOGLE_PLAY_PRODUCT_IDS[productId];
@@ -170,7 +255,7 @@ export const useGooglePlayBilling = () => {
   }, [products]);
 
   return {
-    isAvailable: isAndroid && isReady,
+    isAvailable: isAndroid && isReady && hasLoadedProducts,
     isAndroid,
     products,
     loading,
