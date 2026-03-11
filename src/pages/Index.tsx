@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useBackButton } from '@/hooks/useBackButton';
 import { useGameState } from '@/hooks/useGameState';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -10,6 +11,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyStreak } from '@/hooks/useDailyStreak';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { usePurchaseGate } from '@/hooks/usePurchaseGate';
+import { lovable } from '@/integrations/lovable';
 import { AuthPage } from '@/components/AuthPage';
 import { GameHeader } from '@/components/GameHeader';
 import { GameScreen } from '@/components/GameScreen';
