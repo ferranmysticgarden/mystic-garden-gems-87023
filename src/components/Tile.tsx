@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface TileProps {
   tile: string;
   isSelected: boolean;
@@ -6,16 +8,16 @@ interface TileProps {
   onClick: () => void;
 }
 
-export const Tile = ({ tile, isSelected, isAnimating, isTarget, onClick }: TileProps) => {
+export const Tile = memo(({ tile, isSelected, isAnimating, isTarget, onClick }: TileProps) => {
   return (
     <button
       onClick={onClick}
       className={`
         aspect-square rounded-lg flex items-center justify-center text-2xl sm:text-3xl
-        transition-all duration-300
-        ${isSelected ? 'scale-110 ring-2 ring-accent' : 'hover:scale-105'}
-        ${isAnimating ? 'animate-pop' : 'animate-scale-in'}
-        ${isTarget ? 'ring-2 ring-secondary animate-bounce-subtle' : ''}
+        transition-transform duration-150
+        ${isSelected ? 'scale-110 ring-2 ring-accent' : 'active:scale-95'}
+        ${isAnimating ? 'animate-pop' : ''}
+        ${isTarget ? 'ring-2 ring-secondary' : ''}
       `}
       style={{
         background: 'linear-gradient(180deg, hsl(270 40% 28% / 0.9), hsl(270 50% 18% / 0.95))',
@@ -28,4 +30,4 @@ export const Tile = ({ tile, isSelected, isAnimating, isTarget, onClick }: TileP
       <span className="drop-shadow-md">{tile}</span>
     </button>
   );
-};
+});
