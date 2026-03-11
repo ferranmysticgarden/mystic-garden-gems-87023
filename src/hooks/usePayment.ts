@@ -51,9 +51,9 @@ export const usePayment = () => {
       if (error) throw error;
 
       if (data?.url) {
-        window.open(data.url, '_blank');
         toast.success('Redirigiendo a la pasarela de pago...');
-        return true;
+        window.location.assign(data.url);
+        return false;
       }
 
       return false;

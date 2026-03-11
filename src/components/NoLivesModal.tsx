@@ -15,9 +15,8 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onQuickLifePurchased }:
 
   const handleQuickPackPurchase = async () => {
     trackEvent('purchase_attempt', { product: 'quick_pack', source: 'no_lives_modal' });
-    await createPayment('quick_pack');
-    // El webhook de Stripe procesará la compra y añadirá 3 vidas + 20 gemas
-    if (onQuickLifePurchased) {
+    const success = await createPayment('quick_pack');
+    if (success && onQuickLifePurchased) {
       onQuickLifePurchased();
     }
   };
