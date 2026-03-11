@@ -271,8 +271,8 @@ const Index = () => {
     // Track consecutive losses for flash offer
     setConsecutiveLosses(prev => {
       const newCount = prev + 1;
-      // Show flash offer after 2 consecutive losses
-      if (newCount >= 2) {
+      // Show flash offer after 2 consecutive losses, ONLY level 5+
+      if (newCount >= 2 && currentLevel.id >= 5) {
         setTimeout(() => setShowFlashOffer(true), 1000);
       }
       return newCount;
