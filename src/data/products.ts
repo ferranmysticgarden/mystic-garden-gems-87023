@@ -108,7 +108,7 @@ export const PRODUCTS: Product[] = [
     id: 'extra_moves', 
     nameKey: 'shop.extraMoves',
     name: 'Última Oportunidad', 
-    price: 0.49, 
+    price: 0.50, 
     currency: 'EUR',
     powerups: 5
   },
@@ -165,7 +165,7 @@ export const PRODUCTS: Product[] = [
     id: 'buy_moves', 
     nameKey: 'shop.buyMoves',
     name: 'Comprar Movimientos', 
-    price: 0.49, 
+    price: 0.50, 
     currency: 'EUR',
     powerups: 5
   },
@@ -174,7 +174,7 @@ export const PRODUCTS: Product[] = [
     id: 'welcome_pack',
     nameKey: 'shop.welcomePack',
     name: 'Pack Bienvenida',
-    price: 0.49,
+    price: 0.50,
     currency: 'EUR',
     powerups: 5, // +5 movimientos
     lives: 3 // +3 boosters (representado como vidas)
@@ -185,7 +185,7 @@ export const PRODUCTS: Product[] = [
     id: 'reward_doubler',
     nameKey: 'shop.rewardDoubler',
     name: 'Duplicar Recompensa x2',
-    price: 0.49,
+    price: 0.50,
     currency: 'EUR'
   },
   // PACK VICTORIA SEGURA - Premium €2.99

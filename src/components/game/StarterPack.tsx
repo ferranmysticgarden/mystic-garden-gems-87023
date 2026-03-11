@@ -240,7 +240,7 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
             </Button>
 
             <p className="text-yellow-300/60 text-xs mt-2">
-              💳 Pago seguro con Stripe
+              💳 Pago seguro
             </p>
 
             <Button 
