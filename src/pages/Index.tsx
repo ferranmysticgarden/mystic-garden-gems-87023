@@ -216,6 +216,7 @@ const Index = () => {
       loseLife();
       setScreen('game');
     } else {
+      trackEvent('no_lives_modal_shown', { trigger: 'retry' });
       setShowNoLivesModal(true);
     }
   };
