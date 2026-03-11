@@ -165,7 +165,7 @@ export const PRODUCTS: Product[] = [
     id: 'buy_moves', 
     nameKey: 'shop.buyMoves',
     name: 'Comprar Movimientos', 
-    price: 0.49, 
+    price: 0.50, 
     currency: 'EUR',
     powerups: 5
   },
