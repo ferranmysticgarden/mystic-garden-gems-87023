@@ -557,6 +557,16 @@ const Index = () => {
             Si quieres comprar, pulsa <span className="font-semibold text-foreground">Abrir tienda</span> o el botón de <span className="font-semibold text-foreground">💎 gemas</span> arriba.
           </p>
 
+          {!user && (
+            <Button
+              onClick={handleDirectGoogleSignIn}
+              variant="outline"
+              className="w-full mb-4 hover:scale-105 active:scale-95 transition-transform duration-100"
+            >
+              Continuar con Google
+            </Button>
+          )}
+
           {/* Botones secundarios - SOLO después de nivel 2 */}
           {!isNewUser && (
             <>
