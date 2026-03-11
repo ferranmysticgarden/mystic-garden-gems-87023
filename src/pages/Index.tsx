@@ -623,10 +623,10 @@ const Index = () => {
         />
       )}
 
-      {/* First Day Offer */}
-      <FirstDayOffer />
+      {/* First Day Offer - SOLO después de nivel 2 */}
+      {!isNewUser && <FirstDayOffer />}
 
-      {/* Starter Pack - SIEMPRE visible (es herramienta de conversión temprana) */}
+      {/* Starter Pack - después de nivel 2-4 win */}
       {showStarterPack && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}
@@ -634,10 +634,10 @@ const Index = () => {
         />
       )}
 
-      {/* Lucky Spin */}
-      <LuckySpin />
+      {/* Lucky Spin - SOLO después de nivel 2 */}
+      {!isNewUser && <LuckySpin />}
 
-      {/* Tutorial */}
+      {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log('Tutorial completado')} />
 
       {/* Achievement Modal */}
@@ -648,16 +648,18 @@ const Index = () => {
         />
       )}
 
-      {/* Push Notification Prompt - after level 2+ victory */}
-      <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />
+      {/* Push Notification Prompt - SOLO después de nivel 2 */}
+      {!isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
 
-      {/* Come Back Banner for returning users */}
-      <ComeBackBanner 
-        onClaimReward={(gems, lives) => {
-          addGems(gems);
-          addLives(lives);
-          toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
-        }}
+      {/* Come Back Banner - SOLO después de nivel 2 */}
+      {!isNewUser && (
+        <ComeBackBanner 
+          onClaimReward={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
+          }}
+        />
       />
 
       {/* Review Request Modal - shows after 3 games */}
