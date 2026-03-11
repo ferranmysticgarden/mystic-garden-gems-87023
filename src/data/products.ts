@@ -185,7 +185,7 @@ export const PRODUCTS: Product[] = [
     id: 'reward_doubler',
     nameKey: 'shop.rewardDoubler',
     name: 'Duplicar Recompensa x2',
-    price: 0.49,
+    price: 0.50,
     currency: 'EUR'
   },
   // PACK VICTORIA SEGURA - Premium €2.99

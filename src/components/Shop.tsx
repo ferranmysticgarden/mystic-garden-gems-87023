@@ -20,7 +20,10 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const { createPayment, loading } = usePayment();
 
   const handlePurchase = async (productId: string, productName: string) => {
-    await createPayment(productId);
+    const success = await createPayment(productId);
+    if (success) {
+      onPurchase(productId);
+    }
   };
 
   const shopProducts = PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
