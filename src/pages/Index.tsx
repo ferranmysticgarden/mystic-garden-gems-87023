@@ -125,7 +125,7 @@ const Index = () => {
   const [showLevel4Reward, setShowLevel4Reward] = useState(false);
 
   // State for login prompt (guest mode)
-  const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | 'general' | null>(null);
 
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
