@@ -245,15 +245,15 @@ const Index = () => {
       setShowFirstWin(true);
     }
 
-    // Show Starter Pack after level 2, 3 or 4 (only if welcome offer not active)
-    if ((currentLevel.id === 2 || currentLevel.id === 3 || currentLevel.id === 4) && !showWelcomeOffer) {
-      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: currentLevel.id });
-      trackEvent('offer_shown', { product: 'starter_pack', level: currentLevel.id });
+    // Show Starter Pack ONLY after level 3 win (única oferta temprana)
+    if (currentLevel.id === 3) {
+      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: 3 });
+      trackEvent('offer_shown', { product: 'starter_pack', level: 3 });
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
-    // Show post-victory offer after ANY level win (level 1+)
-    if (reward.gems && reward.gems > 0) {
+    // Show post-victory offer ONLY after level 5+ win (no distracciones tempranas)
+    if (currentLevel.id >= 5 && reward.gems && reward.gems > 0) {
       setLastWinGems(reward.gems);
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'victory_multiplier', level: currentLevel.id });
       trackEvent('offer_shown', { product: 'victory_multiplier', level: currentLevel.id });
@@ -271,15 +271,15 @@ const Index = () => {
     // Track consecutive losses for flash offer
     setConsecutiveLosses(prev => {
       const newCount = prev + 1;
-      // Show flash offer after 2 consecutive losses
-      if (newCount >= 2) {
+      // Show flash offer after 2 consecutive losses, ONLY level 5+
+      if (newCount >= 2 && currentLevel.id >= 5) {
         setTimeout(() => setShowFlashOffer(true), 1000);
       }
       return newCount;
     });
 
-    // Show Welcome Offer on ANY level defeat (level 1+) (if not seen)
-    if (!hasSeenWelcomeOffer() && canShowOfferToday()) {
+    // Show Welcome Offer ONLY on level 5+ defeat (no distracciones tempranas)
+    if (currentLevel.id >= 5 && !hasSeenWelcomeOffer() && canShowOfferToday()) {
       setTimeout(() => {
         emitAnalyticsEvent('first_purchase_offer_shown', { product: 'welcome_pack', level: currentLevel.id });
         trackEvent('offer_shown', { product: 'welcome_pack', level: currentLevel.id });
@@ -623,8 +623,8 @@ const Index = () => {
         />
       )}
 
-      {/* First Day Offer - SOLO después de nivel 2 */}
-      {!isNewUser && <FirstDayOffer />}
+      {/* First Day Offer - SOLO después de nivel 5 (no distraer temprano) */}
+      {gameState.completedLevels.length >= 5 && <FirstDayOffer />}
 
       {/* Starter Pack - después de nivel 2-4 win */}
       {showStarterPack && (

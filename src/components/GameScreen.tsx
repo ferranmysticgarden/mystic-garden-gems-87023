@@ -158,8 +158,8 @@ export const GameScreen = ({
           }
         }
 
-        // Buy moves offer BEFORE defeat (otros niveles)
-        if (!hasShownBuyMoves.current) {
+        // Buy moves offer BEFORE defeat - SOLO nivel 5+ (embudo limpio)
+        if (level.id >= 5 && !hasShownBuyMoves.current) {
           hasShownBuyMoves.current = true;
           emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
           setShowBuyMovesOffer(true);
@@ -408,8 +408,8 @@ export const GameScreen = ({
           </div>
         </div>
 
-        {/* Gems Purchase Banner - persistent during gameplay */}
-        <GemsBanner />
+        {/* Gems Purchase Banner - SOLO nivel 5+ (no distraer en niveles tempranos) */}
+        {level.id >= 5 && <GemsBanner />}
 
         {/* Board */}
         <div className="flex-1 flex items-center justify-center">

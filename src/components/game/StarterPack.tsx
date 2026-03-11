@@ -21,8 +21,8 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
   const price = getPrice('starter_pack', '€0.99');
 
   useEffect(() => {
-    // Trigger después de nivel 2, 3 o 4 (más temprano para captar antes del churn)
-    if (![2, 3, 4].includes(levelJustCompleted)) return;
+    // Trigger SOLO después de nivel 3 (única oferta temprana del embudo)
+    if (levelJustCompleted !== 3) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
