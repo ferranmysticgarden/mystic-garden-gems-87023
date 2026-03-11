@@ -623,8 +623,8 @@ const Index = () => {
         />
       )}
 
-      {/* First Day Offer - SOLO después de nivel 2 */}
-      {!isNewUser && <FirstDayOffer />}
+      {/* First Day Offer - SOLO después de nivel 5 (no distraer temprano) */}
+      {gameState.completedLevels.length >= 5 && <FirstDayOffer />}
 
       {/* Starter Pack - después de nivel 2-4 win */}
       {showStarterPack && (
