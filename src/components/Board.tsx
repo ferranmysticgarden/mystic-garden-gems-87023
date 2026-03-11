@@ -292,19 +292,17 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     setTimeout(() => {
       const matches = findMatches(newBoard);
       if (matches.length === 0) {
-        // No match, swap back
         playInvalidSound();
         setBoard(prevBoard);
         setIsSwapping(false);
       } else {
         matchCountRef.current += 1;
-        // Duck music during match sounds
         backgroundMusic.duck(400);
         playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
       }
-    }, 300);
+    }, 150);
   }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
