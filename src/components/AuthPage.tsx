@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
@@ -90,28 +91,31 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     setLoading(true);
 
     try {
-      const redirectUrl = isNative ? NATIVE_OAUTH_CALLBACK_URL : `${window.location.origin}/`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          // En nativo abrimos la URL nosotros (Custom Tabs / SFSafariViewController)
-          skipBrowserRedirect: isNative,
-        },
-      });
-
-      if (error) throw error;
-
       if (isNative) {
+        // En nativo usamos el flujo Supabase directo con Custom Tabs
+        const redirectUrl = NATIVE_OAUTH_CALLBACK_URL;
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: redirectUrl,
+            skipBrowserRedirect: true,
+          },
+        });
+
+        if (error) throw error;
+
         const url = data?.url;
-        if (!url) {
-          throw new Error('No se pudo iniciar el login con Google.');
-        }
+        if (!url) throw new Error('No se pudo iniciar el login con Google.');
 
         await Browser.open({ url, toolbarColor: '#1a0a2e', presentationStyle: 'fullscreen' });
-        // El cierre del navegador se hace cuando vuelve el deep link (useDeepLinks)
         setLoading(false);
+      } else {
+        // En web usamos Lovable Cloud managed OAuth
+        const { error } = await lovable.auth.signInWithOAuth('google', {
+          redirect_uri: window.location.origin,
+        });
+
+        if (error) throw error;
       }
     } catch (error: any) {
       toast.error(error.message || 'Error al iniciar sesión con Google');
