@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGooglePlayBilling } from './useGooglePlayBilling';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
+import { trackEvent } from '@/lib/trackEvent';
 
 /**
  * Hook unificado de pagos:
@@ -24,12 +25,25 @@ export const usePayment = () => {
       // Android → Google Play Billing
       if (isAndroid) {
         if (googlePlayBilling.isAvailable) {
-          const success = await googlePlayBilling.purchase(productId);
-          return success;
+          trackEvent('payment_bridge_start', { product: productId, platform: 'android' });
+          try {
+            const success = await googlePlayBilling.purchase(productId);
+            trackEvent('payment_bridge_result', { product: productId, platform: 'android', success });
+            return success;
+          } catch (gpError: any) {
+            trackEvent('payment_bridge_error', {
+              product: productId,
+              platform: 'android',
+              error: gpError instanceof Error ? gpError.message : String(gpError),
+            });
+            console.error('[PAYMENT] Google Play purchase threw:', gpError);
+            toast.error('Error en la compra. Inténtalo de nuevo.');
+            return false;
+          }
         }
         
         // Google Play Billing NO está disponible en Android
-        // NO caer a Stripe — los guests no pueden pagar por Stripe
+        trackEvent('payment_bridge_blocked', { product: productId, platform: 'android', reason: 'billing_not_available' });
         console.error('[PAYMENT] Google Play Billing not available on Android. Purchase blocked.');
         toast.error('Compras no disponibles ahora. Reinicia la app e inténtalo de nuevo.');
         return false;
@@ -39,7 +53,6 @@ export const usePayment = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Guest user — dispatch event so Index shows LoginPrompt
         window.dispatchEvent(new CustomEvent('request_login', { detail: { reason: 'purchase' } }));
         return false;
       }
@@ -59,6 +72,7 @@ export const usePayment = () => {
       return false;
     } catch (error: any) {
       console.error('Error creating payment:', error);
+      trackEvent('payment_bridge_error', { product: productId, platform: isAndroid ? 'android' : 'web', error: error?.message });
       toast.error('Error al crear el pago: ' + error.message);
       return false;
     } finally {

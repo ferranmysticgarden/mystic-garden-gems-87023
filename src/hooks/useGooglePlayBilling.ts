@@ -52,15 +52,27 @@ export const useGooglePlayBilling = () => {
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (retryCount = 0): Promise<Record<string, ProductDetails>> => {
     const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
-    const productDetails = await GooglePlayBilling.queryProducts({ productIds });
-    setProducts(productDetails);
-    trackEvent('billing_status', {
-      ready: Object.keys(productDetails).length > 0,
-      products_loaded: Object.keys(productDetails).length,
-    });
-    return productDetails;
+    try {
+      const productDetails = await GooglePlayBilling.queryProducts({ productIds });
+      setProducts(productDetails);
+      trackEvent('billing_status', {
+        ready: Object.keys(productDetails).length > 0,
+        products_loaded: Object.keys(productDetails).length,
+      });
+      return productDetails;
+    } catch (error) {
+      console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
+      trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
+      // Retry up to 2 times with delay for "internal error" / "disconnected"
+      if (retryCount < 2) {
+        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+        return loadProducts(retryCount + 1);
+      }
+      setProducts({});
+      return {};
+    }
   }, []);
 
   useEffect(() => {
@@ -209,10 +221,12 @@ export const useGooglePlayBilling = () => {
     }
 
     setLoading(true);
+    trackEvent('gp_purchase_flow_start', { product: productId, google_id: googlePlayProductId });
     try {
       let cachedProducts = products;
 
       if (!cachedProducts[googlePlayProductId]) {
+        trackEvent('gp_purchase_reload_products', { product: productId, google_id: googlePlayProductId });
         cachedProducts = await loadProducts();
       }
 
@@ -223,23 +237,27 @@ export const useGooglePlayBilling = () => {
           product: productId,
           google_product_id: googlePlayProductId,
           reason: 'product_not_loaded',
+          available_products: Object.keys(cachedProducts).join(','),
         });
         return false;
       }
 
+      trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
+      trackEvent('gp_native_call_success', { product: productId, google_id: googlePlayProductId, has_token: !!result?.purchaseToken });
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
-      if (error.message?.includes('cancelled')) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg?.includes('cancelled') || errorMsg?.includes('Cancel')) {
         toast.info('Compra cancelada');
-        trackEvent('purchase_cancelled', { platform: 'android', product: productId });
+        trackEvent('purchase_cancelled', { platform: 'android', product: productId, error: errorMsg });
       } else {
         console.error('Purchase error:', error);
         toast.error('Error al realizar la compra');
         trackEvent('purchase_error', {
           platform: 'android',
           product: productId,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMsg,
         });
       }
       return false;
