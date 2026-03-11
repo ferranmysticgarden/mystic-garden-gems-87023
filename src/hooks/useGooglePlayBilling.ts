@@ -221,10 +221,12 @@ export const useGooglePlayBilling = () => {
     }
 
     setLoading(true);
+    trackEvent('gp_purchase_flow_start', { product: productId, google_id: googlePlayProductId });
     try {
       let cachedProducts = products;
 
       if (!cachedProducts[googlePlayProductId]) {
+        trackEvent('gp_purchase_reload_products', { product: productId, google_id: googlePlayProductId });
         cachedProducts = await loadProducts();
       }
 
@@ -235,23 +237,27 @@ export const useGooglePlayBilling = () => {
           product: productId,
           google_product_id: googlePlayProductId,
           reason: 'product_not_loaded',
+          available_products: Object.keys(cachedProducts).join(','),
         });
         return false;
       }
 
+      trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
+      trackEvent('gp_native_call_success', { product: productId, google_id: googlePlayProductId, has_token: !!result?.purchaseToken });
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
-      if (error.message?.includes('cancelled')) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg?.includes('cancelled') || errorMsg?.includes('Cancel')) {
         toast.info('Compra cancelada');
-        trackEvent('purchase_cancelled', { platform: 'android', product: productId });
+        trackEvent('purchase_cancelled', { platform: 'android', product: productId, error: errorMsg });
       } else {
         console.error('Purchase error:', error);
         toast.error('Error al realizar la compra');
         trackEvent('purchase_error', {
           platform: 'android',
           product: productId,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMsg,
         });
       }
       return false;
