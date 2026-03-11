@@ -401,6 +401,9 @@ const Index = () => {
     );
   }
 
+  // ¿Es usuario nuevo? (menos de 3 niveles completados)
+  const isNewUser = gameState.completedLevels.length < 3;
+
   return (
     <div className="min-h-screen p-4 relative z-10">
       <div className="max-w-md mx-auto">
@@ -430,7 +433,6 @@ const Index = () => {
                 if (user) {
                   setShowExitModal(true);
                 } else {
-                  // Guest: just show exit modal without signOut
                   setShowExitModal(true);
                 }
               }}
@@ -451,21 +453,25 @@ const Index = () => {
           onShopClick={() => setScreen('shop')}
         />
 
-        {/* Streak Reminder Banner - VISIBLE when can claim */}
-        <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />
+        {/* Streak Reminder Banner - SOLO después de nivel 2 */}
+        {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
 
-        {/* Day Counter - "Día X en Mystic Garden" */}
-        <DayCounter currentStreak={streakData.currentStreak} />
+        {/* Day Counter - SOLO después de nivel 2 */}
+        {!isNewUser && <DayCounter currentStreak={streakData.currentStreak} />}
 
-        {/* Visual Garden - Emotional connection */}
-        <div className="mb-4">
-          <VisualGarden levelsCompleted={gameState.completedLevels.length} />
-        </div>
+        {/* Visual Garden - SOLO después de nivel 3 */}
+        {!isNewUser && (
+          <div className="mb-4">
+            <VisualGarden levelsCompleted={gameState.completedLevels.length} />
+          </div>
+        )}
 
-        {/* Progression Bar */}
-        <div className="mb-4">
-          <ProgressionBar />
-        </div>
+        {/* Progression Bar - SOLO después de nivel 3 */}
+        {!isNewUser && (
+          <div className="mb-4">
+            <ProgressionBar />
+          </div>
+        )}
 
         {/* Logo */}
         <div className="text-center mb-6 animate-float">
@@ -498,86 +504,88 @@ const Index = () => {
             {t('game.play')}
           </Button>
 
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <Button
-              onClick={() => setScreen('levels')}
-              variant="outline"
-              className="hover:scale-105 transition-transform"
-            >
-              <Grid3x3 className="w-5 h-5 mr-2" />
-              {t('menu.levels')}
-            </Button>
-            
-            {/* Shop button - SIEMPRE VISIBLE para generar deseo */}
-              <Button
-                onClick={() => setScreen('shop')}
-                variant="outline"
-                className="hover:scale-105 transition-transform"
-              >
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                {t('menu.shop')}
-              </Button>
-          </div>
+          {/* Botones secundarios - SOLO después de nivel 2 */}
+          {!isNewUser && (
+            <>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <Button
+                  onClick={() => setScreen('levels')}
+                  variant="outline"
+                  className="hover:scale-105 transition-transform"
+                >
+                  <Grid3x3 className="w-5 h-5 mr-2" />
+                  {t('menu.levels')}
+                </Button>
+                
+                <Button
+                  onClick={() => setScreen('shop')}
+                  variant="outline"
+                  className="hover:scale-105 transition-transform"
+                >
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  {t('menu.shop')}
+                </Button>
+              </div>
 
-          {/* Battle Pass Button */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <Button
-              onClick={() => setShowBattlePass(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
-            >
-              <Crown className="w-5 h-5 mr-2 text-yellow-400" />
-              <span className="text-yellow-400 font-semibold text-sm">Battle Pass</span>
-            </Button>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <Button
+                  onClick={() => setShowBattlePass(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
+                >
+                  <Crown className="w-5 h-5 mr-2 text-yellow-400" />
+                  <span className="text-yellow-400 font-semibold text-sm">Battle Pass</span>
+                </Button>
 
-            {/* Daily Streak Button */}
-            <Button
-              onClick={() => setShowStreakCalendar(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50 hover:border-orange-400 relative"
-            >
-              <Flame className="w-5 h-5 mr-2 text-orange-400" />
-              <span className="text-orange-400 font-semibold text-sm">
-                Racha {streakData.currentStreak > 0 ? `🔥${streakData.currentStreak}` : ''}
-              </span>
-              {streakData.canClaimToday && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              )}
-            </Button>
-          </div>
+                <Button
+                  onClick={() => setShowStreakCalendar(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50 hover:border-orange-400 relative"
+                >
+                  <Flame className="w-5 h-5 mr-2 text-orange-400" />
+                  <span className="text-orange-400 font-semibold text-sm">
+                    Racha {streakData.currentStreak > 0 ? `🔥${streakData.currentStreak}` : ''}
+                  </span>
+                  {streakData.canClaimToday && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  )}
+                </Button>
+              </div>
 
-          {/* Daily Missions & Loot Chest buttons */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <Button
-              onClick={() => setShowDailyMissions(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 hover:border-blue-400"
-            >
-              <Target className="w-5 h-5 mr-2 text-blue-400" />
-              <span className="text-blue-400 font-semibold text-sm">Misiones</span>
-            </Button>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <Button
+                  onClick={() => setShowDailyMissions(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 hover:border-blue-400"
+                >
+                  <Target className="w-5 h-5 mr-2 text-blue-400" />
+                  <span className="text-blue-400 font-semibold text-sm">Misiones</span>
+                </Button>
 
-            {/* Loot Chest - SIEMPRE VISIBLE */}
-              <Button
-                onClick={() => setShowLootChest(true)}
-                variant="outline"
-                className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
-              >
-                <Gift className="w-5 h-5 mr-2 text-amber-400" />
-                <span className="text-amber-400 font-semibold text-sm">Cofres</span>
-              </Button>
-          </div>
+                <Button
+                  onClick={() => setShowLootChest(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
+                >
+                  <Gift className="w-5 h-5 mr-2 text-amber-400" />
+                  <span className="text-amber-400 font-semibold text-sm">Cofres</span>
+                </Button>
+              </div>
 
-          {/* Player Rank Display */}
-          <div className="mt-4">
-            <PlayerRank levelsCompleted={gameState.completedLevels.length} />
-          </div>
+              {/* Player Rank Display */}
+              <div className="mt-4">
+                <PlayerRank levelsCompleted={gameState.completedLevels.length} />
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Rewarded Ads Section */}
-        <div className="mb-4">
-          <RewardedAds onRewardEarned={handleRewardedAdEarned} currentLevel={gameState.currentLevel} />
-        </div>
+        {/* Rewarded Ads Section - SOLO después de nivel 3 */}
+        {!isNewUser && (
+          <div className="mb-4">
+            <RewardedAds onRewardEarned={handleRewardedAdEarned} currentLevel={gameState.currentLevel} />
+          </div>
+        )}
       </div>
 
       {/* Shop Modal - SIEMPRE ACCESIBLE */}
