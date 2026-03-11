@@ -1,21 +1,27 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 interface TileProps {
   tile: string;
+  row: number;
+  col: number;
   isSelected: boolean;
   isAnimating: boolean;
   isTarget: boolean;
-  onClick: () => void;
+  onTileClick: (row: number, col: number) => void;
 }
 
-export const Tile = memo(({ tile, isSelected, isAnimating, isTarget, onClick }: TileProps) => {
+export const Tile = memo(({ tile, row, col, isSelected, isAnimating, isTarget, onTileClick }: TileProps) => {
+  const handleClick = useCallback(() => {
+    onTileClick(row, col);
+  }, [onTileClick, row, col]);
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={`
         aspect-square rounded-lg flex items-center justify-center text-2xl sm:text-3xl
-        transition-transform duration-150
-        ${isSelected ? 'scale-110 ring-2 ring-accent' : 'active:scale-95'}
+        transition-transform duration-100
+        ${isSelected ? 'scale-110 ring-2 ring-accent' : ''}
         ${isAnimating ? 'animate-pop' : ''}
         ${isTarget ? 'ring-2 ring-secondary' : ''}
       `}
