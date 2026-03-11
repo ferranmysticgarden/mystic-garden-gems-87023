@@ -245,6 +245,22 @@ serve(async (req) => {
           logStep("ERROR sending email", { error: String(emailError) });
         }
 
+        // Push notification via ntfy.sh
+        try {
+          await fetch("https://ntfy.sh/mystic-garden-admin-7225", {
+            method: "POST",
+            headers: {
+              "Title": `💰 Compra: ${PRODUCT_NAMES[productId] || productId}`,
+              "Priority": "high",
+              "Tags": "moneybag,tada",
+            },
+            body: `€${amountPaid.toFixed(2)} - ${customerEmail || 'anónimo'}`,
+          });
+          logStep("Push notification sent");
+        } catch (pushErr) {
+          logStep("Push notification failed", { error: String(pushErr) });
+        }
+
         logStep(`✅ Purchase completed: ${productId} for user ${userId}`);
       }
     }
