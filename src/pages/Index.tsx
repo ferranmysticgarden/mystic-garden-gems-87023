@@ -49,6 +49,7 @@ import { DiscountUnlockBanner } from '@/components/game/DiscountUnlockBanner';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
 import { Level4Reward } from '@/components/game/Level4Reward';
 import { LoginPrompt } from '@/components/game/LoginPrompt';
+import { signInWithGoogleWeb } from '@/lib/googleAuth';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from '@/lib/analytics';
 import { trackEvent } from '@/lib/trackEvent';
 import { Button } from '@/components/ui/button';
@@ -378,14 +379,7 @@ const Index = () => {
         return;
       }
 
-      const { error } = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-        extraParams: {
-          prompt: 'select_account',
-        },
-      });
-
-      if (error) throw error;
+      await signInWithGoogleWeb('/', 'select_account');
     } catch (error: any) {
       toast.error(error.message || 'Error al iniciar sesión con Google');
     }
