@@ -438,7 +438,7 @@ const Index = () => {
                   setShowExitModal(true);
                 }
               }}
-              className="w-12 h-12 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 hover:scale-110 transition-all duration-150"
+              className="w-12 h-12 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 active:scale-95 transition-transform duration-100"
               aria-label="Salir del juego"
             >
               <DoorOpen className="w-6 h-6 text-destructive" />
