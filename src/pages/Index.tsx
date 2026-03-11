@@ -689,23 +689,23 @@ const Index = () => {
         />
       )}
 
-      {/* Day 2-3 Unlock Bonus - MEGA REWARD */}
-      <Day2UnlockBanner 
-        streak={streakData.currentStreak}
-        onClaimReward={(gems, lives, powerUps) => {
-          addGems(gems);
-          addLives(lives);
-          // Add hammers if included
-          if (powerUps?.hammers) {
-            // Note: Would need to add hammer tracking to gameState
-            toast.success(`¡MEGA REGALO Día ${streakData.currentStreak}! +${gems}💎 +${lives}❤️ +${powerUps.hammers}🔨`);
-          } else {
-            toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
-          }
-        }}
-      />
+      {/* Day 2-3 Unlock Bonus - SOLO después de nivel 2 */}
+      {!isNewUser && (
+        <Day2UnlockBanner 
+          streak={streakData.currentStreak}
+          onClaimReward={(gems, lives, powerUps) => {
+            addGems(gems);
+            addLives(lives);
+            if (powerUps?.hammers) {
+              toast.success(`¡MEGA REGALO Día ${streakData.currentStreak}! +${gems}💎 +${lives}❤️ +${powerUps.hammers}🔨`);
+            } else {
+              toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
+            }
+          }}
+        />
+      )}
 
-      {/* First Win Celebration */}
+      {/* First Win Celebration - OK para nuevos */}
       {showFirstWin && (
         <FirstWinCelebration 
           levelsCompleted={gameState.completedLevels.length}
@@ -713,11 +713,10 @@ const Index = () => {
         />
       )}
 
-      {/* Welcome Offer - €0.49 after level 1 */}
-      {showWelcomeOffer && (
+      {/* Welcome Offer - €0.49 SOLO después de nivel 3 derrota */}
+      {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
-            // Grant rewards: +5 moves handled by product, +3 boosters
             addLives(3);
             toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters, x2 monedas 30 min');
             setShowWelcomeOffer(false);
@@ -726,18 +725,20 @@ const Index = () => {
         />
       )}
 
-      {/* First Session Reward - dopamina temprana para retención */}
-      <FirstSessionReward 
-        levelJustCompleted={lastCompletedLevel}
-        onClaim={(gems, lives) => {
-          addGems(gems);
-          addLives(lives);
-          toast.success(`¡Bienvenido! +${gems}💎 +${lives}❤️`);
-        }}
-        onClose={() => {}}
-      />
+      {/* First Session Reward - SOLO después de nivel 2 */}
+      {!isNewUser && (
+        <FirstSessionReward 
+          levelJustCompleted={lastCompletedLevel}
+          onClaim={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Bienvenido! +${gems}💎 +${lives}❤️`);
+          }}
+          onClose={() => {}}
+        />
+      )}
 
-      {/* Level 4 Micro-Reward - refuerzo de progresión */}
+      {/* Level 4 Micro-Reward */}
       {showLevel4Reward && (
         <Level4Reward 
           open={showLevel4Reward}
@@ -749,11 +750,13 @@ const Index = () => {
         />
       )}
 
-      {/* Share Prompt - after 5 games or 1 day */}
-      <SharePrompt 
-        gamesPlayed={gamesPlayed}
-        daysPlayed={streakData.currentStreak}
-      />
+      {/* Share Prompt - SOLO después de nivel 3 */}
+      {!isNewUser && (
+        <SharePrompt 
+          gamesPlayed={gamesPlayed}
+          daysPlayed={streakData.currentStreak}
+        />
+      )}
 
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
@@ -766,13 +769,13 @@ const Index = () => {
         />
       )}
 
-      {/* Post Victory Offer - after winning harder levels */}
-      {showPostVictoryOffer && lastWinGems > 0 && (
+      {/* Post Victory Offer - SOLO después de nivel 2 */}
+      {showPostVictoryOffer && lastWinGems > 0 && !isNewUser && (
         <PostVictoryOffer 
           baseGems={lastWinGems}
           onClose={() => setShowPostVictoryOffer(false)}
           onMultiply={(newGems) => {
-            addGems(newGems - lastWinGems); // Add the difference
+            addGems(newGems - lastWinGems);
             toast.success(`¡Gemas multiplicadas! +${newGems - lastWinGems}💎`);
           }}
         />
@@ -789,7 +792,7 @@ const Index = () => {
         />
       )}
 
-      {/* Loot Chest Modal - SIEMPRE ACCESIBLE */}
+      {/* Loot Chest Modal */}
       {showLootChest && (
         <LootChest 
           onClose={() => setShowLootChest(false)}
@@ -801,11 +804,11 @@ const Index = () => {
         />
       )}
 
-      {/* Spring Event Banner */}
-      <SpringEvent onClose={() => setShowSpringEvent(false)} />
+      {/* Spring Event - SOLO después de nivel 3 */}
+      {!isNewUser && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
 
-      {/* Discount Unlock Banner - when player reaches new tier */}
-      <DiscountUnlockBanner currentLevel={gameState.currentLevel} />
+      {/* Discount Unlock Banner - SOLO después de nivel 3 */}
+      {!isNewUser && <DiscountUnlockBanner currentLevel={gameState.currentLevel} />}
     </div>
   );
 };
