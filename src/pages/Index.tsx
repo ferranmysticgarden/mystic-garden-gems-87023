@@ -660,10 +660,10 @@ const Index = () => {
             toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
           }}
         />
-      />
+      )}
 
-      {/* Review Request Modal - shows after 3 games */}
-      <ReviewRequestModal gamesPlayed={gamesPlayed} />
+      {/* Review Request Modal - SOLO después de nivel 2 */}
+      {!isNewUser && <ReviewRequestModal gamesPlayed={gamesPlayed} />}
 
       {/* Exit Confirmation Modal */}
       {showExitModal && (
