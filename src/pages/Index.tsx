@@ -162,15 +162,15 @@ const Index = () => {
     }
   }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState]);
 
-  // Auto-show streak calendar if reward available
+  // Auto-show streak calendar if reward available — SOLO después de nivel 2
   useEffect(() => {
-    if (streakData.canClaimToday && user) {
+    if (streakData.canClaimToday && user && gameState.completedLevels.length >= 2) {
       const timer = setTimeout(() => {
         setShowStreakCalendar(true);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [streakData.canClaimToday, user]);
+  }, [streakData.canClaimToday, user, gameState.completedLevels.length]);
 
   // Schedule streak reminder if user has a streak (at 20:30 prime time)
   useEffect(() => {
@@ -401,6 +401,9 @@ const Index = () => {
     );
   }
 
+  // ¿Es usuario nuevo? (menos de 3 niveles completados)
+  const isNewUser = gameState.completedLevels.length < 3;
+
   return (
     <div className="min-h-screen p-4 relative z-10">
       <div className="max-w-md mx-auto">
@@ -430,7 +433,6 @@ const Index = () => {
                 if (user) {
                   setShowExitModal(true);
                 } else {
-                  // Guest: just show exit modal without signOut
                   setShowExitModal(true);
                 }
               }}
@@ -451,21 +453,25 @@ const Index = () => {
           onShopClick={() => setScreen('shop')}
         />
 
-        {/* Streak Reminder Banner - VISIBLE when can claim */}
-        <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />
+        {/* Streak Reminder Banner - SOLO después de nivel 2 */}
+        {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
 
-        {/* Day Counter - "Día X en Mystic Garden" */}
-        <DayCounter currentStreak={streakData.currentStreak} />
+        {/* Day Counter - SOLO después de nivel 2 */}
+        {!isNewUser && <DayCounter currentStreak={streakData.currentStreak} />}
 
-        {/* Visual Garden - Emotional connection */}
-        <div className="mb-4">
-          <VisualGarden levelsCompleted={gameState.completedLevels.length} />
-        </div>
+        {/* Visual Garden - SOLO después de nivel 3 */}
+        {!isNewUser && (
+          <div className="mb-4">
+            <VisualGarden levelsCompleted={gameState.completedLevels.length} />
+          </div>
+        )}
 
-        {/* Progression Bar */}
-        <div className="mb-4">
-          <ProgressionBar />
-        </div>
+        {/* Progression Bar - SOLO después de nivel 3 */}
+        {!isNewUser && (
+          <div className="mb-4">
+            <ProgressionBar />
+          </div>
+        )}
 
         {/* Logo */}
         <div className="text-center mb-6 animate-float">
@@ -498,86 +504,88 @@ const Index = () => {
             {t('game.play')}
           </Button>
 
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <Button
-              onClick={() => setScreen('levels')}
-              variant="outline"
-              className="hover:scale-105 transition-transform"
-            >
-              <Grid3x3 className="w-5 h-5 mr-2" />
-              {t('menu.levels')}
-            </Button>
-            
-            {/* Shop button - SIEMPRE VISIBLE para generar deseo */}
-              <Button
-                onClick={() => setScreen('shop')}
-                variant="outline"
-                className="hover:scale-105 transition-transform"
-              >
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                {t('menu.shop')}
-              </Button>
-          </div>
+          {/* Botones secundarios - SOLO después de nivel 2 */}
+          {!isNewUser && (
+            <>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <Button
+                  onClick={() => setScreen('levels')}
+                  variant="outline"
+                  className="hover:scale-105 transition-transform"
+                >
+                  <Grid3x3 className="w-5 h-5 mr-2" />
+                  {t('menu.levels')}
+                </Button>
+                
+                <Button
+                  onClick={() => setScreen('shop')}
+                  variant="outline"
+                  className="hover:scale-105 transition-transform"
+                >
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  {t('menu.shop')}
+                </Button>
+              </div>
 
-          {/* Battle Pass Button */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <Button
-              onClick={() => setShowBattlePass(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
-            >
-              <Crown className="w-5 h-5 mr-2 text-yellow-400" />
-              <span className="text-yellow-400 font-semibold text-sm">Battle Pass</span>
-            </Button>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <Button
+                  onClick={() => setShowBattlePass(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
+                >
+                  <Crown className="w-5 h-5 mr-2 text-yellow-400" />
+                  <span className="text-yellow-400 font-semibold text-sm">Battle Pass</span>
+                </Button>
 
-            {/* Daily Streak Button */}
-            <Button
-              onClick={() => setShowStreakCalendar(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50 hover:border-orange-400 relative"
-            >
-              <Flame className="w-5 h-5 mr-2 text-orange-400" />
-              <span className="text-orange-400 font-semibold text-sm">
-                Racha {streakData.currentStreak > 0 ? `🔥${streakData.currentStreak}` : ''}
-              </span>
-              {streakData.canClaimToday && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              )}
-            </Button>
-          </div>
+                <Button
+                  onClick={() => setShowStreakCalendar(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50 hover:border-orange-400 relative"
+                >
+                  <Flame className="w-5 h-5 mr-2 text-orange-400" />
+                  <span className="text-orange-400 font-semibold text-sm">
+                    Racha {streakData.currentStreak > 0 ? `🔥${streakData.currentStreak}` : ''}
+                  </span>
+                  {streakData.canClaimToday && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  )}
+                </Button>
+              </div>
 
-          {/* Daily Missions & Loot Chest buttons */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <Button
-              onClick={() => setShowDailyMissions(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 hover:border-blue-400"
-            >
-              <Target className="w-5 h-5 mr-2 text-blue-400" />
-              <span className="text-blue-400 font-semibold text-sm">Misiones</span>
-            </Button>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <Button
+                  onClick={() => setShowDailyMissions(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 hover:border-blue-400"
+                >
+                  <Target className="w-5 h-5 mr-2 text-blue-400" />
+                  <span className="text-blue-400 font-semibold text-sm">Misiones</span>
+                </Button>
 
-            {/* Loot Chest - SIEMPRE VISIBLE */}
-              <Button
-                onClick={() => setShowLootChest(true)}
-                variant="outline"
-                className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
-              >
-                <Gift className="w-5 h-5 mr-2 text-amber-400" />
-                <span className="text-amber-400 font-semibold text-sm">Cofres</span>
-              </Button>
-          </div>
+                <Button
+                  onClick={() => setShowLootChest(true)}
+                  variant="outline"
+                  className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
+                >
+                  <Gift className="w-5 h-5 mr-2 text-amber-400" />
+                  <span className="text-amber-400 font-semibold text-sm">Cofres</span>
+                </Button>
+              </div>
 
-          {/* Player Rank Display */}
-          <div className="mt-4">
-            <PlayerRank levelsCompleted={gameState.completedLevels.length} />
-          </div>
+              {/* Player Rank Display */}
+              <div className="mt-4">
+                <PlayerRank levelsCompleted={gameState.completedLevels.length} />
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Rewarded Ads Section */}
-        <div className="mb-4">
-          <RewardedAds onRewardEarned={handleRewardedAdEarned} currentLevel={gameState.currentLevel} />
-        </div>
+        {/* Rewarded Ads Section - SOLO después de nivel 3 */}
+        {!isNewUser && (
+          <div className="mb-4">
+            <RewardedAds onRewardEarned={handleRewardedAdEarned} currentLevel={gameState.currentLevel} />
+          </div>
+        )}
       </div>
 
       {/* Shop Modal - SIEMPRE ACCESIBLE */}
@@ -615,10 +623,10 @@ const Index = () => {
         />
       )}
 
-      {/* First Day Offer */}
-      <FirstDayOffer />
+      {/* First Day Offer - SOLO después de nivel 2 */}
+      {!isNewUser && <FirstDayOffer />}
 
-      {/* Starter Pack - SIEMPRE visible (es herramienta de conversión temprana) */}
+      {/* Starter Pack - después de nivel 2-4 win */}
       {showStarterPack && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}
@@ -626,10 +634,10 @@ const Index = () => {
         />
       )}
 
-      {/* Lucky Spin */}
-      <LuckySpin />
+      {/* Lucky Spin - SOLO después de nivel 2 */}
+      {!isNewUser && <LuckySpin />}
 
-      {/* Tutorial */}
+      {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log('Tutorial completado')} />
 
       {/* Achievement Modal */}
@@ -640,20 +648,22 @@ const Index = () => {
         />
       )}
 
-      {/* Push Notification Prompt - after level 2+ victory */}
-      <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />
+      {/* Push Notification Prompt - SOLO después de nivel 2 */}
+      {!isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
 
-      {/* Come Back Banner for returning users */}
-      <ComeBackBanner 
-        onClaimReward={(gems, lives) => {
-          addGems(gems);
-          addLives(lives);
-          toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
-        }}
-      />
+      {/* Come Back Banner - SOLO después de nivel 2 */}
+      {!isNewUser && (
+        <ComeBackBanner 
+          onClaimReward={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
+          }}
+        />
+      )}
 
-      {/* Review Request Modal - shows after 3 games */}
-      <ReviewRequestModal gamesPlayed={gamesPlayed} />
+      {/* Review Request Modal - SOLO después de nivel 2 */}
+      {!isNewUser && <ReviewRequestModal gamesPlayed={gamesPlayed} />}
 
       {/* Exit Confirmation Modal */}
       {showExitModal && (
@@ -679,23 +689,23 @@ const Index = () => {
         />
       )}
 
-      {/* Day 2-3 Unlock Bonus - MEGA REWARD */}
-      <Day2UnlockBanner 
-        streak={streakData.currentStreak}
-        onClaimReward={(gems, lives, powerUps) => {
-          addGems(gems);
-          addLives(lives);
-          // Add hammers if included
-          if (powerUps?.hammers) {
-            // Note: Would need to add hammer tracking to gameState
-            toast.success(`¡MEGA REGALO Día ${streakData.currentStreak}! +${gems}💎 +${lives}❤️ +${powerUps.hammers}🔨`);
-          } else {
-            toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
-          }
-        }}
-      />
+      {/* Day 2-3 Unlock Bonus - SOLO después de nivel 2 */}
+      {!isNewUser && (
+        <Day2UnlockBanner 
+          streak={streakData.currentStreak}
+          onClaimReward={(gems, lives, powerUps) => {
+            addGems(gems);
+            addLives(lives);
+            if (powerUps?.hammers) {
+              toast.success(`¡MEGA REGALO Día ${streakData.currentStreak}! +${gems}💎 +${lives}❤️ +${powerUps.hammers}🔨`);
+            } else {
+              toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);
+            }
+          }}
+        />
+      )}
 
-      {/* First Win Celebration */}
+      {/* First Win Celebration - OK para nuevos */}
       {showFirstWin && (
         <FirstWinCelebration 
           levelsCompleted={gameState.completedLevels.length}
@@ -703,11 +713,10 @@ const Index = () => {
         />
       )}
 
-      {/* Welcome Offer - €0.49 after level 1 */}
-      {showWelcomeOffer && (
+      {/* Welcome Offer - €0.49 SOLO después de nivel 3 derrota */}
+      {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
-            // Grant rewards: +5 moves handled by product, +3 boosters
             addLives(3);
             toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters, x2 monedas 30 min');
             setShowWelcomeOffer(false);
@@ -716,18 +725,20 @@ const Index = () => {
         />
       )}
 
-      {/* First Session Reward - dopamina temprana para retención */}
-      <FirstSessionReward 
-        levelJustCompleted={lastCompletedLevel}
-        onClaim={(gems, lives) => {
-          addGems(gems);
-          addLives(lives);
-          toast.success(`¡Bienvenido! +${gems}💎 +${lives}❤️`);
-        }}
-        onClose={() => {}}
-      />
+      {/* First Session Reward - SOLO después de nivel 2 */}
+      {!isNewUser && (
+        <FirstSessionReward 
+          levelJustCompleted={lastCompletedLevel}
+          onClaim={(gems, lives) => {
+            addGems(gems);
+            addLives(lives);
+            toast.success(`¡Bienvenido! +${gems}💎 +${lives}❤️`);
+          }}
+          onClose={() => {}}
+        />
+      )}
 
-      {/* Level 4 Micro-Reward - refuerzo de progresión */}
+      {/* Level 4 Micro-Reward */}
       {showLevel4Reward && (
         <Level4Reward 
           open={showLevel4Reward}
@@ -739,11 +750,13 @@ const Index = () => {
         />
       )}
 
-      {/* Share Prompt - after 5 games or 1 day */}
-      <SharePrompt 
-        gamesPlayed={gamesPlayed}
-        daysPlayed={streakData.currentStreak}
-      />
+      {/* Share Prompt - SOLO después de nivel 3 */}
+      {!isNewUser && (
+        <SharePrompt 
+          gamesPlayed={gamesPlayed}
+          daysPlayed={streakData.currentStreak}
+        />
+      )}
 
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
@@ -756,13 +769,13 @@ const Index = () => {
         />
       )}
 
-      {/* Post Victory Offer - after winning harder levels */}
-      {showPostVictoryOffer && lastWinGems > 0 && (
+      {/* Post Victory Offer - SOLO después de nivel 2 */}
+      {showPostVictoryOffer && lastWinGems > 0 && !isNewUser && (
         <PostVictoryOffer 
           baseGems={lastWinGems}
           onClose={() => setShowPostVictoryOffer(false)}
           onMultiply={(newGems) => {
-            addGems(newGems - lastWinGems); // Add the difference
+            addGems(newGems - lastWinGems);
             toast.success(`¡Gemas multiplicadas! +${newGems - lastWinGems}💎`);
           }}
         />
@@ -779,7 +792,7 @@ const Index = () => {
         />
       )}
 
-      {/* Loot Chest Modal - SIEMPRE ACCESIBLE */}
+      {/* Loot Chest Modal */}
       {showLootChest && (
         <LootChest 
           onClose={() => setShowLootChest(false)}
@@ -791,11 +804,11 @@ const Index = () => {
         />
       )}
 
-      {/* Spring Event Banner */}
-      <SpringEvent onClose={() => setShowSpringEvent(false)} />
+      {/* Spring Event - SOLO después de nivel 3 */}
+      {!isNewUser && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
 
-      {/* Discount Unlock Banner - when player reaches new tier */}
-      <DiscountUnlockBanner currentLevel={gameState.currentLevel} />
+      {/* Discount Unlock Banner - SOLO después de nivel 3 */}
+      {!isNewUser && <DiscountUnlockBanner currentLevel={gameState.currentLevel} />}
     </div>
   );
 };
