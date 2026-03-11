@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Shield, Cloud, Gift } from 'lucide-react';
 import { AuthPage } from '@/components/AuthPage';
+import { lovable } from '@/integrations/lovable';
+import { toast } from 'sonner';
 
 interface LoginPromptProps {
   reason: 'purchase' | 'save_progress' | 'general';
