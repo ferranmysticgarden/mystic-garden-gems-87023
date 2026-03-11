@@ -62,6 +62,9 @@ export const GameHeader = ({ lives, gems, hasUnlimitedLives, timeUntilNextLife, 
           aria-label="Abrir tienda"
           title="Abrir tienda"
         >
+          <span className="text-2xl">💎</span>
+          <span className="text-xl font-bold text-accent-foreground">{gems}</span>
+        </button>
 
       </div>
     </header>
