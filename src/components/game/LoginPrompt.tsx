@@ -92,6 +92,28 @@ export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) =>
             Crear cuenta / Iniciar sesión
           </Button>
 
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mt-3 text-base py-5"
+            onClick={async () => {
+              try {
+                const { error } = await lovable.auth.signInWithOAuth('google', {
+                  redirect_uri: window.location.origin,
+                  extraParams: {
+                    prompt: 'select_account',
+                  },
+                });
+
+                if (error) throw error;
+              } catch (error: any) {
+                toast.error(error.message || 'Error al iniciar sesión con Google');
+              }
+            }}
+          >
+            Continuar con Google
+          </Button>
+
           <button
             onClick={onClose}
             className="text-white/30 hover:text-white/50 text-xs mt-4 transition-colors block mx-auto"

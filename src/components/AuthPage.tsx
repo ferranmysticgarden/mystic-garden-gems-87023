@@ -25,6 +25,18 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        onAuthSuccess();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [onAuthSuccess]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
