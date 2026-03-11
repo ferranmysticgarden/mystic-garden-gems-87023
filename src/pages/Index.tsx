@@ -513,7 +513,7 @@ const Index = () => {
                 <Button
                   onClick={() => setScreen('levels')}
                   variant="outline"
-                  className="hover:scale-105 transition-transform"
+                  className="hover:scale-105 active:scale-95 transition-transform duration-100"
                 >
                   <Grid3x3 className="w-5 h-5 mr-2" />
                   {t('menu.levels')}
