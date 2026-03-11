@@ -278,8 +278,8 @@ const Index = () => {
       return newCount;
     });
 
-    // Show Welcome Offer on ANY level defeat (level 1+) (if not seen)
-    if (!hasSeenWelcomeOffer() && canShowOfferToday()) {
+    // Show Welcome Offer ONLY on level 5+ defeat (no distracciones tempranas)
+    if (currentLevel.id >= 5 && !hasSeenWelcomeOffer() && canShowOfferToday()) {
       setTimeout(() => {
         emitAnalyticsEvent('first_purchase_offer_shown', { product: 'welcome_pack', level: currentLevel.id });
         trackEvent('offer_shown', { product: 'welcome_pack', level: currentLevel.id });
