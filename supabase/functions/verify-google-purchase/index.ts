@@ -202,6 +202,25 @@ serve(async (req) => {
 
     console.log(`[INFO] Verifying purchase: product=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
+    const { error: auditInsertError } = await supabaseClient
+      .from('app_events')
+      .insert({
+        event_name: 'gp_verify_started',
+        event_data: {
+          productId,
+          orderId: orderId || null,
+          purchaseTokenPrefix: purchaseToken.slice(0, 12),
+          isGuest,
+          userId,
+        },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
+
+    if (auditInsertError) {
+      console.error('[WARN] Failed to audit gp_verify_started:', auditInsertError.message);
+    }
+
     // Verify with Google Play API (ALWAYS — this is the real security check)
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
     const packageName = "com.mysticgarden.game";
@@ -215,6 +234,28 @@ serve(async (req) => {
 
     if (!verification.valid) {
       console.error('[ERROR] Purchase verification failed:', verification.error);
+
+      const { error: auditFailError } = await supabaseClient
+        .from('app_events')
+        .insert({
+          event_name: 'gp_verify_failed',
+          event_data: {
+            productId,
+            orderId: orderId || null,
+            error: verification.error || 'Purchase verification failed',
+            purchaseState: verification.purchaseState ?? null,
+            consumptionState: verification.consumptionState ?? null,
+            isGuest,
+            userId,
+          },
+          platform: 'android',
+          device_id: purchaseToken.slice(0, 24),
+        });
+
+      if (auditFailError) {
+        console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
+      }
+
       return new Response(JSON.stringify({ 
         success: false, 
         error: verification.error || 'Purchase verification failed' 
@@ -225,6 +266,26 @@ serve(async (req) => {
     }
 
     console.log('[INFO] Purchase verified successfully with Google Play');
+
+    const { error: auditVerifiedError } = await supabaseClient
+      .from('app_events')
+      .insert({
+        event_name: 'gp_verify_ok',
+        event_data: {
+          productId,
+          orderId: orderId || null,
+          purchaseState: verification.purchaseState ?? null,
+          consumptionState: verification.consumptionState ?? null,
+          isGuest,
+          userId,
+        },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
+
+    if (auditVerifiedError) {
+      console.error('[WARN] Failed to audit gp_verify_ok:', auditVerifiedError.message);
+    }
 
     // Get product rewards
     const rewards = PRODUCT_REWARDS[productId];
@@ -322,9 +383,45 @@ serve(async (req) => {
           });
       }
 
+      const { error: auditGrantedError } = await supabaseClient
+        .from('app_events')
+        .insert({
+          event_name: 'gp_purchase_granted',
+          event_data: {
+            productId,
+            orderId: orderId || null,
+            isGuest: false,
+            userId,
+            rewards,
+          },
+          platform: 'android',
+          device_id: purchaseToken.slice(0, 24),
+        });
+
+      if (auditGrantedError) {
+        console.error('[WARN] Failed to audit gp_purchase_granted:', auditGrantedError.message);
+      }
+
       console.log(`[INFO] ✅ Purchase completed (authenticated): ${productId} for user ${userId}`);
     } else {
       // Guest purchase: Google Play verified it, rewards will be applied client-side
+      const { error: auditGuestError } = await supabaseClient
+        .from('app_events')
+        .insert({
+          event_name: 'gp_purchase_guest_verified',
+          event_data: {
+            productId,
+            orderId: orderId || null,
+            isGuest: true,
+          },
+          platform: 'android',
+          device_id: purchaseToken.slice(0, 24),
+        });
+
+      if (auditGuestError) {
+        console.error('[WARN] Failed to audit gp_purchase_guest_verified:', auditGuestError.message);
+      }
+
       console.log(`[INFO] ✅ Purchase verified (guest): ${productId} — rewards applied client-side`);
     }
 
