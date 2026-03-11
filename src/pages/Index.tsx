@@ -379,14 +379,7 @@ const Index = () => {
         return;
       }
 
-      const { error } = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-        extraParams: {
-          prompt: 'select_account',
-        },
-      });
-
-      if (error) throw error;
+      await signInWithGoogleWeb('/', 'select_account');
     } catch (error: any) {
       toast.error(error.message || 'Error al iniciar sesión con Google');
     }

@@ -122,12 +122,7 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
         await Browser.open({ url, toolbarColor: '#1a0a2e', presentationStyle: 'fullscreen' });
         setLoading(false);
       } else {
-        // En web usamos Lovable Cloud managed OAuth
-        const { error } = await lovable.auth.signInWithOAuth('google', {
-          redirect_uri: window.location.origin,
-        });
-
-        if (error) throw error;
+        await signInWithGoogleWeb('/', 'select_account');
       }
     } catch (error: any) {
       toast.error(error.message || 'Error al iniciar sesión con Google');
