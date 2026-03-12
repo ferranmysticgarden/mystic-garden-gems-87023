@@ -15,9 +15,8 @@ interface AuthPageProps {
 const emailSchema = z.string().trim().email({ message: "Email inválido" });
 const passwordSchema = z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" });
 
-// Para login/confirmación en móvil nativo usamos una URL https (permitida por el backend)
+// Para login/confirmación en móvil nativo usamos una URL https permitida por el backend
 // que luego “salta” de vuelta a la app con deep link.
-const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
 
 export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   const [loading, setLoading] = useState(false);
