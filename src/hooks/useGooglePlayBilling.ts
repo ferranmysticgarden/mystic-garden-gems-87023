@@ -111,7 +111,7 @@ export const useGooglePlayBilling = () => {
     };
   }, [isAndroid, loadProducts]);
 
-  const verifyAndProcessPurchase = useCallback(async (purchase: PurchaseResult) => {
+  const verifyAndProcessPurchase = useCallback((purchase: PurchaseResult): Promise<boolean> => {
     const purchaseToken = purchase.purchaseToken;
 
     if (!purchaseToken) {
@@ -120,72 +120,76 @@ export const useGooglePlayBilling = () => {
         product: purchase.productId,
         reason: 'missing_purchase_token',
       });
-      return false;
+      return Promise.resolve(false);
     }
 
-    if (processedTokensRef.current.has(purchaseToken)) {
-      return true;
+    const existingTask = verificationTasksRef.current.get(purchaseToken);
+    if (existingTask) {
+      return existingTask;
     }
 
-    processedTokensRef.current.add(purchaseToken);
-
-    try {
-      trackEvent('purchase_verification_started', {
-        platform: 'android',
-        product: purchase.productId,
-      });
-
-      const { data, error } = await supabase.functions.invoke('verify-google-purchase', {
-        body: {
-          purchaseToken: purchase.purchaseToken,
-          productId: purchase.productId,
-          orderId: purchase.orderId,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data?.success) {
-        throw new Error(data?.error || 'Purchase verification failed');
-      }
-
-      // Verification succeeded — NOW consume the purchase on Google Play
+    const verificationTask = (async () => {
       try {
-        await GooglePlayBilling.consumePurchase({ purchaseToken });
-        console.log('[PURCHASE] ✅ Consumed after server verification');
-      } catch (consumeError) {
-        // Log but don't fail — rewards already granted server-side
-        console.error('[PURCHASE] ⚠️ Consume failed (rewards already granted):', consumeError);
-        trackEvent('purchase_consume_failed', {
+        trackEvent('purchase_verification_started', {
           platform: 'android',
           product: purchase.productId,
-          error: String(consumeError),
         });
-      }
 
-      console.log('[PURCHASE] success confirmed via Google Play');
-      trackEvent('purchase_verified', {
-        platform: 'android',
-        product: purchase.productId,
-        guest: Boolean(data?.isGuest),
-      });
-      dispatchPurchaseCompleted(purchase.productId);
-      console.log('[PURCHASE] gate unlocked');
-      toast.success('¡Compra completada!');
-      return true;
-    } catch (error) {
-      processedTokensRef.current.delete(purchaseToken);
-      console.error('Error processing purchase:', error);
-      trackEvent('purchase_verification_failed', {
-        platform: 'android',
-        product: purchase.productId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      toast.error('Error al procesar la compra');
-      return false;
-    }
+        const { data, error } = await supabase.functions.invoke('verify-google-purchase', {
+          body: {
+            purchaseToken: purchase.purchaseToken,
+            productId: purchase.productId,
+            orderId: purchase.orderId,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data?.success) {
+          throw new Error(data?.error || 'Purchase verification failed');
+        }
+
+        // Verification succeeded — NOW consume the purchase on Google Play
+        try {
+          await GooglePlayBilling.consumePurchase({ purchaseToken });
+          console.log('[PURCHASE] ✅ Consumed after server verification');
+        } catch (consumeError) {
+          // Log but don't fail — rewards already granted server-side
+          console.error('[PURCHASE] ⚠️ Consume failed (rewards already granted):', consumeError);
+          trackEvent('purchase_consume_failed', {
+            platform: 'android',
+            product: purchase.productId,
+            error: String(consumeError),
+          });
+        }
+
+        console.log('[PURCHASE] success confirmed via Google Play');
+        trackEvent('purchase_verified', {
+          platform: 'android',
+          product: purchase.productId,
+          guest: Boolean(data?.isGuest),
+        });
+        dispatchPurchaseCompleted(purchase.productId);
+        console.log('[PURCHASE] gate unlocked');
+        toast.success('¡Compra completada!');
+        return true;
+      } catch (error) {
+        verificationTasksRef.current.delete(purchaseToken);
+        console.error('Error processing purchase:', error);
+        trackEvent('purchase_verification_failed', {
+          platform: 'android',
+          product: purchase.productId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        toast.error('Error al procesar la compra');
+        return false;
+      }
+    })();
+
+    verificationTasksRef.current.set(purchaseToken, verificationTask);
+    return verificationTask;
   }, []);
 
   const purchase = useCallback(async (productId: string): Promise<boolean> => {

@@ -342,6 +342,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     JSObject ret = new JSObject();
                     for (int i = 0; i < purchases.size(); i++) {
                         Purchase p = purchases.get(i);
+                        if (p.getProducts() == null || p.getProducts().isEmpty()) {
+                            Log.w(TAG, "⚠️ Skipping restored purchase without product payload");
+                            continue;
+                        }
+
                         JSObject purchaseData = new JSObject();
                         purchaseData.put("purchaseToken", p.getPurchaseToken());
                         purchaseData.put("orderId", p.getOrderId());
