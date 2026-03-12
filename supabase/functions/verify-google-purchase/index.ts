@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Product rewards configuration
+// Product rewards configuration (canonical app IDs)
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
   // Cofres (reward granted client-side, randomized)
   "chest_wooden": {},
@@ -38,19 +38,40 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
-  // Google Play aliases (IDs sin guion bajo usados en Google Play Console)
-  "welcomepack": { powerups: 5, lives: 3 },
-  "packimpulso": { powerups: 5, lives: 3 },
-  "packexperiencia": { lives: 2 },
-  "packvictoriasegura": { powerups: 8, lives: 3 },
-  // 7 nuevos productos (10 mar 2026)
-  "quickpack": { lives: 3, gems: 20 },
-  "gems100": { gems: 100 },
-  "gems300": { gems: 300 },
-  "gems1200": { gems: 1200 },
-  "noadsmonth": { noAdsDays: 30 },
-  "noadsforever": { noAdsForever: true },
-  "gardenpass": { gems: 1000, noAdsDays: 30 },
+};
+
+const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
+  welcomepack: 'welcome_pack',
+  packimpulso: 'pack_impulso',
+  packexperiencia: 'pack_experiencia',
+  packrachainfinita: 'pack_racha_infinita',
+  packvictoriasegura: 'pack_victoria_segura',
+  packvictoriasegurapro: 'pack_victoria_segura_pro',
+  quickpack: 'quick_pack',
+  gems100: 'gems_100',
+  gems300: 'gems_300',
+  gems1200: 'gems_1200',
+  noadsmonth: 'no_ads_month',
+  noadsforever: 'no_ads_forever',
+  gardenpass: 'garden_pass',
+  // Compatibilidad con catálogos donde añadieron sufijo numérico
+  welcomepack1: 'welcome_pack',
+  packimpulso1: 'pack_impulso',
+  packexperiencia1: 'pack_experiencia',
+  packrachainfinita1: 'pack_racha_infinita',
+  packvictoriasegura1: 'pack_victoria_segura',
+  packvictoriasegurapro1: 'pack_victoria_segura_pro',
+  quickpack1: 'quick_pack',
+  gems1001: 'gems_100',
+  gems3001: 'gems_300',
+  gems12001: 'gems_1200',
+  noadsmonth1: 'no_ads_month',
+  noadsforever1: 'no_ads_forever',
+  gardenpass1: 'garden_pass',
+};
+
+const normalizeGoogleProductId = (productId: string) => {
+  return GOOGLE_PLAY_PRODUCT_ALIASES[productId] ?? productId;
 };
 
 // Google Play API verification
