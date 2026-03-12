@@ -33,7 +33,6 @@ export const useGooglePlayBilling = () => {
     } catch (error) {
       console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
       trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
-      // Retry up to 2 times with delay for "internal error" / "disconnected"
       if (retryCount < 2) {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
@@ -98,11 +97,17 @@ export const useGooglePlayBilling = () => {
       trackEvent('purchase_error', { platform: 'android', error });
     });
 
+    const pendingListener = GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
+      trackEvent('purchase_pending', { platform: 'android', product: productId });
+      toast.info('Compra pendiente de confirmación de pago');
+    });
+
     return () => {
       readyListener.then(l => l.remove());
       purchaseListener.then(l => l.remove());
       cancelListener.then(l => l.remove());
       errorListener.then(l => l.remove());
+      pendingListener.then(l => l.remove());
     };
   }, [isAndroid, loadProducts]);
 
@@ -144,6 +149,20 @@ export const useGooglePlayBilling = () => {
 
       if (!data?.success) {
         throw new Error(data?.error || 'Purchase verification failed');
+      }
+
+      // Verification succeeded — NOW consume the purchase on Google Play
+      try {
+        await GooglePlayBilling.consumePurchase({ purchaseToken });
+        console.log('[PURCHASE] ✅ Consumed after server verification');
+      } catch (consumeError) {
+        // Log but don't fail — rewards already granted server-side
+        console.error('[PURCHASE] ⚠️ Consume failed (rewards already granted):', consumeError);
+        trackEvent('purchase_consume_failed', {
+          platform: 'android',
+          product: purchase.productId,
+          error: String(consumeError),
+        });
       }
 
       console.log('[PURCHASE] success confirmed via Google Play');
@@ -238,9 +257,14 @@ export const useGooglePlayBilling = () => {
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      if (errorMsg?.includes('cancelled') || errorMsg?.includes('Cancel')) {
-        toast.info('Compra cancelada');
-        trackEvent('purchase_cancelled', { platform: 'android', product: productId, error: errorMsg });
+      if (errorMsg?.includes('cancelled') || errorMsg?.includes('Cancel') || errorMsg?.includes('pending')) {
+        if (errorMsg?.includes('pending')) {
+          toast.info('Compra pendiente de pago');
+          trackEvent('purchase_pending', { platform: 'android', product: productId });
+        } else {
+          toast.info('Compra cancelada');
+          trackEvent('purchase_cancelled', { platform: 'android', product: productId, error: errorMsg });
+        }
       } else {
         console.error('Purchase error:', error);
         toast.error('Error al realizar la compra');

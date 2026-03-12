@@ -20,6 +20,7 @@ export interface GooglePlayBillingPlugin {
   isReady(): Promise<{ ready: boolean }>;
   queryProducts(options: { productIds: string[] }): Promise<Record<string, ProductDetails>>;
   purchase(options: { productId: string }): Promise<PurchaseResult>;
+  consumePurchase(options: { purchaseToken: string }): Promise<{ consumed: boolean }>;
   restorePurchases(): Promise<Record<string, PurchaseResult>>;
   addListener(
     eventName: 'billingReady',
@@ -36,6 +37,10 @@ export interface GooglePlayBillingPlugin {
   addListener(
     eventName: 'purchaseError',
     listenerFunc: (data: { error: string }) => void
+  ): Promise<{ remove: () => void }>;
+  addListener(
+    eventName: 'purchasePending',
+    listenerFunc: (data: { productId: string; purchaseToken: string; state: string }) => void
   ): Promise<{ remove: () => void }>;
 }
 
