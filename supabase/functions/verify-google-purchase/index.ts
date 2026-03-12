@@ -211,17 +211,18 @@ serve(async (req) => {
       userId = userData.user?.id || null;
     }
 
-    const { purchaseToken, productId, orderId } = await req.json();
+    const { purchaseToken, productId: rawProductId, orderId } = await req.json();
 
-    if (!purchaseToken || !productId) {
+    if (!purchaseToken || !rawProductId) {
       throw new Error("Missing purchaseToken or productId");
     }
 
+    const productId = normalizeGoogleProductId(rawProductId);
     const purchaseKey = orderId || purchaseToken;
     const purchaseRecordId = `gp_${purchaseKey}`;
     const isGuest = !userId;
 
-    console.log(`[INFO] Verifying purchase: product=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
+    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
     const { error: auditInsertError } = await supabaseClient
       .from('app_events')
@@ -229,6 +230,7 @@ serve(async (req) => {
         event_name: 'gp_verify_started',
         event_data: {
           productId,
+          rawProductId,
           orderId: orderId || null,
           purchaseTokenPrefix: purchaseToken.slice(0, 12),
           isGuest,
@@ -245,10 +247,10 @@ serve(async (req) => {
     // Verify with Google Play API (ALWAYS — this is the real security check)
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
     const packageName = "com.mysticgarden.game";
-    
+
     const verification = await verifyWithGooglePlay(
       packageName,
-      productId,
+      rawProductId,
       purchaseToken,
       serviceAccountKey
     );
@@ -262,6 +264,7 @@ serve(async (req) => {
           event_name: 'gp_verify_failed',
           event_data: {
             productId,
+            rawProductId,
             orderId: orderId || null,
             error: verification.error || 'Purchase verification failed',
             purchaseState: verification.purchaseState ?? null,
@@ -277,9 +280,9 @@ serve(async (req) => {
         console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
       }
 
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: verification.error || 'Purchase verification failed' 
+      return new Response(JSON.stringify({
+        success: false,
+        error: verification.error || 'Purchase verification failed'
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -294,6 +297,7 @@ serve(async (req) => {
         event_name: 'gp_verify_ok',
         event_data: {
           productId,
+          rawProductId,
           orderId: orderId || null,
           purchaseState: verification.purchaseState ?? null,
           consumptionState: verification.consumptionState ?? null,
@@ -311,7 +315,7 @@ serve(async (req) => {
     // Get product rewards
     const rewards = PRODUCT_REWARDS[productId];
     if (!rewards) {
-      throw new Error(`Unknown product: ${productId}`);
+      throw new Error(`Unknown product: ${productId} (raw=${rawProductId})`);
     }
 
     // If user is authenticated, save to DB and grant rewards server-side
