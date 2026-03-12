@@ -25,7 +25,7 @@ export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: Bat
   const [currentTier, setCurrentTier] = useState(1);
   const [guestPremiumUnlocked, setGuestPremiumUnlocked] = useState(false);
   const { user } = useAuth();
-  const { createPayment, loading } = usePayment();
+  const { createPayment, loading, getPrice } = usePayment();
 
   const isPremium = hasPremiumAccess || guestPremiumUnlocked;
 
