@@ -7,6 +7,7 @@ import { trackEvent } from '@/lib/trackEvent';
 
 interface GemsBannerProps {
   onPurchased?: () => void;
+  onPurchaseSuccess?: () => void;
 }
 
 export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
