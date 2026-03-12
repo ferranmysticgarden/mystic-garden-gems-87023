@@ -21,7 +21,7 @@ interface BattlePassProps {
   onPurchaseSuccess?: () => void;
 }
 
-export const BattlePass = ({ onClose, hasPremiumAccess }: BattlePassProps) => {
+export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: BattlePassProps) => {
   const [currentTier, setCurrentTier] = useState(1);
   const [guestPremiumUnlocked, setGuestPremiumUnlocked] = useState(false);
   const { user } = useAuth();
