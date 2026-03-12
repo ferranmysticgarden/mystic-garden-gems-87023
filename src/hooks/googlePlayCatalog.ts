@@ -15,7 +15,7 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   pack_experiencia: ['packexperiencia'],
   pack_racha_infinita: ['packrachainfinita'],
   pack_victoria_segura: ['packvictoriasegura'],
-  pack_victoria_segura_pro: ['packvictoriasegurapro', 'packvictoriasegura'],
+  pack_victoria_segura_pro: ['packvictoriasegurapro'],
   quick_pack: ['quickpack'],
   gems_100: ['gems100'],
   gems_300: ['gems300'],
@@ -25,6 +25,21 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   garden_pass: ['gardenpass'],
   extra_moves: ['extramoves'],
   first_purchase: ['firstpurchase'],
+  // Productos que antes faltaban en el catálogo
+  flash_offer: ['flashoffer'],
+  buy_moves: ['buymoves'],
+  finish_level: ['finishlevel'],
+  starter_pack: ['starterpack'],
+  continue_game: ['continuegame'],
+  victory_multiplier: ['victorymultiplier'],
+  reward_doubler: ['rewarddoubler'],
+  chest_silver: ['chestsilver'],
+  chest_gold: ['chestgold'],
+  mega_pack_inicial: ['megapackinicial'],
+  pack_revancha: ['packrevancha'],
+  lifesaver_pack: ['lifesaverpack'],
+  streak_protection: ['streakprotection'],
+  extra_spin: ['extraspin'],
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');

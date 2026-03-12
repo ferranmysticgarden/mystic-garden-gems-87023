@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface LoseBundleProps {
   onBuy: () => void;

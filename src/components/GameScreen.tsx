@@ -457,8 +457,10 @@ export const GameScreen = ({
             trigger="loss"
             onClose={handleFlashOfferClose}
             onPurchaseSuccess={() => {
-              // flash_offer grants 10 lives + 150 gems — handled by server for auth users
-              // Client-side: we just close and let user continue
+              // flash_offer: 10 lives + 150 gems — client needs to know purchase succeeded
+              // Lives/gems are granted by Index.tsx FlashOffer or server; here we continue the game
+              setMoves(5);
+              setGameOver(false);
             }}
           />
         )}

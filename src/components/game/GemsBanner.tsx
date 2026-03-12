@@ -35,6 +35,7 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
       trackEvent('purchase_success', { product: 'welcome_pack' });
       dispatchPurchaseCompleted('welcome_pack');
       localStorage.setItem('first_purchase_completed', 'true');
+      onPurchaseSuccess?.();
       onPurchased?.();
     }
   };
