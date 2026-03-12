@@ -1,23 +1,7 @@
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable';
 
 export const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
-const PUBLISHED_WEB_ORIGIN = 'https://mystic-garden-gems-87023.lovable.app';
-
-const isPreviewHost = () => {
-  const hostname = window.location.hostname;
-  return hostname.startsWith('id-preview--') || hostname.includes('lovableproject.com');
-};
-
-const isCustomDomain = () => {
-  const hostname = window.location.hostname;
-
-  return (
-    !hostname.includes('lovable.app') &&
-    !hostname.includes('lovableproject.com')
-  );
-};
 
 const isAllowedOAuthHost = (hostname: string) => {
   const allowedHosts = new Set<string>(['accounts.google.com']);
@@ -39,37 +23,24 @@ const assertValidOAuthUrl = (url: string) => {
 };
 
 export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_account') => {
-  if (isCustomDomain()) {
-    const redirectTo = new URL(redirectPath, window.location.origin).toString();
+  const redirectTo = new URL(redirectPath, window.location.origin).toString();
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo,
-        skipBrowserRedirect: true,
-        queryParams: {
-          prompt,
-        },
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo,
+      skipBrowserRedirect: true,
+      queryParams: {
+        prompt,
       },
-    });
-
-    if (error) throw error;
-    if (!data?.url) throw new Error('No se pudo iniciar el login con Google.');
-
-    assertValidOAuthUrl(data.url);
-    window.location.assign(data.url);
-    return;
-  }
-
-  // For Lovable domains (preview or published), use managed OAuth
-  const { error } = await lovable.auth.signInWithOAuth('google', {
-    redirect_uri: window.location.origin,
-    extraParams: {
-      prompt,
     },
   });
 
   if (error) throw error;
+  if (!data?.url) throw new Error('No se pudo iniciar el login con Google.');
+
+  assertValidOAuthUrl(data.url);
+  window.location.assign(data.url);
 };
 
 export const signInWithGoogleNative = async (prompt = 'select_account') => {
