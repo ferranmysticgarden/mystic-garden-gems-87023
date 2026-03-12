@@ -42,7 +42,7 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
     const success = await createPayment('buy_moves');
     if (success) {
       console.log('[PURCHASE] success confirmed via Level6Offer');
-      dispatchPurchaseCompleted('finish_level');
+      dispatchPurchaseCompleted('buy_moves');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem('level6_offer_dismissed', 'true');
       localStorage.setItem('first_purchase_completed', 'true');
