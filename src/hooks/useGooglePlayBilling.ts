@@ -21,7 +21,7 @@ export const useGooglePlayBilling = () => {
   const hasLoadedProducts = Object.keys(products).length > 0;
 
   const loadProducts = useCallback(async (retryCount = 0): Promise<Record<string, ProductDetails>> => {
-    const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
+    const productIds = getGooglePlayQueryProductIds();
     try {
       const productDetails = await GooglePlayBilling.queryProducts({ productIds });
       setProducts(productDetails);
