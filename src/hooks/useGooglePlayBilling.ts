@@ -181,30 +181,31 @@ export const useGooglePlayBilling = () => {
       return false;
     }
 
-    const googlePlayProductId = GOOGLE_PLAY_PRODUCT_IDS[productId];
-    if (!googlePlayProductId) {
-      toast.error('Producto no encontrado');
-      trackEvent('purchase_blocked', { platform: 'android', product: productId, reason: 'unknown_product_mapping' });
-      return false;
-    }
+    const candidates = getGooglePlayCandidates(productId);
 
     setLoading(true);
-    trackEvent('gp_purchase_flow_start', { product: productId, google_id: googlePlayProductId });
+    trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
+
     try {
       let cachedProducts = products;
+      let googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
 
-      if (!cachedProducts[googlePlayProductId]) {
-        trackEvent('gp_purchase_reload_products', { product: productId, google_id: googlePlayProductId });
+      if (!googlePlayProductId) {
+        trackEvent('gp_purchase_reload_products', {
+          product: productId,
+          google_candidates: candidates.join(','),
+        });
         cachedProducts = await loadProducts();
+        googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
       }
 
-      if (!cachedProducts[googlePlayProductId]) {
-        toast.error('El producto aún no está listo. Inténtalo de nuevo en unos segundos.');
+      if (!googlePlayProductId) {
+        toast.error('Producto no encontrado en Google Play');
         trackEvent('purchase_blocked', {
           platform: 'android',
           product: productId,
-          google_product_id: googlePlayProductId,
           reason: 'product_not_loaded',
+          requested_candidates: candidates.join(','),
           available_products: Object.keys(cachedProducts).join(','),
         });
         return false;
@@ -212,7 +213,11 @@ export const useGooglePlayBilling = () => {
 
       trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
-      trackEvent('gp_native_call_success', { product: productId, google_id: googlePlayProductId, has_token: !!result?.purchaseToken });
+      trackEvent('gp_native_call_success', {
+        product: productId,
+        google_id: googlePlayProductId,
+        has_token: !!result?.purchaseToken,
+      });
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -235,9 +240,9 @@ export const useGooglePlayBilling = () => {
   }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase]);
 
   const getProductPrice = useCallback((productId: string): string | null => {
-    const googlePlayProductId = GOOGLE_PLAY_PRODUCT_IDS[productId];
-    if (!googlePlayProductId) return null;
-    return products[googlePlayProductId]?.price || null;
+    const resolvedProductId = resolveGooglePlayProductId(productId, products);
+    if (!resolvedProductId) return null;
+    return products[resolvedProductId]?.price || null;
   }, [products]);
 
   return {
