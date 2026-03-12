@@ -331,6 +331,7 @@ serve(async (req) => {
             rawProductId,
             orderId: orderId || null,
             error: verification.error || 'Purchase verification failed',
+            googleStatus: verification.statusCode ?? null,
             purchaseState: verification.purchaseState ?? null,
             consumptionState: verification.consumptionState ?? null,
             isGuest,
@@ -344,12 +345,14 @@ serve(async (req) => {
         console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
       }
 
+      const status = verification.statusCode === 403 ? 503 : 400;
       return new Response(JSON.stringify({
         success: false,
-        error: verification.error || 'Purchase verification failed'
+        error: verification.error || 'Purchase verification failed',
+        code: verification.statusCode ?? null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status,
       });
     }
 
