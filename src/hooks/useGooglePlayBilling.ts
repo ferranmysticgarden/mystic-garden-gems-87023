@@ -5,43 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
 import { trackEvent } from '@/lib/trackEvent';
-
-// Mapeo de IDs de producto a IDs de Google Play
-// SINCRONIZADO con Google Play Console (15 productos activos)
-const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
-  // Cofres
-  'chest_gold': 'chest_gold',
-  'chest_silver': 'chest_silver',
-  'chest_wooden': 'chest_wooden',
-  // Packs principales
-  'mega_pack_inicial': 'mega_pack_inicial',
-  'starter_pack': 'starter_pack',
-  'flash_offer': 'flash_offer',
-  'pack_revancha': 'pack_revancha',
-  'lifesaver_pack': 'lifesaver_pack',
-  'welcome_pack': 'welcomepack',
-  // Ofertas de nivel
-  'victory_multiplier': 'victory_multiplier',
-  'finish_level': 'finish_level',
-  'continue_game': 'continue_game',
-  'buy_moves': 'buy_moves',
-  // Micro-transacciones €0.49-€0.50
-  'streak_protection': 'streak_protection',
-  'extra_spin': 'extra_spin',
-  'reward_doubler': 'reward_doubler',
-  // Multi-tier packs (Google Play: sin guion bajo)
-  'pack_impulso': 'packimpulso',
-  'pack_experiencia': 'packexperiencia',
-  'pack_victoria_segura_pro': 'packvictoriasegura',
-  // 7 nuevos productos (10 mar 2026) — Google Play: sin guion bajo
-  'quick_pack': 'quickpack',
-  'gems_100': 'gems100',
-  'gems_300': 'gems300',
-  'gems_1200': 'gems1200',
-  'no_ads_month': 'noadsmonth',
-  'no_ads_forever': 'noadsforever',
-  'garden_pass': 'gardenpass',
-};
+import {
+  getGooglePlayCandidates,
+  getGooglePlayQueryProductIds,
+  resolveGooglePlayProductId,
+} from './googlePlayCatalog';
 
 export const useGooglePlayBilling = () => {
   const [isReady, setIsReady] = useState(false);
@@ -53,7 +21,7 @@ export const useGooglePlayBilling = () => {
   const hasLoadedProducts = Object.keys(products).length > 0;
 
   const loadProducts = useCallback(async (retryCount = 0): Promise<Record<string, ProductDetails>> => {
-    const productIds = Object.values(GOOGLE_PLAY_PRODUCT_IDS);
+    const productIds = getGooglePlayQueryProductIds();
     try {
       const productDetails = await GooglePlayBilling.queryProducts({ productIds });
       setProducts(productDetails);
@@ -213,30 +181,48 @@ export const useGooglePlayBilling = () => {
       return false;
     }
 
-    const googlePlayProductId = GOOGLE_PLAY_PRODUCT_IDS[productId];
-    if (!googlePlayProductId) {
-      toast.error('Producto no encontrado');
-      trackEvent('purchase_blocked', { platform: 'android', product: productId, reason: 'unknown_product_mapping' });
-      return false;
-    }
+    const candidates = getGooglePlayCandidates(productId);
 
     setLoading(true);
-    trackEvent('gp_purchase_flow_start', { product: productId, google_id: googlePlayProductId });
+    trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
+
     try {
       let cachedProducts = products;
+      let googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
 
-      if (!cachedProducts[googlePlayProductId]) {
-        trackEvent('gp_purchase_reload_products', { product: productId, google_id: googlePlayProductId });
+      if (!googlePlayProductId) {
+        trackEvent('gp_purchase_reload_products', {
+          product: productId,
+          google_candidates: candidates.join(','),
+        });
         cachedProducts = await loadProducts();
+        googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
       }
 
-      if (!cachedProducts[googlePlayProductId]) {
-        toast.error('El producto aún no está listo. Inténtalo de nuevo en unos segundos.');
+      if (!googlePlayProductId) {
+        try {
+          const directProductDetails = await GooglePlayBilling.queryProducts({ productIds: candidates });
+          if (Object.keys(directProductDetails).length > 0) {
+            cachedProducts = { ...cachedProducts, ...directProductDetails };
+            setProducts((prev) => ({ ...prev, ...directProductDetails }));
+            googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
+          }
+        } catch (directQueryError) {
+          trackEvent('billing_error', {
+            error: String(directQueryError),
+            phase: 'direct_product_query',
+            product: productId,
+          });
+        }
+      }
+
+      if (!googlePlayProductId) {
+        toast.error('Producto no encontrado en Google Play');
         trackEvent('purchase_blocked', {
           platform: 'android',
           product: productId,
-          google_product_id: googlePlayProductId,
           reason: 'product_not_loaded',
+          requested_candidates: candidates.join(','),
           available_products: Object.keys(cachedProducts).join(','),
         });
         return false;
@@ -244,7 +230,11 @@ export const useGooglePlayBilling = () => {
 
       trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
-      trackEvent('gp_native_call_success', { product: productId, google_id: googlePlayProductId, has_token: !!result?.purchaseToken });
+      trackEvent('gp_native_call_success', {
+        product: productId,
+        google_id: googlePlayProductId,
+        has_token: !!result?.purchaseToken,
+      });
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -267,9 +257,9 @@ export const useGooglePlayBilling = () => {
   }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase]);
 
   const getProductPrice = useCallback((productId: string): string | null => {
-    const googlePlayProductId = GOOGLE_PLAY_PRODUCT_IDS[productId];
-    if (!googlePlayProductId) return null;
-    return products[googlePlayProductId]?.price || null;
+    const resolvedProductId = resolveGooglePlayProductId(productId, products);
+    if (!resolvedProductId) return null;
+    return products[resolvedProductId]?.price || null;
   }, [products]);
 
   return {

@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Product rewards configuration
+// Product rewards configuration (canonical app IDs)
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
   // Cofres (reward granted client-side, randomized)
   "chest_wooden": {},
@@ -38,19 +38,40 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
-  // Google Play aliases (IDs sin guion bajo usados en Google Play Console)
-  "welcomepack": { powerups: 5, lives: 3 },
-  "packimpulso": { powerups: 5, lives: 3 },
-  "packexperiencia": { lives: 2 },
-  "packvictoriasegura": { powerups: 8, lives: 3 },
-  // 7 nuevos productos (10 mar 2026)
-  "quickpack": { lives: 3, gems: 20 },
-  "gems100": { gems: 100 },
-  "gems300": { gems: 300 },
-  "gems1200": { gems: 1200 },
-  "noadsmonth": { noAdsDays: 30 },
-  "noadsforever": { noAdsForever: true },
-  "gardenpass": { gems: 1000, noAdsDays: 30 },
+};
+
+const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
+  welcomepack: 'welcome_pack',
+  packimpulso: 'pack_impulso',
+  packexperiencia: 'pack_experiencia',
+  packrachainfinita: 'pack_racha_infinita',
+  packvictoriasegura: 'pack_victoria_segura',
+  packvictoriasegurapro: 'pack_victoria_segura_pro',
+  quickpack: 'quick_pack',
+  gems100: 'gems_100',
+  gems300: 'gems_300',
+  gems1200: 'gems_1200',
+  noadsmonth: 'no_ads_month',
+  noadsforever: 'no_ads_forever',
+  gardenpass: 'garden_pass',
+  // Compatibilidad con catálogos donde añadieron sufijo numérico
+  welcomepack1: 'welcome_pack',
+  packimpulso1: 'pack_impulso',
+  packexperiencia1: 'pack_experiencia',
+  packrachainfinita1: 'pack_racha_infinita',
+  packvictoriasegura1: 'pack_victoria_segura',
+  packvictoriasegurapro1: 'pack_victoria_segura_pro',
+  quickpack1: 'quick_pack',
+  gems1001: 'gems_100',
+  gems3001: 'gems_300',
+  gems12001: 'gems_1200',
+  noadsmonth1: 'no_ads_month',
+  noadsforever1: 'no_ads_forever',
+  gardenpass1: 'garden_pass',
+};
+
+const normalizeGoogleProductId = (productId: string) => {
+  return GOOGLE_PLAY_PRODUCT_ALIASES[productId] ?? productId;
 };
 
 // Google Play API verification
@@ -190,17 +211,18 @@ serve(async (req) => {
       userId = userData.user?.id || null;
     }
 
-    const { purchaseToken, productId, orderId } = await req.json();
+    const { purchaseToken, productId: rawProductId, orderId } = await req.json();
 
-    if (!purchaseToken || !productId) {
+    if (!purchaseToken || !rawProductId) {
       throw new Error("Missing purchaseToken or productId");
     }
 
+    const productId = normalizeGoogleProductId(rawProductId);
     const purchaseKey = orderId || purchaseToken;
     const purchaseRecordId = `gp_${purchaseKey}`;
     const isGuest = !userId;
 
-    console.log(`[INFO] Verifying purchase: product=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
+    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
     const { error: auditInsertError } = await supabaseClient
       .from('app_events')
@@ -208,6 +230,7 @@ serve(async (req) => {
         event_name: 'gp_verify_started',
         event_data: {
           productId,
+          rawProductId,
           orderId: orderId || null,
           purchaseTokenPrefix: purchaseToken.slice(0, 12),
           isGuest,
@@ -224,10 +247,10 @@ serve(async (req) => {
     // Verify with Google Play API (ALWAYS — this is the real security check)
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
     const packageName = "com.mysticgarden.game";
-    
+
     const verification = await verifyWithGooglePlay(
       packageName,
-      productId,
+      rawProductId,
       purchaseToken,
       serviceAccountKey
     );
@@ -241,6 +264,7 @@ serve(async (req) => {
           event_name: 'gp_verify_failed',
           event_data: {
             productId,
+            rawProductId,
             orderId: orderId || null,
             error: verification.error || 'Purchase verification failed',
             purchaseState: verification.purchaseState ?? null,
@@ -256,9 +280,9 @@ serve(async (req) => {
         console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
       }
 
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: verification.error || 'Purchase verification failed' 
+      return new Response(JSON.stringify({
+        success: false,
+        error: verification.error || 'Purchase verification failed'
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -273,6 +297,7 @@ serve(async (req) => {
         event_name: 'gp_verify_ok',
         event_data: {
           productId,
+          rawProductId,
           orderId: orderId || null,
           purchaseState: verification.purchaseState ?? null,
           consumptionState: verification.consumptionState ?? null,
@@ -290,7 +315,7 @@ serve(async (req) => {
     // Get product rewards
     const rewards = PRODUCT_REWARDS[productId];
     if (!rewards) {
-      throw new Error(`Unknown product: ${productId}`);
+      throw new Error(`Unknown product: ${productId} (raw=${rawProductId})`);
     }
 
     // If user is authenticated, save to DB and grant rewards server-side

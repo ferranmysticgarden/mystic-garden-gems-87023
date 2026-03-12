@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { X, Shield, Cloud, Gift } from 'lucide-react';
 import { AuthPage } from '@/components/AuthPage';
-import { lovable } from '@/integrations/lovable';
+import { signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
 import { toast } from 'sonner';
 
 interface LoginPromptProps {
@@ -98,14 +99,11 @@ export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) =>
             className="w-full mt-3 text-base py-5"
             onClick={async () => {
               try {
-                const { error } = await lovable.auth.signInWithOAuth('google', {
-                  redirect_uri: window.location.origin,
-                  extraParams: {
-                    prompt: 'select_account',
-                  },
-                });
-
-                if (error) throw error;
+                if (Capacitor.isNativePlatform()) {
+                  await signInWithGoogleNative('select_account');
+                } else {
+                  await signInWithGoogleWeb('/', 'select_account');
+                }
               } catch (error: any) {
                 toast.error(error.message || 'Error al iniciar sesión con Google');
               }
