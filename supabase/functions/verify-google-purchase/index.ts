@@ -56,6 +56,8 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   noadsmonth: 'no_ads_month',
   noadsforever: 'no_ads_forever',
   gardenpass: 'garden_pass',
+  extramoves: 'extra_moves',
+  firstpurchase: 'first_purchase',
   // Compatibilidad con catálogos donde añadieron sufijo numérico
   welcomepack1: 'welcome_pack',
   packimpulso1: 'pack_impulso',
@@ -70,10 +72,28 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   noadsmonth1: 'no_ads_month',
   noadsforever1: 'no_ads_forever',
   gardenpass1: 'garden_pass',
+  extramoves1: 'extra_moves',
+  firstpurchase1: 'first_purchase',
 };
 
+const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
+
+const NORMALIZED_CANONICAL_PRODUCT_IDS: Record<string, string> = Object.keys(PRODUCT_REWARDS).reduce(
+  (acc, canonicalId) => {
+    acc[normalizeId(canonicalId)] = canonicalId;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
 const normalizeGoogleProductId = (productId: string) => {
-  return GOOGLE_PLAY_PRODUCT_ALIASES[productId] ?? productId;
+  if (PRODUCT_REWARDS[productId]) return productId;
+
+  const directAlias = GOOGLE_PLAY_PRODUCT_ALIASES[productId];
+  if (directAlias) return directAlias;
+
+  const normalized = normalizeId(productId);
+  return GOOGLE_PLAY_PRODUCT_ALIASES[normalized] ?? NORMALIZED_CANONICAL_PRODUCT_IDS[normalized] ?? productId;
 };
 
 // Google Play API verification
