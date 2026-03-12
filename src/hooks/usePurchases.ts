@@ -70,7 +70,7 @@ export const usePurchases = (user: User | null) => {
     const purchase = purchases.find(p => 
       p.product_id === productId || 
       p.product_id === `stripe_${productId}` ||
-      (p.product_id.startsWith(`gp_`) && p.product_id.includes(productId))
+      (p.product_id.startsWith('gp_') && p.product_id.includes(productId))
     );
     if (!purchase) return false;
     

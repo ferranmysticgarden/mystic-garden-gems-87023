@@ -35,6 +35,9 @@ const PRODUCT_PRICES: Record<string, string> = {
   "streak_protection": "price_1Sx2gxPxvUpv2yak7WnJE3Eo",
   "lifesaver_pack": "price_1Sx2hKPxvUpv2yakkBJPimfq",
   "reward_doubler": "price_1Sx2hYPxvUpv2yaknaIPYKzW",
+  // Extra products
+  "extra_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
+  "first_purchase": "price_1Sx2g2PxvUpv2yakNxaBeR3a",
   // Experience Packs
   "pack_victoria_segura": "price_1SwC7xPxvUpv2yakQ0CmX5uN",
   "pack_racha_infinita": "price_1SwC8APxvUpv2yakGXumP9b1",

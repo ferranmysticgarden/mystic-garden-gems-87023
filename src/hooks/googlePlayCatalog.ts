@@ -13,7 +13,7 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   welcome_pack: ['welcomepack'],
   pack_impulso: ['packimpulso'],
   pack_experiencia: ['packexperiencia'],
-  pack_racha_infinita: ['packrachainfinita', 'packexperiencia'],
+  pack_racha_infinita: ['packrachainfinita'],
   pack_victoria_segura: ['packvictoriasegura'],
   pack_victoria_segura_pro: ['packvictoriasegurapro', 'packvictoriasegura'],
   quick_pack: ['quickpack'],

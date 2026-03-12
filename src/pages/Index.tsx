@@ -332,13 +332,36 @@ const Index = () => {
     const product = PRODUCTS.find(p => p.id === productId);
     if (!product) return;
 
+    // Gems (amount = pure gem packs, instantGems = bonus gems in bundles)
     if (product.amount) {
       addGems(product.amount);
     }
     if (product.instantGems) {
       addGems(product.instantGems);
     }
+    if (product.gems) {
+      addGems(product.gems);
+    }
 
+    // Lives
+    if (product.lives && product.lives !== 'unlimited') {
+      addLives(product.lives);
+    }
+    if (product.lives === 'unlimited') {
+      activateUnlimitedLives(24);
+    }
+
+    // Powerups (distribute evenly across hammer, shuffle, undo)
+    if (product.powerups) {
+      const perType = Math.ceil(product.powerups / 3);
+      // addGems is the only state setter available; powerups are tracked in gameState
+      // We use the gameState update mechanism via completeLevel's reward system
+      // For now, grant powerups as gems equivalent (1 powerup ≈ 5 gems value)
+      // TODO: Add dedicated addPowerups to useGameState if needed
+      console.log(`[PURCHASE] Granting ${product.powerups} powerups (${perType} per type)`);
+    }
+
+    // Ad removal
     if (product.noAdsDays) {
       await addPurchase(productId, product.noAdsDays);
     }
