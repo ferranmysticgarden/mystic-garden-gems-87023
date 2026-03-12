@@ -91,7 +91,7 @@ export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: Bat
                 disabled={loading}
                 className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold"
               >
-                {loading ? 'Procesando...' : 'Premium €4.99'}
+                {loading ? 'Procesando...' : `Premium ${getPrice('garden_pass', '€9.99')}`}
               </Button>
             )}
             <button onClick={onClose} className="text-white/70 hover:text-white">
