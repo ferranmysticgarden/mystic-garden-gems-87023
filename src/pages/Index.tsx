@@ -78,6 +78,9 @@ const Index = () => {
     hasUnlimitedLives,
     getTimeUntilNextLife,
     setOnLivesFull,
+    addHammer,
+    addUndo,
+    addShuffle,
   } = useGameState();
   
   const { 
