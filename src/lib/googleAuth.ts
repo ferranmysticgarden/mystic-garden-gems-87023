@@ -1,5 +1,8 @@
+import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
+
+export const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
 
 const isCustomDomain = () => {
   const hostname = window.location.hostname;
@@ -22,6 +25,13 @@ const isAllowedOAuthHost = (hostname: string) => {
   return allowedHosts.has(hostname);
 };
 
+const assertValidOAuthUrl = (url: string) => {
+  const oauthUrl = new URL(url);
+  if (!isAllowedOAuthHost(oauthUrl.hostname)) {
+    throw new Error('URL de autenticación inválida.');
+  }
+};
+
 export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_account') => {
   const redirectTo = new URL(redirectPath, window.location.origin).toString();
 
@@ -40,11 +50,7 @@ export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_a
     if (error) throw error;
     if (!data?.url) throw new Error('No se pudo iniciar el login con Google.');
 
-    const oauthUrl = new URL(data.url);
-    if (!isAllowedOAuthHost(oauthUrl.hostname)) {
-      throw new Error('URL de autenticación inválida.');
-    }
-
+    assertValidOAuthUrl(data.url);
     window.location.assign(data.url);
     return;
   }
@@ -57,4 +63,27 @@ export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_a
   });
 
   if (error) throw error;
+};
+
+export const signInWithGoogleNative = async (prompt = 'select_account') => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: NATIVE_OAUTH_CALLBACK_URL,
+      skipBrowserRedirect: true,
+      queryParams: {
+        prompt,
+      },
+    },
+  });
+
+  if (error) throw error;
+  if (!data?.url) throw new Error('No se pudo iniciar el login con Google.');
+
+  assertValidOAuthUrl(data.url);
+  await Browser.open({
+    url: data.url,
+    toolbarColor: '#1a0a2e',
+    presentationStyle: 'fullscreen',
+  });
 };
