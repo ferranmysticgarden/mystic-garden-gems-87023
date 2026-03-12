@@ -18,6 +18,7 @@ const TIERS = [
 interface BattlePassProps {
   onClose: () => void;
   hasPremiumAccess: boolean;
+  onPurchaseSuccess?: () => void;
 }
 
 export const BattlePass = ({ onClose, hasPremiumAccess }: BattlePassProps) => {
