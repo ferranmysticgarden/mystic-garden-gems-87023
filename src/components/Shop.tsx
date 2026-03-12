@@ -17,7 +17,7 @@ const BEST_VALUE_ID = 'gems_300';
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
-  const { createPayment, loading } = usePayment();
+  const { createPayment, getPrice, loading } = usePayment();
 
   const handlePurchase = async (productId: string, productName: string) => {
     const success = await createPayment(productId);
@@ -138,7 +138,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                       ) : (
                         <>
                           <Crown className="w-5 h-5 mr-2" />
-                          €{pack.price.toFixed(2)}
+                          {getPrice(pack.id, `€${pack.price.toFixed(2)}`)}
                         </>
                       )}
                     </Button>
@@ -238,7 +238,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                     <>
                       {isBestValue && <Sparkles className="w-4 h-4 mr-2" />}
                       {isGardenPass && <Crown className="w-4 h-4 mr-2" />}
-                      {`€${product.price.toFixed(2)}`}
+                      {getPrice(product.id, `€${product.price.toFixed(2)}`)}
                     </>
                   )}
                 </Button>

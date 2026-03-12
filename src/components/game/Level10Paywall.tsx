@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
+import { PRODUCTS } from '@/data/products';
 
 interface Level10PaywallProps {
   onPurchaseSuccess: () => void;
@@ -21,8 +22,11 @@ export const Level10Paywall = ({
   movesShort = 1,
   progressPercent = 95 
 }: Level10PaywallProps) => {
-  const { createPayment, loading } = usePayment();
+  const { createPayment, getPrice, loading } = usePayment();
   const [purchasing, setPurchasing] = useState(false);
+
+  const buyMovesProduct = PRODUCTS.find(p => p.id === 'buy_moves');
+  const displayPrice = getPrice('buy_moves', `€${buyMovesProduct?.price.toFixed(2) ?? '0.50'}`);
   const [countdown, setCountdown] = useState(15);
 
   console.log("LEVEL10 POPUP RENDER");
@@ -111,7 +115,7 @@ export const Level10Paywall = ({
         
         <div className="bg-gold/10 rounded-xl p-3 mb-4 border border-gold/30">
           <p className="text-foreground font-bold">
-            +5 movimientos · 0,50 €
+            +5 movimientos · {displayPrice}
           </p>
           <p className="text-muted-foreground text-xs">
             Menos que un café ☕
@@ -138,7 +142,7 @@ export const Level10Paywall = ({
         </Button>
 
         <p className="text-sm text-muted-foreground mt-2">
-          0,50 € · menos que un café
+          {displayPrice} · menos que un café
         </p>
        
         <p className="text-xs text-muted-foreground mt-2">
