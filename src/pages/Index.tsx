@@ -812,8 +812,11 @@ const Index = () => {
       {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
+            // welcome_pack: 5 powerups, 3 lives
             addLives(3);
-            toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters, x2 monedas 30 min');
+            const perType = Math.ceil(5 / 3);
+            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters');
             setShowWelcomeOffer(false);
           }}
           onDismiss={() => setShowWelcomeOffer(false)}
