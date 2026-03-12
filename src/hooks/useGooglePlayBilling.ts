@@ -200,6 +200,23 @@ export const useGooglePlayBilling = () => {
       }
 
       if (!googlePlayProductId) {
+        try {
+          const directProductDetails = await GooglePlayBilling.queryProducts({ productIds: candidates });
+          if (Object.keys(directProductDetails).length > 0) {
+            cachedProducts = { ...cachedProducts, ...directProductDetails };
+            setProducts((prev) => ({ ...prev, ...directProductDetails }));
+            googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
+          }
+        } catch (directQueryError) {
+          trackEvent('billing_error', {
+            error: String(directQueryError),
+            phase: 'direct_product_query',
+            product: productId,
+          });
+        }
+      }
+
+      if (!googlePlayProductId) {
         toast.error('Producto no encontrado en Google Play');
         trackEvent('purchase_blocked', {
           platform: 'android',
