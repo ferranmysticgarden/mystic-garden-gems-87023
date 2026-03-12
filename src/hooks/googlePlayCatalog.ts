@@ -23,6 +23,8 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   no_ads_month: ['noadsmonth'],
   no_ads_forever: ['noadsforever'],
   garden_pass: ['gardenpass'],
+  extra_moves: ['extramoves'],
+  first_purchase: ['firstpurchase'],
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
