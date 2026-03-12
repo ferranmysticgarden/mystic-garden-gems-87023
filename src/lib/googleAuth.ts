@@ -3,6 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
 
 export const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
+const PUBLISHED_WEB_ORIGIN = 'https://mystic-garden-gems-87023.lovable.app';
+
+const isPreviewHost = () => {
+  const hostname = window.location.hostname;
+  return hostname.startsWith('id-preview--') || hostname.includes('lovableproject.com');
+};
 
 const isCustomDomain = () => {
   const hostname = window.location.hostname;
