@@ -13,6 +13,9 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
   const handleBuy = async () => {
     const success = await createPayment('pack_revancha');
     if (success) {
+      console.log('[PURCHASE] success confirmed via LoseBundle');
+      dispatchPurchaseCompleted('pack_revancha');
+      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };
