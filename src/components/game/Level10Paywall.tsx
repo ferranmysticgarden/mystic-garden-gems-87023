@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
+import { PRODUCTS } from '@/data/products';
 
 interface Level10PaywallProps {
   onPurchaseSuccess: () => void;
