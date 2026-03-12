@@ -83,8 +83,8 @@ async function verifyWithGooglePlay(
 ): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string }> {
   
   if (!serviceAccountKey) {
-    console.log('[WARN] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - skipping API verification');
-    return { valid: true };
+    console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
+    return { valid: false, error: 'Server verification not configured' };
   }
 
   try {
