@@ -45,24 +45,25 @@ export const usePurchases = (user: User | null) => {
   const addPurchase = async (productId: string, expiresInDays?: number) => {
     if (!user) return;
 
-    try {
-      const expiresAt = expiresInDays 
-        ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
-        : null;
+    const expiresAt = expiresInDays
+      ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+      : null;
 
-      const { error } = await supabase
-        .from('user_purchases')
-        .insert({
+    // Seguridad: los grants persistentes se conceden en backend tras verificación de pago.
+    // Aquí solo reflejamos un estado temporal en cliente para UX inmediata.
+    setPurchases((prev) => {
+      const next = [
+        ...prev.filter((p) => p.product_id !== productId),
+        {
+          id: `client_${productId}_${Date.now()}`,
           user_id: user.id,
           product_id: productId,
           expires_at: expiresAt,
-        });
-
-      if (error) throw error;
-      await loadPurchases();
-    } catch (error) {
-      console.error('Error adding purchase:', error);
-    }
+          created_at: new Date().toISOString(),
+        },
+      ];
+      return next;
+    });
   };
 
   const hasActiveProduct = (productId: string): boolean => {
