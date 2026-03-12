@@ -10,7 +10,7 @@ interface FirstDayOfferProps {
   onPurchaseSuccess?: () => void;
 }
 
-export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
+export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDayOfferProps) => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutos - más urgencia
   const { user } = useAuth();
