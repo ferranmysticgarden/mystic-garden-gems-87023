@@ -278,7 +278,10 @@ serve(async (req) => {
     const { purchaseToken, productId: rawProductId, orderId } = await req.json();
 
     if (!purchaseToken || !rawProductId) {
-      throw new Error("Missing purchaseToken or productId");
+      return new Response(JSON.stringify({ success: false, error: "Missing purchaseToken or productId" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
 
     const productId = normalizeGoogleProductId(rawProductId);
