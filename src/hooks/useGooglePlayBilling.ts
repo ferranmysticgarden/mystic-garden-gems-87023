@@ -15,7 +15,7 @@ export const useGooglePlayBilling = () => {
   const [isReady, setIsReady] = useState(false);
   const [products, setProducts] = useState<Record<string, ProductDetails>>({});
   const [loading, setLoading] = useState(false);
-  const processedTokensRef = useRef(new Set<string>());
+  const verificationTasksRef = useRef<Map<string, Promise<boolean>>>(new Map());
 
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
