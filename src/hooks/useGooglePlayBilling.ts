@@ -180,6 +180,12 @@ export const useGooglePlayBilling = () => {
         console.error('Error processing purchase:', error);
         const errorMessage = error instanceof Error ? error.message : String(error);
         const isPermission403 = errorMessage.includes('Google Play API 403');
+        const normalizedError = errorMessage.toLowerCase();
+        const isServiceDisabled =
+          normalizedError.includes('api desactivada') ||
+          normalizedError.includes('service_disabled') ||
+          normalizedError.includes('accessnotconfigured') ||
+          normalizedError.includes('api has not been used');
 
         trackEvent('purchase_verification_failed', {
           platform: 'android',
@@ -188,9 +194,11 @@ export const useGooglePlayBilling = () => {
         });
 
         toast.error(
-          isPermission403
-            ? 'Compra bloqueada por configuración de Google Play (API 403). Revisa permisos de la cuenta de servicio.'
-            : 'Error al procesar la compra'
+          isServiceDisabled
+            ? 'Compra bloqueada: activa Google Play Android Developer API del proyecto de la cuenta de servicio y espera 5 minutos.'
+            : isPermission403
+              ? 'Compra bloqueada por permisos de Google Play (API 403). Revisa acceso API, Gestionar pedidos y Ver datos financieros.'
+              : 'Error al procesar la compra'
         );
         return false;
       }

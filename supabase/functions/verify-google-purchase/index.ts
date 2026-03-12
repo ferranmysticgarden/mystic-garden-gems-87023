@@ -131,7 +131,15 @@ async function verifyWithGooglePlay(
   productId: string,
   purchaseToken: string,
   serviceAccountKey: string | null
-): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string; statusCode?: number }> {
+): Promise<{
+  valid: boolean;
+  consumptionState?: number;
+  purchaseState?: number;
+  error?: string;
+  statusCode?: number;
+  reason?: 'service_disabled' | 'permission_denied' | 'other';
+  activationUrl?: string;
+}> {
   
   if (!serviceAccountKey) {
     console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
@@ -158,10 +166,52 @@ async function verifyWithGooglePlay(
       const errorText = await response.text();
       console.error('[ERROR] Google Play API error:', response.status, errorText);
 
+      let parsedError: any = null;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = null;
+      }
+
+      const googleError = parsedError?.error;
+      const reasonCodes = [
+        googleError?.status,
+        ...(googleError?.errors ?? []).map((entry: any) => entry?.reason),
+        ...(googleError?.details ?? []).map((detail: any) => detail?.reason),
+      ]
+        .filter(Boolean)
+        .map((value: string) => value.toLowerCase());
+
+      const message = String(googleError?.message ?? errorText ?? '').toLowerCase();
+
+      const isServiceDisabled =
+        response.status === 403 &&
+        (
+          reasonCodes.includes('service_disabled') ||
+          reasonCodes.includes('accessnotconfigured') ||
+          message.includes('api has not been used') ||
+          message.includes('is disabled')
+        );
+
+      const activationUrl =
+        googleError?.details?.find((detail: any) => detail?.metadata?.activationUrl)?.metadata?.activationUrl ??
+        googleError?.details?.find((detail: any) => Array.isArray(detail?.links) && detail.links[0]?.url)?.links?.[0]?.url;
+
+      if (isServiceDisabled) {
+        return {
+          valid: false,
+          statusCode: 403,
+          reason: 'service_disabled',
+          activationUrl,
+          error: 'Google Play API desactivada en el proyecto de la cuenta de servicio. Actívala en Google Cloud y espera 5 minutos.',
+        };
+      }
+
       if (response.status === 403) {
         return {
           valid: false,
           statusCode: 403,
+          reason: 'permission_denied',
           error: 'Google Play API 403: la cuenta de servicio no tiene permisos para este paquete (revisar acceso API, Gestionar pedidos y Ver datos financieros).',
         };
       }
@@ -169,6 +219,7 @@ async function verifyWithGooglePlay(
       return {
         valid: false,
         statusCode: response.status,
+        reason: 'other',
         error: `Google Play API error: ${response.status}`,
       };
     }
@@ -255,10 +306,25 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('[ERROR] Missing backend env vars', {
+      hasSupabaseUrl: Boolean(supabaseUrl),
+      hasServiceRoleKey: Boolean(serviceRoleKey),
+    });
+
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Server configuration error',
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+
+  const supabaseClient = createClient(supabaseUrl, serviceRoleKey);
 
   try {
     // Try to authenticate user — but allow guests (no auth = guest purchase)
@@ -335,6 +401,8 @@ serve(async (req) => {
             orderId: orderId || null,
             error: verification.error || 'Purchase verification failed',
             googleStatus: verification.statusCode ?? null,
+            reason: verification.reason ?? null,
+            activationUrl: verification.activationUrl ?? null,
             purchaseState: verification.purchaseState ?? null,
             consumptionState: verification.consumptionState ?? null,
             isGuest,
@@ -353,6 +421,8 @@ serve(async (req) => {
         success: false,
         error: verification.error || 'Purchase verification failed',
         code: verification.statusCode ?? null,
+        reason: verification.reason ?? null,
+        activationUrl: verification.activationUrl ?? null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
