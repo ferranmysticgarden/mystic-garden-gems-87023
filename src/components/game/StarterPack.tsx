@@ -9,6 +9,7 @@ import confetti from 'canvas-confetti';
 interface StarterPackProps {
   levelJustCompleted: number;
   onClose: () => void;
+  onPurchaseSuccess?: () => void;
 }
 
 export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) => {
