@@ -115,7 +115,7 @@ export const Level10Paywall = ({
         
         <div className="bg-gold/10 rounded-xl p-3 mb-4 border border-gold/30">
           <p className="text-foreground font-bold">
-            +5 movimientos · 0,50 €
+            +5 movimientos · {displayPrice}
           </p>
           <p className="text-muted-foreground text-xs">
             Menos que un café ☕
