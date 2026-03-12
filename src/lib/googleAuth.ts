@@ -39,10 +39,9 @@ const assertValidOAuthUrl = (url: string) => {
 };
 
 export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_account') => {
-  const baseOrigin = isPreviewHost() ? PUBLISHED_WEB_ORIGIN : window.location.origin;
-  const redirectTo = new URL(redirectPath, baseOrigin).toString();
-
   if (isCustomDomain()) {
+    const redirectTo = new URL(redirectPath, window.location.origin).toString();
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -62,8 +61,9 @@ export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_a
     return;
   }
 
+  // For Lovable domains (preview or published), use managed OAuth
   const { error } = await lovable.auth.signInWithOAuth('google', {
-    redirect_uri: redirectTo,
+    redirect_uri: window.location.origin,
     extraParams: {
       prompt,
     },
