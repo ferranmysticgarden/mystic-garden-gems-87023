@@ -10,7 +10,7 @@ interface GemsBannerProps {
   onPurchaseSuccess?: () => void;
 }
 
-export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
+export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) => {
   const { createPayment, loading, getPrice, isGooglePlayAvailable, isAndroid } = usePayment();
   const price = getPrice('welcome_pack', '€0.50');
   const hasTracked = useRef(false);
