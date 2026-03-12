@@ -107,7 +107,13 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             return;
         }
 
-        List<String> productIds = call.getArray("productIds").toList();
+        List<String> productIds;
+        try {
+            productIds = call.getArray("productIds").toList();
+        } catch (JSONException e) {
+            call.reject("Invalid product IDs format: " + e.getMessage());
+            return;
+        }
         if (productIds == null || productIds.isEmpty()) {
             call.reject("No product IDs provided");
             return;
