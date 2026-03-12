@@ -686,7 +686,10 @@ const Index = () => {
 
       {/* Battle Pass Modal */}
       {showBattlePass && (
-        <BattlePass onClose={() => setShowBattlePass(false)} />
+        <BattlePass
+          onClose={() => setShowBattlePass(false)}
+          hasPremiumAccess={hasActiveProduct('garden_pass')}
+        />
       )}
 
       {/* Daily Streak Calendar Modal */}
