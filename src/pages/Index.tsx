@@ -689,6 +689,12 @@ const Index = () => {
         <BattlePass
           onClose={() => setShowBattlePass(false)}
           hasPremiumAccess={hasActiveProduct('garden_pass')}
+          onPurchaseSuccess={() => {
+            // garden_pass: 1000 gems, 30 days no ads
+            addGems(1000);
+            activateUnlimitedLives(24 * 30);
+            toast.success('¡Battle Pass Premium activado! +1000💎 +30 días sin ads');
+          }}
         />
       )}
 

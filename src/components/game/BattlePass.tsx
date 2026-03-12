@@ -18,13 +18,14 @@ const TIERS = [
 interface BattlePassProps {
   onClose: () => void;
   hasPremiumAccess: boolean;
+  onPurchaseSuccess?: () => void;
 }
 
-export const BattlePass = ({ onClose, hasPremiumAccess }: BattlePassProps) => {
+export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: BattlePassProps) => {
   const [currentTier, setCurrentTier] = useState(1);
   const [guestPremiumUnlocked, setGuestPremiumUnlocked] = useState(false);
   const { user } = useAuth();
-  const { createPayment, loading } = usePayment();
+  const { createPayment, loading, getPrice } = usePayment();
 
   const isPremium = hasPremiumAccess || guestPremiumUnlocked;
 
@@ -70,6 +71,7 @@ export const BattlePass = ({ onClose, hasPremiumAccess }: BattlePassProps) => {
 
     dispatchPurchaseCompleted('garden_pass');
     setGuestPremiumUnlocked(true);
+    onPurchaseSuccess?.();
     toast.success('Battle Pass Premium activado');
   };
 
@@ -89,7 +91,7 @@ export const BattlePass = ({ onClose, hasPremiumAccess }: BattlePassProps) => {
                 disabled={loading}
                 className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold"
               >
-                {loading ? 'Procesando...' : 'Premium €4.99'}
+                {loading ? 'Procesando...' : `Premium ${getPrice('garden_pass', '€9.99')}`}
               </Button>
             )}
             <button onClick={onClose} className="text-white/70 hover:text-white">
