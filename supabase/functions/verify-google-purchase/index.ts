@@ -454,18 +454,47 @@ serve(async (req) => {
           .insert(updates);
       }
 
-      // Record purchase
+      // Record immutable purchase proof (used for dedupe / audit)
       await supabaseClient
         .from('user_purchases')
         .insert({
           user_id: userId,
           product_id: purchaseRecordId,
-          expires_at: rewards.noAdsDays 
+          expires_at: rewards.noAdsDays
             ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
             : null,
         });
 
-      if (rewards.noAdsForever) {
+      // Record canonical entitlement for premium/no-ads products (used by client checks)
+      if (rewards.noAdsDays || rewards.noAdsForever) {
+        const canonicalExpiresAt = rewards.noAdsForever
+          ? null
+          : new Date(Date.now() + (rewards.noAdsDays || 0) * 24 * 60 * 60 * 1000).toISOString();
+
+        const { error: deleteCanonicalError } = await supabaseClient
+          .from('user_purchases')
+          .delete()
+          .eq('user_id', userId)
+          .eq('product_id', productId);
+
+        if (deleteCanonicalError) {
+          console.error('[WARN] Could not cleanup previous canonical entitlement:', deleteCanonicalError.message);
+        }
+
+        const { error: insertCanonicalError } = await supabaseClient
+          .from('user_purchases')
+          .insert({
+            user_id: userId,
+            product_id: productId,
+            expires_at: canonicalExpiresAt,
+          });
+
+        if (insertCanonicalError) {
+          throw insertCanonicalError;
+        }
+      }
+
+      if (rewards.noAdsForever && productId !== 'no_ads_forever') {
         await supabaseClient
           .from('user_purchases')
           .insert({
