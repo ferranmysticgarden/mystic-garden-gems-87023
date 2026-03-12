@@ -17,7 +17,7 @@ const BEST_VALUE_ID = 'gems_300';
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
-  const { createPayment, loading } = usePayment();
+  const { createPayment, getPrice, loading } = usePayment();
 
   const handlePurchase = async (productId: string, productName: string) => {
     const success = await createPayment(productId);
