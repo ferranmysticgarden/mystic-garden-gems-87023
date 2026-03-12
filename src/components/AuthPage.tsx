@@ -98,33 +98,17 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   };
 
   const handleGoogleSignIn = async () => {
-    const isNative = Capacitor.isNativePlatform();
     setLoading(true);
 
     try {
-      if (isNative) {
-        // En nativo usamos el flujo Supabase directo con Custom Tabs
-        const redirectUrl = NATIVE_OAUTH_CALLBACK_URL;
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            skipBrowserRedirect: true,
-          },
-        });
-
-        if (error) throw error;
-
-        const url = data?.url;
-        if (!url) throw new Error('No se pudo iniciar el login con Google.');
-
-        await Browser.open({ url, toolbarColor: '#1a0a2e', presentationStyle: 'fullscreen' });
-        setLoading(false);
+      if (Capacitor.isNativePlatform()) {
+        await signInWithGoogleNative('select_account');
       } else {
         await signInWithGoogleWeb('/', 'select_account');
       }
     } catch (error: any) {
       toast.error(error.message || 'Error al iniciar sesión con Google');
+    } finally {
       setLoading(false);
     }
   };

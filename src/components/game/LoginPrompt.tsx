@@ -99,14 +99,11 @@ export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) =>
             className="w-full mt-3 text-base py-5"
             onClick={async () => {
               try {
-                const { error } = await lovable.auth.signInWithOAuth('google', {
-                  redirect_uri: window.location.origin,
-                  extraParams: {
-                    prompt: 'select_account',
-                  },
-                });
-
-                if (error) throw error;
+                if (Capacitor.isNativePlatform()) {
+                  await signInWithGoogleNative('select_account');
+                } else {
+                  await signInWithGoogleWeb('/', 'select_account');
+                }
               } catch (error: any) {
                 toast.error(error.message || 'Error al iniciar sesión con Google');
               }
