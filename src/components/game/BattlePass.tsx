@@ -3,6 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Crown, Lock, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
+import { toast } from 'sonner';
 
 const TIERS = [
   { level: 1, free: '10 💎', premium: '50 💎 + 2 ❤️' },
@@ -14,20 +17,19 @@ const TIERS = [
 
 interface BattlePassProps {
   onClose: () => void;
+  hasPremiumAccess: boolean;
 }
 
-export const BattlePass = ({ onClose }: BattlePassProps) => {
+export const BattlePass = ({ onClose, hasPremiumAccess }: BattlePassProps) => {
   const [currentTier, setCurrentTier] = useState(1);
-  const [isPremium, setIsPremium] = useState(false);
+  const [guestPremiumUnlocked, setGuestPremiumUnlocked] = useState(false);
   const { user } = useAuth();
+  const { createPayment, loading } = usePayment();
 
-  const odId = user?.id || 'guest';
+  const isPremium = hasPremiumAccess || guestPremiumUnlocked;
 
   useEffect(() => {
     const loadProgress = async () => {
-      const hasPremium = localStorage.getItem(`battle-pass-premium-${odId}`);
-      setIsPremium(!!hasPremium);
-
       // Only load from DB if authenticated
       if (user?.id) {
         const { data: gameState } = await supabase
@@ -51,18 +53,24 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
             const tier = Math.min(Math.floor(completedCount / 10) + 1, 5);
             setCurrentTier(tier);
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
     };
 
     loadProgress();
-  }, [odId, user?.id]);
+  }, [user?.id]);
 
-  const handleBuyPremium = () => {
-    localStorage.setItem(`battle-pass-premium-${odId}`, 'true');
-    setIsPremium(true);
+  const handleBuyPremium = async () => {
+    if (loading) return;
+
+    const success = await createPayment('garden_pass');
+    if (!success) return;
+
+    dispatchPurchaseCompleted('garden_pass');
+    setGuestPremiumUnlocked(true);
+    toast.success('Battle Pass Premium activado');
   };
 
   return (
@@ -78,9 +86,10 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
               <Button
                 onClick={handleBuyPremium}
                 size="sm"
+                disabled={loading}
                 className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold"
               >
-                Premium €4.99
+                {loading ? 'Procesando...' : 'Premium €4.99'}
               </Button>
             )}
             <button onClick={onClose} className="text-white/70 hover:text-white">
@@ -92,9 +101,9 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
         <div className="space-y-3">
           {TIERS.map((tier) => {
             const isUnlocked = currentTier >= tier.level;
-            
+
             return (
-              <div 
+              <div
                 key={tier.level}
                 className={`rounded-xl p-4 ${isUnlocked ? 'bg-purple-800/50' : 'bg-gray-800/50'}`}
               >
@@ -104,13 +113,13 @@ export const BattlePass = ({ onClose }: BattlePassProps) => {
                     {!isUnlocked && <Lock className="w-4 h-4 text-gray-400" />}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`rounded-lg p-2 ${isUnlocked ? 'bg-green-500/20' : 'bg-gray-700/50'}`}>
                     <p className="text-xs text-gray-300">GRATIS</p>
                     <p className="text-white font-semibold">{tier.free}</p>
                   </div>
-                  
+
                   <div className={`rounded-lg p-2 ${isPremium && isUnlocked ? 'bg-yellow-500/20' : 'bg-gray-700/50'}`}>
                     <p className="text-xs text-yellow-400 flex items-center gap-1">
                       PREMIUM {isPremium ? '✓' : '🔒'}
