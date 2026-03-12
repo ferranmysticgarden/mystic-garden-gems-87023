@@ -365,17 +365,8 @@ const Index = () => {
       console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} per type)`);
     }
 
-    // Ad removal
-    if (product.noAdsDays) {
-      await addPurchase(productId, product.noAdsDays);
-    }
-    if (product.noAdsForever) {
-      await addPurchase(productId);
-    }
-
-    if (productId === 'garden_pass') {
-      await addPurchase(productId, 30);
-    }
+    // Entitlements de compras premium (sin ads / pass) se conceden en backend tras verificación
+    // para evitar auto-concesión desde cliente.
 
     setScreen('menu');
   };
