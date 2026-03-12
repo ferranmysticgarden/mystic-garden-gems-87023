@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
-import { signInWithGoogleWeb } from '@/lib/googleAuth';
+import { NATIVE_OAUTH_CALLBACK_URL, signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
 import { z } from 'zod';

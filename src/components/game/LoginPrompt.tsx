@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { X, Shield, Cloud, Gift } from 'lucide-react';
 import { AuthPage } from '@/components/AuthPage';
-import { lovable } from '@/integrations/lovable';
+import { signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
 import { toast } from 'sonner';
 
 interface LoginPromptProps {
