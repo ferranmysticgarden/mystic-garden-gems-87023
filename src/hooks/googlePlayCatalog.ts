@@ -29,7 +29,7 @@ const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
 
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
 
-export const getGooglePlayCandidates = (productId: string): string[] => {
+const getPrimaryGooglePlayCandidates = (productId: string): string[] => {
   const normalized = normalizeId(productId);
   const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
 
@@ -37,6 +37,14 @@ export const getGooglePlayCandidates = (productId: string): string[] => {
     productId,
     ...explicit,
     normalized,
+  ]);
+};
+
+export const getGooglePlayCandidates = (productId: string): string[] => {
+  const normalized = normalizeId(productId);
+
+  return unique([
+    ...getPrimaryGooglePlayCandidates(productId),
     `${productId}1`,
     `${normalized}1`,
   ]);
@@ -48,7 +56,7 @@ const KNOWN_PRODUCT_IDS = unique([
 ]);
 
 export const getGooglePlayQueryProductIds = (): string[] => {
-  return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getGooglePlayCandidates(productId)));
+  return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getPrimaryGooglePlayCandidates(productId)));
 };
 
 export const resolveGooglePlayProductId = (
