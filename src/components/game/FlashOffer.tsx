@@ -47,6 +47,7 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
       console.log('[PURCHASE] success confirmed via FlashOffer');
       dispatchPurchaseCompleted('flash_offer');
       console.log('[PURCHASE] gate unlocked');
+      onPurchaseSuccess?.();
       onClose();
     }
   };

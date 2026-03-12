@@ -88,6 +88,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
       dispatchPurchaseCompleted('starter_pack');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`starter-pack-${odId}`, 'true');
+      onPurchaseSuccess?.();
       setShow(false);
       onClose();
     }
