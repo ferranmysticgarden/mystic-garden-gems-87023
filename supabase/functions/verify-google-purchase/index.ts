@@ -192,7 +192,7 @@ async function verifyWithGooglePlay(
 
   } catch (error) {
     console.error('[ERROR] Verification error:', error);
-    return { valid: false, error: String(error) };
+    return { valid: false, statusCode: 500, error: String(error) };
   }
 }
 
