@@ -157,7 +157,20 @@ async function verifyWithGooglePlay(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[ERROR] Google Play API error:', response.status, errorText);
-      return { valid: false, error: `Google Play API error: ${response.status}` };
+
+      if (response.status === 403) {
+        return {
+          valid: false,
+          statusCode: 403,
+          error: 'Google Play API 403: la cuenta de servicio no tiene permisos para este paquete (revisar acceso API, Gestionar pedidos y Ver datos financieros).',
+        };
+      }
+
+      return {
+        valid: false,
+        statusCode: response.status,
+        error: `Google Play API error: ${response.status}`,
+      };
     }
 
     const purchaseData = await response.json();
