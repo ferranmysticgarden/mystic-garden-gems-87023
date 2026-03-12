@@ -63,7 +63,7 @@ type Screen = 'menu' | 'game' | 'levels' | 'shop';
 const Index = () => {
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { hasAdsDisabled, addPurchase } = usePurchases(user);
+  const { hasActiveProduct } = usePurchases(user);
   const { setScreen: setMusicScreen } = useBackgroundMusic('menu');
   const {
     gameState,
