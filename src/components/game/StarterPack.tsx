@@ -12,7 +12,7 @@ interface StarterPackProps {
   onPurchaseSuccess?: () => void;
 }
 
-export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) => {
+export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: StarterPackProps) => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds (más urgencia)
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible'>('entering');
