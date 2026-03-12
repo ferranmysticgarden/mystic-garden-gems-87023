@@ -71,6 +71,7 @@ export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: Bat
 
     dispatchPurchaseCompleted('garden_pass');
     setGuestPremiumUnlocked(true);
+    onPurchaseSuccess?.();
     toast.success('Battle Pass Premium activado');
   };
 
