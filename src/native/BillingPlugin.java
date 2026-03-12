@@ -275,9 +275,17 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     }
 
     private void handlePurchase(Purchase purchase) {
+        if (purchase.getProducts() == null || purchase.getProducts().isEmpty()) {
+            Log.e(TAG, "❌ Purchase has no products in payload");
+            if (pendingPurchaseCall != null) {
+                pendingPurchaseCall.reject("Purchase payload has no products");
+                pendingPurchaseCall = null;
+            }
+            return;
+        }
+
         String productId = purchase.getProducts().get(0);
         int purchaseState = purchase.getPurchaseState();
-        Log.d(TAG, "Processing purchase: " + productId + " state=" + purchaseState + " token=" + purchase.getPurchaseToken().substring(0, 20) + "...");
         
         // Handle PENDING purchases (e.g. cash payments in some countries)
         if (purchaseState == Purchase.PurchaseState.PENDING) {
