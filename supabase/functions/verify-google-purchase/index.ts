@@ -401,6 +401,8 @@ serve(async (req) => {
             orderId: orderId || null,
             error: verification.error || 'Purchase verification failed',
             googleStatus: verification.statusCode ?? null,
+            reason: verification.reason ?? null,
+            activationUrl: verification.activationUrl ?? null,
             purchaseState: verification.purchaseState ?? null,
             consumptionState: verification.consumptionState ?? null,
             isGuest,
@@ -419,6 +421,8 @@ serve(async (req) => {
         success: false,
         error: verification.error || 'Purchase verification failed',
         code: verification.statusCode ?? null,
+        reason: verification.reason ?? null,
+        activationUrl: verification.activationUrl ?? null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
