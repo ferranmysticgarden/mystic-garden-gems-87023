@@ -8,6 +8,7 @@ import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 interface FlashOfferProps {
   trigger: 'loss' | 'streak_loss';
   onClose: () => void;
+  onPurchaseSuccess?: () => void;
 }
 
 export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
