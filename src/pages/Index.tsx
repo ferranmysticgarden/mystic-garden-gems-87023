@@ -357,11 +357,12 @@ const Index = () => {
     // Powerups (distribute evenly across hammer, shuffle, undo)
     if (product.powerups) {
       const perType = Math.ceil(product.powerups / 3);
-      // addGems is the only state setter available; powerups are tracked in gameState
-      // We use the gameState update mechanism via completeLevel's reward system
-      // For now, grant powerups as gems equivalent (1 powerup ≈ 5 gems value)
-      // TODO: Add dedicated addPowerups to useGameState if needed
-      console.log(`[PURCHASE] Granting ${product.powerups} powerups (${perType} per type)`);
+      for (let i = 0; i < perType; i++) {
+        addHammer();
+        addShuffle();
+        addUndo();
+      }
+      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} per type)`);
     }
 
     // Ad removal
