@@ -138,7 +138,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                       ) : (
                         <>
                           <Crown className="w-5 h-5 mr-2" />
-                          €{pack.price.toFixed(2)}
+                          {getPrice(pack.id, `€${pack.price.toFixed(2)}`)}
                         </>
                       )}
                     </Button>
