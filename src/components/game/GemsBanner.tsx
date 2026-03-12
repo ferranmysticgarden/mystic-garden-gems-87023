@@ -7,9 +7,10 @@ import { trackEvent } from '@/lib/trackEvent';
 
 interface GemsBannerProps {
   onPurchased?: () => void;
+  onPurchaseSuccess?: () => void;
 }
 
-export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
+export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) => {
   const { createPayment, loading, getPrice, isGooglePlayAvailable, isAndroid } = usePayment();
   const price = getPrice('welcome_pack', '€0.50');
   const hasTracked = useRef(false);
@@ -34,6 +35,7 @@ export const GemsBanner = ({ onPurchased }: GemsBannerProps) => {
       trackEvent('purchase_success', { product: 'welcome_pack' });
       dispatchPurchaseCompleted('welcome_pack');
       localStorage.setItem('first_purchase_completed', 'true');
+      onPurchaseSuccess?.();
       onPurchased?.();
     }
   };

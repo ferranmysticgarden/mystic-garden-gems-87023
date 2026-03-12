@@ -20,7 +20,7 @@ export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOf
     const success = await createPayment('finish_level');
     if (success) {
       console.log('[PURCHASE] success confirmed via CloseDefeatOffer');
-      dispatchPurchaseCompleted('continue_game');
+      dispatchPurchaseCompleted('finish_level');
       console.log('[PURCHASE] gate unlocked');
       onBuy();
     }

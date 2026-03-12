@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface LoseBundleProps {
   onBuy: () => void;
@@ -13,6 +14,9 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
   const handleBuy = async () => {
     const success = await createPayment('pack_revancha');
     if (success) {
+      console.log('[PURCHASE] success confirmed via LoseBundle');
+      dispatchPurchaseCompleted('pack_revancha');
+      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };

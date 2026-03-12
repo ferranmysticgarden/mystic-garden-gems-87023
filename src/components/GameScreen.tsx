@@ -409,7 +409,14 @@ export const GameScreen = ({
         </div>
 
         {/* Gems Purchase Banner - SOLO nivel 5+ (no distraer en niveles tempranos) */}
-        {level.id >= 5 && <GemsBanner />}
+        {level.id >= 5 && (
+          <GemsBanner 
+            onPurchaseSuccess={() => {
+              // welcome_pack: 5 powerups, 3 lives — grant client-side
+              setMoves(prev => prev + 5);
+            }}
+          />
+        )}
 
         {/* Board */}
         <div className="flex-1 flex items-center justify-center">
@@ -450,8 +457,10 @@ export const GameScreen = ({
             trigger="loss"
             onClose={handleFlashOfferClose}
             onPurchaseSuccess={() => {
-              // flash_offer grants 10 lives + 150 gems — handled by server for auth users
-              // Client-side: we just close and let user continue
+              // flash_offer: 10 lives + 150 gems — client needs to know purchase succeeded
+              // Lives/gems are granted by Index.tsx FlashOffer or server; here we continue the game
+              setMoves(5);
+              setGameOver(false);
             }}
           />
         )}
