@@ -9,9 +9,10 @@ import confetti from 'canvas-confetti';
 interface StarterPackProps {
   levelJustCompleted: number;
   onClose: () => void;
+  onPurchaseSuccess?: () => void;
 }
 
-export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) => {
+export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: StarterPackProps) => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds (más urgencia)
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible'>('entering');
@@ -87,6 +88,7 @@ export const StarterPack = ({ levelJustCompleted, onClose }: StarterPackProps) =
       dispatchPurchaseCompleted('starter_pack');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`starter-pack-${odId}`, 'true');
+      onPurchaseSuccess?.();
       setShow(false);
       onClose();
     }

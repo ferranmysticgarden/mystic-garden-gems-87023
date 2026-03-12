@@ -8,9 +8,10 @@ import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 interface FlashOfferProps {
   trigger: 'loss' | 'streak_loss';
   onClose: () => void;
+  onPurchaseSuccess?: () => void;
 }
 
-export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
+export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferProps) => {
   const [timeLeft, setTimeLeft] = useState(7200); // 2 hours in seconds
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
@@ -46,6 +47,7 @@ export const FlashOffer = ({ trigger, onClose }: FlashOfferProps) => {
       console.log('[PURCHASE] success confirmed via FlashOffer');
       dispatchPurchaseCompleted('flash_offer');
       console.log('[PURCHASE] gate unlocked');
+      onPurchaseSuccess?.();
       onClose();
     }
   };

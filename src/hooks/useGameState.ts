@@ -246,7 +246,7 @@ export const useGameState = () => {
   const addLives = useCallback((amount: number) => {
     setGameState((prev) => ({
       ...prev,
-      lives: Math.min(5, prev.lives + amount),
+      lives: Math.min(99, prev.lives + amount),
       lastLifeRefill: Date.now(),
     }));
   }, []);

@@ -78,6 +78,9 @@ const Index = () => {
     hasUnlimitedLives,
     getTimeUntilNextLife,
     setOnLivesFull,
+    addHammer,
+    addUndo,
+    addShuffle,
   } = useGameState();
   
   const { 
@@ -354,11 +357,12 @@ const Index = () => {
     // Powerups (distribute evenly across hammer, shuffle, undo)
     if (product.powerups) {
       const perType = Math.ceil(product.powerups / 3);
-      // addGems is the only state setter available; powerups are tracked in gameState
-      // We use the gameState update mechanism via completeLevel's reward system
-      // For now, grant powerups as gems equivalent (1 powerup ≈ 5 gems value)
-      // TODO: Add dedicated addPowerups to useGameState if needed
-      console.log(`[PURCHASE] Granting ${product.powerups} powerups (${perType} per type)`);
+      for (let i = 0; i < perType; i++) {
+        addHammer();
+        addShuffle();
+        addUndo();
+      }
+      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} per type)`);
     }
 
     // Ad removal
@@ -707,13 +711,33 @@ const Index = () => {
       )}
 
       {/* First Day Offer - SOLO después de nivel 5 (no distraer temprano) */}
-      {gameState.completedLevels.length >= 5 && <FirstDayOffer />}
+      {gameState.completedLevels.length >= 5 && (
+        <FirstDayOffer 
+          onPurchaseSuccess={() => {
+            // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
+            addGems(500);
+            addLives(10);
+            const perType = Math.ceil(3 / 3);
+            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            activateUnlimitedLives(24);
+            toast.success('¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads');
+          }}
+        />
+      )}
 
       {/* Starter Pack - después de nivel 2-4 win */}
       {showStarterPack && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}
           onClose={() => setShowStarterPack(false)}
+          onPurchaseSuccess={() => {
+            // starter_pack: 500 gems, 10 lives, 3 powerups
+            addGems(500);
+            addLives(10);
+            const perType = Math.ceil(3 / 3);
+            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            toast.success('¡Starter Pack activado! +500💎 +10❤️ +3🔨');
+          }}
         />
       )}
 
@@ -800,8 +824,11 @@ const Index = () => {
       {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
+            // welcome_pack: 5 powerups, 3 lives
             addLives(3);
-            toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters, x2 monedas 30 min');
+            const perType = Math.ceil(5 / 3);
+            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters');
             setShowWelcomeOffer(false);
           }}
           onDismiss={() => setShowWelcomeOffer(false)}
@@ -848,6 +875,12 @@ const Index = () => {
           onClose={() => {
             setShowFlashOffer(false);
             setConsecutiveLosses(0);
+          }}
+          onPurchaseSuccess={() => {
+            // flash_offer: 10 lives, 150 gems
+            addLives(10);
+            addGems(150);
+            toast.success('¡Pack Relámpago activado! +10❤️ +150💎');
           }}
         />
       )}

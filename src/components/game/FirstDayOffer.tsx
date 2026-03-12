@@ -7,9 +7,10 @@ import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface FirstDayOfferProps {
   levelJustCompleted?: number;
+  onPurchaseSuccess?: () => void;
 }
 
-export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
+export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDayOfferProps) => {
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutos - más urgencia
   const { user } = useAuth();
@@ -83,6 +84,7 @@ export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
       dispatchPurchaseCompleted('mega_pack_inicial');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`first-day-offer-${odId}`, 'true');
+      onPurchaseSuccess?.();
       setShow(false);
     }
   };
