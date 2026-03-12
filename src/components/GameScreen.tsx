@@ -409,7 +409,14 @@ export const GameScreen = ({
         </div>
 
         {/* Gems Purchase Banner - SOLO nivel 5+ (no distraer en niveles tempranos) */}
-        {level.id >= 5 && <GemsBanner />}
+        {level.id >= 5 && (
+          <GemsBanner 
+            onPurchaseSuccess={() => {
+              // welcome_pack: 5 powerups, 3 lives — grant client-side
+              setMoves(prev => prev + 5);
+            }}
+          />
+        )}
 
         {/* Board */}
         <div className="flex-1 flex items-center justify-center">
