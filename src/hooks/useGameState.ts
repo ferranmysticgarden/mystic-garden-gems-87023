@@ -139,13 +139,16 @@ export const useGameState = () => {
     loadProgress();
   }, [user]);
 
-  // Save progress whenever state changes
+  // Save progress whenever state changes (debounced to prevent race conditions)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (loading || !hasLoadedRef.current) return;
 
     if (user) {
-      // Save to DB
-      const saveProgress = async () => {
+      // Debounce DB saves by 400ms to prevent concurrent upserts
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
         try {
           console.log('[SAVE] Saving progress:', {
             level: gameState.currentLevel,
@@ -177,12 +180,15 @@ export const useGameState = () => {
         } catch (error) {
           console.error('[SAVE] ❌ Error saving game progress:', error);
         }
-      };
-      saveProgress();
+      }, 400);
     } else {
-      // Guest: save to localStorage
+      // Guest: save to localStorage (instant, no debounce needed)
       saveLocalProgress(gameState);
     }
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, [gameState, user, loading]);
 
   // Life refill system with notification callback
