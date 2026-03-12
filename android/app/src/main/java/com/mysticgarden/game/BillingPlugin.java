@@ -100,8 +100,12 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void queryProducts(PluginCall call) {
+        if (call.getArray("productIds") == null) {
+            call.reject("No product IDs provided");
+            return;
+        }
+
         List<String> productIds = call.getArray("productIds").toList();
-        
         if (productIds == null || productIds.isEmpty()) {
             call.reject("No product IDs provided");
             return;
