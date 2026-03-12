@@ -131,7 +131,7 @@ async function verifyWithGooglePlay(
   productId: string,
   purchaseToken: string,
   serviceAccountKey: string | null
-): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string }> {
+): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string; statusCode?: number }> {
   
   if (!serviceAccountKey) {
     console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
