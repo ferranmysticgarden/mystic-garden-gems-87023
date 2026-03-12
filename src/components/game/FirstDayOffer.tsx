@@ -7,6 +7,7 @@ import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface FirstDayOfferProps {
   levelJustCompleted?: number;
+  onPurchaseSuccess?: () => void;
 }
 
 export const FirstDayOffer = ({ levelJustCompleted }: FirstDayOfferProps) => {
