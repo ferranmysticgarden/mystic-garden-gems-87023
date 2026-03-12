@@ -63,7 +63,7 @@ type Screen = 'menu' | 'game' | 'levels' | 'shop';
 const Index = () => {
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { hasAdsDisabled, addPurchase } = usePurchases(user);
+  const { hasActiveProduct } = usePurchases(user);
   const { setScreen: setMusicScreen } = useBackgroundMusic('menu');
   const {
     gameState,
@@ -365,17 +365,8 @@ const Index = () => {
       console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} per type)`);
     }
 
-    // Ad removal
-    if (product.noAdsDays) {
-      await addPurchase(productId, product.noAdsDays);
-    }
-    if (product.noAdsForever) {
-      await addPurchase(productId);
-    }
-
-    if (productId === 'garden_pass') {
-      await addPurchase(productId, 30);
-    }
+    // Entitlements de compras premium (sin ads / pass) se conceden en backend tras verificación
+    // para evitar auto-concesión desde cliente.
 
     setScreen('menu');
   };
@@ -695,7 +686,10 @@ const Index = () => {
 
       {/* Battle Pass Modal */}
       {showBattlePass && (
-        <BattlePass onClose={() => setShowBattlePass(false)} />
+        <BattlePass
+          onClose={() => setShowBattlePass(false)}
+          hasPremiumAccess={hasActiveProduct('garden_pass')}
+        />
       )}
 
       {/* Daily Streak Calendar Modal */}

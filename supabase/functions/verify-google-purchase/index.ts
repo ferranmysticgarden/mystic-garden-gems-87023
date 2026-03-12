@@ -131,7 +131,7 @@ async function verifyWithGooglePlay(
   productId: string,
   purchaseToken: string,
   serviceAccountKey: string | null
-): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string }> {
+): Promise<{ valid: boolean; consumptionState?: number; purchaseState?: number; error?: string; statusCode?: number }> {
   
   if (!serviceAccountKey) {
     console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
@@ -157,7 +157,20 @@ async function verifyWithGooglePlay(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[ERROR] Google Play API error:', response.status, errorText);
-      return { valid: false, error: `Google Play API error: ${response.status}` };
+
+      if (response.status === 403) {
+        return {
+          valid: false,
+          statusCode: 403,
+          error: 'Google Play API 403: la cuenta de servicio no tiene permisos para este paquete (revisar acceso API, Gestionar pedidos y Ver datos financieros).',
+        };
+      }
+
+      return {
+        valid: false,
+        statusCode: response.status,
+        error: `Google Play API error: ${response.status}`,
+      };
     }
 
     const purchaseData = await response.json();
@@ -179,7 +192,7 @@ async function verifyWithGooglePlay(
 
   } catch (error) {
     console.error('[ERROR] Verification error:', error);
-    return { valid: false, error: String(error) };
+    return { valid: false, statusCode: 500, error: String(error) };
   }
 }
 
@@ -265,7 +278,10 @@ serve(async (req) => {
     const { purchaseToken, productId: rawProductId, orderId } = await req.json();
 
     if (!purchaseToken || !rawProductId) {
-      throw new Error("Missing purchaseToken or productId");
+      return new Response(JSON.stringify({ success: false, error: "Missing purchaseToken or productId" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
 
     const productId = normalizeGoogleProductId(rawProductId);
@@ -318,6 +334,7 @@ serve(async (req) => {
             rawProductId,
             orderId: orderId || null,
             error: verification.error || 'Purchase verification failed',
+            googleStatus: verification.statusCode ?? null,
             purchaseState: verification.purchaseState ?? null,
             consumptionState: verification.consumptionState ?? null,
             isGuest,
@@ -331,12 +348,14 @@ serve(async (req) => {
         console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
       }
 
+      const status = verification.statusCode === 403 ? 503 : 400;
       return new Response(JSON.stringify({
         success: false,
-        error: verification.error || 'Purchase verification failed'
+        error: verification.error || 'Purchase verification failed',
+        code: verification.statusCode ?? null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status,
       });
     }
 
@@ -438,18 +457,47 @@ serve(async (req) => {
           .insert(updates);
       }
 
-      // Record purchase
+      // Record immutable purchase proof (used for dedupe / audit)
       await supabaseClient
         .from('user_purchases')
         .insert({
           user_id: userId,
           product_id: purchaseRecordId,
-          expires_at: rewards.noAdsDays 
+          expires_at: rewards.noAdsDays
             ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
             : null,
         });
 
-      if (rewards.noAdsForever) {
+      // Record canonical entitlement for premium/no-ads products (used by client checks)
+      if (rewards.noAdsDays || rewards.noAdsForever) {
+        const canonicalExpiresAt = rewards.noAdsForever
+          ? null
+          : new Date(Date.now() + (rewards.noAdsDays || 0) * 24 * 60 * 60 * 1000).toISOString();
+
+        const { error: deleteCanonicalError } = await supabaseClient
+          .from('user_purchases')
+          .delete()
+          .eq('user_id', userId)
+          .eq('product_id', productId);
+
+        if (deleteCanonicalError) {
+          console.error('[WARN] Could not cleanup previous canonical entitlement:', deleteCanonicalError.message);
+        }
+
+        const { error: insertCanonicalError } = await supabaseClient
+          .from('user_purchases')
+          .insert({
+            user_id: userId,
+            product_id: productId,
+            expires_at: canonicalExpiresAt,
+          });
+
+        if (insertCanonicalError) {
+          throw insertCanonicalError;
+        }
+      }
+
+      if (rewards.noAdsForever && productId !== 'no_ads_forever') {
         await supabaseClient
           .from('user_purchases')
           .insert({

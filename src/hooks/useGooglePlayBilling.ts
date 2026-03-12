@@ -178,12 +178,20 @@ export const useGooglePlayBilling = () => {
       } catch (error) {
         verificationTasksRef.current.delete(purchaseToken);
         console.error('Error processing purchase:', error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isPermission403 = errorMessage.includes('Google Play API 403');
+
         trackEvent('purchase_verification_failed', {
           platform: 'android',
           product: purchase.productId,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage,
         });
-        toast.error('Error al procesar la compra');
+
+        toast.error(
+          isPermission403
+            ? 'Compra bloqueada por configuración de Google Play (API 403). Revisa permisos de la cuenta de servicio.'
+            : 'Error al procesar la compra'
+        );
         return false;
       }
     })();
