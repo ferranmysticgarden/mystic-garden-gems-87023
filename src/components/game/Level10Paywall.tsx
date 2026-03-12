@@ -22,8 +22,11 @@ export const Level10Paywall = ({
   movesShort = 1,
   progressPercent = 95 
 }: Level10PaywallProps) => {
-  const { createPayment, loading } = usePayment();
+  const { createPayment, getPrice, loading } = usePayment();
   const [purchasing, setPurchasing] = useState(false);
+
+  const buyMovesProduct = PRODUCTS.find(p => p.id === 'buy_moves');
+  const displayPrice = getPrice('buy_moves', `€${buyMovesProduct?.price.toFixed(2) ?? '0.50'}`);
   const [countdown, setCountdown] = useState(15);
 
   console.log("LEVEL10 POPUP RENDER");
