@@ -142,7 +142,7 @@ export const Level10Paywall = ({
         </Button>
 
         <p className="text-sm text-muted-foreground mt-2">
-          0,50 € · menos que un café
+          {displayPrice} · menos que un café
         </p>
        
         <p className="text-xs text-muted-foreground mt-2">

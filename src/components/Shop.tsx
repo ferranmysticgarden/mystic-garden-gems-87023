@@ -238,7 +238,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                     <>
                       {isBestValue && <Sparkles className="w-4 h-4 mr-2" />}
                       {isGardenPass && <Crown className="w-4 h-4 mr-2" />}
-                      {`€${product.price.toFixed(2)}`}
+                      {getPrice(product.id, `€${product.price.toFixed(2)}`)}
                     </>
                   )}
                 </Button>
