@@ -100,8 +100,12 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void queryProducts(PluginCall call) {
+        if (call.getArray("productIds") == null) {
+            call.reject("No product IDs provided");
+            return;
+        }
+
         List<String> productIds = call.getArray("productIds").toList();
-        
         if (productIds == null || productIds.isEmpty()) {
             call.reject("No product IDs provided");
             return;
@@ -271,9 +275,17 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     }
 
     private void handlePurchase(Purchase purchase) {
+        if (purchase.getProducts() == null || purchase.getProducts().isEmpty()) {
+            Log.e(TAG, "❌ Purchase has no products in payload");
+            if (pendingPurchaseCall != null) {
+                pendingPurchaseCall.reject("Purchase payload has no products");
+                pendingPurchaseCall = null;
+            }
+            return;
+        }
+
         String productId = purchase.getProducts().get(0);
         int purchaseState = purchase.getPurchaseState();
-        Log.d(TAG, "Processing purchase: " + productId + " state=" + purchaseState + " token=" + purchase.getPurchaseToken().substring(0, 20) + "...");
         
         // Handle PENDING purchases (e.g. cash payments in some countries)
         if (purchaseState == Purchase.PurchaseState.PENDING) {
@@ -330,6 +342,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     JSObject ret = new JSObject();
                     for (int i = 0; i < purchases.size(); i++) {
                         Purchase p = purchases.get(i);
+                        if (p.getProducts() == null || p.getProducts().isEmpty()) {
+                            Log.w(TAG, "⚠️ Skipping restored purchase without product payload");
+                            continue;
+                        }
+
                         JSObject purchaseData = new JSObject();
                         purchaseData.put("purchaseToken", p.getPurchaseToken());
                         purchaseData.put("orderId", p.getOrderId());

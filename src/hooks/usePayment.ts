@@ -22,31 +22,28 @@ export const usePayment = () => {
     setLoading(true);
 
     try {
-      // Android → Google Play Billing
+      // Android → Google Play Billing (intenta siempre; el hook interno gestiona readiness/reintentos)
       if (isAndroid) {
-        if (googlePlayBilling.isAvailable) {
-          trackEvent('payment_bridge_start', { product: productId, platform: 'android' });
-          try {
-            const success = await googlePlayBilling.purchase(productId);
-            trackEvent('payment_bridge_result', { product: productId, platform: 'android', success });
-            return success;
-          } catch (gpError: any) {
-            trackEvent('payment_bridge_error', {
-              product: productId,
-              platform: 'android',
-              error: gpError instanceof Error ? gpError.message : String(gpError),
-            });
-            console.error('[PAYMENT] Google Play purchase threw:', gpError);
-            toast.error('Error en la compra. Inténtalo de nuevo.');
-            return false;
-          }
+        trackEvent('payment_bridge_start', {
+          product: productId,
+          platform: 'android',
+          billing_available: googlePlayBilling.isAvailable,
+        });
+
+        try {
+          const success = await googlePlayBilling.purchase(productId);
+          trackEvent('payment_bridge_result', { product: productId, platform: 'android', success });
+          return success;
+        } catch (gpError: any) {
+          trackEvent('payment_bridge_error', {
+            product: productId,
+            platform: 'android',
+            error: gpError instanceof Error ? gpError.message : String(gpError),
+          });
+          console.error('[PAYMENT] Google Play purchase threw:', gpError);
+          toast.error('Error en la compra. Inténtalo de nuevo.');
+          return false;
         }
-        
-        // Google Play Billing NO está disponible en Android
-        trackEvent('payment_bridge_blocked', { product: productId, platform: 'android', reason: 'billing_not_available' });
-        console.error('[PAYMENT] Google Play Billing not available on Android. Purchase blocked.');
-        toast.error('Compras no disponibles ahora. Reinicia la app e inténtalo de nuevo.');
-        return false;
       }
 
       // Web → Stripe (solo plataforma web)

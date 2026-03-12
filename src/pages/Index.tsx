@@ -376,7 +376,10 @@ const Index = () => {
     setScreen('menu');
   };
 
-  const handleQuickLifePurchased = () => {
+  const handleQuickLifePurchased = ({ lives, gems }: { lives: number; gems: number }) => {
+    if (lives > 0) addLives(lives);
+    if (gems > 0) addGems(gems);
+    toast.success(`¡Compra completada! +${lives}❤️ +${gems}💎`);
     setShowNoLivesModal(false);
   };
 
