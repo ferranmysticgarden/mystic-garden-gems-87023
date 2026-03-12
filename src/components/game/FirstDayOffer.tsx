@@ -84,6 +84,7 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
       dispatchPurchaseCompleted('mega_pack_inicial');
       console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`first-day-offer-${odId}`, 'true');
+      onPurchaseSuccess?.();
       setShow(false);
     }
   };

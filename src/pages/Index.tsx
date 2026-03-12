@@ -711,7 +711,19 @@ const Index = () => {
       )}
 
       {/* First Day Offer - SOLO después de nivel 5 (no distraer temprano) */}
-      {gameState.completedLevels.length >= 5 && <FirstDayOffer />}
+      {gameState.completedLevels.length >= 5 && (
+        <FirstDayOffer 
+          onPurchaseSuccess={() => {
+            // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
+            addGems(500);
+            addLives(10);
+            const perType = Math.ceil(3 / 3);
+            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            activateUnlimitedLives(24);
+            toast.success('¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads');
+          }}
+        />
+      )}
 
       {/* Starter Pack - después de nivel 2-4 win */}
       {showStarterPack && (
