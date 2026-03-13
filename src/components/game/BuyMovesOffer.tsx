@@ -68,10 +68,10 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
           ) : (
             <>
               <p className="text-white text-lg mb-2">
-                No es una derrota aún...
+                ¡CASI LO CONSEGUISTE!
               </p>
               <p className="text-purple-200 mb-4">
-                ¡Puedes continuar!
+                Solo te faltaba un poco más...
               </p>
             </>
           )}
