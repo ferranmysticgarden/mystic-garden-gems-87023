@@ -268,10 +268,10 @@ const Index = () => {
       setShowFirstWin(true);
     }
 
-    // Show Starter Pack ONLY after level 3 win (única oferta temprana)
-    if (currentLevel.id === 3) {
-      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: 3 });
-      trackEvent('offer_shown', { product: 'starter_pack', level: 3 });
+    // Show Starter Pack ONLY after level 4 win (primera oferta del embudo)
+    if (currentLevel.id === 4) {
+      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: 4 });
+      trackEvent('offer_shown', { product: 'starter_pack', level: 4 });
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
