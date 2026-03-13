@@ -442,7 +442,10 @@ serve(async (req) => {
       serviceAccountKey
     );
 
-    if (!verification.valid && (verification.statusCode === 401 || verification.statusCode === 403)) {
+    const shouldRetryPackageFallback = (statusCode?: number) =>
+      statusCode === 401 || statusCode === 403 || statusCode === 404;
+
+    if (!verification.valid && shouldRetryPackageFallback(verification.statusCode)) {
       for (const candidatePackageName of fallbackPackageNames) {
         const candidateResult = await verifyWithGooglePlay(
           candidatePackageName,
@@ -454,7 +457,7 @@ serve(async (req) => {
         resolvedPackageName = candidatePackageName;
         verification = candidateResult;
 
-        if (candidateResult.valid || (candidateResult.statusCode !== 401 && candidateResult.statusCode !== 403)) {
+        if (candidateResult.valid || !shouldRetryPackageFallback(candidateResult.statusCode)) {
           break;
         }
       }
