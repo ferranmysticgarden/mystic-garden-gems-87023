@@ -19,7 +19,7 @@ const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_
 const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_experiencia'];
 const BEST_VALUE_ID = 'gems_300';
 
-export const Shop = ({ onClose, onPurchase }: ShopProps) => {
+export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
   const { createPayment, getPrice, loading } = usePayment();
 
