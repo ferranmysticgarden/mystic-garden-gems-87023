@@ -186,6 +186,13 @@ export const useGooglePlayBilling = () => {
           normalizedError.includes('service_disabled') ||
           normalizedError.includes('accessnotconfigured') ||
           normalizedError.includes('api has not been used');
+        const isInvalidCredentials =
+          normalizedError.includes('google play api error: 401') ||
+          normalizedError.includes('invalid_grant') ||
+          normalizedError.includes('invalid credentials') ||
+          normalizedError.includes('invalid_client') ||
+          normalizedError.includes('invalid jwt') ||
+          normalizedError.includes('cuenta de servicio');
 
         trackEvent('purchase_verification_failed', {
           platform: 'android',
@@ -198,7 +205,9 @@ export const useGooglePlayBilling = () => {
             ? 'Compra bloqueada: activa Google Play Android Developer API del proyecto de la cuenta de servicio y espera 5 minutos.'
             : isPermission403
               ? 'Compra bloqueada por permisos de Google Play (API 403). Revisa acceso API, Gestionar pedidos y Ver datos financieros.'
-              : 'Error al procesar la compra'
+              : isInvalidCredentials
+                ? 'Compra bloqueada: credenciales de Google Play inválidas o cuenta de servicio sin acceso. Revisa GOOGLE_PLAY_SERVICE_ACCOUNT y el acceso API en Google Play Console.'
+                : 'Error al procesar la compra'
         );
         return false;
       }
