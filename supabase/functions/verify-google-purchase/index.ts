@@ -218,6 +218,15 @@ async function verifyWithGooglePlay(
         };
       }
 
+      if (response.status === 401) {
+        return {
+          valid: false,
+          statusCode: 401,
+          reason: 'invalid_credentials',
+          error: 'Google Play API 401: credenciales inválidas o cuenta de servicio no vinculada al paquete en Google Play Console.',
+        };
+      }
+
       if (response.status === 403) {
         return {
           valid: false,
