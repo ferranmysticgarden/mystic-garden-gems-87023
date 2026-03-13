@@ -180,20 +180,23 @@ export const useGooglePlayBilling = () => {
         verificationTasksRef.current.delete(purchaseToken);
         console.error('Error processing purchase:', error);
         const errorMessage = error instanceof Error ? error.message : String(error);
-        const isPermission403 = errorMessage.includes('Google Play API 403');
         const normalizedError = errorMessage.toLowerCase();
         const isServiceDisabled =
           normalizedError.includes('api desactivada') ||
           normalizedError.includes('service_disabled') ||
           normalizedError.includes('accessnotconfigured') ||
           normalizedError.includes('api has not been used');
+        const isPermissionDenied =
+          errorMessage.includes('Google Play API 403') ||
+          errorMessage.includes('Google Play API 401: permisos insuficientes') ||
+          normalizedError.includes('permissiondenied') ||
+          normalizedError.includes('insufficient permissions');
         const isInvalidCredentials =
-          normalizedError.includes('google play api error: 401') ||
+          normalizedError.includes('google play api 401: credenciales inválidas') ||
           normalizedError.includes('invalid_grant') ||
           normalizedError.includes('invalid credentials') ||
           normalizedError.includes('invalid_client') ||
-          normalizedError.includes('invalid jwt') ||
-          normalizedError.includes('cuenta de servicio');
+          normalizedError.includes('invalid jwt');
 
         trackEvent('purchase_verification_failed', {
           platform: 'android',
@@ -204,10 +207,10 @@ export const useGooglePlayBilling = () => {
         toast.error(
           isServiceDisabled
             ? 'Compra bloqueada: activa Google Play Android Developer API del proyecto de la cuenta de servicio y espera 5 minutos.'
-            : isPermission403
-              ? 'Compra bloqueada por permisos de Google Play (API 403). Revisa acceso API, Gestionar pedidos y Ver datos financieros.'
+            : isPermissionDenied
+              ? 'Compra bloqueada por permisos de Google Play para la cuenta de servicio. Revisa acceso API, Gestionar pedidos y Ver datos financieros en Google Play Console.'
               : isInvalidCredentials
-                ? 'Compra bloqueada: credenciales de Google Play inválidas o cuenta de servicio sin acceso. Revisa GOOGLE_PLAY_SERVICE_ACCOUNT y el acceso API en Google Play Console.'
+                ? 'Compra bloqueada: credenciales de Google Play inválidas. Revisa GOOGLE_PLAY_SERVICE_ACCOUNT.'
                 : 'Error al procesar la compra'
         );
         return false;

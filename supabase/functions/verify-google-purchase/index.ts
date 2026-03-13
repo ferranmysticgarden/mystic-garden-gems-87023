@@ -139,6 +139,7 @@ async function verifyWithGooglePlay(
   statusCode?: number;
   reason?: 'service_disabled' | 'permission_denied' | 'invalid_credentials' | 'other';
   activationUrl?: string;
+  serviceAccountEmail?: string;
 }> {
   
   if (!serviceAccountKey) {
@@ -148,6 +149,7 @@ async function verifyWithGooglePlay(
 
   try {
     const serviceAccount = JSON.parse(serviceAccountKey);
+    const serviceAccountEmail = String(serviceAccount?.client_email ?? '');
     const tokenResponse = await getGoogleAccessToken(serviceAccount);
     if (!tokenResponse.access_token) {
       const tokenError = [tokenResponse.error, tokenResponse.error_description]
@@ -161,6 +163,7 @@ async function verifyWithGooglePlay(
         error: tokenError
           ? `Google OAuth error: ${tokenError}`
           : 'No se pudo obtener token OAuth de Google Play (credenciales inválidas).',
+        serviceAccountEmail,
       };
     }
 
@@ -204,6 +207,11 @@ async function verifyWithGooglePlay(
           message.includes('is disabled')
         );
 
+      const isPermissionDenied =
+        reasonCodes.includes('permissiondenied') ||
+        reasonCodes.includes('permission_denied') ||
+        message.includes('insufficient permissions');
+
       const activationUrl =
         googleError?.details?.find((detail: any) => detail?.metadata?.activationUrl)?.metadata?.activationUrl ??
         googleError?.details?.find((detail: any) => Array.isArray(detail?.links) && detail.links[0]?.url)?.links?.[0]?.url;
@@ -215,6 +223,17 @@ async function verifyWithGooglePlay(
           reason: 'service_disabled',
           activationUrl,
           error: 'Google Play API desactivada en el proyecto de la cuenta de servicio. Actívala en Google Cloud y espera 5 minutos.',
+          serviceAccountEmail,
+        };
+      }
+
+      if (response.status === 401 && isPermissionDenied) {
+        return {
+          valid: false,
+          statusCode: 401,
+          reason: 'permission_denied',
+          error: 'Google Play API 401: permisos insuficientes para la cuenta de servicio en Google Play Console (acceso API + Gestionar pedidos + Ver datos financieros).',
+          serviceAccountEmail,
         };
       }
 
@@ -223,16 +242,18 @@ async function verifyWithGooglePlay(
           valid: false,
           statusCode: 401,
           reason: 'invalid_credentials',
-          error: 'Google Play API 401: credenciales inválidas o cuenta de servicio no vinculada al paquete en Google Play Console.',
+          error: 'Google Play API 401: credenciales inválidas de la cuenta de servicio.',
+          serviceAccountEmail,
         };
       }
 
-      if (response.status === 403) {
+      if (response.status === 403 || isPermissionDenied) {
         return {
           valid: false,
           statusCode: 403,
           reason: 'permission_denied',
           error: 'Google Play API 403: la cuenta de servicio no tiene permisos para este paquete (revisar acceso API, Gestionar pedidos y Ver datos financieros).',
+          serviceAccountEmail,
         };
       }
 
