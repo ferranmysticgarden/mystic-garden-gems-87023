@@ -382,7 +382,7 @@ serve(async (req) => {
       userId = userData.user?.id || null;
     }
 
-    const { purchaseToken, productId: rawProductId, orderId } = await req.json();
+    const { purchaseToken, productId: rawProductId, orderId, packageName: purchasePackageName } = await req.json();
 
     if (!purchaseToken || !rawProductId) {
       return new Response(JSON.stringify({ success: false, error: "Missing purchaseToken or productId" }), {
@@ -396,7 +396,18 @@ serve(async (req) => {
     const purchaseRecordId = `gp_${purchaseKey}`;
     const isGuest = !userId;
 
-    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
+    const defaultPackageName = "com.mysticgarden.game";
+    const packageCandidates = Array.from(
+      new Set(
+        [
+          typeof purchasePackageName === "string" ? purchasePackageName.trim() : "",
+          Deno.env.get("ANDROID_PACKAGE_NAME") ?? "",
+          defaultPackageName,
+        ].filter((pkg): pkg is string => Boolean(pkg))
+      )
+    );
+
+    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}, packages=${packageCandidates.join(',')}`);
 
     const { error: auditInsertError } = await supabaseClient
       .from('app_events')
@@ -407,6 +418,7 @@ serve(async (req) => {
           rawProductId,
           orderId: orderId || null,
           purchaseTokenPrefix: purchaseToken.slice(0, 12),
+          packageCandidates,
           isGuest,
           userId,
         },
@@ -420,14 +432,36 @@ serve(async (req) => {
 
     // Verify with Google Play API (ALWAYS — this is the real security check)
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
-    const packageName = "com.mysticgarden.game";
 
-    const verification = await verifyWithGooglePlay(
-      packageName,
+    const [primaryPackageName, ...fallbackPackageNames] = packageCandidates;
+    let resolvedPackageName = primaryPackageName;
+    let verification = await verifyWithGooglePlay(
+      primaryPackageName,
       rawProductId,
       purchaseToken,
       serviceAccountKey
     );
+
+    const shouldRetryPackageFallback = (statusCode?: number) =>
+      statusCode === 401 || statusCode === 403 || statusCode === 404;
+
+    if (!verification.valid && shouldRetryPackageFallback(verification.statusCode)) {
+      for (const candidatePackageName of fallbackPackageNames) {
+        const candidateResult = await verifyWithGooglePlay(
+          candidatePackageName,
+          rawProductId,
+          purchaseToken,
+          serviceAccountKey
+        );
+
+        resolvedPackageName = candidatePackageName;
+        verification = candidateResult;
+
+        if (candidateResult.valid || !shouldRetryPackageFallback(candidateResult.statusCode)) {
+          break;
+        }
+      }
+    }
 
     if (!verification.valid) {
       console.error('[ERROR] Purchase verification failed:', verification.error);
@@ -440,6 +474,7 @@ serve(async (req) => {
             productId,
             rawProductId,
             orderId: orderId || null,
+            packageName: resolvedPackageName,
             error: verification.error || 'Purchase verification failed',
             googleStatus: verification.statusCode ?? null,
             reason: verification.reason ?? null,
@@ -464,6 +499,7 @@ serve(async (req) => {
         code: verification.statusCode ?? null,
         reason: verification.reason ?? null,
         activationUrl: verification.activationUrl ?? null,
+        packageName: resolvedPackageName,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
@@ -480,6 +516,7 @@ serve(async (req) => {
           productId,
           rawProductId,
           orderId: orderId || null,
+          packageName: resolvedPackageName,
           purchaseState: verification.purchaseState ?? null,
           consumptionState: verification.consumptionState ?? null,
           isGuest,

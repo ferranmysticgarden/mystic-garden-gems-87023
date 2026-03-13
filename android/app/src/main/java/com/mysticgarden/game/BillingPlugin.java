@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONObject;
+
 @CapacitorPlugin(name = "GooglePlayBilling")
 public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
@@ -315,10 +317,25 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
         // Build purchase data — DO NOT consume here
         // JS layer will call consumePurchase() after server verification
+        String packageName = getContext() != null ? getContext().getPackageName() : "com.mysticgarden.game";
+        try {
+            String originalJson = purchase.getOriginalJson();
+            if (originalJson != null && !originalJson.isEmpty()) {
+                JSONObject purchaseJson = new JSONObject(originalJson);
+                String packageNameFromPurchase = purchaseJson.optString("packageName", packageName);
+                if (packageNameFromPurchase != null && !packageNameFromPurchase.isEmpty()) {
+                    packageName = packageNameFromPurchase;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not extract packageName from purchase payload", e);
+        }
+
         JSObject purchaseData = new JSObject();
         purchaseData.put("purchaseToken", purchase.getPurchaseToken());
         purchaseData.put("orderId", purchase.getOrderId());
         purchaseData.put("productId", productId);
+        purchaseData.put("packageName", packageName);
         purchaseData.put("purchaseTime", purchase.getPurchaseTime());
 
         if (pendingPurchaseCall != null) {

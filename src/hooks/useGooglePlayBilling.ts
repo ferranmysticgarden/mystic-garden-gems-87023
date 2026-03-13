@@ -140,6 +140,7 @@ export const useGooglePlayBilling = () => {
             purchaseToken: purchase.purchaseToken,
             productId: purchase.productId,
             orderId: purchase.orderId,
+            packageName: purchase.packageName,
           },
         });
 
