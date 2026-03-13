@@ -396,7 +396,7 @@ const Index = () => {
   const handleDirectGoogleSignIn = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        setShowLoginPrompt('general');
+        await signInWithGoogleNative('select_account');
         return;
       }
 
