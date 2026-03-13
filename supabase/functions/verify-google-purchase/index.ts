@@ -149,6 +149,7 @@ async function verifyWithGooglePlay(
 
   try {
     const serviceAccount = JSON.parse(serviceAccountKey);
+    const serviceAccountEmail = String(serviceAccount?.client_email ?? '');
     const tokenResponse = await getGoogleAccessToken(serviceAccount);
     if (!tokenResponse.access_token) {
       const tokenError = [tokenResponse.error, tokenResponse.error_description]
@@ -162,6 +163,7 @@ async function verifyWithGooglePlay(
         error: tokenError
           ? `Google OAuth error: ${tokenError}`
           : 'No se pudo obtener token OAuth de Google Play (credenciales inválidas).',
+        serviceAccountEmail,
       };
     }
 
