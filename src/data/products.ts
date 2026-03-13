@@ -238,5 +238,46 @@ export const PRODUCTS: Product[] = [
     currency: 'EUR',
     powerups: 8, // +8 movimientos
     // + protección derrota + boosters premium (handled by webhook)
-  }
+  },
+  // MEGA PACK INICIAL - First Day Offer
+  {
+    id: 'mega_pack_inicial',
+    nameKey: 'shop.megaPackInicial',
+    name: 'Mega Pack de Bienvenida',
+    price: 0.99,
+    currency: 'EUR',
+    gems: 500,
+    lives: 10,
+    powerups: 3,
+    noAdsDays: 1,
+  },
+  // PACK REVANCHA - Lose Bundle
+  {
+    id: 'pack_revancha',
+    nameKey: 'shop.packRevancha',
+    name: 'Pack Revancha',
+    price: 0.99,
+    currency: 'EUR',
+    gems: 50,
+    lives: 5,
+    powerups: 5,
+  },
+  // LIFESAVER PACK - When out of lives
+  {
+    id: 'lifesaver_pack',
+    nameKey: 'shop.lifesaverPack',
+    name: 'Pack Salvavidas',
+    price: 0.50,
+    currency: 'EUR',
+    lives: 1,
+    powerups: 3,
+  },
+  // STREAK PROTECTION
+  {
+    id: 'streak_protection',
+    nameKey: 'shop.streakProtection',
+    name: 'Protección de Racha',
+    price: 0.50,
+    currency: 'EUR',
+  },
 ];

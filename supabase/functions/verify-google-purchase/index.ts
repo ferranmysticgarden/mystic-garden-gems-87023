@@ -14,7 +14,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "chest_gold": {},
   // Packs principales
   "mega_pack_inicial": { gems: 500, lives: 10, powerups: 3, noAdsDays: 1 },
-  "pack_revancha": { gems: 50, lives: 5 },
+  "pack_revancha": { gems: 50, lives: 5, powerups: 5 },
   "quick_pack": { lives: 3, gems: 20 },
   "gems_100": { gems: 100 },
   "gems_300": { gems: 300 },
@@ -35,7 +35,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "first_purchase": { gems: 500, lives: 20, noAdsDays: 1 },
   "extra_spin": { gems: 0 },
   "streak_protection": { gems: 0 },
-  "lifesaver_pack": { lives: 3 },
+  "lifesaver_pack": { lives: 1, powerups: 3 },
   "welcome_pack": { powerups: 5, lives: 3 },
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
