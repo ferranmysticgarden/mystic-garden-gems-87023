@@ -741,8 +741,8 @@ const Index = () => {
         />
       )}
 
-      {/* Lucky Spin - SOLO después de nivel 2 */}
-      {!isNewUser && <LuckySpin />}
+      {/* Lucky Spin - SOLO después de nivel 5 */}
+      {gameState.completedLevels.length >= 5 && <LuckySpin />}
 
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log('Tutorial completado')} />
