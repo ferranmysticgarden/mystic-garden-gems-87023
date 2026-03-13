@@ -45,11 +45,10 @@ import { SpringEvent } from '@/components/game/SpringEvent';
 import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
-import { DiscountUnlockBanner } from '@/components/game/DiscountUnlockBanner';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
 import { Level4Reward } from '@/components/game/Level4Reward';
 import { LoginPrompt } from '@/components/game/LoginPrompt';
-import { signInWithGoogleWeb } from '@/lib/googleAuth';
+import { signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from '@/lib/analytics';
 import { trackEvent } from '@/lib/trackEvent';
 import { Button } from '@/components/ui/button';
@@ -134,17 +133,12 @@ const Index = () => {
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
 
-  // Android back button: navegar hacia atrás por pantallas
+  // Android back button: navegación inmediata y salida solo en menú
   useBackButton(useCallback(() => {
-    if (screen === 'shop' || screen === 'levels') {
+    if (screen === 'shop' || screen === 'levels' || screen === 'game') {
       setScreen('menu');
       return false;
     }
-    if (screen === 'game') {
-      setShowExitModal(true);
-      return false;
-    }
-    // En menú principal: mostrar confirmación de salida
     setShowExitModal(true);
     return false;
   }, [screen, setScreen]));
@@ -184,14 +178,20 @@ const Index = () => {
     }
   }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState]);
 
-  // Auto-show streak calendar if reward available — SOLO después de nivel 2
+  // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
   useEffect(() => {
-    if (streakData.canClaimToday && user && gameState.completedLevels.length >= 2) {
-      const timer = setTimeout(() => {
-        setShowStreakCalendar(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
+    if (!streakData.canClaimToday || !user || gameState.completedLevels.length < 5) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const autoShownKey = `streak-auto-shown-${user.id}-${today}`;
+    if (localStorage.getItem(autoShownKey)) return;
+
+    const timer = setTimeout(() => {
+      setShowStreakCalendar(true);
+      localStorage.setItem(autoShownKey, 'true');
+    }, 1200);
+
+    return () => clearTimeout(timer);
   }, [streakData.canClaimToday, user, gameState.completedLevels.length]);
 
   // Schedule streak reminder if user has a streak (at 20:30 prime time)
@@ -396,7 +396,7 @@ const Index = () => {
   const handleDirectGoogleSignIn = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        setShowLoginPrompt('general');
+        await signInWithGoogleNative('select_account');
         return;
       }
 
@@ -456,8 +456,8 @@ const Index = () => {
     );
   }
 
-  // ¿Es usuario nuevo? (menos de 3 niveles completados)
-  const isNewUser = gameState.completedLevels.length < 3;
+  // ¿Es usuario nuevo? (menos de 5 niveles completados)
+  const isNewUser = gameState.completedLevels.length < 5;
 
   return (
     <div className="min-h-screen p-4 relative z-10">
@@ -741,8 +741,8 @@ const Index = () => {
         />
       )}
 
-      {/* Lucky Spin - SOLO después de nivel 2 */}
-      {!isNewUser && <LuckySpin />}
+      {/* Lucky Spin - SOLO después de nivel 5 */}
+      {gameState.completedLevels.length >= 5 && <LuckySpin />}
 
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log('Tutorial completado')} />
@@ -920,11 +920,8 @@ const Index = () => {
         />
       )}
 
-      {/* Spring Event - SOLO después de nivel 3 */}
-      {!isNewUser && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
-
-      {/* Discount Unlock Banner - SOLO después de nivel 3 */}
-      {!isNewUser && <DiscountUnlockBanner currentLevel={gameState.currentLevel} />}
+      {/* Spring Event - SOLO después de nivel 8 */}
+      {gameState.completedLevels.length >= 8 && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
     </div>
   );
 };
