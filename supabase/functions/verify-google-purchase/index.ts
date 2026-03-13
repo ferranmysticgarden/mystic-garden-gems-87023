@@ -150,7 +150,18 @@ async function verifyWithGooglePlay(
     const serviceAccount = JSON.parse(serviceAccountKey);
     const tokenResponse = await getGoogleAccessToken(serviceAccount);
     if (!tokenResponse.access_token) {
-      return { valid: false, error: 'Failed to get access token' };
+      const tokenError = [tokenResponse.error, tokenResponse.error_description]
+        .filter(Boolean)
+        .join(' - ');
+
+      return {
+        valid: false,
+        statusCode: 401,
+        reason: 'invalid_credentials',
+        error: tokenError
+          ? `Google OAuth error: ${tokenError}`
+          : 'No se pudo obtener token OAuth de Google Play (credenciales inválidas).',
+      };
     }
 
     const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
