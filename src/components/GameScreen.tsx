@@ -433,8 +433,8 @@ export const GameScreen = ({
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 pointer-events-none">
             <div className="text-center animate-scale-in">
               <div className="text-7xl mb-3">😱</div>
-              <h2 className="text-3xl font-bold text-yellow-400 drop-shadow-lg">¡Casi lo logras!</h2>
-              <p className="text-xl text-white/90 mt-2">Estuviste MUY cerca...</p>
+              <h2 className="text-3xl font-bold text-yellow-400 drop-shadow-lg">¡CASI LO CONSEGUISTE!</h2>
+              <p className="text-xl text-white/90 mt-2">Solo te faltaba un poco más...</p>
             </div>
           </div>
         )}
