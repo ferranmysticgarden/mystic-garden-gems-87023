@@ -30,8 +30,10 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
     }
   };
 
-  const shopProducts = PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
-  const premiumPacks = PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
+  const shopProducts = isNewUser 
+    ? PRODUCTS.filter(p => NEW_USER_PRODUCTS.includes(p.id))
+    : PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
+  const premiumPacks = isNewUser ? [] : PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
