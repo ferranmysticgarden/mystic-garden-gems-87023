@@ -496,6 +496,7 @@ serve(async (req) => {
         code: verification.statusCode ?? null,
         reason: verification.reason ?? null,
         activationUrl: verification.activationUrl ?? null,
+        packageName: resolvedPackageName,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
