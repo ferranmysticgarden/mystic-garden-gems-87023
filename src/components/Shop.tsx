@@ -12,7 +12,7 @@ interface ShopProps {
 
 // Products to show in main shop (exclude special offers)
 const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_ads_forever', 'garden_pass'];
-const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_racha_infinita'];
+const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_experiencia'];
 const BEST_VALUE_ID = 'gems_300';
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
@@ -83,7 +83,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
                     <div className={`absolute -top-3 left-1/2 -translate-x-1/2 ${isVictoria ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-orange-400 to-red-400'} px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg`}>
                       <Crown className="w-4 h-4 text-white" />
                       <span className="text-white text-sm font-bold">
-                        {isVictoria ? 'VICTORIA SEGURA' : 'RACHA INFINITA'}
+                        {isVictoria ? 'VICTORIA SEGURA' : 'PACK EXPERIENCIA'}
                       </span>
                     </div>
 

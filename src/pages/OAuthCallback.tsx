@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 
 const DEEPLINK_CALLBACK_BASE = 'com.mysticgarden.game://callback';
@@ -87,6 +89,39 @@ export default function OAuthCallback() {
       return;
     }
 
+    const isNativePlatform = Capacitor.isNativePlatform();
+
+    if (!isNativePlatform) {
+      const finalizeWebSession = async () => {
+        try {
+          if (parsed.code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(parsed.code);
+            if (error) throw error;
+            window.location.replace('/');
+            return;
+          }
+
+          if (parsed.accessToken && parsed.refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: parsed.accessToken,
+              refresh_token: parsed.refreshToken,
+            });
+            if (error) throw error;
+            window.location.replace('/');
+            return;
+          }
+
+          setStatus('missing');
+        } catch (error) {
+          setStatus('error');
+          setErrorMsg(error instanceof Error ? error.message : String(error));
+        }
+      };
+
+      void finalizeWebSession();
+      return;
+    }
+
     if (!deepLinkUrl) {
       setStatus('missing');
       return;
@@ -117,7 +152,7 @@ export default function OAuthCallback() {
     }, 0);
 
     return () => window.clearTimeout(id);
-  }, [androidIntentUrl, deepLinkUrl, parsed.error]);
+  }, [androidIntentUrl, deepLinkUrl, parsed.error, parsed.code, parsed.accessToken, parsed.refreshToken]);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 relative z-10">
@@ -145,6 +180,11 @@ export default function OAuthCallback() {
             type="button"
             className="w-full gradient-gold shadow-gold text-lg py-6"
             onClick={() => {
+              if (!Capacitor.isNativePlatform()) {
+                window.location.assign('/');
+                return;
+              }
+
               if (!deepLinkUrl) return;
               // En Android intent:// puede abrir más consistente.
               const isAndroid = /Android/i.test(navigator.userAgent);
@@ -162,13 +202,15 @@ export default function OAuthCallback() {
               }
               window.location.href = deepLinkUrl;
             }}
-            disabled={!deepLinkUrl}
+            disabled={Capacitor.isNativePlatform() ? !deepLinkUrl : false}
           >
-            Abrir la app
+            {Capacitor.isNativePlatform() ? 'Abrir la app' : 'Volver al juego'}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Si no se abre automáticamente, pulsa el botón. Luego la pantalla de login se cerrará sola.
+            {Capacitor.isNativePlatform()
+              ? 'Si no se abre automáticamente, pulsa el botón. Luego la pantalla de login se cerrará sola.'
+              : 'Si no vuelve solo al menú, pulsa el botón.'}
           </p>
         </div>
       </section>

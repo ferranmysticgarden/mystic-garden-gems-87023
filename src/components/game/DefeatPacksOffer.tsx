@@ -139,7 +139,7 @@ export const DefeatPacksOffer = ({
             </div>
           </div>
 
-          {/* Pack Victoria Segura Pro €2.99 */}
+          {/* Pack Victoria Segura €2.99 */}
           <div className="bg-gradient-to-r from-red-900/70 via-rose-900/70 to-pink-900/70 rounded-2xl p-4 border border-red-500/50">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -148,20 +148,20 @@ export const DefeatPacksOffer = ({
                   <span className="text-lg font-bold text-white">Pack Victoria Segura</span>
                 </div>
                 <div className="text-sm text-red-200 space-y-0.5">
-                  <p>💪 +8 movimientos</p>
+                  <p>💪 +5 movimientos</p>
+                  <p>🧰 +3 boosters</p>
                   <p>🛡️ Protección de derrota</p>
-                  <p>⚡ Boosters premium</p>
                 </div>
               </div>
               <div className="ml-4">
                 <PremiumButton
-                  onClick={() => handleBuy('pack_victoria_segura_pro')}
-                  loading={loading === 'pack_victoria_segura_pro'}
+                  onClick={() => handleBuy('pack_victoria_segura')}
+                  loading={loading === 'pack_victoria_segura'}
                   variant="red"
                   size="md"
                   className="whitespace-nowrap min-w-[100px]"
                 >
-                  {getPrice('pack_victoria_segura_pro', '€2.99')}
+                  {getPrice('pack_victoria_segura', '€2.99')}
                 </PremiumButton>
               </div>
             </div>
