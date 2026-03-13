@@ -268,7 +268,18 @@ async function verifyWithGooglePlay(
 }
 
 // Get Google OAuth access token from service account
-async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token?: string }> {
+async function getGoogleAccessToken(serviceAccount: any): Promise<{
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+}> {
+  if (!serviceAccount?.client_email || !serviceAccount?.private_key) {
+    return {
+      error: 'invalid_service_account',
+      error_description: 'Faltan client_email o private_key en GOOGLE_PLAY_SERVICE_ACCOUNT.',
+    };
+  }
+
   const now = Math.floor(Date.now() / 1000);
   const expiry = now + 3600;
 
@@ -286,13 +297,14 @@ async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token
   const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  const pemContents = serviceAccount.private_key
+  const privateKey = String(serviceAccount.private_key).replace(/\\n/g, '\n');
+  const pemContents = privateKey
     .replace('-----BEGIN PRIVATE KEY-----', '')
     .replace('-----END PRIVATE KEY-----', '')
     .replace(/\s/g, '');
-  
+
   const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-  
+
   const cryptoKey = await crypto.subtle.importKey(
     'pkcs8',
     binaryKey,
@@ -318,7 +330,16 @@ async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
 
-  return await tokenResponse.json();
+  const tokenPayload = await tokenResponse.json();
+
+  if (!tokenResponse.ok || !tokenPayload?.access_token) {
+    return {
+      error: tokenPayload?.error ?? 'oauth_token_error',
+      error_description: tokenPayload?.error_description ?? `Token endpoint HTTP ${tokenResponse.status}`,
+    };
+  }
+
+  return tokenPayload;
 }
 
 serve(async (req) => {
