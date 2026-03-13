@@ -47,9 +47,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
         <div className="text-center">
           {/* Urgency indicator */}
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
-            <span className="text-yellow-400 font-bold text-lg">¡SIN MOVIMIENTOS!</span>
-            <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
+            <span className="text-yellow-400 font-bold text-lg">¡CASI LO CONSEGUISTE!</span>
           </div>
 
           {/* Visual representation */}
