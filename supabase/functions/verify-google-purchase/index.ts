@@ -513,6 +513,7 @@ serve(async (req) => {
           productId,
           rawProductId,
           orderId: orderId || null,
+          packageName: resolvedPackageName,
           purchaseState: verification.purchaseState ?? null,
           consumptionState: verification.consumptionState ?? null,
           isGuest,
