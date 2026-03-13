@@ -198,6 +198,34 @@ export const useGooglePlayBilling = () => {
           normalizedError.includes('invalid_client') ||
           normalizedError.includes('invalid jwt');
 
+        const normalizedProductId = purchase.productId.toLowerCase().replace(/[_-]/g, '');
+        const isServerOnlyEntitlement = ['noadsmonth', 'noadsforever', 'gardenpass'].some((prefix) =>
+          normalizedProductId.startsWith(prefix)
+        );
+
+        if (isPermissionDenied && !isServerOnlyEntitlement) {
+          trackEvent('purchase_verified_degraded', {
+            platform: 'android',
+            product: purchase.productId,
+            reason: 'google_permission_denied',
+          });
+
+          try {
+            await GooglePlayBilling.consumePurchase({ purchaseToken });
+          } catch (consumeError) {
+            trackEvent('purchase_consume_failed', {
+              platform: 'android',
+              product: purchase.productId,
+              error: String(consumeError),
+              degraded_mode: true,
+            });
+          }
+
+          dispatchPurchaseCompleted(purchase.productId);
+          toast.success('¡Compra completada! (modo de respaldo activado)');
+          return true;
+        }
+
         trackEvent('purchase_verification_failed', {
           platform: 'android',
           product: purchase.productId,
