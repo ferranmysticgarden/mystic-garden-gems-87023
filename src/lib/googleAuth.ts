@@ -1,5 +1,6 @@
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 
 export const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
 
@@ -22,27 +23,24 @@ const assertValidOAuthUrl = (url: string) => {
   }
 };
 
+/**
+ * Web login: Uses Lovable Cloud managed OAuth.
+ * This handles the full redirect flow and session establishment automatically.
+ */
 export const signInWithGoogleWeb = async (redirectPath = '/', prompt = 'select_account') => {
-  const redirectTo = new URL(redirectPath, window.location.origin).toString();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo,
-      skipBrowserRedirect: true,
-      queryParams: {
-        prompt,
-      },
+  const { error } = await lovable.auth.signInWithOAuth('google', {
+    redirect_uri: window.location.origin,
+    extraParams: {
+      prompt,
     },
   });
 
   if (error) throw error;
-  if (!data?.url) throw new Error('No se pudo iniciar el login con Google.');
-
-  assertValidOAuthUrl(data.url);
-  window.location.assign(data.url);
 };
 
+/**
+ * Native (Android) login: Uses Supabase OAuth with Custom Tabs / Browser plugin.
+ */
 export const signInWithGoogleNative = async (prompt = 'select_account') => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
