@@ -137,7 +137,7 @@ async function verifyWithGooglePlay(
   purchaseState?: number;
   error?: string;
   statusCode?: number;
-  reason?: 'service_disabled' | 'permission_denied' | 'other';
+  reason?: 'service_disabled' | 'permission_denied' | 'invalid_credentials' | 'other';
   activationUrl?: string;
 }> {
   
@@ -150,7 +150,18 @@ async function verifyWithGooglePlay(
     const serviceAccount = JSON.parse(serviceAccountKey);
     const tokenResponse = await getGoogleAccessToken(serviceAccount);
     if (!tokenResponse.access_token) {
-      return { valid: false, error: 'Failed to get access token' };
+      const tokenError = [tokenResponse.error, tokenResponse.error_description]
+        .filter(Boolean)
+        .join(' - ');
+
+      return {
+        valid: false,
+        statusCode: 401,
+        reason: 'invalid_credentials',
+        error: tokenError
+          ? `Google OAuth error: ${tokenError}`
+          : 'No se pudo obtener token OAuth de Google Play (credenciales inválidas).',
+      };
     }
 
     const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
@@ -207,6 +218,15 @@ async function verifyWithGooglePlay(
         };
       }
 
+      if (response.status === 401) {
+        return {
+          valid: false,
+          statusCode: 401,
+          reason: 'invalid_credentials',
+          error: 'Google Play API 401: credenciales inválidas o cuenta de servicio no vinculada al paquete en Google Play Console.',
+        };
+      }
+
       if (response.status === 403) {
         return {
           valid: false,
@@ -248,7 +268,18 @@ async function verifyWithGooglePlay(
 }
 
 // Get Google OAuth access token from service account
-async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token?: string }> {
+async function getGoogleAccessToken(serviceAccount: any): Promise<{
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+}> {
+  if (!serviceAccount?.client_email || !serviceAccount?.private_key) {
+    return {
+      error: 'invalid_service_account',
+      error_description: 'Faltan client_email o private_key en GOOGLE_PLAY_SERVICE_ACCOUNT.',
+    };
+  }
+
   const now = Math.floor(Date.now() / 1000);
   const expiry = now + 3600;
 
@@ -266,13 +297,14 @@ async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token
   const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  const pemContents = serviceAccount.private_key
+  const privateKey = String(serviceAccount.private_key).replace(/\\n/g, '\n');
+  const pemContents = privateKey
     .replace('-----BEGIN PRIVATE KEY-----', '')
     .replace('-----END PRIVATE KEY-----', '')
     .replace(/\s/g, '');
-  
+
   const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-  
+
   const cryptoKey = await crypto.subtle.importKey(
     'pkcs8',
     binaryKey,
@@ -298,7 +330,16 @@ async function getGoogleAccessToken(serviceAccount: any): Promise<{ access_token
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
 
-  return await tokenResponse.json();
+  const tokenPayload = await tokenResponse.json();
+
+  if (!tokenResponse.ok || !tokenPayload?.access_token) {
+    return {
+      error: tokenPayload?.error ?? 'oauth_token_error',
+      error_description: tokenPayload?.error_description ?? `Token endpoint HTTP ${tokenResponse.status}`,
+    };
+  }
+
+  return tokenPayload;
 }
 
 serve(async (req) => {
@@ -416,7 +457,7 @@ serve(async (req) => {
         console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
       }
 
-      const status = verification.statusCode === 403 ? 503 : 400;
+      const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
       return new Response(JSON.stringify({
         success: false,
         error: verification.error || 'Purchase verification failed',
