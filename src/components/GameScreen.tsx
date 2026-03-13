@@ -158,8 +158,8 @@ export const GameScreen = ({
           }
         }
 
-        // Buy moves offer BEFORE defeat - SOLO nivel 5+ (embudo limpio)
-        if (level.id >= 5 && !hasShownBuyMoves.current) {
+        // Buy moves offer BEFORE defeat - TODOS los niveles (trigger principal de compra)
+        if (!hasShownBuyMoves.current) {
           hasShownBuyMoves.current = true;
           emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
           setShowBuyMovesOffer(true);
