@@ -161,11 +161,11 @@ export const PRODUCTS: Product[] = [
     powerups: 5 // +5 moves
   },
   // BUY MOVES - Before losing (0 moves) - Soft paywall €0.49
-  { 
-    id: 'buy_moves', 
+  {
+    id: 'buy_moves',
     nameKey: 'shop.buyMoves',
-    name: 'Comprar Movimientos', 
-    price: 0.50, 
+    name: 'Comprar Movimientos',
+    price: 0.49,
     currency: 'EUR',
     powerups: 5
   },
