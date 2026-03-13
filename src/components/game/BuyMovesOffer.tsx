@@ -59,10 +59,10 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
           {isSoftPaywall ? (
             <>
               <p className="text-white text-lg mb-1">
-                ¡A solo <span className="text-yellow-400 font-bold">{movesShort}</span> {movesShort === 1 ? 'movimiento' : 'movimientos'}!
+                ¡Solo te faltaba <span className="text-yellow-400 font-bold">{movesShort}</span> {movesShort === 1 ? 'movimiento' : 'movimientos'}!
               </p>
               <p className="text-purple-200 text-sm mb-4">
-                Todo tu progreso está ahí...
+                Todo tu progreso se perderá...
               </p>
             </>
           ) : (
