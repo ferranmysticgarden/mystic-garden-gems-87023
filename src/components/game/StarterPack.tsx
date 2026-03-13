@@ -189,7 +189,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 mb-4 border-2 border-yellow-400/50 backdrop-blur-sm">
+            <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 mb-4 border-2 border-yellow-400/50">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Gift className="w-7 h-7 text-yellow-400 animate-bounce" />
                 <h3 className="text-xl font-bold text-white">
