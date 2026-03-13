@@ -456,8 +456,8 @@ const Index = () => {
     );
   }
 
-  // ¿Es usuario nuevo? (menos de 3 niveles completados)
-  const isNewUser = gameState.completedLevels.length < 3;
+  // ¿Es usuario nuevo? (menos de 5 niveles completados)
+  const isNewUser = gameState.completedLevels.length < 5;
 
   return (
     <div className="min-h-screen p-4 relative z-10">
