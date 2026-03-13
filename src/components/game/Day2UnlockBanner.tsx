@@ -85,7 +85,7 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg p-4 animate-in fade-in duration-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 animate-in fade-in duration-700">
       <div className={`relative bg-gradient-to-b from-purple-900 via-indigo-900 to-purple-950 rounded-3xl p-6 max-w-sm w-full border-4 border-yellow-400 shadow-2xl transition-all duration-700 ${animationPhase >= 1 ? 'scale-100 opacity-100' : 'scale-50 opacity-0'} ${showGlow ? 'shadow-yellow-500/60 shadow-2xl' : ''}`}>
         {showGlow && (
           <>

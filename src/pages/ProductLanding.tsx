@@ -153,7 +153,7 @@ export default function ProductLanding() {
           </div>
 
           {/* Price */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 backdrop-blur-sm">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
             {discount > 0 && (
               <p className="text-white/30 line-through text-lg mb-1">€34,99</p>
             )}

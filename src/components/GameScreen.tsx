@@ -158,8 +158,8 @@ export const GameScreen = ({
           }
         }
 
-        // Buy moves offer BEFORE defeat - SOLO nivel 5+ (embudo limpio)
-        if (level.id >= 5 && !hasShownBuyMoves.current) {
+        // Buy moves offer BEFORE defeat - TODOS los niveles (trigger principal de compra)
+        if (!hasShownBuyMoves.current) {
           hasShownBuyMoves.current = true;
           emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
           setShowBuyMovesOffer(true);
@@ -430,11 +430,11 @@ export const GameScreen = ({
 
         {/* Near Win Emotional Message */}
         {showNearWinMessage && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 pointer-events-none">
             <div className="text-center animate-scale-in">
               <div className="text-7xl mb-3">😱</div>
-              <h2 className="text-3xl font-bold text-yellow-400 drop-shadow-lg">¡Casi lo logras!</h2>
-              <p className="text-xl text-white/90 mt-2">Estuviste MUY cerca...</p>
+              <h2 className="text-3xl font-bold text-yellow-400 drop-shadow-lg">¡CASI LO CONSEGUISTE!</h2>
+              <p className="text-xl text-white/90 mt-2">Solo te faltaba un poco más...</p>
             </div>
           </div>
         )}

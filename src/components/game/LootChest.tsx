@@ -155,7 +155,7 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
       <div className="relative bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 max-w-md w-full border-4 border-purple-400 shadow-2xl max-h-[90vh] overflow-y-auto">
         <button 
           onClick={onClose}

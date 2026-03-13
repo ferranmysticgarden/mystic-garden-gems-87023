@@ -20,7 +20,7 @@ export const FloatingParticles = () => {
       'rgba(255, 255, 255, 0.5)', // white
     ];
     
-    return Array.from({ length: 30 }, (_, i): Particle => ({
+    return Array.from({ length: 12 }, (_, i): Particle => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,

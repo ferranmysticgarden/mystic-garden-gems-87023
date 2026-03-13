@@ -268,10 +268,10 @@ const Index = () => {
       setShowFirstWin(true);
     }
 
-    // Show Starter Pack ONLY after level 3 win (única oferta temprana)
-    if (currentLevel.id === 3) {
-      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: 3 });
-      trackEvent('offer_shown', { product: 'starter_pack', level: 3 });
+    // Show Starter Pack ONLY after level 4 win (primera oferta del embudo)
+    if (currentLevel.id === 4) {
+      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'starter_pack', level: 4 });
+      trackEvent('offer_shown', { product: 'starter_pack', level: 4 });
       setTimeout(() => setShowStarterPack(true), 2000);
     }
     
@@ -294,8 +294,8 @@ const Index = () => {
     // Track consecutive losses for flash offer
     setConsecutiveLosses(prev => {
       const newCount = prev + 1;
-      // Show flash offer after 2 consecutive losses, ONLY level 5+
-      if (newCount >= 2 && currentLevel.id >= 5) {
+      // Show flash offer after 3 consecutive losses (frustration pack), ONLY level 5+
+      if (newCount >= 3 && currentLevel.id >= 5) {
         setTimeout(() => setShowFlashOffer(true), 1000);
       }
       return newCount;
@@ -671,6 +671,7 @@ const Index = () => {
         <Shop
           onClose={() => setScreen('menu')}
           onPurchase={handlePurchase}
+          isNewUser={isNewUser}
         />
       )}
 
@@ -680,6 +681,11 @@ const Index = () => {
           gems={gameState.gems}
           onUseGems={handleUseGemsForLife}
           onClose={() => setShowNoLivesModal(false)}
+          onUnlimitedLivesPurchased={() => {
+            activateUnlimitedLives(0.5); // 30 minutes
+            toast.success('¡Vidas Infinitas activadas! 30 minutos ❤️∞');
+            setShowNoLivesModal(false);
+          }}
           onQuickLifePurchased={handleQuickLifePurchased}
         />
       )}
@@ -725,7 +731,7 @@ const Index = () => {
         />
       )}
 
-      {/* Starter Pack - después de nivel 2-4 win */}
+      {/* Starter Pack - después de nivel 4 win */}
       {showStarterPack && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}

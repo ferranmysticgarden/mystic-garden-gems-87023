@@ -53,7 +53,7 @@ export const DefeatPacksOffer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 animate-fade-in">
       <div className="relative max-w-md mx-4 w-full">
         {/* Close button */}
         <button 

@@ -56,7 +56,7 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300">
       <div className="bg-gradient-to-b from-pink-900 via-purple-900 to-indigo-900 rounded-3xl p-6 max-w-sm w-full border-4 border-pink-400/50 shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex justify-end mb-2">
           <button onClick={handleDismiss} className="text-white/50 hover:text-white">

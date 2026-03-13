@@ -41,14 +41,14 @@ export const DailyStreakCalendar = ({ onClose, onRewardClaimed }: DailyStreakCal
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
         <div className="animate-spin text-4xl">🔥</div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
       <div className="bg-gradient-to-b from-orange-900 via-red-900 to-purple-900 rounded-3xl p-6 max-w-md w-full border-4 border-orange-400 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

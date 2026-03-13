@@ -76,7 +76,7 @@ export const ComeBackBanner = ({ onClaimReward }: ComeBackBannerProps) => {
   const reward = calculateReward();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
       <div className="bg-gradient-to-b from-emerald-900 via-teal-900 to-blue-900 rounded-3xl p-6 max-w-sm w-full border-4 border-emerald-400 shadow-2xl">
         <div className="flex justify-end">
           <button onClick={handleDismiss} className="text-white/50 hover:text-white">

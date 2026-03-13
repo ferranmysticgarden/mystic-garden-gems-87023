@@ -8,14 +8,18 @@ import { usePayment } from '@/hooks/usePayment';
 interface ShopProps {
   onClose: () => void;
   onPurchase: (productId: string) => void;
+  isNewUser?: boolean;
 }
+
+// Products for new users (max 3 - simple)
+const NEW_USER_PRODUCTS = ['starter_pack', 'gems_100', 'no_ads_forever'];
 
 // Products to show in main shop (exclude special offers)
 const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_ads_forever', 'garden_pass'];
 const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_experiencia'];
 const BEST_VALUE_ID = 'gems_300';
 
-export const Shop = ({ onClose, onPurchase }: ShopProps) => {
+export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
   const { createPayment, getPrice, loading } = usePayment();
 
@@ -26,11 +30,13 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
     }
   };
 
-  const shopProducts = PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
-  const premiumPacks = PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
+  const shopProducts = isNewUser 
+    ? PRODUCTS.filter(p => NEW_USER_PRODUCTS.includes(p.id))
+    : PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
+  const premiumPacks = isNewUser ? [] : PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
       <div className="bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-purple-500/30 shadow-2xl shadow-purple-900/50">
         {/* Header Premium */}
         <div className="flex items-center justify-between mb-6">

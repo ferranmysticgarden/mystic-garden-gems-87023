@@ -14,7 +14,7 @@ interface StarterPackProps {
 
 export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: StarterPackProps) => {
   const [show, setShow] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds (más urgencia)
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible'>('entering');
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
@@ -22,8 +22,8 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const price = getPrice('starter_pack', '€0.99');
 
   useEffect(() => {
-    // Trigger SOLO después de nivel 3 (única oferta temprana del embudo)
-    if (levelJustCompleted !== 3) return;
+    // Trigger SOLO después de nivel 4 (única oferta temprana del embudo)
+    if (levelJustCompleted !== 4) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
@@ -113,7 +113,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       {/* Animación de entrada "cae del cielo" */}
       <div 
         className={`relative max-w-sm mx-4 transition-all duration-700 ease-out ${
@@ -189,7 +189,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 mb-4 border-2 border-yellow-400/50 backdrop-blur-sm">
+            <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 mb-4 border-2 border-yellow-400/50">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Gift className="w-7 h-7 text-yellow-400 animate-bounce" />
                 <h3 className="text-xl font-bold text-white">

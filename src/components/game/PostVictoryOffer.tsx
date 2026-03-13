@@ -27,7 +27,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
   const price = getPrice('victory_multiplier', '€0.99');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-green-900 via-emerald-900 to-teal-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-green-400 shadow-2xl animate-scale-in overflow-hidden">
         {/* Celebration particles */}
         <div className="absolute inset-0 overflow-hidden">

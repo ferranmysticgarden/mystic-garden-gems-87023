@@ -60,7 +60,7 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200">
       <div className={`relative bg-gradient-to-b from-amber-900 via-yellow-900 to-orange-900 rounded-3xl p-6 max-w-sm w-full border-4 ${showPulse ? 'border-red-400 animate-pulse' : 'border-yellow-400'} shadow-2xl shadow-yellow-500/30 animate-in zoom-in-95 duration-300`}>
         
         {/* Floating particles */}

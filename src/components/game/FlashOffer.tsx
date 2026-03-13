@@ -53,7 +53,7 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-red-900 via-orange-900 to-yellow-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-yellow-400 shadow-2xl animate-scale-in">
         {/* Pulsing border effect */}
         <div className="absolute inset-0 rounded-3xl border-4 border-yellow-400/50 animate-pulse" />

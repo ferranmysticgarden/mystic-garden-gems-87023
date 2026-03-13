@@ -78,7 +78,7 @@ export const Level10Paywall = ({
   const displayProgress = Math.max(90, Math.min(98, progressPercent));
 
   return (
-    <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] backdrop-blur-md">
+    <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100]">
       <div className="gradient-card rounded-3xl p-6 max-w-sm w-full mx-4 border-2 border-gold/50 shadow-2xl text-center relative overflow-hidden">
         <button 
           onClick={handleClose}

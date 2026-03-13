@@ -12,7 +12,7 @@ export const AchievementModal = ({ achievement, onClose }: AchievementModalProps
   const { t } = useLanguage();
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 animate-fade-in">
       <div className="bg-gradient-to-b from-purple-900 to-indigo-900 rounded-3xl p-8 max-w-sm mx-4 border-4 border-yellow-400 shadow-2xl animate-scale-in">
         <div className="flex justify-center mb-4">
           <div className="bg-yellow-400 rounded-full p-4">

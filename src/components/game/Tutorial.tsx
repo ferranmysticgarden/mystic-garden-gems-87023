@@ -70,7 +70,7 @@ export const Tutorial = ({ onComplete }: TutorialProps) => {
   const step = STEPS[currentStep];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="bg-gradient-to-b from-purple-900 to-indigo-900 rounded-3xl p-8 max-w-sm mx-4 border-4 border-purple-400 shadow-2xl animate-scale-in">
         <div className="text-6xl text-center mb-6">
           {step.image}

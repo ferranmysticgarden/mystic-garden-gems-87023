@@ -35,10 +35,10 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
     }
   };
 
-  const price = getPrice('buy_moves', '€0.50');
+  const price = getPrice('buy_moves', '€0.49');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div 
         className={`relative bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 max-w-sm mx-4 border-4 transition-all duration-300 ${
           pulse ? 'border-yellow-400 shadow-2xl shadow-yellow-500/30' : 'border-yellow-500/50 shadow-xl'
@@ -47,9 +47,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
         <div className="text-center">
           {/* Urgency indicator */}
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
-            <span className="text-yellow-400 font-bold text-lg">¡SIN MOVIMIENTOS!</span>
-            <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
+            <span className="text-yellow-400 font-bold text-lg">¡CASI LO CONSEGUISTE!</span>
           </div>
 
           {/* Visual representation */}
@@ -61,19 +59,19 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
           {isSoftPaywall ? (
             <>
               <p className="text-white text-lg mb-1">
-                ¡A solo <span className="text-yellow-400 font-bold">{movesShort}</span> {movesShort === 1 ? 'movimiento' : 'movimientos'}!
+                ¡Solo te faltaba <span className="text-yellow-400 font-bold">{movesShort}</span> {movesShort === 1 ? 'movimiento' : 'movimientos'}!
               </p>
               <p className="text-purple-200 text-sm mb-4">
-                Todo tu progreso está ahí...
+                Todo tu progreso se perderá...
               </p>
             </>
           ) : (
             <>
               <p className="text-white text-lg mb-2">
-                No es una derrota aún...
+                ¡CASI LO CONSEGUISTE!
               </p>
               <p className="text-purple-200 mb-4">
-                ¡Puedes continuar!
+                Solo te faltaba un poco más...
               </p>
             </>
           )}
@@ -99,7 +97,8 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
             ) : (
               <span className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5" />
-                {isSoftPaywall ? '¡CONTINUAR!' : '¡SEGUIR JUGANDO!'}
+                {isSoftPaywall ? '¡CONTINUAR!' : 'CONTINUAR'}
+                <span className="ml-1">{price}</span>
               </span>
             )}
           </Button>
@@ -110,7 +109,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
               onClick={onDismiss}
               className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
             >
-              Aceptar derrota
+              PERDER NIVEL
             </button>
           )}
           
@@ -120,7 +119,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
               onClick={onDismiss}
               className="text-white/20 hover:text-white/40 text-xs transition-colors mt-2"
             >
-              Perder todo el progreso
+              PERDER NIVEL
             </button>
           )}
         </div>
