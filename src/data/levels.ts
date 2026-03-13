@@ -25,8 +25,8 @@ export const LEVELS: Level[] = [
   { id: 4, objective: { type: 'score', target: 'points', count: 800 }, moves: 24, stars: { one: 800, two: 1100, three: 1400 }, reward: { gems: 10 } },
   { id: 5, objective: { type: 'collect', target: '🌺', count: 8 }, moves: 20, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
   
-  // Nivel 6: Transición - todavía ganable pero ajustado
-  { id: 6, objective: { type: 'collect', target: '🌼', count: 9 }, moves: 25, stars: { one: 9, two: 11, three: 13 }, reward: {} },
+  // Nivel 6: Transición - todavía ganable pero ajustado (primer bloqueo real inminente)
+  { id: 6, objective: { type: 'collect', target: '🌼', count: 10 }, moves: 22, stars: { one: 10, two: 12, three: 14 }, reward: {} },
   
   // Niveles 7-10: SPIKE DE DIFICULTAD - generar "casi" para monetización
   // -2 movimientos y +10-15% objetivo vs antes
