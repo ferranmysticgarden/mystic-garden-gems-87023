@@ -23,7 +23,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
   useEffect(() => {
     // Trigger SOLO después de nivel 4 (única oferta temprana del embudo)
-    if (levelJustCompleted !== 3) return;
+    if (levelJustCompleted !== 4) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
