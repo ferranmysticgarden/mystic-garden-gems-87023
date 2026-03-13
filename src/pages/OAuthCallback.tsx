@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 
 const DEEPLINK_CALLBACK_BASE = 'com.mysticgarden.game://callback';

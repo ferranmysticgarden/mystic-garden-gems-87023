@@ -12,7 +12,7 @@ interface ShopProps {
 
 // Products to show in main shop (exclude special offers)
 const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_ads_forever', 'garden_pass'];
-const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_racha_infinita'];
+const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_experiencia'];
 const BEST_VALUE_ID = 'gems_300';
 
 export const Shop = ({ onClose, onPurchase }: ShopProps) => {
