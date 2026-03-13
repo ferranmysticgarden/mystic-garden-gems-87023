@@ -731,7 +731,7 @@ const Index = () => {
         />
       )}
 
-      {/* Starter Pack - después de nivel 2-4 win */}
+      {/* Starter Pack - después de nivel 4 win */}
       {showStarterPack && (
         <StarterPack 
           levelJustCompleted={lastCompletedLevel}
