@@ -113,7 +113,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       {/* Animación de entrada "cae del cielo" */}
       <div 
         className={`relative max-w-sm mx-4 transition-all duration-700 ease-out ${
