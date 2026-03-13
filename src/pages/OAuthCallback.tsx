@@ -180,6 +180,11 @@ export default function OAuthCallback() {
             type="button"
             className="w-full gradient-gold shadow-gold text-lg py-6"
             onClick={() => {
+              if (!Capacitor.isNativePlatform()) {
+                window.location.assign('/');
+                return;
+              }
+
               if (!deepLinkUrl) return;
               // En Android intent:// puede abrir más consistente.
               const isAndroid = /Android/i.test(navigator.userAgent);
@@ -197,13 +202,15 @@ export default function OAuthCallback() {
               }
               window.location.href = deepLinkUrl;
             }}
-            disabled={!deepLinkUrl}
+            disabled={Capacitor.isNativePlatform() ? !deepLinkUrl : false}
           >
-            Abrir la app
+            {Capacitor.isNativePlatform() ? 'Abrir la app' : 'Volver al juego'}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Si no se abre automáticamente, pulsa el botón. Luego la pantalla de login se cerrará sola.
+            {Capacitor.isNativePlatform()
+              ? 'Si no se abre automáticamente, pulsa el botón. Luego la pantalla de login se cerrará sola.'
+              : 'Si no vuelve solo al menú, pulsa el botón.'}
           </p>
         </div>
       </section>
