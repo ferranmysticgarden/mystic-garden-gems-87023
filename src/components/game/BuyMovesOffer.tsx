@@ -109,7 +109,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
               onClick={onDismiss}
               className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
             >
-              Aceptar derrota
+              PERDER NIVEL
             </button>
           )}
           
