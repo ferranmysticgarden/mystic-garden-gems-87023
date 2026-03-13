@@ -13,6 +13,7 @@ export interface PurchaseResult {
   purchaseToken: string;
   orderId: string;
   productId: string;
+  packageName?: string;
   purchaseTime: number;
 }
 
