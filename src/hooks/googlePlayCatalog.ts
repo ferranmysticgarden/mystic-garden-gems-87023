@@ -1,13 +1,6 @@
 import { PRODUCTS } from '@/data/products';
 
-const EXTRA_PRODUCT_IDS = [
-  'mega_pack_inicial',
-  'pack_revancha',
-  'lifesaver_pack',
-  'streak_protection',
-  'extra_spin',
-  'chest_wooden',
-] as const;
+// EXTRA_PRODUCT_IDS ya no es necesario — todos los productos están en PRODUCTS
 
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   welcome_pack: ['welcomepack'],
