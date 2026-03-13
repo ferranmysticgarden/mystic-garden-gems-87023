@@ -17,12 +17,13 @@ export interface Level {
 }
 
 export const LEVELS: Level[] = [
-  // Niveles 1-5: MUY FÁCILES - enganchar al jugador
-  { id: 1, objective: { type: 'score', target: 'points', count: 500 }, moves: 30, stars: { one: 500, two: 800, three: 1000 }, reward: { gems: 10 } },
-  { id: 2, objective: { type: 'collect', target: '🌸', count: 5 }, moves: 25, stars: { one: 5, two: 7, three: 10 }, reward: { gems: 5 } },
-  { id: 3, objective: { type: 'collect', target: '🍃', count: 6 }, moves: 22, stars: { one: 6, two: 8, three: 10 }, reward: { gems: 5 } },
-  { id: 4, objective: { type: 'score', target: 'points', count: 700 }, moves: 28, stars: { one: 700, two: 1000, three: 1300 }, reward: { gems: 10 } },
-  { id: 5, objective: { type: 'collect', target: '🌺', count: 6 }, moves: 22, stars: { one: 6, two: 8, three: 10 }, reward: { gems: 5 } },
+  // Niveles 1-3: MUY FÁCILES - enganchar al jugador, victoria garantizada
+  { id: 1, objective: { type: 'score', target: 'points', count: 400 }, moves: 35, stars: { one: 400, two: 600, three: 800 }, reward: { gems: 10 } },
+  { id: 2, objective: { type: 'collect', target: '🌸', count: 4 }, moves: 30, stars: { one: 4, two: 6, three: 8 }, reward: { gems: 5 } },
+  { id: 3, objective: { type: 'collect', target: '🍃', count: 5 }, moves: 28, stars: { one: 5, two: 7, three: 9 }, reward: { gems: 5 } },
+  // Niveles 4-6: Ligeramente difíciles - primera frustración leve
+  { id: 4, objective: { type: 'score', target: 'points', count: 800 }, moves: 24, stars: { one: 800, two: 1100, three: 1400 }, reward: { gems: 10 } },
+  { id: 5, objective: { type: 'collect', target: '🌺', count: 8 }, moves: 20, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
   
   // Nivel 6: Transición - todavía ganable pero ajustado
   { id: 6, objective: { type: 'collect', target: '🌼', count: 9 }, moves: 25, stars: { one: 9, two: 11, three: 13 }, reward: {} },
