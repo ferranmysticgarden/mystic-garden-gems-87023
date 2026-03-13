@@ -57,7 +57,7 @@ export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) =>
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 animate-fade-in">
       <div className="relative bg-gradient-to-b from-indigo-900 via-purple-900 to-indigo-900 rounded-2xl p-6 max-w-sm mx-4 border-2 border-purple-400/50 shadow-2xl animate-scale-in">
         <button
           onClick={onClose}

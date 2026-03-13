@@ -151,7 +151,7 @@ export const DailyMissions = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
       <div className="relative bg-gradient-to-b from-blue-900 via-indigo-900 to-purple-900 rounded-3xl p-6 max-w-sm w-full border-4 border-blue-400 shadow-2xl">
         <button 
           onClick={onClose}

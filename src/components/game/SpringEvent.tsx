@@ -80,7 +80,7 @@ export const SpringEvent = ({ onClose }: SpringEventProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 p-4">
       <div className="relative bg-gradient-to-b from-pink-900 via-rose-900 to-purple-900 rounded-3xl p-6 max-w-sm w-full border-4 border-pink-400 shadow-2xl overflow-hidden">
         {/* Floating petals */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
