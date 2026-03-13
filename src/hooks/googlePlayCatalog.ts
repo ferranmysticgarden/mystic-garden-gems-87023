@@ -67,10 +67,7 @@ export const getGooglePlayCandidates = (productId: string): string[] => {
   ]);
 };
 
-const KNOWN_PRODUCT_IDS = unique([
-  ...PRODUCTS.map((product) => product.id),
-  ...EXTRA_PRODUCT_IDS,
-]);
+const KNOWN_PRODUCT_IDS = PRODUCTS.map((product) => product.id);
 
 export const getGooglePlayQueryProductIds = (): string[] => {
   return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getPrimaryGooglePlayCandidates(productId)));
