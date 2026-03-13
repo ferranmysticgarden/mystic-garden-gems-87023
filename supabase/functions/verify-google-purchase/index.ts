@@ -14,7 +14,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "chest_gold": {},
   // Packs principales
   "mega_pack_inicial": { gems: 500, lives: 10, powerups: 3, noAdsDays: 1 },
-  "pack_revancha": { gems: 50, lives: 5 },
+  "pack_revancha": { gems: 50, lives: 5, powerups: 5 },
   "quick_pack": { lives: 3, gems: 20 },
   "gems_100": { gems: 100 },
   "gems_300": { gems: 300 },
