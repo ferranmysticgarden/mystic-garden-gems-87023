@@ -457,7 +457,7 @@ serve(async (req) => {
         console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
       }
 
-      const status = verification.statusCode === 403 ? 503 : 400;
+      const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
       return new Response(JSON.stringify({
         success: false,
         error: verification.error || 'Purchase verification failed',
