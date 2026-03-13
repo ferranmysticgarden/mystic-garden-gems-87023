@@ -97,7 +97,8 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
             ) : (
               <span className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5" />
-                {isSoftPaywall ? '¡CONTINUAR!' : '¡SEGUIR JUGANDO!'}
+                {isSoftPaywall ? '¡CONTINUAR!' : 'CONTINUAR'}
+                <span className="ml-1">{price}</span>
               </span>
             )}
           </Button>
