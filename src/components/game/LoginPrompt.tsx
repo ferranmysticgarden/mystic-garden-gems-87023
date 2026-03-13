@@ -42,7 +42,7 @@ export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) =>
 
   if (showAuth) {
     return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 animate-fade-in">
         <div className="relative w-full max-w-sm mx-4">
           <button
             onClick={onClose}
