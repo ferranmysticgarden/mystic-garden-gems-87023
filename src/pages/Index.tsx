@@ -133,17 +133,12 @@ const Index = () => {
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
 
-  // Android back button: navegar hacia atrás por pantallas
+  // Android back button: navegación inmediata y salida solo en menú
   useBackButton(useCallback(() => {
-    if (screen === 'shop' || screen === 'levels') {
+    if (screen === 'shop' || screen === 'levels' || screen === 'game') {
       setScreen('menu');
       return false;
     }
-    if (screen === 'game') {
-      setShowExitModal(true);
-      return false;
-    }
-    // En menú principal: mostrar confirmación de salida
     setShowExitModal(true);
     return false;
   }, [screen, setScreen]));
