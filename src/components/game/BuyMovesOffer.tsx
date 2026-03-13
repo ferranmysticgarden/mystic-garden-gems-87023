@@ -38,7 +38,7 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
   const price = getPrice('buy_moves', '€0.50');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div 
         className={`relative bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 max-w-sm mx-4 border-4 transition-all duration-300 ${
           pulse ? 'border-yellow-400 shadow-2xl shadow-yellow-500/30' : 'border-yellow-500/50 shadow-xl'

@@ -30,7 +30,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
   const price = getPrice('lifesaver_pack', '€0.50');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-red-900 via-pink-900 to-purple-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-red-400 shadow-2xl animate-scale-in">
         <button 
           onClick={onDismiss}

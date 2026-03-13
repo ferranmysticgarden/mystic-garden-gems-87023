@@ -30,7 +30,7 @@ export const Shop = ({ onClose, onPurchase }: ShopProps) => {
   const premiumPacks = PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
       <div className="bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-purple-500/30 shadow-2xl shadow-purple-900/50">
         {/* Header Premium */}
         <div className="flex items-center justify-between mb-6">
