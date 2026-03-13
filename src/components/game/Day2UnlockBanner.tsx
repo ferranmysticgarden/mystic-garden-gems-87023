@@ -61,29 +61,13 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
       scalar: 1.5,
     });
     
-    const duration = 3000;
-    const end = Date.now() + duration;
-    const frame = () => {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 45,
-        origin: { x: 0, y: 0.5 },
-        colors: ['#FFD700', '#FFA500'],
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 45,
-        origin: { x: 1, y: 0.5 },
-        colors: ['#FFD700', '#FFA500'],
-      });
-      
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    };
-    frame();
+    confetti({
+      particleCount: 45,
+      spread: 90,
+      origin: { y: 0.5 },
+      colors: ['#FFD700', '#FFA500'],
+      scalar: 1.1,
+    });
 
     localStorage.setItem(`day2-mega-claimed-${odId}`, 'true');
     

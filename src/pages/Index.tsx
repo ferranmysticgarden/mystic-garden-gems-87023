@@ -920,11 +920,8 @@ const Index = () => {
         />
       )}
 
-      {/* Spring Event - SOLO después de nivel 3 */}
-      {!isNewUser && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
-
-      {/* Discount Unlock Banner - SOLO después de nivel 3 */}
-      {!isNewUser && <DiscountUnlockBanner currentLevel={gameState.currentLevel} />}
+      {/* Spring Event - SOLO después de nivel 8 */}
+      {gameState.completedLevels.length >= 8 && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
     </div>
   );
 };

@@ -169,6 +169,8 @@ export const LuckySpin = () => {
   const handleSpin = async () => {
     if (!canSpin || spinning) return;
 
+    localStorage.setItem(`last-spin-${odId}`, new Date().toISOString());
+    setCanSpin(false);
     setSpinning(true);
     setReward(null);
     

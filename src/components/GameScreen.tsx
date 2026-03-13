@@ -355,7 +355,7 @@ export const GameScreen = ({
               {t('game.level')} {level.id}
             </h2>
             <button 
-              onClick={onShowExitModal} 
+              onClick={onBack} 
               className="w-10 h-10 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 active:scale-90 transition-transform duration-100"
               aria-label="Salir del nivel"
             >
