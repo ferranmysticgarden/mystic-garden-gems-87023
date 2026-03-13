@@ -89,6 +89,39 @@ export default function OAuthCallback() {
       return;
     }
 
+    const isNativePlatform = Capacitor.isNativePlatform();
+
+    if (!isNativePlatform) {
+      const finalizeWebSession = async () => {
+        try {
+          if (parsed.code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(parsed.code);
+            if (error) throw error;
+            window.location.replace('/');
+            return;
+          }
+
+          if (parsed.accessToken && parsed.refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: parsed.accessToken,
+              refresh_token: parsed.refreshToken,
+            });
+            if (error) throw error;
+            window.location.replace('/');
+            return;
+          }
+
+          setStatus('missing');
+        } catch (error) {
+          setStatus('error');
+          setErrorMsg(error instanceof Error ? error.message : String(error));
+        }
+      };
+
+      void finalizeWebSession();
+      return;
+    }
+
     if (!deepLinkUrl) {
       setStatus('missing');
       return;
@@ -119,7 +152,7 @@ export default function OAuthCallback() {
     }, 0);
 
     return () => window.clearTimeout(id);
-  }, [androidIntentUrl, deepLinkUrl, parsed.error]);
+  }, [androidIntentUrl, deepLinkUrl, parsed.error, parsed.code, parsed.accessToken, parsed.refreshToken]);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 relative z-10">
