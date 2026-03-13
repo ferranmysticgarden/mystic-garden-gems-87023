@@ -471,6 +471,7 @@ serve(async (req) => {
             productId,
             rawProductId,
             orderId: orderId || null,
+            packageName: resolvedPackageName,
             error: verification.error || 'Purchase verification failed',
             googleStatus: verification.statusCode ?? null,
             reason: verification.reason ?? null,
