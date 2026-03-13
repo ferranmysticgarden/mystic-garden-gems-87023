@@ -163,7 +163,7 @@ export const VisualGarden = ({ levelsCompleted, maxLevel = 50 }: VisualGardenPro
         )}
         
         {/* Stage badge */}
-        <div className="absolute top-1 left-1 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1">
+        <div className="absolute top-1 left-1 bg-black/60 rounded-lg px-2 py-1 flex items-center gap-1">
           <span className="text-lg">{garden.emoji}</span>
           <span className="text-white text-xs font-semibold">{garden.name}</span>
         </div>

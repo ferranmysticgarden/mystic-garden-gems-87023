@@ -51,7 +51,7 @@ export const StreakProtectionOffer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-orange-900 via-red-900 to-purple-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-orange-400 shadow-2xl animate-scale-in">
         <button 
           onClick={onDismiss}

@@ -37,7 +37,7 @@ export const ContinueGameOffer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 animate-fade-in">
       <div className="relative max-w-sm mx-4 text-center">
         {/* Slow fade in animation for emotional impact */}
         <div className="animate-scale-in" style={{ animationDuration: '0.8s' }}>
