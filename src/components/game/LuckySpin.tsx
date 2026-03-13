@@ -137,11 +137,18 @@ export const LuckySpin = () => {
   }, [playTickSound, playVictorySound]);
 
   useEffect(() => {
-    const checkAvailability = async () => {
+    const checkAvailability = () => {
       const lastSpin = localStorage.getItem(`last-spin-${odId}`);
+      const promptKey = `last-spin-prompt-${odId}`;
+      const today = new Date().toISOString().split('T')[0];
+      const promptedToday = localStorage.getItem(promptKey) === today;
+
+      if (promptedToday) return;
+
       if (!lastSpin) {
         setCanSpin(true);
         setShow(true);
+        localStorage.setItem(promptKey, today);
         return;
       }
 
@@ -152,6 +159,7 @@ export const LuckySpin = () => {
       if (diffHours >= 24) {
         setCanSpin(true);
         setShow(true);
+        localStorage.setItem(promptKey, today);
       }
     };
 

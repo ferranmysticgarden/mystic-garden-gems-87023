@@ -24,35 +24,27 @@ export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProp
 
   useEffect(() => {
     const day2ClaimedKey = `day2-mega-claimed-${odId}`;
+    const today = new Date().toISOString().split('T')[0];
+    const day2ShownKey = `day2-mega-shown-${odId}-${today}`;
     const alreadyClaimed = localStorage.getItem(day2ClaimedKey);
+    const alreadyShownToday = localStorage.getItem(day2ShownKey);
 
-    if ((streak === 2 || streak === 3) && !alreadyClaimed) {
+    if ((streak === 2 || streak === 3) && !alreadyClaimed && !alreadyShownToday) {
       const timer = setTimeout(() => {
+        localStorage.setItem(day2ShownKey, 'true');
         setShow(true);
         setTimeout(() => setAnimationPhase(1), 200);
         setTimeout(() => setAnimationPhase(2), 600);
         setTimeout(() => setAnimationPhase(3), 1000);
         setTimeout(() => setShowGlow(true), 1200);
-        
-        const duration = 3000;
-        const end = Date.now() + duration;
-        
-        const goldenRain = () => {
-          confetti({
-            particleCount: 3,
-            angle: 90,
-            spread: 180,
-            origin: { y: -0.1 },
-            colors: ['#FFD700', '#FFA500', '#FFE55C'],
-            gravity: 0.8,
-            scalar: 1.2,
-          });
-          
-          if (Date.now() < end) {
-            requestAnimationFrame(goldenRain);
-          }
-        };
-        goldenRain();
+
+        confetti({
+          particleCount: 18,
+          spread: 70,
+          origin: { y: 0.2 },
+          colors: ['#FFD700', '#FFA500', '#FFE55C'],
+          scalar: 1,
+        });
       }, 2000);
       return () => clearTimeout(timer);
     }
