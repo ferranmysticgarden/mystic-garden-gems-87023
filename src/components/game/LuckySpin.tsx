@@ -33,18 +33,15 @@ export const LuckySpin = () => {
 
   const odId = user?.id || 'guest';
 
-  // Detect pending extra_spin purchase from Stripe redirect
+  // Listen for extra_spin purchase completion event (works for both Android and Web)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get('payment');
-    
-    if (paymentStatus === 'success') {
+    const handler = () => {
       try {
         const saved = localStorage.getItem('pending_purchase_state');
         if (saved) {
           const state = JSON.parse(saved);
           if (state.productId === 'extra_spin') {
-            console.log('[LUCKY_SPIN] Extra spin detected from Stripe redirect');
+            console.log('[LUCKY_SPIN] Extra spin purchase completed');
             setExtraSpinAvailable(true);
             setCanSpin(true);
             setShow(true);
@@ -53,9 +50,12 @@ export const LuckySpin = () => {
           }
         }
       } catch (e) {
-        console.error('[LUCKY_SPIN] Error checking pending purchase:', e);
+        console.error('[LUCKY_SPIN] Error handling extra_spin:', e);
       }
-    }
+    };
+    
+    window.addEventListener('first_purchase_completed', handler);
+    return () => window.removeEventListener('first_purchase_completed', handler);
   }, []);
 
   // Handler para giro extra
@@ -350,22 +350,23 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   const price = getPrice('extra_spin', '€0.50');
 
   const handleBuy = async () => {
+    // Save pending state ONLY for web Stripe redirect
     localStorage.setItem('pending_purchase_state', JSON.stringify({
       productId: 'extra_spin',
       timestamp: Date.now(),
-      levelId: 0,
-      moves: 0,
-      score: 0,
-      collected: {},
     }));
     
     const success = await createPayment('extra_spin');
     if (success) {
+      // Android path: success = true means Google Play verified
       console.log('[PURCHASE] success confirmed via ExtraSpin');
       dispatchPurchaseCompleted('extra_spin');
       console.log('[PURCHASE] gate unlocked');
+      localStorage.removeItem('pending_purchase_state');
       onBuy();
     }
+    // Web path: createPayment returns false (redirect), 
+    // purchase is handled by usePendingPurchase + verify-stripe-purchase
   };
 
   return (

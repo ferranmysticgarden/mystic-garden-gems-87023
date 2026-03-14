@@ -210,10 +210,6 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
                   <span className="text-xl">🔨</span>
                   <span className="font-bold text-blue-300 text-sm">3 Power-ups</span>
                 </div>
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">✨</span>
-                  <span className="font-bold text-purple-300 text-sm">1 Revive</span>
-                </div>
               </div>
               
               {/* Precio con valor percibido aumentado */}

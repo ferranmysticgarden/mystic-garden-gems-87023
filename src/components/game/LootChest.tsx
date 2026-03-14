@@ -135,21 +135,25 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
       }, 2000);
     } else {
       // Paid chest - use unified payment
+      // On Android, success=true means Google Play verified and rewards granted server-side
+      // On Web, success=false (Stripe redirect) — webhook handles rewards
       setLoadingChest(chest.id);
       const success = await createPayment(`chest_${chest.id}`);
       if (success) {
+        // Android path: purchase verified
         console.log('[PURCHASE] success confirmed via LootChest');
         dispatchPurchaseCompleted(`chest_${chest.id}`);
         console.log('[PURCHASE] gate unlocked');
-        // Payment initiated successfully
         setOpening(chest.id);
         setTimeout(() => {
           const rewardResult = getRandomReward(chest);
           setReward(rewardResult);
+          // Chest rewards are randomized client-side (backend has empty reward for chests)
           if (onRewardClaimed) onRewardClaimed(rewardResult.gems, rewardResult.lives);
           setOpening(null);
         }, 2000);
       }
+      // Web path: redirect happened, no action needed here
       setLoadingChest(null);
     }
   };
@@ -177,7 +181,6 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
             <div className="flex justify-center gap-4 text-white">
               {reward.gems > 0 && <span className="text-lg">💎 {reward.gems}</span>}
               {reward.lives > 0 && <span className="text-lg">❤️ {reward.lives}</span>}
-              {reward.noAdsMins > 0 && <span className="text-lg">🚫 {reward.noAdsMins}m</span>}
             </div>
             <Button 
               onClick={() => setReward(null)}
@@ -205,6 +208,7 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
                     <p className="text-white/70 text-sm">
                       💎 {chest.rewards.gems[0]}-{chest.rewards.gems[1]} | 
                       ❤️ {chest.rewards.lives[0]}-{chest.rewards.lives[1]}
+                      {chest.rewards.noAdsMins[1] > 0 ? '' : ''}
                     </p>
                   </div>
                 </div>

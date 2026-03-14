@@ -824,6 +824,9 @@ const Index = () => {
             addGems(gems);
             addLives(lives);
             if (powerUps?.hammers) {
+              for (let i = 0; i < powerUps.hammers; i++) {
+                addHammer();
+              }
               toast.success(`¡MEGA REGALO Día ${streakData.currentStreak}! +${gems}💎 +${lives}❤️ +${powerUps.hammers}🔨`);
             } else {
               toast.success(`¡Regalo Día ${streakData.currentStreak} reclamado! +${gems}💎 +${lives}❤️`);

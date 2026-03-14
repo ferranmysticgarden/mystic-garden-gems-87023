@@ -160,13 +160,10 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
                           <>
                             <li className="flex items-center gap-2">✓ +5 movimientos extra</li>
                             <li className="flex items-center gap-2">✓ +3 boosters</li>
-                            <li className="flex items-center gap-2">✓ Protección de derrota 1x</li>
                           </>
                         ) : (
                           <>
-                            <li className="flex items-center gap-2">✓ Protección de racha</li>
-                            <li className="flex items-center gap-2">✓ +2 vidas</li>
-                            <li className="flex items-center gap-2">✓ 1 giro extra ruleta</li>
+                            <li className="flex items-center gap-2">✓ +2 vidas extra</li>
                           </>
                         )}
                       </ul>
