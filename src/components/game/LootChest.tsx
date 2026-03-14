@@ -209,6 +209,7 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
                     <p className="text-white/70 text-sm">
                       💎 {chest.rewards.gems[0]}-{chest.rewards.gems[1]} | 
                       ❤️ {chest.rewards.lives[0]}-{chest.rewards.lives[1]}
+                      {chest.rewards.noAdsMins[1] > 0 ? '' : ''}
                     </p>
                   </div>
                 </div>

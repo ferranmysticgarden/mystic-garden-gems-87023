@@ -104,12 +104,6 @@ export const FirstSessionReward = ({ levelJustCompleted, onClaim, onClose }: Fir
                 <div className="text-2xl font-bold text-red-400">+5</div>
                 <div className="text-xs text-white/60">Vidas</div>
               </div>
-              <div className="text-3xl text-yellow-400">+</div>
-              <div className="text-center">
-                <div className="text-4xl mb-1 animate-bounce" style={{ animationDelay: '0.4s' }}>📦</div>
-                <div className="text-xl font-bold text-amber-400">1x</div>
-                <div className="text-xs text-white/60">Cofre</div>
-              </div>
             </div>
           </div>
 

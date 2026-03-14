@@ -31,18 +31,17 @@ interface Stats {
   todayRevenue: number;
 }
 
-const PRODUCT_PRICES: Record<string, number> = {
-  "gems_100": 0.99,
-  "gems_300": 3.99,
-  "gems_1200": 9.99,
-  "no_ads_month": 4.99,
-  "no_ads_forever": 9.99,
-  "garden_pass": 9.99,
-  "starter_pack": 0.99,
-  "continue_game": 0.99,
-  "buy_moves": 0.99,
-  "quick_life": 0.20,
-};
+// Revenue calculation uses actual prices from products catalog
+import { PRODUCTS } from '@/data/products';
+
+const PRODUCT_PRICES: Record<string, number> = Object.fromEntries(
+  PRODUCTS.map(p => [p.id, p.price])
+);
+// Also map stripe-prefixed IDs
+PRODUCTS.forEach(p => {
+  PRODUCT_PRICES[`stripe_${p.id}`] = p.price;
+  PRODUCT_PRICES[`gp_${p.id}`] = p.price;
+});
 
 const PRODUCT_NAMES: Record<string, string> = {
   "gems_100": "100 Gemas",

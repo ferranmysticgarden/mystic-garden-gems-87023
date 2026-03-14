@@ -148,7 +148,6 @@ export const DefeatPacksOffer = ({
                 <div className="text-sm text-red-200 space-y-0.5">
                   <p>💪 +5 movimientos</p>
                   <p>🧰 +3 boosters</p>
-                  <p>🛡️ Protección de derrota</p>
                 </div>
               </div>
               <div className="ml-4">
