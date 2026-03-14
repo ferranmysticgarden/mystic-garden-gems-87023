@@ -108,7 +108,7 @@ const Index = () => {
   const [showPostVictoryOffer, setShowPostVictoryOffer] = useState(false);
   const [showDailyMissions, setShowDailyMissions] = useState(false);
   const [showLootChest, setShowLootChest] = useState(false);
-  const [showSpringEvent, setShowSpringEvent] = useState(false);
+  const [springEventDismissed, setSpringEventDismissed] = useState(false);
   const [showStarterPack, setShowStarterPack] = useState(false);
   const [lastCompletedLevel, setLastCompletedLevel] = useState(0);
   const [lastWinGems, setLastWinGems] = useState(0);
