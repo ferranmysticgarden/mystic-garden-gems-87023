@@ -1,6 +1,5 @@
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable';
 
 export const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
 
