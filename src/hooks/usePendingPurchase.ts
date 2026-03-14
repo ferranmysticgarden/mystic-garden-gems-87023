@@ -44,7 +44,7 @@ export const usePendingPurchase = () => {
       if (savedState && user) {
         // VERIFICAR con backend antes de desbloquear
         setVerifying(true);
-        verifyStripePurchase(savedState.productId).then((verified) => {
+        verifyStripePurchase(savedState.productId, sessionId).then((verified) => {
           if (verified) {
             setPendingState(savedState);
             setPaymentSuccess(true);
