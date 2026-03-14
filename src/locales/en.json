@@ -41,7 +41,9 @@
     "purchased": "Purchase successful!",
     "packImpulso": "Boost Pack",
     "packExperiencia": "Experience Pack",
-    "packVictoriaSeguraPro": "Sure Victory Pack"
+    "packVictoriaSeguraPro": "Sure Victory Pack",
+    "extraSpin": "Extra Spin",
+    "unlimitedLives30": "Unlimited Lives 30m"
   },
   "powerups": {
     "hammer": "Hammer",

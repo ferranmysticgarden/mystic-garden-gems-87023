@@ -41,7 +41,9 @@
     "purchased": "Compra realizada com sucesso!",
     "packImpulso": "Pacote Impulso",
     "packExperiencia": "Pacote Experiência",
-    "packVictoriaSeguraPro": "Pacote Vitória Segura"
+    "packVictoriaSeguraPro": "Pacote Vitória Segura",
+    "extraSpin": "Giro Extra",
+    "unlimitedLives30": "Vidas Ilimitadas 30min"
   },
   "powerups": {
     "hammer": "Martelo",
