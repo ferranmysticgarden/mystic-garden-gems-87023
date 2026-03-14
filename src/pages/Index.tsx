@@ -356,13 +356,16 @@ const Index = () => {
 
     // Powerups (distribute evenly across hammer, shuffle, undo)
     if (product.powerups) {
-      const perType = Math.ceil(product.powerups / 3);
+      const perType = Math.floor(product.powerups / 3);
+      const remainder = product.powerups % 3;
       for (let i = 0; i < perType; i++) {
         addHammer();
         addShuffle();
         addUndo();
       }
-      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} per type)`);
+      if (remainder >= 1) addHammer();
+      if (remainder >= 2) addShuffle();
+      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} base per type, ${remainder} extra)`);
     }
 
     // Entitlements de compras premium (sin ads / pass) se conceden en backend tras verificación
