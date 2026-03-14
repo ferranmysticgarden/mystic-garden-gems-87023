@@ -844,9 +844,11 @@ const Index = () => {
       {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
-            // welcome_pack: 5 powerups, 3 lives
-            addLives(3);
-            addHammer(); addHammer(); addShuffle(); addShuffle(); addUndo();
+            if (shouldApplyClientPersistentRewards) {
+              // welcome_pack: 5 powerups, 3 lives
+              addLives(3);
+              addHammer(); addHammer(); addShuffle(); addShuffle(); addUndo();
+            }
             toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters');
             setShowWelcomeOffer(false);
           }}
