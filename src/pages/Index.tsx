@@ -154,30 +154,34 @@ const Index = () => {
     collected: Record<string, number>;
   } | null>(null);
 
-  // Detectar pago exitoso y restaurar estado del nivel
+  // Detectar pago Stripe verificado y restaurar efecto correcto por producto
   useEffect(() => {
-    if (paymentSuccess && pendingState) {
-      console.log('[Index] Pago exitoso detectado, restaurando nivel:', pendingState.levelId);
-      
-      // Seleccionar el nivel donde estaba
+    if (!paymentSuccess || !pendingState) return;
+
+    const { productId } = pendingState;
+    console.log('[Index] Pago Stripe verificado, aplicando producto:', productId);
+
+    if (['buy_moves', 'finish_level', 'continue_game'].includes(productId)) {
       selectLevel(pendingState.levelId);
-      
-      // Guardar estado para pasar a GameScreen
       setRestoredGameState({
-        moves: 5, // +5 movimientos comprados
+        moves: 5,
         score: pendingState.score,
         collected: pendingState.collected,
       });
-      
-      // Cambiar a pantalla de juego
       setScreen('game');
-      
-      // Limpiar estado pendiente
-      clearPendingState();
-      
-      toast.success('¡Pago completado! +5 movimientos');
+      toast.success('¡Pago verificado! +5 movimientos');
+    } else if (productId === 'reward_doubler') {
+      addGems(50);
+      toast.success('¡Pago verificado! +50💎');
+    } else if (productId === 'extra_spin') {
+      window.dispatchEvent(new Event('first_purchase_completed'));
+      toast.success('¡Pago verificado! Giro extra desbloqueado');
+    } else {
+      toast.success('¡Pago verificado!');
     }
-  }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState]);
+
+    clearPendingState();
+  }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState, addGems]);
 
   // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
   useEffect(() => {

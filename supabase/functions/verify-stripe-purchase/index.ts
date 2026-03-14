@@ -39,46 +39,41 @@ serve(async (req) => {
     }
     const userId = data.user.id;
 
-    const { productId } = await req.json();
+    const { productId, sessionId } = await req.json();
     if (!productId || typeof productId !== "string") {
       throw new Error("productId is required");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Find the most recent completed checkout session for this user+product
-    const sessions = await stripe.checkout.sessions.list({
-      limit: 10,
-    });
-
-    let matchedSession: Stripe.Checkout.Session | null = null;
-    for (const session of sessions.data) {
-      if (
-        session.metadata?.user_id === userId &&
-        session.metadata?.product_id === productId &&
-        session.payment_status === "paid" &&
-        session.status === "complete"
-      ) {
-        matchedSession = session;
-        break;
-      }
+    if (!sessionId || typeof sessionId !== "string") {
+      throw new Error("sessionId is required");
     }
 
-    if (!matchedSession) {
-      console.log(`[verify-stripe] No paid session found for user=${userId}, product=${productId}`);
-      return new Response(JSON.stringify({ verified: false, error: "No completed payment found" }), {
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    const verified =
+      session.payment_status === "paid" &&
+      session.status === "complete" &&
+      session.metadata?.user_id === userId &&
+      session.metadata?.product_id === productId;
+
+    if (!verified) {
+      console.log(`[verify-stripe] Verification failed for session=${sessionId}, user=${userId}, product=${productId}`);
+      return new Response(JSON.stringify({ verified: false, error: "Payment not verified" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    console.log(`[verify-stripe] ✅ Found paid session ${matchedSession.id} for product=${productId}`);
+    console.log(`[verify-stripe] ✅ Verified paid session ${session.id} for product=${productId}`);
 
     return new Response(JSON.stringify({
       verified: true,
       productId,
-      sessionId: matchedSession.id,
-      amountPaid: (matchedSession.amount_total || 0) / 100,
+      sessionId: session.id,
+      amountPaid: (session.amount_total || 0) / 100,
+      paymentIntent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface ChestType {
   id: string;
@@ -61,12 +60,11 @@ interface LootChestProps {
 
 export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   const { user } = useAuth();
-  const { createPayment, loading: paymentLoading, getPrice } = usePayment();
+  const { getPrice } = usePayment();
   const [opening, setOpening] = useState<string | null>(null);
   const [freeChestAvailable, setFreeChestAvailable] = useState(false);
   const [freeChestTimeLeft, setFreeChestTimeLeft] = useState('');
   const [reward, setReward] = useState<{ gems: number; lives: number; noAdsMins: number } | null>(null);
-  const [loadingChest, setLoadingChest] = useState<string | null>(null);
 
   // Set music to chest volume when open
   useEffect(() => {
@@ -134,27 +132,9 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
         checkFreeChest();
       }, 2000);
     } else {
-      // Paid chest - use unified payment
-      // On Android, success=true means Google Play verified and rewards granted server-side
-      // On Web, success=false (Stripe redirect) — webhook handles rewards
-      setLoadingChest(chest.id);
-      const success = await createPayment(`chest_${chest.id}`);
-      if (success) {
-        // Android path: purchase verified
-        console.log('[PURCHASE] success confirmed via LootChest');
-        dispatchPurchaseCompleted(`chest_${chest.id}`);
-        console.log('[PURCHASE] gate unlocked');
-        setOpening(chest.id);
-        setTimeout(() => {
-          const rewardResult = getRandomReward(chest);
-          setReward(rewardResult);
-          // Chest rewards are randomized client-side (backend has empty reward for chests)
-          if (onRewardClaimed) onRewardClaimed(rewardResult.gems, rewardResult.lives);
-          setOpening(null);
-        }, 2000);
-      }
-      // Web path: redirect happened, no action needed here
-      setLoadingChest(null);
+      // Paid chests temporarily disabled until deterministic backend reward grant exists
+      toast.error('Los cofres de pago están temporalmente desactivados para evitar cobros sin recompensa persistente.');
+      return;
     }
   };
 
@@ -208,7 +188,6 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
                     <p className="text-white/70 text-sm">
                       💎 {chest.rewards.gems[0]}-{chest.rewards.gems[1]} | 
                       ❤️ {chest.rewards.lives[0]}-{chest.rewards.lives[1]}
-                      {chest.rewards.noAdsMins[1] > 0 ? '' : ''}
                     </p>
                   </div>
                 </div>
@@ -239,10 +218,9 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
                   ) : (
                     <Button
                       onClick={() => handleOpenChest(chest)}
-                      disabled={loadingChest === chest.id || paymentLoading}
                       className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
                     >
-                      {loadingChest === chest.id ? '...' : `${getPrice(`chest_${chest.id}`, `€${chest.price}`)}`}
+                      {`${getPrice(`chest_${chest.id}`, `€${chest.price}`)}`}
                     </Button>
                   )}
                 </div>

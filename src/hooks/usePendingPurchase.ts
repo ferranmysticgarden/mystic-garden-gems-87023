@@ -33,7 +33,7 @@ export const usePendingPurchase = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
-    
+    const sessionId = urlParams.get('session_id');
     if (paymentStatus === 'success') {
       // Limpiar URL inmediatamente
       const newUrl = window.location.pathname;
@@ -44,7 +44,7 @@ export const usePendingPurchase = () => {
       if (savedState && user) {
         // VERIFICAR con backend antes de desbloquear
         setVerifying(true);
-        verifyStripePurchase(savedState.productId).then((verified) => {
+        verifyStripePurchase(savedState.productId, sessionId).then((verified) => {
           if (verified) {
             setPendingState(savedState);
             setPaymentSuccess(true);
@@ -70,10 +70,11 @@ export const usePendingPurchase = () => {
     }
   }, [user]);
 
-  const verifyStripePurchase = async (productId: string): Promise<boolean> => {
+  const verifyStripePurchase = async (productId: string, sessionId: string | null): Promise<boolean> => {
+    if (!sessionId) return false;
     try {
       const { data, error } = await supabase.functions.invoke('verify-stripe-purchase', {
-        body: { productId },
+        body: { productId, sessionId },
       });
       
       if (error) {
