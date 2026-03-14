@@ -131,6 +131,9 @@ const Index = () => {
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
 
+  // Evitar doble grant en Android autenticado: rewards persistentes solo backend
+  const shouldApplyClientPersistentRewards = !(user && Capacitor.getPlatform() === 'android');
+
   // Android back button: navegación inmediata y salida solo en menú
   useBackButton(useCallback(() => {
     if (screen === 'shop' || screen === 'levels' || screen === 'game') {
