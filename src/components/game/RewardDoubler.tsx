@@ -115,23 +115,16 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
             </div>
             
             {/* Arrow animation */}
-            <div className="text-4xl animate-pulse">➡️</div>
+            <div className="text-4xl animate-pulse">+</div>
             
-            {/* Doubled reward */}
+            {/* Bonus reward */}
             <div className="text-center transform scale-110">
-              <p className="text-green-400 text-sm font-bold mb-1">x2</p>
+              <p className="text-green-400 text-sm font-bold mb-1">BONUS</p>
               <div className="flex items-center gap-1">
                 <span className="text-4xl">💎</span>
-                <span className="text-3xl font-black text-green-400">{doubledGems}</span>
+                <span className="text-3xl font-black text-green-400">+50</span>
               </div>
             </div>
-          </div>
-
-          {/* Visual chests */}
-          <div className="flex justify-center gap-4 mt-4">
-            <div className="text-4xl animate-bounce" style={{ animationDelay: '0ms' }}>🎁</div>
-            <div className="text-5xl animate-bounce" style={{ animationDelay: '150ms' }}>🎁</div>
-            <div className="text-4xl animate-bounce" style={{ animationDelay: '300ms' }}>🎁</div>
           </div>
         </div>
 
