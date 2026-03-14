@@ -11,8 +11,8 @@ const corsHeaders = {
 const PRODUCT_PRICES: Record<string, string> = {
   // Gemas
   "gems_100": "price_1TAmg2B6GI8NmIPniADboyZd",
-  "gems_300": "price_1TAmgxPxvUpv2yakYJAjaVX6",
-  "gems_1200": "price_1TAmhRPxvUpv2yakvEomJw5i",
+  "gems_300": "price_1TAolMB6GI8NmIPny1IrmuBB",
+  "gems_1200": "price_1TAolePxvUpv2yakP3PQuSyE",
   // Sin anuncios
   "no_ads_month": "price_1TAmhnB6GI8NmIPnuKlcpjCa",
   "no_ads_forever": "price_1TAmiAB6GI8NmIPn8WG1DdLD",
