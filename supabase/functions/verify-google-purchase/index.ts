@@ -227,22 +227,17 @@ async function verifyWithGooglePlay(
         };
       }
 
-      if (response.status === 401 && isPermissionDenied) {
-        return {
-          valid: false,
-          statusCode: 401,
-          reason: 'permission_denied',
-          error: 'Google Play API 401: permisos insuficientes para la cuenta de servicio en Google Play Console (acceso API + Gestionar pedidos + Ver datos financieros).',
-          serviceAccountEmail,
-        };
-      }
-
       if (response.status === 401) {
+        // ALL 401 errors indicate permission/credential issues — classify as permission_denied
+        // so degraded mode can activate on the client side
+        const specificReason = isPermissionDenied ? 'permission_denied' : 'permission_denied';
         return {
           valid: false,
           statusCode: 401,
-          reason: 'invalid_credentials',
-          error: 'Google Play API 401: credenciales inválidas de la cuenta de servicio.',
+          reason: specificReason,
+          error: isPermissionDenied
+            ? 'Google Play API 401: permisos insuficientes para la cuenta de servicio en Google Play Console (acceso API + Gestionar pedidos + Ver datos financieros).'
+            : 'Google Play API 401: permisos insuficientes o credenciales inválidas de la cuenta de servicio.',
           serviceAccountEmail,
         };
       }
