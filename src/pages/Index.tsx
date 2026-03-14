@@ -124,8 +124,6 @@ const Index = () => {
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
 
-  // State for level 4 micro-reward
-  const [showLevel4Reward, setShowLevel4Reward] = useState(false);
 
   // State for login prompt (guest mode)
   const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | 'general' | null>(null);
