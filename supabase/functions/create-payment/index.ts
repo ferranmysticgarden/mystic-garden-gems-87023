@@ -11,8 +11,8 @@ const corsHeaders = {
 const PRODUCT_PRICES: Record<string, string> = {
   // Gemas
   "gems_100": "price_1TAmg2B6GI8NmIPniADboyZd",
-  "gems_300": "price_1TAmgxPxvUpv2yakYJAjaVX6",
-  "gems_1200": "price_1TAmhRPxvUpv2yakvEomJw5i",
+  "gems_300": "price_1TAolMB6GI8NmIPny1IrmuBB",
+  "gems_1200": "price_1TAolePxvUpv2yakP3PQuSyE",
   // Sin anuncios
   "no_ads_month": "price_1TAmhnB6GI8NmIPnuKlcpjCa",
   "no_ads_forever": "price_1TAmiAB6GI8NmIPn8WG1DdLD",
@@ -29,14 +29,14 @@ const PRODUCT_PRICES: Record<string, string> = {
   "continue_game": "price_1TAmnjB6GI8NmIPnEZouUfqq",
   "flash_offer": "price_1TAmmsB6GI8NmIPnATdkUxno",
   // Micro-transacciones €0.50
-  "buy_moves": "price_1TAmoUPxvUpv2yakjusoqZZb",
+  "buy_moves": "price_1TAolzB6GI8NmIPn3ayBTFXP",
   "welcome_pack": "price_1TAmowB6GI8NmIPnYWc5k1NH",
   "extra_spin": "price_1TAmpDB6GI8NmIPnpIoVj1KV",
   "streak_protection": "price_1TAleoB6GI8NmIPn2iCVKVc3",
   "lifesaver_pack": "price_1TAlfFB6GI8NmIPnKkd6j757",
   "reward_doubler": "price_1TAlfXB6GI8NmIPnOsSnbulR",
   // Extra products (aliases)
-  "extra_moves": "price_1TAmoUPxvUpv2yakjusoqZZb",
+  "extra_moves": "price_1TAolzB6GI8NmIPn3ayBTFXP",
   "first_purchase": "price_1TAmowB6GI8NmIPnYWc5k1NH",
   // Vidas infinitas 30min (web)
   "unlimited_lives_30min": "price_1TAlfrB6GI8NmIPnuJjK1pUf",
@@ -96,6 +96,36 @@ serve(async (req) => {
 
     const FALLBACK_PRICE_DATA: Record<string, { amount: number; name: string }> = {
       gems_100: { amount: 99, name: "100 Gems" },
+      gems_300: { amount: 299, name: "300 Gems" },
+      gems_1200: { amount: 999, name: "1200 Gems" },
+      buy_moves: { amount: 50, name: "Buy Moves" },
+      extra_moves: { amount: 50, name: "Extra Moves" },
+      quick_pack: { amount: 99, name: "Quick Pack" },
+      starter_pack: { amount: 199, name: "Starter Pack" },
+      continue_game: { amount: 50, name: "Continue Game" },
+      welcome_pack: { amount: 50, name: "Welcome Pack" },
+      flash_offer: { amount: 50, name: "Flash Offer" },
+      victory_multiplier: { amount: 50, name: "Victory Multiplier" },
+      finish_level: { amount: 50, name: "Finish Level" },
+      no_ads_month: { amount: 199, name: "No Ads Month" },
+      no_ads_forever: { amount: 499, name: "No Ads Forever" },
+      garden_pass: { amount: 299, name: "Garden Pass" },
+      lifesaver_pack: { amount: 50, name: "Lifesaver Pack" },
+      streak_protection: { amount: 50, name: "Streak Protection" },
+      extra_spin: { amount: 50, name: "Extra Spin" },
+      reward_doubler: { amount: 50, name: "Reward Doubler" },
+      unlimited_lives_30min: { amount: 50, name: "Unlimited Lives 30min" },
+      chest_silver: { amount: 199, name: "Chest Silver" },
+      chest_gold: { amount: 399, name: "Chest Gold" },
+      mega_pack_inicial: { amount: 299, name: "Mega Pack" },
+      pack_revancha: { amount: 99, name: "Pack Revancha" },
+      first_day_offer: { amount: 99, name: "First Day Offer" },
+      pack_victoria_segura: { amount: 299, name: "Pack Victoria Segura" },
+      pack_racha_infinita: { amount: 199, name: "Pack Racha Infinita" },
+      pack_impulso: { amount: 199, name: "Pack Impulso" },
+      pack_experiencia: { amount: 299, name: "Pack Experiencia" },
+      pack_victoria_segura_pro: { amount: 399, name: "Pack Victoria Segura Pro" },
+      first_purchase: { amount: 50, name: "First Purchase Pack" },
     };
     const fallback = FALLBACK_PRICE_DATA[productId];
 
