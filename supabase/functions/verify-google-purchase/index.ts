@@ -170,7 +170,9 @@ async function verifyWithGooglePlay(
       };
     }
 
-    const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
+    const encodedToken = encodeURIComponent(purchaseToken);
+    const encodedProductId = encodeURIComponent(productId);
+    const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${encodedProductId}/tokens/${encodedToken}`;
     
     const response = await fetch(apiUrl, {
       headers: {
