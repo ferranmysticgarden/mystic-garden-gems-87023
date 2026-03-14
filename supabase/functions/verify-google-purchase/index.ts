@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Product rewards configuration (canonical app IDs)
-const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
+const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean; unlimitedLivesMinutes?: number }> = {
   // Cofres (reward granted client-side, randomized)
   "chest_wooden": {},
   "chest_silver": {},
