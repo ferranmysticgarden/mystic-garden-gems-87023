@@ -33,8 +33,6 @@ interface Stats {
 }
 
 // Revenue calculation uses actual prices from products catalog
-import { PRODUCTS } from '@/data/products';
-
 const PRODUCT_PRICES: Record<string, number> = Object.fromEntries(
   PRODUCTS.map(p => [p.id, p.price])
 );

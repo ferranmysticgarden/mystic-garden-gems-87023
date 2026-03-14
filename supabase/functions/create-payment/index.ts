@@ -145,7 +145,7 @@ serve(async (req) => {
         customer_email: customerId ? undefined : user.email,
         line_items: lineItems,
         mode: "payment",
-        success_url: `${origin}/?payment=success`,
+        success_url: `${origin}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/?payment=cancel`,
         metadata: {
           user_id: user.id,

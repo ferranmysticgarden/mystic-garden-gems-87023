@@ -70,10 +70,11 @@ export const usePendingPurchase = () => {
     }
   }, [user]);
 
-  const verifyStripePurchase = async (productId: string): Promise<boolean> => {
+  const verifyStripePurchase = async (productId: string, sessionId: string | null): Promise<boolean> => {
+    if (!sessionId) return false;
     try {
       const { data, error } = await supabase.functions.invoke('verify-stripe-purchase', {
-        body: { productId },
+        body: { productId, sessionId },
       });
       
       if (error) {
