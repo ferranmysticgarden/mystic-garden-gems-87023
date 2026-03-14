@@ -218,10 +218,9 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
                   ) : (
                     <Button
                       onClick={() => handleOpenChest(chest)}
-                      disabled={loadingChest === chest.id || paymentLoading}
                       className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
                     >
-                      {loadingChest === chest.id ? '...' : `${getPrice(`chest_${chest.id}`, `€${chest.price}`)}`}
+                      {`${getPrice(`chest_${chest.id}`, `€${chest.price}`)}`}
                     </Button>
                   )}
                 </div>
