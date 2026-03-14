@@ -330,29 +330,35 @@ const Index = () => {
   };
 
   const handlePurchase = async (productId: string) => {
+    // For authenticated users on Android, rewards are granted server-side.
+    // Only apply local grants for:
+    //  - Web Stripe purchases (redirects away, webhook handles DB, but we refresh state on return)
+    //  - Guest purchases (no server-side DB to update)
+    const isAndroidPlatform = Capacitor.getPlatform() === 'android';
+
+    if (user && isAndroidPlatform) {
+      // Authenticated Android: server already granted rewards in verify-google-purchase.
+      // Just refresh game state from DB.
+      console.log('[PURCHASE] Authenticated Android — rewards granted server-side, skipping local grants');
+      setScreen('menu');
+      return;
+    }
+
+    // Guest or Web: apply local grants
     const product = PRODUCTS.find(p => p.id === productId);
     if (!product) return;
 
-    // Gems (amount = pure gem packs, instantGems = bonus gems in bundles)
-    if (product.amount) {
-      addGems(product.amount);
-    }
-    if (product.instantGems) {
-      addGems(product.instantGems);
-    }
-    if (product.gems) {
-      addGems(product.gems);
-    }
+    if (product.amount) addGems(product.amount);
+    if (product.instantGems) addGems(product.instantGems);
+    if (product.gems) addGems(product.gems);
 
-    // Lives
     if (product.lives && product.lives !== 'unlimited') {
       addLives(product.lives);
     }
     if (product.lives === 'unlimited') {
-      activateUnlimitedLives(24);
+      activateUnlimitedLives(0.5); // 30 minutes = 0.5 hours
     }
 
-    // Powerups (distribute evenly across hammer, shuffle, undo)
     if (product.powerups) {
       const perType = Math.floor(product.powerups / 3);
       const remainder = product.powerups % 3;
@@ -363,11 +369,7 @@ const Index = () => {
       }
       if (remainder >= 1) addHammer();
       if (remainder >= 2) addShuffle();
-      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} base per type, ${remainder} extra)`);
     }
-
-    // Entitlements de compras premium (sin ads / pass) se conceden en backend tras verificación
-    // para evitar auto-concesión desde cliente.
 
     setScreen('menu');
   };
