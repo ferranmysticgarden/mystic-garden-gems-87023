@@ -705,10 +705,13 @@ const Index = () => {
           onClose={() => setShowBattlePass(false)}
           hasPremiumAccess={hasActiveProduct('garden_pass')}
           onPurchaseSuccess={() => {
-            // garden_pass: 1000 gems, 30 days no ads (NOT unlimited lives)
-            addGems(1000);
-            // no_ads is handled server-side via no_ads_until
-            toast.success('¡Battle Pass Premium activado! +1000💎 +30 días sin ads');
+            if (shouldApplyClientPersistentRewards) {
+              // garden_pass: 1000 gems, 30 days no ads
+              addGems(1000);
+              toast.success('¡Battle Pass Premium activado! +1000💎 +30 días sin ads');
+            } else {
+              toast.success('¡Battle Pass Premium activado!');
+            }
           }}
         />
       )}
