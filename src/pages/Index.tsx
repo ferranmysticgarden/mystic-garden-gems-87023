@@ -885,9 +885,11 @@ const Index = () => {
             setConsecutiveLosses(0);
           }}
           onPurchaseSuccess={() => {
-            // flash_offer: 10 lives, 150 gems
-            addLives(10);
-            addGems(150);
+            if (shouldApplyClientPersistentRewards) {
+              // flash_offer: 10 lives, 150 gems
+              addLives(10);
+              addGems(150);
+            }
             toast.success('¡Pack Relámpago activado! +10❤️ +150💎');
           }}
         />
