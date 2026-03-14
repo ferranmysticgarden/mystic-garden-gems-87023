@@ -60,12 +60,11 @@ interface LootChestProps {
 
 export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
   const { user } = useAuth();
-  const { createPayment, loading: paymentLoading, getPrice } = usePayment();
+  const { getPrice } = usePayment();
   const [opening, setOpening] = useState<string | null>(null);
   const [freeChestAvailable, setFreeChestAvailable] = useState(false);
   const [freeChestTimeLeft, setFreeChestTimeLeft] = useState('');
   const [reward, setReward] = useState<{ gems: number; lives: number; noAdsMins: number } | null>(null);
-  const [loadingChest, setLoadingChest] = useState<string | null>(null);
 
   // Set music to chest volume when open
   useEffect(() => {
