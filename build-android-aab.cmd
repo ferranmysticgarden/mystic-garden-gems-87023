@@ -33,7 +33,7 @@ if not "%MG_VERSION_CODE%"=="" (
 if not "%MG_VERSION_NAME%"=="" (
   set "TARGET_VERSION_NAME=%MG_VERSION_NAME%"
 ) else (
-  set "TARGET_VERSION_NAME=1.0.4.2"
+  set "TARGET_VERSION_NAME=1.0.6.4"
 )
 
 REM --- Step 1/4 ---
