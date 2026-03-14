@@ -64,27 +64,18 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
           </h2>
           
           <p className="text-emerald-200 text-sm mb-4">
-            ¡Victoria épica! Celebra con un bonus especial
+            ¡Victoria épica! Activa un bonus directo para seguir avanzando
           </p>
 
           <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-2xl p-5 mb-4 border border-yellow-400/30">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-gray-400 text-sm">Ganaste</p>
-                <p className="text-2xl font-bold text-white">{baseGems} 💎</p>
-              </div>
-              
-              <div className="text-4xl animate-pulse">→</div>
-              
-              <div className="text-center">
-                <p className="text-yellow-400 text-sm font-bold">x3</p>
-                <p className="text-3xl font-bold text-yellow-400">{multipliedGems} 💎</p>
-              </div>
+            <div className="text-center mb-4">
+              <p className="text-gray-300 text-sm">Has ganado</p>
+              <p className="text-2xl font-bold text-white">{baseGems} 💎</p>
             </div>
 
-            <div className="bg-green-500/20 rounded-lg p-2 mb-3">
-              <p className="text-green-300 font-semibold text-sm">
-                + 2 vidas extra ❤️❤️
+            <div className="bg-green-500/20 rounded-lg p-3 mb-3">
+              <p className="text-green-300 font-semibold text-base">
+                Bonus de compra: +2 vidas ❤️❤️
               </p>
             </div>
             
