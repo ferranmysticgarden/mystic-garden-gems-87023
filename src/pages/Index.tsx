@@ -704,7 +704,7 @@ const Index = () => {
             addGems(1000);
             // no_ads is handled server-side via no_ads_until
             toast.success('¡Battle Pass Premium activado! +1000💎 +30 días sin ads');
-          }
+          }}
         />
       )}
 
