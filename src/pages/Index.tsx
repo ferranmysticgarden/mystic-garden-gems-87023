@@ -46,7 +46,7 @@ import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
-import { Level4Reward } from '@/components/game/Level4Reward';
+
 import { LoginPrompt } from '@/components/game/LoginPrompt';
 import { signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from '@/lib/analytics';
