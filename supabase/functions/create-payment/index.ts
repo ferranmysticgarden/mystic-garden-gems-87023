@@ -93,8 +93,16 @@ serve(async (req) => {
     if (!priceId) throw new Error(`Product ${productId} not found`);
     console.log("[INFO] Creating payment for product:", productId, "price:", priceId);
 
+    const FALLBACK_PRICE_DATA: Record<string, { amount: number; name: string }> = {
+      gems_100: { amount: 99, name: "100 Gems" },
+    };
+    const fallback = FALLBACK_PRICE_DATA[productId];
+
     // 4. Create Stripe session
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    const account = await stripe.accounts.retrieve();
+    console.log("[INFO] Stripe account in use:", account.id, "livemode:", account.livemode);
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
@@ -104,19 +112,46 @@ serve(async (req) => {
     console.log("[INFO] Customer lookup done, existing:", !!customerId);
 
     const origin = req.headers.get("origin") || "https://mystic-garden-gems-87023.lovable.app";
-    
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: "payment",
-      success_url: `${origin}/?payment=success`,
-      cancel_url: `${origin}/?payment=cancel`,
-      metadata: {
-        user_id: user.id,
-        product_id: productId,
-      },
-    });
+
+    const createSession = async (lineItems: any[]) => {
+      return stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: lineItems,
+        mode: "payment",
+        success_url: `${origin}/?payment=success`,
+        cancel_url: `${origin}/?payment=cancel`,
+        metadata: {
+          user_id: user.id,
+          product_id: productId,
+        },
+      });
+    };
+
+    let session;
+    try {
+      session = await createSession([{ price: priceId, quantity: 1 }]);
+    } catch (stripeError: unknown) {
+      const stripeMessage = stripeError instanceof Error ? stripeError.message : String(stripeError);
+      if (stripeMessage.includes("No such price") && fallback) {
+        console.warn(`[WARN] Missing Stripe price ${priceId}. Using inline fallback for ${productId}.`);
+        session = await createSession([
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: fallback.name,
+                description: `Fallback checkout for ${productId}`,
+              },
+              unit_amount: fallback.amount,
+            },
+            quantity: 1,
+          },
+        ]);
+      } else {
+        throw stripeError;
+      }
+    }
 
     console.log("[INFO] ✅ Payment session created:", session.id);
 
