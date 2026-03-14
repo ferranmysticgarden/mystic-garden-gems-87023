@@ -733,10 +733,12 @@ const Index = () => {
         <FirstDayOffer 
           levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
-            // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
-            addGems(500);
-            addLives(10);
-            addHammer(); addShuffle(); addUndo();
+            if (shouldApplyClientPersistentRewards) {
+              // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
+              addGems(500);
+              addLives(10);
+              addHammer(); addShuffle(); addUndo();
+            }
             toast.success('¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads');
           }}
         />
@@ -748,10 +750,12 @@ const Index = () => {
           levelJustCompleted={lastCompletedLevel}
           onClose={() => setShowStarterPack(false)}
           onPurchaseSuccess={() => {
-            // starter_pack: 500 gems, 10 lives, 3 powerups
-            addGems(500);
-            addLives(10);
-            addHammer(); addShuffle(); addUndo();
+            if (shouldApplyClientPersistentRewards) {
+              // starter_pack: 500 gems, 10 lives, 3 powerups
+              addGems(500);
+              addLives(10);
+              addHammer(); addShuffle(); addUndo();
+            }
             toast.success('¡Starter Pack activado! +500💎 +10❤️ +3🔨');
           }}
         />
@@ -840,9 +844,11 @@ const Index = () => {
       {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
-            // welcome_pack: 5 powerups, 3 lives
-            addLives(3);
-            addHammer(); addHammer(); addShuffle(); addShuffle(); addUndo();
+            if (shouldApplyClientPersistentRewards) {
+              // welcome_pack: 5 powerups, 3 lives
+              addLives(3);
+              addHammer(); addHammer(); addShuffle(); addShuffle(); addUndo();
+            }
             toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters');
             setShowWelcomeOffer(false);
           }}
@@ -881,9 +887,11 @@ const Index = () => {
             setConsecutiveLosses(0);
           }}
           onPurchaseSuccess={() => {
-            // flash_offer: 10 lives, 150 gems
-            addLives(10);
-            addGems(150);
+            if (shouldApplyClientPersistentRewards) {
+              // flash_offer: 10 lives, 150 gems
+              addLives(10);
+              addGems(150);
+            }
             toast.success('¡Pack Relámpago activado! +10❤️ +150💎');
           }}
         />
