@@ -120,9 +120,7 @@ export const DefeatPacksOffer = ({
                   <span className="text-lg font-bold text-white">Pack Experiencia</span>
                 </div>
                 <div className="text-sm text-purple-200 space-y-0.5">
-                  <p>🛡️ Protección de racha</p>
-                  <p>❤️ 2 vidas extra</p>
-                  <p>🎰 1 giro ruleta</p>
+                  <p>❤️ +2 vidas extra</p>
                 </div>
               </div>
               <div className="ml-4">
