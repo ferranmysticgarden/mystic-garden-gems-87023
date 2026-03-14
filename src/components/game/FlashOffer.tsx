@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap, X, Clock } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
@@ -13,7 +13,7 @@ interface FlashOfferProps {
 
 export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferProps) => {
   const [timeLeft, setTimeLeft] = useState(7200); // 2 hours in seconds
-  const { user } = useAuth();
+  
   const { createPayment, loading, getPrice } = usePayment();
 
   const price = getPrice('flash_offer', '€0.99');
@@ -94,10 +94,6 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
               <p className="flex items-center gap-2">
                 <span className="text-2xl">💎</span>
                 <span className="font-semibold">150 gemas</span>
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="text-2xl">🚫</span>
-                <span className="font-semibold">30 min sin anuncios</span>
               </p>
             </div>
             

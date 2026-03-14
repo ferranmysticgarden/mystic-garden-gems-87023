@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Sparkles, Zap, Coins } from 'lucide-react';
+import { X, Sparkles, Zap } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
@@ -110,10 +110,6 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
               <div className="flex items-center gap-3 text-white">
                 <Sparkles className="w-5 h-5 text-cyan-400" />
                 <span><strong>+3 Boosters</strong> especiales</span>
-              </div>
-              <div className="flex items-center gap-3 text-white">
-                <Coins className="w-5 h-5 text-amber-400" />
-                <span><strong>x2 Monedas</strong> durante 30 min</span>
               </div>
             </div>
 

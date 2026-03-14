@@ -6,12 +6,11 @@ import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 interface PostVictoryOfferProps {
   baseGems: number;
   onClose: () => void;
-  onMultiply: (newGems: number) => void;
+  onPurchaseSuccess: () => void;
 }
 
-export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryOfferProps) => {
+export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostVictoryOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
-  const multipliedGems = baseGems * 3;
 
   const handleBuy = async () => {
     const success = await createPayment('victory_multiplier');
@@ -19,7 +18,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
       console.log('[PURCHASE] success confirmed via PostVictoryOffer');
       dispatchPurchaseCompleted('victory_multiplier');
       console.log('[PURCHASE] gate unlocked');
-      onMultiply(multipliedGems);
+      onPurchaseSuccess();
       onClose();
     }
   };
@@ -65,27 +64,18 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
           </h2>
           
           <p className="text-emerald-200 text-sm mb-4">
-            ¡Victoria épica! Celebra con un bonus especial
+            ¡Victoria épica! Activa un bonus directo para seguir avanzando
           </p>
 
           <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-2xl p-5 mb-4 border border-yellow-400/30">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-gray-400 text-sm">Ganaste</p>
-                <p className="text-2xl font-bold text-white">{baseGems} 💎</p>
-              </div>
-              
-              <div className="text-4xl animate-pulse">→</div>
-              
-              <div className="text-center">
-                <p className="text-yellow-400 text-sm font-bold">x3</p>
-                <p className="text-3xl font-bold text-yellow-400">{multipliedGems} 💎</p>
-              </div>
+            <div className="text-center mb-4">
+              <p className="text-gray-300 text-sm">Has ganado</p>
+              <p className="text-2xl font-bold text-white">{baseGems} 💎</p>
             </div>
 
-            <div className="bg-green-500/20 rounded-lg p-2 mb-3">
-              <p className="text-green-300 font-semibold text-sm">
-                + 2 vidas extra ❤️❤️
+            <div className="bg-green-500/20 rounded-lg p-3 mb-3">
+              <p className="text-green-300 font-semibold text-base">
+                Bonus de compra: +2 vidas ❤️❤️
               </p>
             </div>
             
@@ -100,7 +90,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
             className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-bold py-5 rounded-xl text-lg shadow-lg shadow-green-500/30"
           >
             <Sparkles className="w-5 h-5 mr-2" />
-            {loading ? '⏳ Procesando...' : '¡MULTIPLICAR x3! 🚀'}
+            {loading ? '⏳ Procesando...' : '¡ACTIVAR BONUS! 🚀'}
           </Button>
 
           <Button 
@@ -108,7 +98,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
             variant="ghost"
             className="w-full text-emerald-300/60 hover:text-emerald-300 mt-2"
           >
-            No, solo quiero {baseGems} gemas
+            No, continuar sin bonus
           </Button>
         </div>
       </div>

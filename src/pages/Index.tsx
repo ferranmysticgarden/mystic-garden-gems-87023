@@ -902,9 +902,13 @@ const Index = () => {
         <PostVictoryOffer 
           baseGems={lastWinGems}
           onClose={() => setShowPostVictoryOffer(false)}
-          onMultiply={(newGems) => {
-            addGems(newGems - lastWinGems);
-            toast.success(`¡Gemas multiplicadas! +${newGems - lastWinGems}💎`);
+          onPurchaseSuccess={() => {
+            if (shouldApplyClientPersistentRewards) {
+              addLives(2);
+              toast.success('¡Bonus de victoria activado! +2❤️');
+            } else {
+              toast.success('¡Bonus de victoria activado!');
+            }
           }}
         />
       )}
