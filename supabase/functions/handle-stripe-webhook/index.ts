@@ -85,26 +85,35 @@ serve(async (req) => {
           { auth: { persistSession: false } }
         );
 
-        // ── IDEMPOTENCY CHECK ──
-        const eventKey = event.id; // Stripe event ID is unique
-        const { data: existing } = await supabaseAdmin
-          .from("processed_webhook_events")
-          .select("id")
-          .eq("id", eventKey)
-          .maybeSingle();
+        // ── IDEMPOTENCY LOCK (event.id + session.id) ──
+        // Criterio de dedupe:
+        // 1) event.id único de Stripe
+        // 2) stripe_session_id único por checkout
+        const eventKey = event.id;
+        const sessionKey = session.id ?? null;
 
-        if (existing) {
-          logStep("⚠️ Event already processed, skipping", { eventId: eventKey });
-          return new Response(JSON.stringify({ received: true, duplicate: true }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
+        const { error: lockError } = await supabaseAdmin
+          .from("processed_webhook_events")
+          .insert({
+            id: eventKey,
+            product_id: productId,
+            user_id: userId,
+            stripe_session_id: sessionKey,
           });
-        }
 
-        // Mark as processed BEFORE granting (crash-safe: worst case we skip a retry)
-        await supabaseAdmin
-          .from("processed_webhook_events")
-          .insert({ id: eventKey, product_id: productId, user_id: userId });
+        if (lockError) {
+          const code = (lockError as { code?: string }).code;
+          if (code === "23505") {
+            logStep("⚠️ Duplicate webhook skipped", { eventId: eventKey, sessionId: sessionKey });
+            return new Response(JSON.stringify({ received: true, duplicate: true }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          logStep("ERROR creating idempotency lock", { error: lockError.message, code });
+          throw lockError;
+        }
 
         const rewards = PRODUCT_REWARDS[productId];
         logStep("Rewards lookup", { productId, rewards });
