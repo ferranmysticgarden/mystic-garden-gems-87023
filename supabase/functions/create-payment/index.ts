@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno&no-check";
+import Stripe from "npm:stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Mapeo de productos del juego a precios de Stripe (Cuenta FCG: acct_1SA78ZB6GI8NmIPn)
@@ -60,60 +60,56 @@ serve(async (req) => {
   }
 
   try {
-    // 1. Validate env vars
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    
-    console.log("[DEBUG] SUPABASE_URL present:", !!supabaseUrl, "length:", supabaseUrl?.length);
-    console.log("[DEBUG] SUPABASE_ANON_KEY present:", !!supabaseAnonKey);
-    console.log("[DEBUG] STRIPE_SECRET_KEY present:", !!stripeKey, "prefix:", stripeKey?.substring(0, 7));
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error(`Missing Supabase config: URL=${!!supabaseUrl}, KEY=${!!supabaseAnonKey}`);
+      throw new Error("Missing backend config");
     }
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
 
-    // 2. Auth
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    console.log("[INFO] User authenticated:", user.email);
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new Error("No authorization header");
+    }
 
-    // 3. Product lookup
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    if (authError || !data.user?.email) {
+      throw new Error("User not authenticated or email not available");
+    }
+    const user = data.user;
+
     const { productId } = await req.json();
+    if (!productId || typeof productId !== "string") {
+      throw new Error("productId is required");
+    }
+
     const priceId = PRODUCT_PRICES[productId];
-    if (!priceId) throw new Error(`Product ${productId} not found`);
-    console.log("[INFO] Creating payment for product:", productId, "price:", priceId);
+    if (!priceId) {
+      throw new Error(`Product ${productId} not found`);
+    }
 
     const FALLBACK_PRICE_DATA: Record<string, { amount: number; name: string }> = {
       gems_100: { amount: 99, name: "100 Gems" },
     };
     const fallback = FALLBACK_PRICE_DATA[productId];
 
-    // 4. Create Stripe session
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
-    const account = await stripe.accounts.retrieve();
-    console.log("[INFO] Stripe account in use:", account.id, "livemode:", account.livemode);
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
     }
-    console.log("[INFO] Customer lookup done, existing:", !!customerId);
 
     const origin = req.headers.get("origin") || "https://mystic-garden-gems-87023.lovable.app";
 
-    const createSession = async (lineItems: any[]) => {
+    const createSession = async (lineItems: Stripe.Checkout.SessionCreateParams.LineItem[]) => {
       return stripe.checkout.sessions.create({
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
@@ -128,7 +124,8 @@ serve(async (req) => {
       });
     };
 
-    let session;
+    let session: Stripe.Checkout.Session;
+
     try {
       session = await createSession([{ price: priceId, quantity: 1 }]);
     } catch (stripeError: unknown) {
