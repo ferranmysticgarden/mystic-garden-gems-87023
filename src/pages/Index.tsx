@@ -853,17 +853,6 @@ const Index = () => {
         />
       )}
 
-      {/* Level 4 Micro-Reward */}
-      {showLevel4Reward && (
-        <Level4Reward 
-          open={showLevel4Reward}
-          onClaim={() => {
-            addGems(50);
-            toast.success(`¡Nivel 4 completado! +50💎`);
-            setShowLevel4Reward(false);
-          }}
-        />
-      )}
 
       {/* Share Prompt - SOLO después de nivel 3 */}
       {!isNewUser && (
