@@ -673,6 +673,7 @@ const Index = () => {
           onClose={() => setScreen('menu')}
           onPurchase={handlePurchase}
           isNewUser={isNewUser}
+          hasPurchasedOnce={hasPurchasedOnce}
         />
       )}
 
