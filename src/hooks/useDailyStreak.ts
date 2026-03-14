@@ -151,7 +151,7 @@ export const useDailyStreak = () => {
           max_streak: newMaxStreak,
           last_login_date: today,
           streak_claimed_today: true,
-          unlimited_lives_until: unlimitedLivesUntil?.toISOString() || null,
+          no_ads_until: noAdsUntil?.toISOString() || null,
         })
         .eq('user_id', user.id);
 
