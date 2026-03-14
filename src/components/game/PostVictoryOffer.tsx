@@ -6,12 +6,11 @@ import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 interface PostVictoryOfferProps {
   baseGems: number;
   onClose: () => void;
-  onMultiply: (newGems: number) => void;
+  onPurchaseSuccess: () => void;
 }
 
-export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryOfferProps) => {
+export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostVictoryOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
-  const multipliedGems = baseGems * 3;
 
   const handleBuy = async () => {
     const success = await createPayment('victory_multiplier');
@@ -19,7 +18,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onMultiply }: PostVictoryO
       console.log('[PURCHASE] success confirmed via PostVictoryOffer');
       dispatchPurchaseCompleted('victory_multiplier');
       console.log('[PURCHASE] gate unlocked');
-      onMultiply(multipliedGems);
+      onPurchaseSuccess();
       onClose();
     }
   };
