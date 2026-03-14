@@ -742,8 +742,7 @@ const Index = () => {
             // starter_pack: 500 gems, 10 lives, 3 powerups
             addGems(500);
             addLives(10);
-            const perType = Math.ceil(3 / 3);
-            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            addHammer(); addShuffle(); addUndo();
             toast.success('¡Starter Pack activado! +500💎 +10❤️ +3🔨');
           }}
         />
