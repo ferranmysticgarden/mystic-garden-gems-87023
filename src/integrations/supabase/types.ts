@@ -75,6 +75,7 @@ export type Database = {
           last_login_date: string | null
           lives: number
           max_streak: number | null
+          no_ads_until: string | null
           shuffle_count: number
           streak_claimed_today: boolean | null
           undo_count: number
@@ -94,6 +95,7 @@ export type Database = {
           last_login_date?: string | null
           lives?: number
           max_streak?: number | null
+          no_ads_until?: string | null
           shuffle_count?: number
           streak_claimed_today?: boolean | null
           undo_count?: number
@@ -113,6 +115,7 @@ export type Database = {
           last_login_date?: string | null
           lives?: number
           max_streak?: number | null
+          no_ads_until?: string | null
           shuffle_count?: number
           streak_claimed_today?: boolean | null
           undo_count?: number
