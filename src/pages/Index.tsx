@@ -733,10 +733,12 @@ const Index = () => {
         <FirstDayOffer 
           levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
-            // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
-            addGems(500);
-            addLives(10);
-            addHammer(); addShuffle(); addUndo();
+            if (shouldApplyClientPersistentRewards) {
+              // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
+              addGems(500);
+              addLives(10);
+              addHammer(); addShuffle(); addUndo();
+            }
             toast.success('¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads');
           }}
         />
