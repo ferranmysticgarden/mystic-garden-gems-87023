@@ -90,7 +90,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
             className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-bold py-5 rounded-xl text-lg shadow-lg shadow-green-500/30"
           >
             <Sparkles className="w-5 h-5 mr-2" />
-            {loading ? '⏳ Procesando...' : '¡MULTIPLICAR x3! 🚀'}
+            {loading ? '⏳ Procesando...' : '¡ACTIVAR BONUS! 🚀'}
           </Button>
 
           <Button 
@@ -98,7 +98,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
             variant="ghost"
             className="w-full text-emerald-300/60 hover:text-emerald-300 mt-2"
           >
-            No, solo quiero {baseGems} gemas
+            No, continuar sin bonus
           </Button>
         </div>
       </div>
