@@ -607,7 +607,7 @@ serve(async (req) => {
       if (rewards.noAdsDays) {
         const expireDate = new Date();
         expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
-        updates.unlimited_lives_until = expireDate.toISOString();
+        updates.no_ads_until = expireDate.toISOString();
       }
 
       // Update or insert game progress
