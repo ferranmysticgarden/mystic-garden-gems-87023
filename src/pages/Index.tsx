@@ -930,7 +930,7 @@ const Index = () => {
       )}
 
       {/* Spring Event - SOLO después de nivel 8 */}
-      {gameState.completedLevels.length >= 8 && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
+      {gameState.completedLevels.length >= 8 && !showSpringEvent === false && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
     </div>
   );
 };
