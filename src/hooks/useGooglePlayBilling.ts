@@ -20,14 +20,63 @@ export const useGooglePlayBilling = () => {
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
 
+  const queryProductsWithFallback = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
+    // First try: full batch (fast path)
+    try {
+      const fullBatch = await GooglePlayBilling.queryProducts({ productIds });
+      if (Object.keys(fullBatch).length > 0) return fullBatch;
+    } catch (error) {
+      trackEvent('billing_error', {
+        error: String(error),
+        phase: 'query_batch',
+        requested_ids: productIds.length,
+      });
+    }
+
+    // Fallback: query each product independently to avoid "all-or-nothing" failures
+    const settled = await Promise.allSettled(
+      productIds.map(async (id) => GooglePlayBilling.queryProducts({ productIds: [id] }))
+    );
+
+    const merged: Record<string, ProductDetails> = {};
+    settled.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        Object.assign(merged, result.value);
+      } else {
+        trackEvent('billing_error', {
+          error: String(result.reason),
+          phase: 'query_single',
+          product_id: productIds[index],
+        });
+      }
+    });
+
+    return merged;
+  }, []);
+
   const loadProducts = useCallback(async (retryCount = 0): Promise<Record<string, ProductDetails>> => {
     const productIds = getGooglePlayQueryProductIds();
     try {
-      const productDetails = await GooglePlayBilling.queryProducts({ productIds });
+      const productDetails = await queryProductsWithFallback(productIds);
+      const loadedCount = Object.keys(productDetails).length;
+
+      if (loadedCount === 0 && retryCount < 2) {
+        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+        return loadProducts(retryCount + 1);
+      }
+
+      if (loadedCount === 0) {
+        trackEvent('billing_error', {
+          phase: 'empty_catalog_after_fallback',
+          attempt: retryCount + 1,
+          queried_ids: productIds.length,
+        });
+      }
+
       setProducts(productDetails);
       trackEvent('billing_status', {
-        ready: Object.keys(productDetails).length > 0,
-        products_loaded: Object.keys(productDetails).length,
+        ready: loadedCount > 0,
+        products_loaded: loadedCount,
       });
       return productDetails;
     } catch (error) {
@@ -40,7 +89,7 @@ export const useGooglePlayBilling = () => {
       setProducts({});
       return {};
     }
-  }, []);
+  }, [queryProductsWithFallback]);
 
   useEffect(() => {
     if (!isAndroid) return;
