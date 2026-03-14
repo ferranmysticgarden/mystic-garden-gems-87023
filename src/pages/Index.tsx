@@ -689,8 +689,10 @@ const Index = () => {
           onUseGems={handleUseGemsForLife}
           onClose={() => setShowNoLivesModal(false)}
           onUnlimitedLivesPurchased={() => {
-            activateUnlimitedLives(0.5); // 30 minutes
-            toast.success('¡Vidas Infinitas activadas! 30 minutos ❤️∞');
+            if (shouldApplyClientPersistentRewards) {
+              activateUnlimitedLives(0.5); // 30 minutes
+              toast.success('¡Vidas Infinitas activadas! 30 minutos ❤️∞');
+            }
             setShowNoLivesModal(false);
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
