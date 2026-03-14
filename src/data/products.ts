@@ -280,6 +280,14 @@ export const PRODUCTS: Product[] = [
     price: 0.50,
     currency: 'EUR',
   },
+  // EXTRA SPIN - Lucky spin adicional
+  {
+    id: 'extra_spin',
+    nameKey: 'shop.extraSpin',
+    name: 'Giro Extra',
+    price: 0.50,
+    currency: 'EUR',
+  },
   // VIDAS INFINITAS 30min - Trigger sin vidas
   {
     id: 'unlimited_lives_30min',
