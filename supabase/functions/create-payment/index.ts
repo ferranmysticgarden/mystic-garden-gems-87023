@@ -36,7 +36,7 @@ const PRODUCT_PRICES: Record<string, string> = {
   "lifesaver_pack": "price_1TAlfFB6GI8NmIPnKkd6j757",
   "reward_doubler": "price_1TAlfXB6GI8NmIPnOsSnbulR",
   // Extra products (aliases)
-  "extra_moves": "price_1TAmoUPxvUpv2yakjusoqZZb",
+  "extra_moves": "price_1TAolzB6GI8NmIPn3ayBTFXP",
   "first_purchase": "price_1TAmowB6GI8NmIPnYWc5k1NH",
   // Vidas infinitas 30min (web)
   "unlimited_lives_30min": "price_1TAlfrB6GI8NmIPnuJjK1pUf",
