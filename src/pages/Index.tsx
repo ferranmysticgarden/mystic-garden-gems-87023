@@ -926,8 +926,8 @@ const Index = () => {
         />
       )}
 
-      {/* Spring Event - SOLO después de nivel 8 */}
-      {gameState.completedLevels.length >= 8 && !showSpringEvent === false && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
+      {/* Spring Event - SOLO después de nivel 8, respetar dismiss */}
+      {gameState.completedLevels.length >= 8 && !springEventDismissed && <SpringEvent onClose={() => setSpringEventDismissed(true)} />}
     </div>
   );
 };
