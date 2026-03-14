@@ -186,13 +186,15 @@ export const useGooglePlayBilling = () => {
           normalizedError.includes('service_disabled') ||
           normalizedError.includes('accessnotconfigured') ||
           normalizedError.includes('api has not been used');
+        // Catch ALL 401/403 errors from Google Play API as permission issues
         const isPermissionDenied =
           errorMessage.includes('Google Play API 403') ||
-          errorMessage.includes('Google Play API 401: permisos insuficientes') ||
+          errorMessage.includes('Google Play API 401') ||
           normalizedError.includes('permissiondenied') ||
-          normalizedError.includes('insufficient permissions');
+          normalizedError.includes('permission_denied') ||
+          normalizedError.includes('insufficient permissions') ||
+          normalizedError.includes('permisos insuficientes');
         const isInvalidCredentials =
-          normalizedError.includes('google play api 401: credenciales inválidas') ||
           normalizedError.includes('invalid_grant') ||
           normalizedError.includes('invalid credentials') ||
           normalizedError.includes('invalid_client') ||

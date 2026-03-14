@@ -33,6 +33,7 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   lifesaver_pack: ['lifesaverpack'],
   streak_protection: ['streakprotection'],
   extra_spin: ['extraspin'],
+  unlimited_lives_30min: ['unlimitedlives30min'],
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');

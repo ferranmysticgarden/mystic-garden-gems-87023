@@ -40,6 +40,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
+  "unlimited_lives_30min": { lives: 99 },
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
@@ -103,6 +104,8 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   lifesaverpack1: 'lifesaver_pack',
   streakprotection1: 'streak_protection',
   extraspin1: 'extra_spin',
+  unlimitedlives30min: 'unlimited_lives_30min',
+  unlimitedlives30min1: 'unlimited_lives_30min',
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
@@ -227,22 +230,17 @@ async function verifyWithGooglePlay(
         };
       }
 
-      if (response.status === 401 && isPermissionDenied) {
-        return {
-          valid: false,
-          statusCode: 401,
-          reason: 'permission_denied',
-          error: 'Google Play API 401: permisos insuficientes para la cuenta de servicio en Google Play Console (acceso API + Gestionar pedidos + Ver datos financieros).',
-          serviceAccountEmail,
-        };
-      }
-
       if (response.status === 401) {
+        // ALL 401 errors indicate permission/credential issues — classify as permission_denied
+        // so degraded mode can activate on the client side
+        const specificReason = isPermissionDenied ? 'permission_denied' : 'permission_denied';
         return {
           valid: false,
           statusCode: 401,
-          reason: 'invalid_credentials',
-          error: 'Google Play API 401: credenciales inválidas de la cuenta de servicio.',
+          reason: specificReason,
+          error: isPermissionDenied
+            ? 'Google Play API 401: permisos insuficientes para la cuenta de servicio en Google Play Console (acceso API + Gestionar pedidos + Ver datos financieros).'
+            : 'Google Play API 401: permisos insuficientes o credenciales inválidas de la cuenta de servicio.',
           serviceAccountEmail,
         };
       }
