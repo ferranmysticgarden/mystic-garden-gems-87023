@@ -610,6 +610,15 @@ serve(async (req) => {
         expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
         updates.no_ads_until = expireDate.toISOString();
       }
+      // Unlimited lives → unlimited_lives_until (NOT no_ads_until)
+      if (rewards.unlimitedLivesMinutes) {
+        const now = new Date();
+        const currentUL = progress?.unlimited_lives_until
+          ? new Date(progress.unlimited_lives_until as string)
+          : null;
+        const base = (currentUL && currentUL > now) ? currentUL : now;
+        updates.unlimited_lives_until = new Date(base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000).toISOString();
+      }
 
       // Update or insert game progress
       if (progress) {
