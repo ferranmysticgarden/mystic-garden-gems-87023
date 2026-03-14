@@ -46,7 +46,7 @@ import { PlayerRank } from '@/components/game/PlayerRank';
 import { AudioControls } from '@/components/game/AudioControls';
 import { VisualGarden } from '@/components/game/VisualGarden';
 import { WelcomeOffer } from '@/components/game/WelcomeOffer';
-import { Level4Reward } from '@/components/game/Level4Reward';
+
 import { LoginPrompt } from '@/components/game/LoginPrompt';
 import { signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from '@/lib/analytics';
@@ -124,8 +124,6 @@ const Index = () => {
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
 
-  // State for level 4 micro-reward
-  const [showLevel4Reward, setShowLevel4Reward] = useState(false);
 
   // State for login prompt (guest mode)
   const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | 'general' | null>(null);
@@ -675,6 +673,7 @@ const Index = () => {
           onClose={() => setScreen('menu')}
           onPurchase={handlePurchase}
           isNewUser={isNewUser}
+          hasPurchasedOnce={hasPurchasedOnce}
         />
       )}
 
@@ -854,17 +853,6 @@ const Index = () => {
         />
       )}
 
-      {/* Level 4 Micro-Reward */}
-      {showLevel4Reward && (
-        <Level4Reward 
-          open={showLevel4Reward}
-          onClaim={() => {
-            addGems(50);
-            toast.success(`¡Nivel 4 completado! +50💎`);
-            setShowLevel4Reward(false);
-          }}
-        />
-      )}
 
       {/* Share Prompt - SOLO después de nivel 3 */}
       {!isNewUser && (

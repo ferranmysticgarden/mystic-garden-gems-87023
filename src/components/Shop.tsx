@@ -1,14 +1,14 @@
-import { ShoppingBag, X, Loader2, Star, Sparkles, Crown } from 'lucide-react';
+import { X, Loader2, Star, Sparkles, Crown, Lock } from 'lucide-react';
 import { PRODUCTS } from '@/data/products';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
-import { toast } from 'sonner';
 import { usePayment } from '@/hooks/usePayment';
 
 interface ShopProps {
   onClose: () => void;
   onPurchase: (productId: string) => void;
   isNewUser?: boolean;
+  hasPurchasedOnce?: boolean;
 }
 
 // Products for new users (max 3 - simple)
@@ -19,7 +19,32 @@ const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_
 const PREMIUM_PACKS = ['pack_victoria_segura', 'pack_experiencia'];
 const BEST_VALUE_ID = 'gems_300';
 
-export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
+// Always purchasable - entry/rescue products
+const ALWAYS_OPEN_IDS = new Set([
+  'starter_pack', 'welcome_pack', 'buy_moves', 'unlimited_lives_30min',
+  'quick_pack', 'gems_100', 'gems_300', 'gems_1200', 'no_ads_month',
+  'flash_offer', 'finish_level', 'extra_moves', 'continue_game',
+  'lifesaver_pack', 'extra_spin', 'first_purchase', 'reward_doubler',
+  'mega_pack_inicial', 'pack_revancha', 'pack_impulso', 'streak_protection',
+  'chest_silver',
+]);
+
+// Premium/locked until first purchase
+const PREMIUM_LOCKED_IDS = new Set([
+  'garden_pass', 'no_ads_forever', 'pack_experiencia', 'pack_victoria_segura',
+  'pack_victoria_segura_pro', 'pack_racha_infinita', 'chest_gold',
+]);
+
+const isProductLocked = (productId: string, hasPurchasedOnce: boolean): boolean => {
+  if (hasPurchasedOnce) return false;
+  if (ALWAYS_OPEN_IDS.has(productId)) return false;
+  if (PREMIUM_LOCKED_IDS.has(productId)) return true;
+  // Default: if not in either set, lock if price >= 2
+  const product = PRODUCTS.find(p => p.id === productId);
+  return (product?.price ?? 0) >= 2;
+};
+
+export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce = false }: ShopProps) => {
   const { t, formatPrice } = useLanguage();
   const { createPayment, getPrice, loading } = usePayment();
 
@@ -59,7 +84,17 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
           </button>
         </div>
 
-        {/* PREMIUM PACKS SECTION - New! */}
+        {/* Unlock banner when shop is partially locked */}
+        {!hasPurchasedOnce && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3">
+            <Lock className="w-5 h-5 text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-200">
+              Desbloquea la <span className="font-bold text-amber-400">tienda premium</span> con tu primera compra
+            </p>
+          </div>
+        )}
+
+        {/* PREMIUM PACKS SECTION */}
         {premiumPacks.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
@@ -74,17 +109,27 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {premiumPacks.map((pack) => {
+                const locked = isProductLocked(pack.id, hasPurchasedOnce);
                 const isVictoria = pack.id === 'pack_victoria_segura';
                 
                 return (
                   <div
                     key={pack.id}
-                    className={`relative rounded-2xl p-5 transition-all hover:scale-[1.03] ${
+                    className={`relative rounded-2xl p-5 transition-all ${
+                      locked ? 'opacity-60 grayscale' : 'hover:scale-[1.03]'
+                    } ${
                       isVictoria 
                         ? 'bg-gradient-to-br from-emerald-600/40 via-green-500/30 to-teal-600/40 border-2 border-emerald-400 shadow-xl shadow-emerald-500/30' 
                         : 'bg-gradient-to-br from-orange-600/40 via-amber-500/30 to-red-600/40 border-2 border-orange-400 shadow-xl shadow-orange-500/30'
                     }`}
                   >
+                    {/* Lock badge */}
+                    {locked && (
+                      <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5 z-10">
+                        <Lock className="w-4 h-4 text-amber-400" />
+                      </div>
+                    )}
+
                     {/* Badge */}
                     <div className={`absolute -top-3 left-1/2 -translate-x-1/2 ${isVictoria ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-orange-400 to-red-400'} px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg`}>
                       <Crown className="w-4 h-4 text-white" />
@@ -130,13 +175,19 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
                     <Button
                       onClick={() => handlePurchase(pack.id, pack.name)}
                       className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg text-lg ${
-                        isVictoria 
-                          ? 'bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 text-slate-900 shadow-emerald-500/40' 
-                          : 'bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white shadow-orange-500/40'
+                        locked
+                          ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                          : isVictoria 
+                            ? 'bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 text-slate-900 shadow-emerald-500/40' 
+                            : 'bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white shadow-orange-500/40'
                       }`}
-                      disabled={loading}
+                      disabled={loading || locked}
                     >
-                      {loading ? (
+                      {locked ? (
+                        <span className="flex items-center gap-2">
+                          <Lock className="w-4 h-4" /> Haz tu primera compra
+                        </span>
+                      ) : loading ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Procesando...
@@ -164,13 +215,16 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {shopProducts.map((product) => {
+            const locked = isProductLocked(product.id, hasPurchasedOnce);
             const isBestValue = product.id === BEST_VALUE_ID;
             const isGardenPass = product.id === 'garden_pass';
             
             return (
               <div
                 key={product.id}
-                className={`relative rounded-2xl p-5 transition-all hover:scale-[1.02] ${
+                className={`relative rounded-2xl p-5 transition-all ${
+                  locked ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'
+                } ${
                   isBestValue 
                     ? 'bg-gradient-to-br from-yellow-600/30 via-amber-500/20 to-orange-600/30 border-2 border-yellow-400 shadow-xl shadow-yellow-500/20' 
                     : isGardenPass
@@ -178,6 +232,13 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
                     : 'bg-slate-800/50 border border-slate-600/30 hover:border-purple-400/50 hover:bg-slate-800/70'
                 }`}
               >
+                {/* Lock icon */}
+                {locked && (
+                  <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5 z-10">
+                    <Lock className="w-4 h-4 text-amber-400" />
+                  </div>
+                )}
+
                 {/* Best Value Badge */}
                 {isBestValue && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
@@ -226,16 +287,22 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false }: ShopProps) => {
                 <Button
                   onClick={() => handlePurchase(product.id, t(product.nameKey))}
                   className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg ${
-                    isBestValue 
-                      ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 hover:from-yellow-500 hover:via-amber-500 hover:to-orange-500 text-slate-900 shadow-yellow-500/30' 
-                      : isGardenPass
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-purple-500/30'
-                      : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white'
+                    locked
+                      ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                      : isBestValue 
+                        ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 hover:from-yellow-500 hover:via-amber-500 hover:to-orange-500 text-slate-900 shadow-yellow-500/30' 
+                        : isGardenPass
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-purple-500/30'
+                        : 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white'
                   }`}
                   id={`buy-${product.id}`}
-                  disabled={loading}
+                  disabled={loading || locked}
                 >
-                  {loading ? (
+                  {locked ? (
+                    <span className="flex items-center gap-2">
+                      <Lock className="w-4 h-4" /> Haz tu primera compra
+                    </span>
+                  ) : loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Procesando...
