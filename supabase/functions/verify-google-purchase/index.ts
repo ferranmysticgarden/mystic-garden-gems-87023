@@ -170,7 +170,9 @@ async function verifyWithGooglePlay(
       };
     }
 
-    const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
+    const encodedToken = encodeURIComponent(purchaseToken);
+    const encodedProductId = encodeURIComponent(productId);
+    const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${encodedProductId}/tokens/${encodedToken}`;
     
     const response = await fetch(apiUrl, {
       headers: {
@@ -182,7 +184,7 @@ async function verifyWithGooglePlay(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[ERROR] Google Play API error:', response.status, errorText);
-
+      console.error('[ERROR] Request details:', { packageName, productId, tokenLength: purchaseToken.length, tokenPrefix: purchaseToken.slice(0, 20) });
       let parsedError: any = null;
       try {
         parsedError = JSON.parse(errorText);
