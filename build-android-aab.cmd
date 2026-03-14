@@ -27,7 +27,7 @@ if not "%MG_APP_ID%"=="" set "TARGET_APP_ID=%MG_APP_ID%"
 if not "%MG_VERSION_CODE%"=="" (
   set "TARGET_VERSION_CODE=%MG_VERSION_CODE%"
 ) else (
-  set "TARGET_VERSION_CODE=1042"
+  set "TARGET_VERSION_CODE=1064"
 )
 
 if not "%MG_VERSION_NAME%"=="" (
