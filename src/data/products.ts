@@ -178,7 +178,6 @@ export const PRODUCTS: Product[] = [
     currency: 'EUR',
     powerups: 5, // +5 movimientos
     lives: 3 // +3 boosters (representado como vidas)
-    // x2 monedas 30 min handled by webhook
   },
   // REWARD DOUBLER - Post-victory €0.49
   {

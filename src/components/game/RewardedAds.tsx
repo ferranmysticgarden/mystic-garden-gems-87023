@@ -43,7 +43,7 @@ const PROMO_PACKS = [
     price: '€0,49',
     oldPrice: '€1,99',
     discount: 75,
-    benefits: ['+5 Movimientos 🎯', '+3 Boosters 🚀', 'x2 Monedas 30min'],
+    benefits: ['+5 Movimientos 🎯', '+3 Boosters 🚀', 'Oferta exclusiva inicial'],
     gradient: 'from-emerald-500/80 to-teal-600/80',
     border: 'border-emerald-400/40',
   },
