@@ -181,7 +181,6 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
             <div className="flex justify-center gap-4 text-white">
               {reward.gems > 0 && <span className="text-lg">💎 {reward.gems}</span>}
               {reward.lives > 0 && <span className="text-lg">❤️ {reward.lives}</span>}
-              {reward.noAdsMins > 0 && <span className="text-lg">🚫 {reward.noAdsMins}m</span>}
             </div>
             <Button 
               onClick={() => setReward(null)}
