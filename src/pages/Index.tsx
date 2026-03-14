@@ -750,10 +750,12 @@ const Index = () => {
           levelJustCompleted={lastCompletedLevel}
           onClose={() => setShowStarterPack(false)}
           onPurchaseSuccess={() => {
-            // starter_pack: 500 gems, 10 lives, 3 powerups
-            addGems(500);
-            addLives(10);
-            addHammer(); addShuffle(); addUndo();
+            if (shouldApplyClientPersistentRewards) {
+              // starter_pack: 500 gems, 10 lives, 3 powerups
+              addGems(500);
+              addLives(10);
+              addHammer(); addShuffle(); addUndo();
+            }
             toast.success('¡Starter Pack activado! +500💎 +10❤️ +3🔨');
           }}
         />
