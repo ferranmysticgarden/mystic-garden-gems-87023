@@ -719,9 +719,10 @@ const Index = () => {
         />
       )}
 
-      {/* First Day Offer - SOLO después de nivel 5 (no distraer temprano) */}
-      {gameState.completedLevels.length >= 5 && (
+      {/* First Day Offer - after level 1 completion */}
+      {gameState.completedLevels.length >= 1 && (
         <FirstDayOffer 
+          levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
             // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
             addGems(500);
