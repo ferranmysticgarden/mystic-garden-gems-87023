@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Sparkles, Zap, Coins } from 'lucide-react';
+import { X, Sparkles, Zap } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';

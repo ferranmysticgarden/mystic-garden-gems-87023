@@ -13,7 +13,7 @@ interface FlashOfferProps {
 
 export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferProps) => {
   const [timeLeft, setTimeLeft] = useState(7200); // 2 hours in seconds
-  const { user } = useAuth();
+  
   const { createPayment, loading, getPrice } = usePayment();
 
   const price = getPrice('flash_offer', '€0.99');
