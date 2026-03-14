@@ -184,7 +184,7 @@ async function verifyWithGooglePlay(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[ERROR] Google Play API error:', response.status, errorText);
-
+      console.error('[ERROR] Request details:', { packageName, productId, tokenLength: purchaseToken.length, tokenPrefix: purchaseToken.slice(0, 20) });
       let parsedError: any = null;
       try {
         parsedError = JSON.parse(errorText);
