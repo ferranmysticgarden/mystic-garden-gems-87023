@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Product rewards configuration (canonical app IDs)
-const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean }> = {
+const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean; unlimitedLivesMinutes?: number }> = {
   // Cofres (reward granted client-side, randomized)
   "chest_wooden": {},
   "chest_silver": {},
@@ -40,7 +40,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
-  "unlimited_lives_30min": { lives: 99 },
+  "unlimited_lives_30min": { unlimitedLivesMinutes: 30 },
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
@@ -609,6 +609,15 @@ serve(async (req) => {
         const expireDate = new Date();
         expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
         updates.no_ads_until = expireDate.toISOString();
+      }
+      // Unlimited lives → unlimited_lives_until (NOT no_ads_until)
+      if (rewards.unlimitedLivesMinutes) {
+        const now = new Date();
+        const currentUL = progress?.unlimited_lives_until
+          ? new Date(progress.unlimited_lives_until as string)
+          : null;
+        const base = (currentUL && currentUL > now) ? currentUL : now;
+        updates.unlimited_lives_until = new Date(base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000).toISOString();
       }
 
       // Update or insert game progress

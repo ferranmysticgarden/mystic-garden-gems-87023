@@ -133,6 +133,27 @@ export type Database = {
           },
         ]
       }
+      processed_webhook_events: {
+        Row: {
+          id: string
+          processed_at: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          id: string
+          processed_at?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_orders: {
         Row: {
           created_at: string
