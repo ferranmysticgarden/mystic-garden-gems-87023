@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface ChestType {
   id: string;
