@@ -98,7 +98,7 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
             ¡VICTORIA! 🎉
           </h2>
           <p className="text-yellow-100/90 text-lg">
-            ¡Duplica tus recompensas ahora!
+            ¡Consigue un bonus de 50 gemas extra!
           </p>
         </div>
 
