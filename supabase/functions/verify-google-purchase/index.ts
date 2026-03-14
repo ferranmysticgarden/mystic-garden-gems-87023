@@ -40,7 +40,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_impulso": { powerups: 5, lives: 3 },
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
-  "unlimited_lives_30min": { lives: 99 },
+  "unlimited_lives_30min": { unlimitedLivesMinutes: 30 },
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
