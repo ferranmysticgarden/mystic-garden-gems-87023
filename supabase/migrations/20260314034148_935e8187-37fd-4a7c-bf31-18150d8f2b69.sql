@@ -1,0 +1,1 @@
+ALTER TABLE public.game_progress ADD COLUMN IF NOT EXISTS no_ads_until TIMESTAMPTZ DEFAULT NULL;

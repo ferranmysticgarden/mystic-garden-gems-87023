@@ -108,7 +108,7 @@ const Index = () => {
   const [showPostVictoryOffer, setShowPostVictoryOffer] = useState(false);
   const [showDailyMissions, setShowDailyMissions] = useState(false);
   const [showLootChest, setShowLootChest] = useState(false);
-  const [showSpringEvent, setShowSpringEvent] = useState(false);
+  const [springEventDismissed, setSpringEventDismissed] = useState(false);
   const [showStarterPack, setShowStarterPack] = useState(false);
   const [lastCompletedLevel, setLastCompletedLevel] = useState(0);
   const [lastWinGems, setLastWinGems] = useState(0);
@@ -356,13 +356,16 @@ const Index = () => {
 
     // Powerups (distribute evenly across hammer, shuffle, undo)
     if (product.powerups) {
-      const perType = Math.ceil(product.powerups / 3);
+      const perType = Math.floor(product.powerups / 3);
+      const remainder = product.powerups % 3;
       for (let i = 0; i < perType; i++) {
         addHammer();
         addShuffle();
         addUndo();
       }
-      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} per type)`);
+      if (remainder >= 1) addHammer();
+      if (remainder >= 2) addShuffle();
+      console.log(`[PURCHASE] ✅ Granted ${product.powerups} powerups (${perType} base per type, ${remainder} extra)`);
     }
 
     // Entitlements de compras premium (sin ads / pass) se conceden en backend tras verificación
@@ -716,16 +719,15 @@ const Index = () => {
         />
       )}
 
-      {/* First Day Offer - SOLO después de nivel 5 (no distraer temprano) */}
-      {gameState.completedLevels.length >= 5 && (
+      {/* First Day Offer - after level 1 completion */}
+      {gameState.completedLevels.length >= 1 && (
         <FirstDayOffer 
+          levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
             // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
             addGems(500);
             addLives(10);
-            const perType = Math.ceil(3 / 3);
-            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
-            activateUnlimitedLives(24);
+            addHammer(); addShuffle(); addUndo();
             toast.success('¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads');
           }}
         />
@@ -740,8 +742,7 @@ const Index = () => {
             // starter_pack: 500 gems, 10 lives, 3 powerups
             addGems(500);
             addLives(10);
-            const perType = Math.ceil(3 / 3);
-            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            addHammer(); addShuffle(); addUndo();
             toast.success('¡Starter Pack activado! +500💎 +10❤️ +3🔨');
           }}
         />
@@ -832,8 +833,7 @@ const Index = () => {
           onPurchase={() => {
             // welcome_pack: 5 powerups, 3 lives
             addLives(3);
-            const perType = Math.ceil(5 / 3);
-            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            addHammer(); addHammer(); addShuffle(); addShuffle(); addUndo();
             toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters');
             setShowWelcomeOffer(false);
           }}
@@ -926,8 +926,8 @@ const Index = () => {
         />
       )}
 
-      {/* Spring Event - SOLO después de nivel 8 */}
-      {gameState.completedLevels.length >= 8 && <SpringEvent onClose={() => setShowSpringEvent(false)} />}
+      {/* Spring Event - SOLO después de nivel 8, respetar dismiss */}
+      {gameState.completedLevels.length >= 8 && !springEventDismissed && <SpringEvent onClose={() => setSpringEventDismissed(true)} />}
     </div>
   );
 };

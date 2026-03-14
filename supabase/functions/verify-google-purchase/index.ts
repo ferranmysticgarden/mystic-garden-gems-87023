@@ -599,15 +599,16 @@ serve(async (req) => {
       if (rewards.gems) updates.gems = currentGems + rewards.gems;
       if (rewards.lives) updates.lives = Math.min(currentLives + rewards.lives, 99);
       if (rewards.powerups) {
-        const perType = Math.ceil(rewards.powerups / 3);
-        updates.hammer_count = currentHammer + perType;
-        updates.shuffle_count = currentShuffle + perType;
+        const perType = Math.floor(rewards.powerups / 3);
+        const remainder = rewards.powerups % 3;
+        updates.hammer_count = currentHammer + perType + (remainder >= 1 ? 1 : 0);
+        updates.shuffle_count = currentShuffle + perType + (remainder >= 2 ? 1 : 0);
         updates.undo_count = currentUndo + perType;
       }
       if (rewards.noAdsDays) {
         const expireDate = new Date();
         expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
-        updates.unlimited_lives_until = expireDate.toISOString();
+        updates.no_ads_until = expireDate.toISOString();
       }
 
       // Update or insert game progress

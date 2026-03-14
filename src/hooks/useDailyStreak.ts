@@ -115,7 +115,7 @@ export const useDailyStreak = () => {
       // Get current game state
       const { data: gameState, error: fetchError } = await supabase
         .from('game_progress')
-        .select('gems, lives, unlimited_lives_until, current_streak, max_streak')
+        .select('gems, lives, no_ads_until, current_streak, max_streak')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -124,17 +124,17 @@ export const useDailyStreak = () => {
       const currentGems = gameState?.gems || 0;
       const currentLives = Math.min((gameState?.lives || 0) + reward.lives, 10); // Cap at 10 lives
       
-      // Calculate no ads time
-      let unlimitedLivesUntil = gameState?.unlimited_lives_until 
-        ? new Date(gameState.unlimited_lives_until) 
+      // Calculate no ads time — write to no_ads_until, NOT unlimited_lives_until
+      let noAdsUntil = gameState?.no_ads_until 
+        ? new Date(gameState.no_ads_until as string) 
         : null;
       
       if (reward.noAdsMinutes > 0) {
         const now = new Date();
-        if (!unlimitedLivesUntil || unlimitedLivesUntil < now) {
-          unlimitedLivesUntil = new Date(now.getTime() + reward.noAdsMinutes * 60 * 1000);
+        if (!noAdsUntil || noAdsUntil < now) {
+          noAdsUntil = new Date(now.getTime() + reward.noAdsMinutes * 60 * 1000);
         } else {
-          unlimitedLivesUntil = new Date(unlimitedLivesUntil.getTime() + reward.noAdsMinutes * 60 * 1000);
+          noAdsUntil = new Date(noAdsUntil.getTime() + reward.noAdsMinutes * 60 * 1000);
         }
       }
 
@@ -151,7 +151,7 @@ export const useDailyStreak = () => {
           max_streak: newMaxStreak,
           last_login_date: today,
           streak_claimed_today: true,
-          unlimited_lives_until: unlimitedLivesUntil?.toISOString() || null,
+          no_ads_until: noAdsUntil?.toISOString() || null,
         })
         .eq('user_id', user.id);
 

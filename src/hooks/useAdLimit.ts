@@ -10,7 +10,7 @@ export const useAdLimit = () => {
   const [nextAdAvailableIn, setNextAdAvailableIn] = useState<number | null>(null);
 
   const getStorageKey = useCallback(() => {
-    return user?.id ? `ad_history_${user.id}` : null;
+    return `ad_history_${user?.id || 'guest'}`;
   }, [user?.id]);
 
   // Load and clean up ad history
@@ -63,7 +63,6 @@ export const useAdLimit = () => {
 
   const recordAdWatch = useCallback(() => {
     const storageKey = getStorageKey();
-    if (!storageKey) return false;
 
     const stored = localStorage.getItem(storageKey);
     const adTimestamps: number[] = stored ? JSON.parse(stored) : [];

@@ -176,16 +176,17 @@ serve(async (req) => {
             logStep(`Adding ${rewards.lives} lives -> ${updates.lives}`);
           }
           if (rewards.powerups) {
-            const perType = Math.ceil(rewards.powerups / 3);
-            updates.hammer_count = currentHammer + perType;
-            updates.shuffle_count = currentShuffle + perType;
+            const perType = Math.floor(rewards.powerups / 3);
+            const remainder = rewards.powerups % 3;
+            updates.hammer_count = currentHammer + perType + (remainder >= 1 ? 1 : 0);
+            updates.shuffle_count = currentShuffle + perType + (remainder >= 2 ? 1 : 0);
             updates.undo_count = currentUndo + perType;
-            logStep(`Adding ${perType} of each powerup`);
+            logStep(`Adding powerups: ${rewards.powerups} total, ${perType} base per type`);
           }
           if (rewards.noAdsDays) {
             const expireDate = new Date();
             expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
-            updates.unlimited_lives_until = expireDate.toISOString();
+            updates.no_ads_until = expireDate.toISOString();
           }
 
           if (progressData) {
@@ -206,10 +207,10 @@ serve(async (req) => {
                 user_id: userId,
                 gems: rewards.gems || 0,
                 lives: rewards.lives || 5,
-                hammer_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
-                shuffle_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
-                undo_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
-                unlimited_lives_until: rewards.noAdsDays 
+                hammer_count: rewards.powerups ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 1 ? 1 : 0) : 0,
+                shuffle_count: rewards.powerups ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 2 ? 1 : 0) : 0,
+                undo_count: rewards.powerups ? Math.floor(rewards.powerups / 3) : 0,
+                no_ads_until: rewards.noAdsDays 
                   ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
                   : null,
               });
