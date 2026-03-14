@@ -727,9 +727,7 @@ const Index = () => {
             // mega_pack_inicial: 500 gems, 10 lives, 3 powerups, 1 day no ads
             addGems(500);
             addLives(10);
-            const perType = Math.ceil(3 / 3);
-            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
-            activateUnlimitedLives(24);
+            addHammer(); addShuffle(); addUndo();
             toast.success('¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads');
           }}
         />
