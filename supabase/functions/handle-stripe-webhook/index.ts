@@ -207,10 +207,10 @@ serve(async (req) => {
                 user_id: userId,
                 gems: rewards.gems || 0,
                 lives: rewards.lives || 5,
-                hammer_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
-                shuffle_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
-                undo_count: rewards.powerups ? Math.ceil(rewards.powerups / 3) : 0,
-                unlimited_lives_until: rewards.noAdsDays 
+                hammer_count: rewards.powerups ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 1 ? 1 : 0) : 0,
+                shuffle_count: rewards.powerups ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 2 ? 1 : 0) : 0,
+                undo_count: rewards.powerups ? Math.floor(rewards.powerups / 3) : 0,
+                no_ads_until: rewards.noAdsDays 
                   ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
                   : null,
               });

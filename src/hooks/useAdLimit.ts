@@ -63,7 +63,6 @@ export const useAdLimit = () => {
 
   const recordAdWatch = useCallback(() => {
     const storageKey = getStorageKey();
-    if (!storageKey) return false;
 
     const stored = localStorage.getItem(storageKey);
     const adTimestamps: number[] = stored ? JSON.parse(stored) : [];

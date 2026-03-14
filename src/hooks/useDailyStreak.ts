@@ -115,7 +115,7 @@ export const useDailyStreak = () => {
       // Get current game state
       const { data: gameState, error: fetchError } = await supabase
         .from('game_progress')
-        .select('gems, lives, unlimited_lives_until, current_streak, max_streak')
+        .select('gems, lives, no_ads_until, current_streak, max_streak')
         .eq('user_id', user.id)
         .maybeSingle();
 

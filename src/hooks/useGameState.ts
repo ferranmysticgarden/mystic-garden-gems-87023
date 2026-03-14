@@ -220,10 +220,12 @@ export const useGameState = () => {
             onLivesFullRef.current();
           }
           
+          // Keep remainder time instead of resetting to now
+          const consumedTime = livesToAdd * LIFE_REFILL_TIME;
           return {
             ...prev,
             lives: newLives,
-            lastLifeRefill: now,
+            lastLifeRefill: prev.lastLifeRefill + consumedTime,
           };
         }
         

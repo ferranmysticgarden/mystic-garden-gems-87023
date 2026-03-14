@@ -38,6 +38,8 @@ const PRODUCT_PRICES: Record<string, string> = {
   // Extra products
   "extra_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
   "first_purchase": "price_1Sx2g2PxvUpv2yakNxaBeR3a",
+  // Vidas infinitas 30min (web)
+  "unlimited_lives_30min": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
   // Experience Packs
   "pack_victoria_segura": "price_1SwC7xPxvUpv2yakQ0CmX5uN",
   "pack_racha_infinita": "price_1SwC8APxvUpv2yakGXumP9b1",

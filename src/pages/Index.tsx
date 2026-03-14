@@ -833,8 +833,7 @@ const Index = () => {
           onPurchase={() => {
             // welcome_pack: 5 powerups, 3 lives
             addLives(3);
-            const perType = Math.ceil(5 / 3);
-            for (let i = 0; i < perType; i++) { addHammer(); addShuffle(); addUndo(); }
+            addHammer(); addHammer(); addShuffle(); addShuffle(); addUndo();
             toast.success('¡Pack Bienvenida activado! +5 movimientos, +3 boosters');
             setShowWelcomeOffer(false);
           }}
