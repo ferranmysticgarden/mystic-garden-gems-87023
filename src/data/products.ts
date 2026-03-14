@@ -85,11 +85,11 @@ export const PRODUCTS: Product[] = [
     gems: 150,
     noAdsDays: 0 // 30 mins handled separately
   },
-  // Victory Multiplier
+  // Victory Bonus
   { 
     id: 'victory_multiplier', 
     nameKey: 'shop.victoryMultiplier',
-    name: 'Multiplicador x3', 
+    name: 'Bono de Victoria (+2 Vidas)', 
     price: 0.99, 
     currency: 'EUR',
     lives: 2
