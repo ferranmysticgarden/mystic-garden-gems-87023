@@ -134,27 +134,9 @@ export const LootChest = ({ onClose, onRewardClaimed }: LootChestProps) => {
         checkFreeChest();
       }, 2000);
     } else {
-      // Paid chest - use unified payment
-      // On Android, success=true means Google Play verified and rewards granted server-side
-      // On Web, success=false (Stripe redirect) — webhook handles rewards
-      setLoadingChest(chest.id);
-      const success = await createPayment(`chest_${chest.id}`);
-      if (success) {
-        // Android path: purchase verified
-        console.log('[PURCHASE] success confirmed via LootChest');
-        dispatchPurchaseCompleted(`chest_${chest.id}`);
-        console.log('[PURCHASE] gate unlocked');
-        setOpening(chest.id);
-        setTimeout(() => {
-          const rewardResult = getRandomReward(chest);
-          setReward(rewardResult);
-          // Chest rewards are randomized client-side (backend has empty reward for chests)
-          if (onRewardClaimed) onRewardClaimed(rewardResult.gems, rewardResult.lives);
-          setOpening(null);
-        }, 2000);
-      }
-      // Web path: redirect happened, no action needed here
-      setLoadingChest(null);
+      // Paid chests temporarily disabled until deterministic backend reward grant exists
+      toast.error('Los cofres de pago están temporalmente desactivados para evitar cobros sin recompensa persistente.');
+      return;
     }
   };
 

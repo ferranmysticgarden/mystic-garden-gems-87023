@@ -33,7 +33,7 @@ export const usePendingPurchase = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
-    
+    const sessionId = urlParams.get('session_id');
     if (paymentStatus === 'success') {
       // Limpiar URL inmediatamente
       const newUrl = window.location.pathname;

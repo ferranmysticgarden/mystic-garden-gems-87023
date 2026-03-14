@@ -39,7 +39,7 @@ serve(async (req) => {
     }
     const userId = data.user.id;
 
-    const { productId } = await req.json();
+    const { productId, sessionId } = await req.json();
     if (!productId || typeof productId !== "string") {
       throw new Error("productId is required");
     }

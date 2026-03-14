@@ -4,6 +4,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
+import { PRODUCTS } from '@/data/products';
 
 interface Profile {
   id: string;
