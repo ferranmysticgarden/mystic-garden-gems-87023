@@ -131,6 +131,9 @@ const Index = () => {
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
 
+  // Evitar doble grant en Android autenticado: rewards persistentes solo backend
+  const shouldApplyClientPersistentRewards = !(user && Capacitor.getPlatform() === 'android');
+
   // Android back button: navegación inmediata y salida solo en menú
   useBackButton(useCallback(() => {
     if (screen === 'shop' || screen === 'levels' || screen === 'game') {
@@ -686,8 +689,10 @@ const Index = () => {
           onUseGems={handleUseGemsForLife}
           onClose={() => setShowNoLivesModal(false)}
           onUnlimitedLivesPurchased={() => {
-            activateUnlimitedLives(0.5); // 30 minutes
-            toast.success('¡Vidas Infinitas activadas! 30 minutos ❤️∞');
+            if (shouldApplyClientPersistentRewards) {
+              activateUnlimitedLives(0.5); // 30 minutes
+              toast.success('¡Vidas Infinitas activadas! 30 minutos ❤️∞');
+            }
             setShowNoLivesModal(false);
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
@@ -700,10 +705,13 @@ const Index = () => {
           onClose={() => setShowBattlePass(false)}
           hasPremiumAccess={hasActiveProduct('garden_pass')}
           onPurchaseSuccess={() => {
-            // garden_pass: 1000 gems, 30 days no ads (NOT unlimited lives)
-            addGems(1000);
-            // no_ads is handled server-side via no_ads_until
-            toast.success('¡Battle Pass Premium activado! +1000💎 +30 días sin ads');
+            if (shouldApplyClientPersistentRewards) {
+              // garden_pass: 1000 gems, 30 days no ads
+              addGems(1000);
+              toast.success('¡Battle Pass Premium activado! +1000💎 +30 días sin ads');
+            } else {
+              toast.success('¡Battle Pass Premium activado!');
+            }
           }}
         />
       )}

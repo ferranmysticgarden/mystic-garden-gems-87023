@@ -138,18 +138,21 @@ export type Database = {
           id: string
           processed_at: string
           product_id: string
+          stripe_session_id: string | null
           user_id: string
         }
         Insert: {
           id: string
           processed_at?: string
           product_id: string
+          stripe_session_id?: string | null
           user_id: string
         }
         Update: {
           id?: string
           processed_at?: string
           product_id?: string
+          stripe_session_id?: string | null
           user_id?: string
         }
         Relationships: []
