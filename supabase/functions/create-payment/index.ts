@@ -7,51 +7,51 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Mapeo de productos del juego a precios de Stripe (Cuenta: acct_1SqILHPxvUpv2yak)
+// Mapeo de productos del juego a precios de Stripe (Cuenta FCG: acct_1SA78ZB6GI8NmIPn)
 const PRODUCT_PRICES: Record<string, string> = {
   // Gemas
-  "gems_100": "price_1SwC1uPxvUpv2yaknEvmYMKo",
-  "gems_300": "price_1SwC27PxvUpv2yaknxghKfhG",
-  "gems_1200": "price_1SwC2KPxvUpv2yak5Cf5hvjE",
+  "gems_100": "price_1TAlY4B6GI8NmIPnoUXVXoXT",
+  "gems_300": "price_1TAlYKB6GI8NmIPn44P94iZy",
+  "gems_1200": "price_1TAlYcB6GI8NmIPnVbAqDYeT",
   // Sin anuncios
-  "no_ads_month": "price_1SwC2XPxvUpv2yakzLULeJPP",
-  "no_ads_forever": "price_1SwC2pPxvUpv2yakPTbVH6W0",
+  "no_ads_month": "price_1TAlZ3B6GI8NmIPn73pIMGxB",
+  "no_ads_forever": "price_1TAlauB6GI8NmIPnhpQqBDBn",
   // Suscripción
-  "garden_pass": "price_1SwC3KPxvUpv2yakxDYVKdsx",
+  "garden_pass": "price_1TAlb9B6GI8NmIPn6UpoKwr9",
   // Packs principales
-  "quick_pack": "price_1SwC3ePxvUpv2yakitUEtrbt",
-  "mega_pack_inicial": "price_1SwC3sPxvUpv2yakpk9AvEr2",
-  "pack_revancha": "price_1SwC48PxvUpv2yak43bIy9ED",
+  "quick_pack": "price_1TAlbTPxvUpv2yakoCn3W1A3",
+  "mega_pack_inicial": "price_1TAlbwB6GI8NmIPn3KS5Apvs",
+  "pack_revancha": "price_1TAlcGB6GI8NmIPn4IldsQYl",
   // Ofertas de nivel
-  "victory_multiplier": "price_1SwC4UPxvUpv2yakS90wIhNe",
-  "finish_level": "price_1SwC55PxvUpv2yakaAMufOsE",
-  "starter_pack": "price_1SwC5TPxvUpv2yakU9MsfDZS",
-  "continue_game": "price_1SwC5mPxvUpv2yaks3JEMRJn",
-  "flash_offer": "price_1SwC4UPxvUpv2yakS90wIhNe",
-  // Micro-transacciones €0.50 (mínimo Stripe)
-  "buy_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
-  "welcome_pack": "price_1Sx2g2PxvUpv2yakNxaBeR3a",
-  "extra_spin": "price_1Sx2gcPxvUpv2yakAQHL5UKW",
-  "streak_protection": "price_1Sx2gxPxvUpv2yak7WnJE3Eo",
-  "lifesaver_pack": "price_1Sx2hKPxvUpv2yakkBJPimfq",
-  "reward_doubler": "price_1Sx2hYPxvUpv2yaknaIPYKzW",
-  // Extra products
-  "extra_moves": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
-  "first_purchase": "price_1Sx2g2PxvUpv2yakNxaBeR3a",
+  "victory_multiplier": "price_1TAlcdB6GI8NmIPnZQNbhxxP",
+  "finish_level": "price_1TAlcsB6GI8NmIPn94CdWVvt",
+  "starter_pack": "price_1TAldAB6GI8NmIPnh7Zs7bPA",
+  "continue_game": "price_1TAldOB6GI8NmIPnVxkW6pMc",
+  "flash_offer": "price_1TAlcdB6GI8NmIPnZQNbhxxP",
+  // Micro-transacciones €0.50
+  "buy_moves": "price_1TAldiPxvUpv2yakU2nyMNfQ",
+  "welcome_pack": "price_1TAle6B6GI8NmIPn8ayVTngg",
+  "extra_spin": "price_1TAleWB6GI8NmIPnMZOGo2N6",
+  "streak_protection": "price_1TAleoB6GI8NmIPn2iCVKVc3",
+  "lifesaver_pack": "price_1TAlfFB6GI8NmIPnKkd6j757",
+  "reward_doubler": "price_1TAlfXB6GI8NmIPnOsSnbulR",
+  // Extra products (aliases)
+  "extra_moves": "price_1TAldiPxvUpv2yakU2nyMNfQ",
+  "first_purchase": "price_1TAle6B6GI8NmIPn8ayVTngg",
   // Vidas infinitas 30min (web)
-  "unlimited_lives_30min": "price_1Sx2ffPxvUpv2yakLqNF0Mlg",
+  "unlimited_lives_30min": "price_1TAlfrB6GI8NmIPnuJjK1pUf",
   // Experience Packs
-  "pack_victoria_segura": "price_1SwC7xPxvUpv2yakQ0CmX5uN",
-  "pack_racha_infinita": "price_1SwC8APxvUpv2yakGXumP9b1",
+  "pack_victoria_segura": "price_1TAlg9B6GI8NmIPnbk8EpVYi",
+  "pack_racha_infinita": "price_1TAlgXB6GI8NmIPnfNVMkqqO",
   // Multi-tier packs
-  "pack_impulso": "price_1SwC8OPxvUpv2yakqAuraXxH",
-  "pack_experiencia": "price_1SwC8gPxvUpv2yakRe3NKrI2",
-  "pack_victoria_segura_pro": "price_1SwC99PxvUpv2yakvtPl1F0r",
+  "pack_impulso": "price_1TAlguB6GI8NmIPnNXBvRUc1",
+  "pack_experiencia": "price_1TAlhDB6GI8NmIPnhPHrcV57",
+  "pack_victoria_segura_pro": "price_1TAlhWB6GI8NmIPnLXe9hVWu",
   // First day offer
-  "first_day_offer": "price_1SwC9OPxvUpv2yakOtw7E4ue",
+  "first_day_offer": "price_1TAlhsPxvUpv2yakN9juOabs",
   // Cofres (web)
-  "chest_silver": "price_1T1Q8KPxvUpv2yakThqAtlyy",
-  "chest_gold": "price_1T1Q8ZPxvUpv2yak0AU20DiC",
+  "chest_silver": "price_1TAlimPxvUpv2yakhdlWFBHf",
+  "chest_gold": "price_1TAlj7B6GI8NmIPnletS1ST2",
 };
 
 serve(async (req) => {
