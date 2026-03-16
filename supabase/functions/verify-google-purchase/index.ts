@@ -140,7 +140,7 @@ async function verifyWithGooglePlay(
   purchaseState?: number;
   error?: string;
   statusCode?: number;
-  reason?: 'service_disabled' | 'permission_denied' | 'invalid_credentials' | 'other';
+  reason?: 'service_disabled' | 'permission_denied' | 'invalid_credentials' | 'server_not_configured' | 'other';
   activationUrl?: string;
   serviceAccountEmail?: string;
 }> {
