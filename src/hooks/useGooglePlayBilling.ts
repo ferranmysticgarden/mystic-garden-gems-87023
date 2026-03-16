@@ -178,6 +178,7 @@ export const useGooglePlayBilling = () => {
     }
 
     const verificationTask = (async () => {
+      let verificationFailReason: string | null = null;
       try {
         trackEvent('purchase_verification_started', {
           platform: 'android',
@@ -196,8 +197,6 @@ export const useGooglePlayBilling = () => {
         if (error) {
           throw error;
         }
-
-        let verificationFailReason: string | null = null;
 
         if (!data?.success) {
           verificationFailReason = data?.reason ?? data?.code ?? null;
