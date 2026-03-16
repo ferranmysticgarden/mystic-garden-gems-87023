@@ -197,7 +197,10 @@ export const useGooglePlayBilling = () => {
           throw error;
         }
 
+        let verificationFailReason: string | null = null;
+
         if (!data?.success) {
+          verificationFailReason = data?.reason ?? data?.code ?? null;
           throw new Error(data?.error || 'Purchase verification failed');
         }
 
