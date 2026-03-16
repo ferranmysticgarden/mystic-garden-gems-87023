@@ -279,11 +279,6 @@ export const useGooglePlayBilling = () => {
           return true;
         }
 
-        const isServerNotConfigured =
-          normalizedError.includes('server verification not configured') ||
-          normalizedError.includes('server_verification_not_configured') ||
-          normalizedError.includes('server_not_configured');
-
         trackEvent('purchase_verification_failed', {
           platform: 'android',
           product: purchase.productId,
@@ -291,9 +286,14 @@ export const useGooglePlayBilling = () => {
           reason: verificationFailReason ?? undefined,
         });
 
+        const isServerNotConfigured =
+          normalizedError.includes('server verification not configured') ||
+          verificationFailReason === 'server_not_configured' ||
+          verificationFailReason === 'SERVER_VERIFICATION_NOT_CONFIGURED';
+
         toast.error(
           isServerNotConfigured
-            ? 'El servidor no tiene configurada la verificación de Google Play. Contacta al administrador.'
+            ? 'Compra bloqueada: el servidor no tiene configurada la verificación de Google Play (contacta al desarrollador).'
             : isServiceDisabled
               ? 'Compra bloqueada: activa Google Play Android Developer API del proyecto de la cuenta de servicio y espera 5 minutos.'
               : isPermissionDenied

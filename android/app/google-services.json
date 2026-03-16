@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "601918949398",
+    "project_id": "mystic-garden-pro-d49ba",
+    "storage_bucket": "mystic-garden-pro-d49ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601918949398:android:92fdace481715f34074d37",
+        "android_client_info": {
+          "package_name": "com.mysticgarden.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAc4k0IuXhNHWsEYVzz-5qRk4DHHv34snk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

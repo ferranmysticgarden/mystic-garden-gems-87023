@@ -146,8 +146,12 @@ async function verifyWithGooglePlay(
 }> {
   
   if (!serviceAccountKey) {
-    console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
-    return { valid: false, error: 'Server verification not configured. Set GOOGLE_PLAY_SERVICE_ACCOUNT secret in Edge Functions.', reason: 'server_not_configured' };
+    console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security. Add the secret in Supabase → Project Settings → Edge Functions / Secrets.');
+    return {
+      valid: false,
+      error: 'Server verification not configured. Configure GOOGLE_PLAY_SERVICE_ACCOUNT in Supabase (see DIAGNOSTICO_PAGOS.md).',
+      reason: 'server_not_configured',
+    };
   }
 
   try {
@@ -517,7 +521,7 @@ serve(async (req) => {
       }
 
       const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
-      const responsePayload: Record<string, any> = {
+      const responsePayload: Record<string, unknown> = {
         success: false,
         error: verification.error || 'Purchase verification failed',
         code: verification.statusCode ?? null,
@@ -525,11 +529,9 @@ serve(async (req) => {
         activationUrl: verification.activationUrl ?? null,
         packageName: resolvedPackageName,
       };
-
       if (verification.reason === 'server_not_configured') {
         responsePayload.code = 'SERVER_VERIFICATION_NOT_CONFIGURED';
       }
-
       return new Response(JSON.stringify(responsePayload), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
