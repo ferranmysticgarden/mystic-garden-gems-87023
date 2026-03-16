@@ -58,8 +58,8 @@ export const useGooglePlayBilling = () => {
       const productDetails = await queryProductsWithFallback(productIds);
       const loadedCount = Object.keys(productDetails).length;
 
-      if (loadedCount === 0 && retryCount < 2) {
-        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+      if (loadedCount === 0 && retryCount < 4) {
+        await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
 
@@ -80,8 +80,8 @@ export const useGooglePlayBilling = () => {
     } catch (error) {
       console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
       trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
-      if (retryCount < 2) {
-        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+      if (retryCount < 4) {
+        await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
       setProducts({});
@@ -412,3 +412,11 @@ export const useGooglePlayBilling = () => {
     getProductPrice,
   };
 };
+```
+
+Guarda con Ctrl+S y luego ejecuta en CMD:
+```
+cd /d "D:\mystic-garden-gems-87023"
+git add src/hooks/useGooglePlayBilling.ts
+git commit -m "Increase product load retries to 4 with longer delays"
+git push origin main
