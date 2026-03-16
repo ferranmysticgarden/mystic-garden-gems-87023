@@ -21,7 +21,6 @@ export const useGooglePlayBilling = () => {
   const hasLoadedProducts = Object.keys(products).length > 0;
 
   const queryProductsWithFallback = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
-    // First try: full batch (fast path)
     try {
       const fullBatch = await GooglePlayBilling.queryProducts({ productIds });
       if (Object.keys(fullBatch).length > 0) return fullBatch;
@@ -33,7 +32,6 @@ export const useGooglePlayBilling = () => {
       });
     }
 
-    // Fallback: query each product independently to avoid "all-or-nothing" failures
     const settled = await Promise.allSettled(
       productIds.map(async (id) => GooglePlayBilling.queryProducts({ productIds: [id] }))
     );
@@ -91,75 +89,6 @@ export const useGooglePlayBilling = () => {
     }
   }, [queryProductsWithFallback]);
 
-  useEffect(() => {
-    if (!isAndroid) return;
-
-    const setupBilling = async () => {
-      try {
-        const { ready } = await GooglePlayBilling.isReady();
-        setIsReady(ready);
-
-        if (!ready) {
-          setProducts({});
-          trackEvent('billing_status', { ready: false, products_loaded: 0 });
-          return;
-        }
-
-        await loadProducts();
-      } catch (error) {
-        console.error('Error setting up billing:', error);
-        setProducts({});
-        trackEvent('billing_error', { error: String(error), phase: 'setup' });
-      }
-    };
-
-    setupBilling();
-
-    const readyListener = GooglePlayBilling.addListener('billingReady', async ({ ready }) => {
-      setIsReady(ready);
-
-      if (!ready) {
-        setProducts({});
-        trackEvent('billing_status', { ready: false, products_loaded: 0 });
-        return;
-      }
-
-      try {
-        await loadProducts();
-      } catch (error) {
-        console.error('Error loading products after billingReady:', error);
-        setProducts({});
-        trackEvent('billing_error', { error: String(error), phase: 'billingReady' });
-      }
-    });
-
-    const purchaseListener = GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
-      console.log('Purchase completed:', purchase);
-      await verifyAndProcessPurchase(purchase);
-    });
-
-    const cancelListener = GooglePlayBilling.addListener('purchaseCancelled', () => {
-      trackEvent('purchase_cancelled', { platform: 'android' });
-    });
-
-    const errorListener = GooglePlayBilling.addListener('purchaseError', ({ error }) => {
-      trackEvent('purchase_error', { platform: 'android', error });
-    });
-
-    const pendingListener = GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
-      trackEvent('purchase_pending', { platform: 'android', product: productId });
-      toast.info('Compra pendiente de confirmación de pago');
-    });
-
-    return () => {
-      readyListener.then(l => l.remove());
-      purchaseListener.then(l => l.remove());
-      cancelListener.then(l => l.remove());
-      errorListener.then(l => l.remove());
-      pendingListener.then(l => l.remove());
-    };
-  }, [isAndroid, loadProducts]);
-
   const verifyAndProcessPurchase = useCallback((purchase: PurchaseResult): Promise<boolean> => {
     const purchaseToken = purchase.purchaseToken;
 
@@ -203,12 +132,10 @@ export const useGooglePlayBilling = () => {
           throw new Error(data?.error || 'Purchase verification failed');
         }
 
-        // Verification succeeded — NOW consume the purchase on Google Play
         try {
           await GooglePlayBilling.consumePurchase({ purchaseToken });
           console.log('[PURCHASE] ✅ Consumed after server verification');
         } catch (consumeError) {
-          // Log but don't fail — rewards already granted server-side
           console.error('[PURCHASE] ⚠️ Consume failed (rewards already granted):', consumeError);
           trackEvent('purchase_consume_failed', {
             platform: 'android',
@@ -237,7 +164,6 @@ export const useGooglePlayBilling = () => {
           normalizedError.includes('service_disabled') ||
           normalizedError.includes('accessnotconfigured') ||
           normalizedError.includes('api has not been used');
-        // Catch ALL 401/403 errors from Google Play API as permission issues
         const isPermissionDenied =
           errorMessage.includes('Google Play API 403') ||
           errorMessage.includes('Google Play API 401') ||
@@ -309,6 +235,75 @@ export const useGooglePlayBilling = () => {
     verificationTasksRef.current.set(purchaseToken, verificationTask);
     return verificationTask;
   }, []);
+
+  useEffect(() => {
+    if (!isAndroid) return;
+
+    const setupBilling = async () => {
+      try {
+        const { ready } = await GooglePlayBilling.isReady();
+        setIsReady(ready);
+
+        if (!ready) {
+          setProducts({});
+          trackEvent('billing_status', { ready: false, products_loaded: 0 });
+          return;
+        }
+
+        await loadProducts();
+      } catch (error) {
+        console.error('Error setting up billing:', error);
+        setProducts({});
+        trackEvent('billing_error', { error: String(error), phase: 'setup' });
+      }
+    };
+
+    setupBilling();
+
+    const readyListener = GooglePlayBilling.addListener('billingReady', async ({ ready }) => {
+      setIsReady(ready);
+
+      if (!ready) {
+        setProducts({});
+        trackEvent('billing_status', { ready: false, products_loaded: 0 });
+        return;
+      }
+
+      try {
+        await loadProducts();
+      } catch (error) {
+        console.error('Error loading products after billingReady:', error);
+        setProducts({});
+        trackEvent('billing_error', { error: String(error), phase: 'billingReady' });
+      }
+    });
+
+    const purchaseListener = GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
+      console.log('Purchase completed:', purchase);
+      await verifyAndProcessPurchase(purchase);
+    });
+
+    const cancelListener = GooglePlayBilling.addListener('purchaseCancelled', () => {
+      trackEvent('purchase_cancelled', { platform: 'android' });
+    });
+
+    const errorListener = GooglePlayBilling.addListener('purchaseError', ({ error }) => {
+      trackEvent('purchase_error', { platform: 'android', error });
+    });
+
+    const pendingListener = GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
+      trackEvent('purchase_pending', { platform: 'android', product: productId });
+      toast.info('Compra pendiente de confirmación de pago');
+    });
+
+    return () => {
+      readyListener.then(l => l.remove());
+      purchaseListener.then(l => l.remove());
+      cancelListener.then(l => l.remove());
+      errorListener.then(l => l.remove());
+      pendingListener.then(l => l.remove());
+    };
+  }, [isAndroid, loadProducts, verifyAndProcessPurchase]);
 
   const purchase = useCallback(async (productId: string): Promise<boolean> => {
     if (!isAndroid) {
