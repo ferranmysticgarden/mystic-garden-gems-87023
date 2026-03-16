@@ -147,7 +147,7 @@ async function verifyWithGooglePlay(
   
   if (!serviceAccountKey) {
     console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
-    return { valid: false, error: 'Server verification not configured' };
+    return { valid: false, error: 'Server verification not configured. Set GOOGLE_PLAY_SERVICE_ACCOUNT secret in Edge Functions.', reason: 'server_not_configured' };
   }
 
   try {
