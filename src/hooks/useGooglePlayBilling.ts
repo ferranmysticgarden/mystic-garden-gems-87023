@@ -280,20 +280,28 @@ export const useGooglePlayBilling = () => {
           return true;
         }
 
+        const isServerNotConfigured =
+          normalizedError.includes('server verification not configured') ||
+          normalizedError.includes('server_verification_not_configured') ||
+          normalizedError.includes('server_not_configured');
+
         trackEvent('purchase_verification_failed', {
           platform: 'android',
           product: purchase.productId,
           error: errorMessage,
+          reason: verificationFailReason ?? undefined,
         });
 
         toast.error(
-          isServiceDisabled
-            ? 'Compra bloqueada: activa Google Play Android Developer API del proyecto de la cuenta de servicio y espera 5 minutos.'
-            : isPermissionDenied
-              ? 'Compra bloqueada por permisos de Google Play para la cuenta de servicio. Revisa acceso API, Gestionar pedidos y Ver datos financieros en Google Play Console.'
-              : isInvalidCredentials
-                ? 'Compra bloqueada: credenciales de Google Play inválidas. Revisa GOOGLE_PLAY_SERVICE_ACCOUNT.'
-                : 'Error al procesar la compra'
+          isServerNotConfigured
+            ? 'El servidor no tiene configurada la verificación de Google Play. Contacta al administrador.'
+            : isServiceDisabled
+              ? 'Compra bloqueada: activa Google Play Android Developer API del proyecto de la cuenta de servicio y espera 5 minutos.'
+              : isPermissionDenied
+                ? 'Compra bloqueada por permisos de Google Play para la cuenta de servicio. Revisa acceso API, Gestionar pedidos y Ver datos financieros en Google Play Console.'
+                : isInvalidCredentials
+                  ? 'Compra bloqueada: credenciales de Google Play inválidas. Revisa GOOGLE_PLAY_SERVICE_ACCOUNT.'
+                  : 'Error al procesar la compra'
         );
         return false;
       }

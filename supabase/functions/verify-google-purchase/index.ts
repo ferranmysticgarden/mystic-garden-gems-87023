@@ -517,14 +517,20 @@ serve(async (req) => {
       }
 
       const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
-      return new Response(JSON.stringify({
+      const responsePayload: Record<string, any> = {
         success: false,
         error: verification.error || 'Purchase verification failed',
         code: verification.statusCode ?? null,
         reason: verification.reason ?? null,
         activationUrl: verification.activationUrl ?? null,
         packageName: resolvedPackageName,
-      }), {
+      };
+
+      if (verification.reason === 'server_not_configured') {
+        responsePayload.code = 'SERVER_VERIFICATION_NOT_CONFIGURED';
+      }
+
+      return new Response(JSON.stringify(responsePayload), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
       });
