@@ -140,14 +140,14 @@ async function verifyWithGooglePlay(
   purchaseState?: number;
   error?: string;
   statusCode?: number;
-  reason?: 'service_disabled' | 'permission_denied' | 'invalid_credentials' | 'other';
+  reason?: 'service_disabled' | 'permission_denied' | 'invalid_credentials' | 'server_not_configured' | 'other';
   activationUrl?: string;
   serviceAccountEmail?: string;
 }> {
   
   if (!serviceAccountKey) {
     console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security');
-    return { valid: false, error: 'Server verification not configured' };
+    return { valid: false, error: 'Server verification not configured. Set GOOGLE_PLAY_SERVICE_ACCOUNT secret in Edge Functions.', reason: 'server_not_configured' };
   }
 
   try {
@@ -517,14 +517,20 @@ serve(async (req) => {
       }
 
       const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
-      return new Response(JSON.stringify({
+      const responsePayload: Record<string, any> = {
         success: false,
         error: verification.error || 'Purchase verification failed',
         code: verification.statusCode ?? null,
         reason: verification.reason ?? null,
         activationUrl: verification.activationUrl ?? null,
         packageName: resolvedPackageName,
-      }), {
+      };
+
+      if (verification.reason === 'server_not_configured') {
+        responsePayload.code = 'SERVER_VERIFICATION_NOT_CONFIGURED';
+      }
+
+      return new Response(JSON.stringify(responsePayload), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status,
       });
