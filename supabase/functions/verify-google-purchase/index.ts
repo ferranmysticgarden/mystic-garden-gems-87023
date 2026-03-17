@@ -6,13 +6,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Product rewards configuration (canonical app IDs)
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean; unlimitedLivesMinutes?: number }> = {
-  // Cofres (reward granted client-side, randomized)
   "chest_wooden": {},
   "chest_silver": {},
   "chest_gold": {},
-  // Packs principales
   "mega_pack_inicial": { gems: 500, lives: 10, powerups: 3, noAdsDays: 1 },
   "pack_revancha": { gems: 50, lives: 5, powerups: 5 },
   "quick_pack": { lives: 3, gems: 20 },
@@ -59,7 +56,6 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   gardenpass: 'garden_pass',
   extramoves: 'extra_moves',
   firstpurchase: 'first_purchase',
-  // Productos que faltaban
   flashoffer: 'flash_offer',
   buymoves: 'buy_moves',
   finishlevel: 'finish_level',
@@ -74,7 +70,6 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   lifesaverpack: 'lifesaver_pack',
   streakprotection: 'streak_protection',
   extraspin: 'extra_spin',
-  // Compatibilidad con catálogos donde añadieron sufijo numérico
   welcomepack1: 'welcome_pack',
   packimpulso1: 'pack_impulso',
   packexperiencia1: 'pack_experiencia',
@@ -120,15 +115,12 @@ const NORMALIZED_CANONICAL_PRODUCT_IDS: Record<string, string> = Object.keys(PRO
 
 const normalizeGoogleProductId = (productId: string) => {
   if (PRODUCT_REWARDS[productId]) return productId;
-
   const directAlias = GOOGLE_PLAY_PRODUCT_ALIASES[productId];
   if (directAlias) return directAlias;
-
   const normalized = normalizeId(productId);
   return GOOGLE_PLAY_PRODUCT_ALIASES[normalized] ?? NORMALIZED_CANONICAL_PRODUCT_IDS[normalized] ?? productId;
 };
 
-// Google Play API verification
 async function verifyWithGooglePlay(
   packageName: string,
   productId: string,
@@ -144,12 +136,11 @@ async function verifyWithGooglePlay(
   activationUrl?: string;
   serviceAccountEmail?: string;
 }> {
-  
   if (!serviceAccountKey) {
-    console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured - REJECTING purchase for security. Add the secret in Supabase → Project Settings → Edge Functions / Secrets.');
+    console.error('[ERROR] No GOOGLE_PLAY_SERVICE_ACCOUNT configured');
     return {
       valid: false,
-      error: 'Server verification not configured. Configure GOOGLE_PLAY_SERVICE_ACCOUNT in Supabase (see DIAGNOSTICO_PAGOS.md).',
+      error: 'Server verification not configured. Configure GOOGLE_PLAY_SERVICE_ACCOUNT in Supabase.',
       reason: 'server_not_configured',
     };
   }
@@ -159,17 +150,12 @@ async function verifyWithGooglePlay(
     const serviceAccountEmail = String(serviceAccount?.client_email ?? '');
     const tokenResponse = await getGoogleAccessToken(serviceAccount);
     if (!tokenResponse.access_token) {
-      const tokenError = [tokenResponse.error, tokenResponse.error_description]
-        .filter(Boolean)
-        .join(' - ');
-
+      const tokenError = [tokenResponse.error, tokenResponse.error_description].filter(Boolean).join(' - ');
       return {
         valid: false,
         statusCode: 401,
         reason: 'invalid_credentials',
-        error: tokenError
-          ? `Google OAuth error: ${tokenError}`
-          : 'No se pudo obtener token OAuth de Google Play (credenciales inválidas).',
+        error: tokenError ? `Google OAuth error: ${tokenError}` : 'No se pudo obtener token OAuth de Google Play.',
         serviceAccountEmail,
       };
     }
@@ -178,9 +164,9 @@ async function verifyWithGooglePlay(
     const encodedToken = encodeURIComponent(purchaseToken);
     const encodedProductId = encodeURIComponent(productId);
     const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodedPackageName}/purchases/products/${encodedProductId}/tokens/${encodedToken}`;
-    
+
     console.log(`[INFO] Google Play API request: package=${packageName}, product=${productId}, tokenPrefix=${purchaseToken.slice(0, 16)}..., tokenLength=${purchaseToken.length}`);
-    
+
     const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${tokenResponse.access_token}`,
@@ -191,33 +177,24 @@ async function verifyWithGooglePlay(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[ERROR] Google Play API error:', response.status, errorText);
-      console.error('[ERROR] Request details:', { packageName, productId, tokenLength: purchaseToken.length, tokenPrefix: purchaseToken.slice(0, 20) });
       let parsedError: any = null;
-      try {
-        parsedError = JSON.parse(errorText);
-      } catch {
-        parsedError = null;
-      }
+      try { parsedError = JSON.parse(errorText); } catch { parsedError = null; }
 
       const googleError = parsedError?.error;
       const reasonCodes = [
         googleError?.status,
         ...(googleError?.errors ?? []).map((entry: any) => entry?.reason),
         ...(googleError?.details ?? []).map((detail: any) => detail?.reason),
-      ]
-        .filter(Boolean)
-        .map((value: string) => value.toLowerCase());
+      ].filter(Boolean).map((value: string) => value.toLowerCase());
 
       const message = String(googleError?.message ?? errorText ?? '').toLowerCase();
 
-      const isServiceDisabled =
-        response.status === 403 &&
-        (
-          reasonCodes.includes('service_disabled') ||
-          reasonCodes.includes('accessnotconfigured') ||
-          message.includes('api has not been used') ||
-          message.includes('is disabled')
-        );
+      const isServiceDisabled = response.status === 403 && (
+        reasonCodes.includes('service_disabled') ||
+        reasonCodes.includes('accessnotconfigured') ||
+        message.includes('api has not been used') ||
+        message.includes('is disabled')
+      );
 
       const isPermissionDenied =
         reasonCodes.includes('permissiondenied') ||
@@ -229,65 +206,28 @@ async function verifyWithGooglePlay(
         googleError?.details?.find((detail: any) => Array.isArray(detail?.links) && detail.links[0]?.url)?.links?.[0]?.url;
 
       if (isServiceDisabled) {
-        return {
-          valid: false,
-          statusCode: 403,
-          reason: 'service_disabled',
-          activationUrl,
-          error: 'Google Play API desactivada en el proyecto de la cuenta de servicio. Actívala en Google Cloud y espera 5 minutos.',
-          serviceAccountEmail,
-        };
+        return { valid: false, statusCode: 403, reason: 'service_disabled', activationUrl, error: 'Google Play API desactivada.', serviceAccountEmail };
       }
 
       if (response.status === 401) {
-        // ALL 401 errors indicate permission/credential issues — classify as permission_denied
-        // so degraded mode can activate on the client side
-        const specificReason = isPermissionDenied ? 'permission_denied' : 'permission_denied';
-        return {
-          valid: false,
-          statusCode: 401,
-          reason: specificReason,
-          error: isPermissionDenied
-            ? 'Google Play API 401: permisos insuficientes para la cuenta de servicio en Google Play Console (acceso API + Gestionar pedidos + Ver datos financieros).'
-            : 'Google Play API 401: permisos insuficientes o credenciales inválidas de la cuenta de servicio.',
-          serviceAccountEmail,
-        };
+        return { valid: false, statusCode: 401, reason: 'permission_denied', error: 'Google Play API 401: permisos insuficientes.', serviceAccountEmail };
       }
 
       if (response.status === 403 || isPermissionDenied) {
-        return {
-          valid: false,
-          statusCode: 403,
-          reason: 'permission_denied',
-          error: 'Google Play API 403: la cuenta de servicio no tiene permisos para este paquete (revisar acceso API, Gestionar pedidos y Ver datos financieros).',
-          serviceAccountEmail,
-        };
+        return { valid: false, statusCode: 403, reason: 'permission_denied', error: 'Google Play API 403: permisos insuficientes.', serviceAccountEmail };
       }
 
-      return {
-        valid: false,
-        statusCode: response.status,
-        reason: 'other',
-        error: `Google Play API error: ${response.status}`,
-      };
+      return { valid: false, statusCode: response.status, reason: 'other', error: `Google Play API error: ${response.status}` };
     }
 
     const purchaseData = await response.json();
     console.log('[INFO] Google Play purchase data:', JSON.stringify(purchaseData));
 
     if (purchaseData.purchaseState !== 0) {
-      return { 
-        valid: false, 
-        purchaseState: purchaseData.purchaseState,
-        error: `Purchase state is ${purchaseData.purchaseState}, not purchased` 
-      };
+      return { valid: false, purchaseState: purchaseData.purchaseState, error: `Purchase state is ${purchaseData.purchaseState}, not purchased` };
     }
 
-    return { 
-      valid: true, 
-      consumptionState: purchaseData.consumptionState,
-      purchaseState: purchaseData.purchaseState 
-    };
+    return { valid: true, consumptionState: purchaseData.consumptionState, purchaseState: purchaseData.purchaseState };
 
   } catch (error) {
     console.error('[ERROR] Verification error:', error);
@@ -295,22 +235,17 @@ async function verifyWithGooglePlay(
   }
 }
 
-// Get Google OAuth access token from service account
 async function getGoogleAccessToken(serviceAccount: any): Promise<{
   access_token?: string;
   error?: string;
   error_description?: string;
 }> {
   if (!serviceAccount?.client_email || !serviceAccount?.private_key) {
-    return {
-      error: 'invalid_service_account',
-      error_description: 'Faltan client_email o private_key en GOOGLE_PLAY_SERVICE_ACCOUNT.',
-    };
+    return { error: 'invalid_service_account', error_description: 'Faltan client_email o private_key.' };
   }
 
   const now = Math.floor(Date.now() / 1000);
   const expiry = now + 3600;
-
   const header = { alg: 'RS256', typ: 'JWT' };
   const payload = {
     iss: serviceAccount.client_email,
@@ -326,30 +261,12 @@ async function getGoogleAccessToken(serviceAccount: any): Promise<{
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
   const privateKey = String(serviceAccount.private_key).replace(/\\n/g, '\n');
-  const pemContents = privateKey
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s/g, '');
-
+  const pemContents = privateKey.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '').replace(/\s/g, '');
   const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
 
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    binaryKey,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    encoder.encode(unsignedToken)
-  );
-
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
+  const cryptoKey = await crypto.subtle.importKey('pkcs8', binaryKey, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, encoder.encode(unsignedToken));
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   const jwt = `${unsignedToken}.${signatureB64}`;
 
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -379,15 +296,7 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !serviceRoleKey) {
-    console.error('[ERROR] Missing backend env vars', {
-      hasSupabaseUrl: Boolean(supabaseUrl),
-      hasServiceRoleKey: Boolean(serviceRoleKey),
-    });
-
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Server configuration error',
-    }), {
+    return new Response(JSON.stringify({ success: false, error: 'Server configuration error' }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
@@ -396,16 +305,11 @@ serve(async (req) => {
   const supabaseClient = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Try to authenticate user — but allow guests (no auth = guest purchase)
     let userId: string | null = null;
-
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
-      const supabaseAnonClient = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-      );
+      const supabaseAnonClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
       const { data: userData } = await supabaseAnonClient.auth.getUser(token);
       userId = userData.user?.id || null;
     }
@@ -425,100 +329,45 @@ serve(async (req) => {
     const isGuest = !userId;
 
     const defaultPackageName = "com.mysticgarden.game";
-    const packageCandidates = Array.from(
-      new Set(
-        [
-          typeof purchasePackageName === "string" ? purchasePackageName.trim() : "",
-          Deno.env.get("ANDROID_PACKAGE_NAME") ?? "",
-          defaultPackageName,
-        ].filter((pkg): pkg is string => Boolean(pkg))
-      )
-    );
+    const packageCandidates = Array.from(new Set([
+      typeof purchasePackageName === "string" ? purchasePackageName.trim() : "",
+      Deno.env.get("ANDROID_PACKAGE_NAME") ?? "",
+      defaultPackageName,
+    ].filter((pkg): pkg is string => Boolean(pkg))));
 
-    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}, packages=${packageCandidates.join(',')}`);
+    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
-    const { error: auditInsertError } = await supabaseClient
-      .from('app_events')
-      .insert({
-        event_name: 'gp_verify_started',
-        event_data: {
-          productId,
-          rawProductId,
-          orderId: orderId || null,
-          purchaseTokenPrefix: purchaseToken.slice(0, 12),
-          packageCandidates,
-          isGuest,
-          userId,
-        },
-        platform: 'android',
-        device_id: purchaseToken.slice(0, 24),
-      });
+    await supabaseClient.from('app_events').insert({
+      event_name: 'gp_verify_started',
+      event_data: { productId, rawProductId, orderId: orderId || null, purchaseTokenPrefix: purchaseToken.slice(0, 12), packageCandidates, isGuest, userId },
+      platform: 'android',
+      device_id: purchaseToken.slice(0, 24),
+    });
 
-    if (auditInsertError) {
-      console.error('[WARN] Failed to audit gp_verify_started:', auditInsertError.message);
-    }
-
-    // Verify with Google Play API (ALWAYS — this is the real security check)
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
-
     const [primaryPackageName, ...fallbackPackageNames] = packageCandidates;
     let resolvedPackageName = primaryPackageName;
-    let verification = await verifyWithGooglePlay(
-      primaryPackageName,
-      rawProductId,
-      purchaseToken,
-      serviceAccountKey
-    );
+    let verification = await verifyWithGooglePlay(primaryPackageName, rawProductId, purchaseToken, serviceAccountKey);
 
-    const shouldRetryPackageFallback = (statusCode?: number) =>
-      statusCode === 401 || statusCode === 403 || statusCode === 404;
+    const shouldRetryPackageFallback = (statusCode?: number) => statusCode === 401 || statusCode === 403 || statusCode === 404;
 
     if (!verification.valid && shouldRetryPackageFallback(verification.statusCode)) {
       for (const candidatePackageName of fallbackPackageNames) {
-        const candidateResult = await verifyWithGooglePlay(
-          candidatePackageName,
-          rawProductId,
-          purchaseToken,
-          serviceAccountKey
-        );
-
+        const candidateResult = await verifyWithGooglePlay(candidatePackageName, rawProductId, purchaseToken, serviceAccountKey);
         resolvedPackageName = candidatePackageName;
         verification = candidateResult;
-
-        if (candidateResult.valid || !shouldRetryPackageFallback(candidateResult.statusCode)) {
-          break;
-        }
+        if (candidateResult.valid || !shouldRetryPackageFallback(candidateResult.statusCode)) break;
       }
     }
 
     if (!verification.valid) {
       console.error('[ERROR] Purchase verification failed:', verification.error);
-
-      const { error: auditFailError } = await supabaseClient
-        .from('app_events')
-        .insert({
-          event_name: 'gp_verify_failed',
-          event_data: {
-            productId,
-            rawProductId,
-            orderId: orderId || null,
-            packageName: resolvedPackageName,
-            error: verification.error || 'Purchase verification failed',
-            googleStatus: verification.statusCode ?? null,
-            reason: verification.reason ?? null,
-            activationUrl: verification.activationUrl ?? null,
-            purchaseState: verification.purchaseState ?? null,
-            consumptionState: verification.consumptionState ?? null,
-            isGuest,
-            userId,
-          },
-          platform: 'android',
-          device_id: purchaseToken.slice(0, 24),
-        });
-
-      if (auditFailError) {
-        console.error('[WARN] Failed to audit gp_verify_failed:', auditFailError.message);
-      }
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_verify_failed',
+        event_data: { productId, rawProductId, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
 
       const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
       const responsePayload: Record<string, unknown> = {
@@ -526,7 +375,6 @@ serve(async (req) => {
         error: verification.error || 'Purchase verification failed',
         code: verification.statusCode ?? null,
         reason: verification.reason ?? null,
-        activationUrl: verification.activationUrl ?? null,
         packageName: resolvedPackageName,
       };
       if (verification.reason === 'server_not_configured') {
@@ -540,37 +388,19 @@ serve(async (req) => {
 
     console.log('[INFO] Purchase verified successfully with Google Play');
 
-    const { error: auditVerifiedError } = await supabaseClient
-      .from('app_events')
-      .insert({
-        event_name: 'gp_verify_ok',
-        event_data: {
-          productId,
-          rawProductId,
-          orderId: orderId || null,
-          packageName: resolvedPackageName,
-          purchaseState: verification.purchaseState ?? null,
-          consumptionState: verification.consumptionState ?? null,
-          isGuest,
-          userId,
-        },
-        platform: 'android',
-        device_id: purchaseToken.slice(0, 24),
-      });
+    await supabaseClient.from('app_events').insert({
+      event_name: 'gp_verify_ok',
+      event_data: { productId, rawProductId, orderId: orderId || null, packageName: resolvedPackageName, purchaseState: verification.purchaseState ?? null, consumptionState: verification.consumptionState ?? null, isGuest, userId },
+      platform: 'android',
+      device_id: purchaseToken.slice(0, 24),
+    });
 
-    if (auditVerifiedError) {
-      console.error('[WARN] Failed to audit gp_verify_ok:', auditVerifiedError.message);
-    }
-
-    // Get product rewards
     const rewards = PRODUCT_REWARDS[productId];
     if (!rewards) {
       throw new Error(`Unknown product: ${productId} (raw=${rawProductId})`);
     }
 
-    // If user is authenticated, save to DB and grant rewards server-side
     if (userId) {
-      // Check if this purchase was already processed (prevent double-spend)
       const { data: existingPurchase } = await supabaseClient
         .from('user_purchases')
         .select('id')
@@ -586,18 +416,14 @@ serve(async (req) => {
         });
       }
 
-      // Get current game progress
       const { data: progress, error: progressError } = await supabaseClient
         .from('game_progress')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (progressError && progressError.code !== 'PGRST116') {
-        throw progressError;
-      }
+      if (progressError && progressError.code !== 'PGRST116') throw progressError;
 
-      // Calculate new values
       const currentGems = progress?.gems || 0;
       const currentLives = progress?.lives || 5;
       const currentHammer = progress?.hammer_count || 0;
@@ -623,118 +449,67 @@ serve(async (req) => {
         expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
         updates.no_ads_until = expireDate.toISOString();
       }
-      // Unlimited lives → unlimited_lives_until (NOT no_ads_until)
+      if (rewards.noAdsForever) {
+        updates.no_ads_until = '2099-12-31T23:59:59.000Z';
+      }
       if (rewards.unlimitedLivesMinutes) {
         const now = new Date();
-        const currentUL = progress?.unlimited_lives_until
-          ? new Date(progress.unlimited_lives_until as string)
-          : null;
+        const currentUL = progress?.unlimited_lives_until ? new Date(progress.unlimited_lives_until as string) : null;
         const base = (currentUL && currentUL > now) ? currentUL : now;
         updates.unlimited_lives_until = new Date(base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000).toISOString();
       }
 
-      // Update or insert game progress
       if (progress) {
-        await supabaseClient
-          .from('game_progress')
-          .update(updates)
-          .eq('user_id', userId);
+        await supabaseClient.from('game_progress').update(updates).eq('user_id', userId);
       } else {
         updates.lives = updates.lives || 5;
         updates.gems = updates.gems || 0;
-        await supabaseClient
-          .from('game_progress')
-          .insert(updates);
+        await supabaseClient.from('game_progress').insert(updates);
       }
 
-      // Record immutable purchase proof (used for dedupe / audit)
-      await supabaseClient
-        .from('user_purchases')
-        .insert({
+      await supabaseClient.from('user_purchases').insert({
+        user_id: userId,
+        product_id: purchaseRecordId,
+        expires_at: rewards.noAdsDays ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString() : null,
+      });
+
+      if (rewards.noAdsDays || rewards.noAdsForever) {
+        const canonicalExpiresAt = rewards.noAdsForever ? null : new Date(Date.now() + (rewards.noAdsDays || 0) * 24 * 60 * 60 * 1000).toISOString();
+
+        await supabaseClient.from('user_purchases').delete().eq('user_id', userId).eq('product_id', productId);
+
+        const { error: insertCanonicalError } = await supabaseClient.from('user_purchases').insert({
           user_id: userId,
-          product_id: purchaseRecordId,
-          expires_at: rewards.noAdsDays
-            ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
-            : null,
+          product_id: productId,
+          expires_at: canonicalExpiresAt,
         });
 
-      // Record canonical entitlement for premium/no-ads products (used by client checks)
-      if (rewards.noAdsDays || rewards.noAdsForever) {
-        const canonicalExpiresAt = rewards.noAdsForever
-          ? null
-          : new Date(Date.now() + (rewards.noAdsDays || 0) * 24 * 60 * 60 * 1000).toISOString();
-
-        const { error: deleteCanonicalError } = await supabaseClient
-          .from('user_purchases')
-          .delete()
-          .eq('user_id', userId)
-          .eq('product_id', productId);
-
-        if (deleteCanonicalError) {
-          console.error('[WARN] Could not cleanup previous canonical entitlement:', deleteCanonicalError.message);
-        }
-
-        const { error: insertCanonicalError } = await supabaseClient
-          .from('user_purchases')
-          .insert({
-            user_id: userId,
-            product_id: productId,
-            expires_at: canonicalExpiresAt,
-          });
-
-        if (insertCanonicalError) {
-          throw insertCanonicalError;
-        }
+        if (insertCanonicalError) throw insertCanonicalError;
       }
 
       if (rewards.noAdsForever && productId !== 'no_ads_forever') {
-        await supabaseClient
-          .from('user_purchases')
-          .insert({
-            user_id: userId,
-            product_id: 'no_ads_forever',
-            expires_at: null,
-          });
-      }
-
-      const { error: auditGrantedError } = await supabaseClient
-        .from('app_events')
-        .insert({
-          event_name: 'gp_purchase_granted',
-          event_data: {
-            productId,
-            orderId: orderId || null,
-            isGuest: false,
-            userId,
-            rewards,
-          },
-          platform: 'android',
-          device_id: purchaseToken.slice(0, 24),
+        await supabaseClient.from('user_purchases').insert({
+          user_id: userId,
+          product_id: 'no_ads_forever',
+          expires_at: null,
         });
-
-      if (auditGrantedError) {
-        console.error('[WARN] Failed to audit gp_purchase_granted:', auditGrantedError.message);
       }
+
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_purchase_granted',
+        event_data: { productId, orderId: orderId || null, isGuest: false, userId, rewards },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
 
       console.log(`[INFO] ✅ Purchase completed (authenticated): ${productId} for user ${userId}`);
     } else {
-      // Guest purchase: Google Play verified it, rewards will be applied client-side
-      const { error: auditGuestError } = await supabaseClient
-        .from('app_events')
-        .insert({
-          event_name: 'gp_purchase_guest_verified',
-          event_data: {
-            productId,
-            orderId: orderId || null,
-            isGuest: true,
-          },
-          platform: 'android',
-          device_id: purchaseToken.slice(0, 24),
-        });
-
-      if (auditGuestError) {
-        console.error('[WARN] Failed to audit gp_purchase_guest_verified:', auditGuestError.message);
-      }
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_purchase_guest_verified',
+        event_data: { productId, orderId: orderId || null, isGuest: true },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
 
       console.log(`[INFO] ✅ Purchase verified (guest): ${productId} — rewards applied client-side`);
     }
@@ -752,3 +527,11 @@ serve(async (req) => {
     });
   }
 });
+```
+
+Guarda con Ctrl+S. Luego en CMD:
+```
+cd /d "D:\mystic-garden-gems-87023"
+git add supabase/functions/verify-google-purchase/index.ts
+git commit -m "Fix: set no_ads_until for no_ads_forever purchases"
+git push origin main
