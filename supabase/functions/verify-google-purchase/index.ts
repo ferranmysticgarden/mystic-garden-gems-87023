@@ -527,11 +527,3 @@ serve(async (req) => {
     });
   }
 });
-```
-
-Guarda con Ctrl+S. Luego en CMD:
-```
-cd /d "D:\mystic-garden-gems-87023"
-git add supabase/functions/verify-google-purchase/index.ts
-git commit -m "Fix: set no_ads_until for no_ads_forever purchases"
-git push origin main
