@@ -16,6 +16,7 @@ export const useGooglePlayBilling = () => {
   const [products, setProducts] = useState<Record<string, ProductDetails>>({});
   const [loading, setLoading] = useState(false);
   const verificationTasksRef = useRef<Map<string, Promise<boolean>>>(new Map());
+  const purchaseInitiatedByUserRef = useRef<Set<string>>(new Set());
 
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
@@ -58,7 +59,7 @@ export const useGooglePlayBilling = () => {
       const productDetails = await queryProductsWithFallback(productIds);
       const loadedCount = Object.keys(productDetails).length;
 
-      if (loadedCount === 0 && retryCount < 2) {
+      if (loadedCount === 0 && retryCount < 4) {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
@@ -80,7 +81,7 @@ export const useGooglePlayBilling = () => {
     } catch (error) {
       console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
       trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
-      if (retryCount < 2) {
+      if (retryCount < 4) {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
@@ -279,7 +280,12 @@ export const useGooglePlayBilling = () => {
     });
 
     const purchaseListener = GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
-      console.log('Purchase completed:', purchase);
+      console.log('Purchase completed (listener):', purchase);
+      if (purchase.purchaseToken && purchaseInitiatedByUserRef.current.has(purchase.purchaseToken)) {
+        console.log('[PURCHASE] Skipping listener — already handled by purchase()');
+        purchaseInitiatedByUserRef.current.delete(purchase.purchaseToken);
+        return;
+      }
       await verifyAndProcessPurchase(purchase);
     });
 
@@ -371,6 +377,10 @@ export const useGooglePlayBilling = () => {
         google_id: googlePlayProductId,
         has_token: !!result?.purchaseToken,
       });
+      // Mark token so the listener skips this purchase
+      if (result?.purchaseToken) {
+        purchaseInitiatedByUserRef.current.add(result.purchaseToken);
+      }
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
