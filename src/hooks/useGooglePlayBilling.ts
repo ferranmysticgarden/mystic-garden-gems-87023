@@ -80,7 +80,7 @@ export const useGooglePlayBilling = () => {
     } catch (error) {
       console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
       trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
-      if (retryCount < 2) {
+      if (retryCount < 4) {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
