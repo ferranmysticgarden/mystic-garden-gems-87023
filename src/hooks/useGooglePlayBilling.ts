@@ -377,6 +377,10 @@ export const useGooglePlayBilling = () => {
         google_id: googlePlayProductId,
         has_token: !!result?.purchaseToken,
       });
+      // Mark token so the listener skips this purchase
+      if (result?.purchaseToken) {
+        purchaseInitiatedByUserRef.current.add(result.purchaseToken);
+      }
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
