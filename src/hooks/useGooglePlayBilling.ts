@@ -278,8 +278,16 @@ export const useGooglePlayBilling = () => {
       }
     });
 
+    const purchaseInitiatedByUser = new Set<string>();
+
     const purchaseListener = GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
-      console.log('Purchase completed:', purchase);
+      console.log('Purchase completed (listener):', purchase);
+      // Skip if purchase() already handles this token
+      if (purchase.purchaseToken && purchaseInitiatedByUser.has(purchase.purchaseToken)) {
+        console.log('[PURCHASE] Skipping listener — already handled by purchase()');
+        purchaseInitiatedByUser.delete(purchase.purchaseToken);
+        return;
+      }
       await verifyAndProcessPurchase(purchase);
     });
 
