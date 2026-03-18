@@ -58,7 +58,7 @@ export const useGooglePlayBilling = () => {
       const productDetails = await queryProductsWithFallback(productIds);
       const loadedCount = Object.keys(productDetails).length;
 
-      if (loadedCount === 0 && retryCount < 2) {
+      if (loadedCount === 0 && retryCount < 4) {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
