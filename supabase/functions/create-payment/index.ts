@@ -1,57 +1,58 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "npm:stripe@17.7.0";
+import Stripe from "npm:stripe@14.21.0";
 import { createClient } from "npm:@supabase/supabase-js@2.76.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Mapeo de productos del juego a precios de Stripe (Cuenta FCG: acct_1SA78ZB6GI8NmIPn)
 const PRODUCT_PRICES: Record<string, string> = {
   // Gemas
-  "gems_100": "price_1TAmg2B6GI8NmIPniADboyZd",
-  "gems_300": "price_1TAolMB6GI8NmIPny1IrmuBB",
-  "gems_1200": "price_1TApZjB6GI8NmIPnKines1LB",
+  gems_100: "price_1TAmg2B6GI8NmIPniADboyZd",
+  gems_300: "price_1TAolMB6GI8NmIPny1IrmuBB",
+  gems_1200: "price_1TApZjB6GI8NmIPnKines1LB",
   // Sin anuncios
-  "no_ads_month": "price_1TAmhnB6GI8NmIPnuKlcpjCa",
-  "no_ads_forever": "price_1TAmiAB6GI8NmIPn8WG1DdLD",
+  no_ads_month: "price_1TAmhnB6GI8NmIPnuKlcpjCa",
+  no_ads_forever: "price_1TAmiAB6GI8NmIPn8WG1DdLD",
   // Garden Pass
-  "garden_pass": "price_1TAmikB6GI8NmIPnulGhUk2B",
+  garden_pass: "price_1TAmikB6GI8NmIPnulGhUk2B",
   // Packs principales
-  "quick_pack": "price_1TAmltB6GI8NmIPn51rEsiE2",
-  "mega_pack_inicial": "price_1TAmmIB6GI8NmIPnveD4dD2N",
-  "pack_revancha": "price_1TAmmaB6GI8NmIPnQLZWWdtt",
+  quick_pack: "price_1TAmltB6GI8NmIPn51rEsiE2",
+  mega_pack_inicial: "price_1TAmmIB6GI8NmIPnveD4dD2N",
+  pack_revancha: "price_1TAmmaB6GI8NmIPnQLZWWdtt",
   // Ofertas de nivel
-  "victory_multiplier": "price_1TAmmsB6GI8NmIPnATdkUxno",
-  "finish_level": "price_1TAmnAB6GI8NmIPngsgoL9pf",
-  "starter_pack": "price_1TAmnRB6GI8NmIPnQemntW8N",
-  "continue_game": "price_1TAmnjB6GI8NmIPnEZouUfqq",
-  "flash_offer": "price_1TAmmsB6GI8NmIPnATdkUxno",
+  victory_multiplier: "price_1TAmmsB6GI8NmIPnATdkUxno",
+  finish_level: "price_1TAmnAB6GI8NmIPngsgoL9pf",
+  starter_pack: "price_1TAmnRB6GI8NmIPnQemntW8N",
+  continue_game: "price_1TAmnjB6GI8NmIPnEZouUfqq",
+  flash_offer: "price_1TAmmsB6GI8NmIPnATdkUxno",
   // Micro-transacciones €0.50
-  "buy_moves": "price_1TAolzB6GI8NmIPn3ayBTFXP",
-  "welcome_pack": "price_1TAmowB6GI8NmIPnYWc5k1NH",
-  "extra_spin": "price_1TAmpDB6GI8NmIPnpIoVj1KV",
-  "streak_protection": "price_1TAleoB6GI8NmIPn2iCVKVc3",
-  "lifesaver_pack": "price_1TAlfFB6GI8NmIPnKkd6j757",
-  "reward_doubler": "price_1TAlfXB6GI8NmIPnOsSnbulR",
+  buy_moves: "price_1TAolzB6GI8NmIPn3ayBTFXP",
+  welcome_pack: "price_1TAmowB6GI8NmIPnYWc5k1NH",
+  extra_spin: "price_1TAmpDB6GI8NmIPnpIoVj1KV",
+  streak_protection: "price_1TAleoB6GI8NmIPn2iCVKVc3",
+  lifesaver_pack: "price_1TAlfFB6GI8NmIPnKkd6j757",
+  reward_doubler: "price_1TAlfXB6GI8NmIPnOsSnbulR",
   // Extra products (aliases)
-  "extra_moves": "price_1TAolzB6GI8NmIPn3ayBTFXP",
-  "first_purchase": "price_1TAmowB6GI8NmIPnYWc5k1NH",
+  extra_moves: "price_1TAolzB6GI8NmIPn3ayBTFXP",
+  first_purchase: "price_1TAmowB6GI8NmIPnYWc5k1NH",
   // Vidas infinitas 30min (web)
-  "unlimited_lives_30min": "price_1TAlfrB6GI8NmIPnuJjK1pUf",
+  unlimited_lives_30min: "price_1TAlfrB6GI8NmIPnuJjK1pUf",
   // Experience Packs
-  "pack_victoria_segura": "price_1TAlg9B6GI8NmIPnbk8EpVYi",
-  "pack_racha_infinita": "price_1TAlgXB6GI8NmIPnfNVMkqqO",
+  pack_victoria_segura: "price_1TAlg9B6GI8NmIPnbk8EpVYi",
+  pack_racha_infinita: "price_1TAlgXB6GI8NmIPnfNVMkqqO",
   // Multi-tier packs
-  "pack_impulso": "price_1TAlguB6GI8NmIPnNXBvRUc1",
-  "pack_experiencia": "price_1TAlhDB6GI8NmIPnhPHrcV57",
-  "pack_victoria_segura_pro": "price_1TAlhWB6GI8NmIPnLXe9hVWu",
+  pack_impulso: "price_1TAlguB6GI8NmIPnNXBvRUc1",
+  pack_experiencia: "price_1TAlhDB6GI8NmIPnhPHrcV57",
+  pack_victoria_segura_pro: "price_1TAlhWB6GI8NmIPnLXe9hVWu",
   // First day offer
-  "first_day_offer": "price_1TAmpVB6GI8NmIPn7l00f2jG",
+  first_day_offer: "price_1TAmpVB6GI8NmIPn7l00f2jG",
   // Cofres (web)
-  "chest_silver": "price_1TAmplB6GI8NmIPnlk5g494D",
-  "chest_gold": "price_1TAlj7B6GI8NmIPnletS1ST2",
+  chest_silver: "price_1TAmplB6GI8NmIPnlk5g494D",
+  chest_gold: "price_1TAlj7B6GI8NmIPnletS1ST2",
 };
 
 serve(async (req) => {
