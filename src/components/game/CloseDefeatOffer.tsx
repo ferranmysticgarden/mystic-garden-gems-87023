@@ -16,6 +16,8 @@ interface CloseDefeatOfferProps {
 export const CloseDefeatOffer = ({ movesShort, onBuy, onDismiss }: CloseDefeatOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
 
+  return null; // DESACTIVADO - reemplazado por UltimateRescueOffer
+
   const handleBuy = async () => {
     const success = await createPayment('finish_level');
     if (success) {

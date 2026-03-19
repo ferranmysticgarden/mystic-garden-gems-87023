@@ -11,10 +11,12 @@ import { BuyMovesOffer } from './game/BuyMovesOffer';
 import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { Level10Paywall } from './game/Level10Paywall';
 import { Level6Offer } from './game/Level6Offer';
+import { UltimateRescueOffer } from './game/UltimateRescueOffer';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePurchaseGate } from '@/hooks/usePurchaseGate';
+import { useAttemptTracker } from '@/hooks/useAttemptTracker';
 import confetti from 'canvas-confetti';
 import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 
@@ -24,7 +26,6 @@ interface GameScreenProps {
   onLose: () => void;
   onBack: () => void;
   onShowExitModal: () => void;
-  // Para restaurar estado después de pago
   initialMoves?: number;
   initialScore?: number;
   initialCollected?: Record<string, number>;
@@ -52,6 +53,8 @@ export const GameScreen = ({
   const [showDefeatPacksOffer, setShowDefeatPacksOffer] = useState(false);
   const [showLevel10Paywall, setShowLevel10Paywall] = useState(false);
   const [showLevel6Offer, setShowLevel6Offer] = useState(false);
+  const [showRescueOffer, setShowRescueOffer] = useState(false);
+  const [rescueData, setRescueData] = useState({ attempts: 0, movesShort: 0, levelNumber: 1 });
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
@@ -60,14 +63,12 @@ export const GameScreen = ({
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
   
-  // Hook para verificar si ya compró
   const { hasPurchasedOnce } = usePurchaseGate();
   const { savePendingState } = usePendingPurchase();
+  const { getAttempts, incrementAttempt, resetAttempts } = useAttemptTracker();
   
-  // Use mystical fairy sounds
   const { playVictorySound, playLoseSound } = useMysticSounds();
 
-  // Set music to very low during gameplay
   useEffect(() => {
     backgroundMusic.setScreen('game');
     return () => {
@@ -84,7 +85,6 @@ export const GameScreen = ({
     return false;
   }, [level, score, collected]);
 
-  // Calcular qué tan cerca estuvo el jugador de ganar
   const getProgressPercentage = useCallback(() => {
     if (level.objective.type === 'score') {
       return (score / level.objective.count) * 100;
@@ -94,13 +94,10 @@ export const GameScreen = ({
     }
   }, [level, score, collected]);
 
-  // Estimar cuántos movimientos le faltaron (aproximado)
   const estimateMovesNeeded = useCallback(() => {
     const progress = getProgressPercentage();
     if (progress >= 100) return 0;
-    // Si llegó al 80%+, probablemente le faltaban 2-3 movimientos
     if (progress >= 80) return Math.ceil((100 - progress) / 15);
-    // Si llegó al 60%+, probablemente le faltaban 4-5
     if (progress >= 60) return Math.ceil((100 - progress) / 10);
     return Math.ceil((100 - progress) / 8);
   }, [getProgressPercentage]);
@@ -115,6 +112,13 @@ export const GameScreen = ({
         backgroundMusic.setScreen('victory');
         playVictorySound();
       }
+
+      // Reset intentos al ganar
+      try {
+        resetAttempts(level.id);
+      } catch (error) {
+        console.error('Error reseteando intentos:', error);
+      }
       
       confetti({
         particleCount: 100,
@@ -122,13 +126,11 @@ export const GameScreen = ({
         origin: { y: 0.6 }
       });
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
-      // Player ran out of moves - calculate how close they were
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
       const progress = getProgressPercentage();
 
-      // Helper: lógica que decide qué oferta mostrar
       const showDefeatOffer = () => {
         // MURO NIVEL 10
         const paywallAlreadyShown = localStorage.getItem('level10_paywall_dismissed') === 'true';
@@ -147,23 +149,25 @@ export const GameScreen = ({
           return;
         }
 
-        // OFERTA NIVEL 6
-        const level6AlreadyShown = localStorage.getItem('level6_offer_dismissed') === 'true';
-        if (level.id === 6 && !level6AlreadyShown) {
-          if (progress >= 50) {
-            setProgressAtLoss(progress);
-            emitAnalyticsEvent('level6_popup_shown', { level: 6, progress });
-            setShowLevel6Offer(true);
+        // UltimateRescueOffer - nueva oferta principal
+        try {
+          const attempts = incrementAttempt(level.id);
+          const shouldShowRescue = 
+            level.id >= 6 &&
+            movesNeeded <= 3 &&
+            !showRescueOffer;
+          
+          if (shouldShowRescue) {
+            setRescueData({ 
+              attempts, 
+              movesShort: movesNeeded,
+              levelNumber: level.id 
+            });
+            setShowRescueOffer(true);
             return;
           }
-        }
-
-        // Buy moves offer BEFORE defeat - TODOS los niveles (trigger principal de compra)
-        if (!hasShownBuyMoves.current) {
-          hasShownBuyMoves.current = true;
-          emitAnalyticsEvent('buy_moves_offer_shown', { level: level.id });
-          setShowBuyMovesOffer(true);
-          return;
+        } catch (error) {
+          console.error('Error en handleDefeat:', error);
         }
 
         // Game over final
@@ -188,7 +192,6 @@ export const GameScreen = ({
         }
       };
 
-      // MICRO-VICTORIA EMOCIONAL: si progreso >= 80%, mostrar mensaje 1s antes de oferta
       if (progress >= 80) {
         setShowNearWinMessage(true);
         setTimeout(() => {
@@ -216,7 +219,6 @@ export const GameScreen = ({
 
   const handleMove = useCallback(() => {
     setMoves((prev) => Math.max(0, prev - 1));
-    // Reset combo on move without match (handled by match timing)
   }, []);
 
   const handleComboEnd = useCallback(() => {
@@ -224,7 +226,6 @@ export const GameScreen = ({
   }, []);
 
   const handleCloseDefeatBuy = () => {
-    // User bought - add 5 moves and continue
     setMoves(5);
     setGameOver(false);
     setShowCloseDefeatOffer(false);
@@ -233,7 +234,6 @@ export const GameScreen = ({
   const handleCloseDefeatDismiss = () => {
     setShowCloseDefeatOffer(false);
     
-    // Si es primera derrota cercana, mostrar Flash Offer
     if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
       localStorage.setItem('flash_offer_shown_session', 'true');
       setShowFlashOffer(true);
@@ -244,16 +244,14 @@ export const GameScreen = ({
     setShowFlashOffer(false);
   };
 
-  // Handler para comprar movimientos ANTES de perder
   const handleBuyMovesBuy = () => {
     setMoves(5);
     setShowBuyMovesOffer(false);
-    hasShownBuyMoves.current = false; // Reset para siguiente vez
+    hasShownBuyMoves.current = false;
   };
 
   const handleBuyMovesDismiss = () => {
     setShowBuyMovesOffer(false);
-    // Ahora sí es game over
     setGameOver(true);
     setWon(false);
     
@@ -266,23 +264,20 @@ export const GameScreen = ({
     const progress = getProgressPercentage();
     setProgressAtLoss(progress);
     
-    // Mostrar DefeatPacksOffer si llegó al 40%+
     if (progress >= 40) {
       emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
       setShowDefeatPacksOffer(true);
     }
   };
 
-  // Handler para compra en DefeatPacksOffer (multi-tier)
   const handleDefeatPacksBuy = () => {
-    setMoves(5); // Los movimientos dependen del pack pero el básico da +5
+    setMoves(5);
     setGameOver(false);
     setShowDefeatPacksOffer(false);
   };
 
   const handleDefeatPacksExit = () => {
     setShowDefeatPacksOffer(false);
-    // Mostrar Flash Offer si aplica
     if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
       localStorage.setItem('flash_offer_shown_session', 'true');
       emitAnalyticsEvent('flash_offer_shown', { level: level.id });
@@ -290,38 +285,29 @@ export const GameScreen = ({
     }
   };
 
-  // Handler para compra exitosa en Level10Paywall
   const handleLevel10Purchase = () => {
-    setMoves(5); // +5 movimientos
+    setMoves(5);
     setShowLevel10Paywall(false);
-    // El nivel continúa - no es game over
   };
  
-   // Handler para cerrar Level10Paywall SIN pagar
-   // Va a pantalla de derrota estándar, NO al menú
-   const handleLevel10Dismiss = () => {
-     // Marcar como mostrado para NO volver a mostrarlo en reintentos
-     localStorage.setItem('level10_paywall_dismissed', 'true');
-     setShowLevel10Paywall(false);
-     setGameOver(true);
-     setWon(false);
-     
-     if (!hasPlayedEndSound.current) {
-       hasPlayedEndSound.current = true;
-       backgroundMusic.setScreen('defeat');
-       playLoseSound();
-     }
-     // NO mostrar otras ofertas - derrota limpia
-   };
-
-  // Handler para compra exitosa en Level6Offer
-  const handleLevel6Purchase = () => {
-    setMoves(3); // +3 movimientos
-    setShowLevel6Offer(false);
-    // El nivel continúa - no es game over
+  const handleLevel10Dismiss = () => {
+    localStorage.setItem('level10_paywall_dismissed', 'true');
+    setShowLevel10Paywall(false);
+    setGameOver(true);
+    setWon(false);
+    
+    if (!hasPlayedEndSound.current) {
+      hasPlayedEndSound.current = true;
+      backgroundMusic.setScreen('defeat');
+      playLoseSound();
+    }
   };
 
-  // Handler para cerrar Level6Offer SIN pagar
+  const handleLevel6Purchase = () => {
+    setMoves(3);
+    setShowLevel6Offer(false);
+  };
+
   const handleLevel6Dismiss = () => {
     setShowLevel6Offer(false);
     setGameOver(true);
@@ -332,7 +318,25 @@ export const GameScreen = ({
       backgroundMusic.setScreen('defeat');
       playLoseSound();
     }
-    // Derrota normal, sin otra oferta inmediata
+  };
+
+  // Handlers para UltimateRescueOffer
+  const handleRescueBuy = () => {
+    setShowRescueOffer(false);
+    setMoves(prev => prev + 5);
+  };
+
+  const handleRescueDismiss = () => {
+    setShowRescueOffer(false);
+    // Mostrar pantalla de derrota normal
+    setGameOver(true);
+    setWon(false);
+    
+    if (!hasPlayedEndSound.current) {
+      hasPlayedEndSound.current = true;
+      backgroundMusic.setScreen('defeat');
+      playLoseSound();
+    }
   };
 
   const getProgress = () => {
@@ -408,11 +412,10 @@ export const GameScreen = ({
           </div>
         </div>
 
-        {/* Gems Purchase Banner - SOLO nivel 5+ (no distraer en niveles tempranos) */}
+        {/* Gems Purchase Banner - SOLO nivel 5+ */}
         {level.id >= 5 && (
           <GemsBanner 
             onPurchaseSuccess={() => {
-              // welcome_pack: 5 powerups, 3 lives — grant client-side
               setMoves(prev => prev + 5);
             }}
           />
@@ -433,8 +436,8 @@ export const GameScreen = ({
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 pointer-events-none">
             <div className="text-center animate-scale-in">
               <div className="text-7xl mb-3">😱</div>
-              <h2 className="text-3xl font-bold text-yellow-400 drop-shadow-lg">¡CASI LO CONSEGUISTE!</h2>
-              <p className="text-xl text-white/90 mt-2">Solo te faltaba un poco más...</p>
+              <h2 className="text-3xl font-bold text-accent drop-shadow-lg">¡CASI LO CONSEGUISTE!</h2>
+              <p className="text-xl text-foreground/90 mt-2">Solo te faltaba un poco más...</p>
             </div>
           </div>
         )}
@@ -442,7 +445,7 @@ export const GameScreen = ({
         {/* Combo Multiplier */}
         <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
 
-        {/* Close Defeat Offer - oferta simple cuando pierde por poco */}
+        {/* Close Defeat Offer */}
         {showCloseDefeatOffer && (
           <CloseDefeatOffer 
             movesShort={movesShortBy}
@@ -451,21 +454,19 @@ export const GameScreen = ({
           />
         )}
 
-        {/* Flash Offer - aparece después de primera derrota cercana */}
+        {/* Flash Offer */}
         {showFlashOffer && (
           <FlashOffer 
             trigger="loss"
             onClose={handleFlashOfferClose}
             onPurchaseSuccess={() => {
-              // flash_offer: 10 lives + 150 gems — client needs to know purchase succeeded
-              // Lives/gems are granted by Index.tsx FlashOffer or server; here we continue the game
               setMoves(5);
               setGameOver(false);
             }}
           />
         )}
 
-        {/* Buy Moves Offer - ANTES de perder cuando quedan 0 movimientos */}
+        {/* Buy Moves Offer */}
         {showBuyMovesOffer && (
           <BuyMovesOffer 
             onBuy={handleBuyMovesBuy}
@@ -474,7 +475,7 @@ export const GameScreen = ({
           />
         )}
 
-        {/* DefeatPacksOffer - Modal multi-tier después de perder */}
+        {/* DefeatPacksOffer */}
         {showDefeatPacksOffer && (
           <DefeatPacksOffer 
             progressPercent={progressAtLoss}
@@ -483,7 +484,7 @@ export const GameScreen = ({
         />
         )}
 
-        {/* Level 6 Offer - oferta neutra primera derrota cercana */}
+        {/* Level 6 Offer */}
         {showLevel6Offer && (
           <Level6Offer
             onBuy={handleLevel6Purchase}
@@ -492,7 +493,7 @@ export const GameScreen = ({
           />
         )}
 
-        {/* Level 10 Paywall - FORZADO, no se puede cerrar */}
+        {/* Level 10 Paywall */}
         {showLevel10Paywall && (
          <Level10Paywall 
            onPurchaseSuccess={handleLevel10Purchase}
@@ -502,8 +503,20 @@ export const GameScreen = ({
          />
         )}
 
-        {/* Game Over Overlay - only show after all offers are dismissed or if won */}
-        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && (
+        {/* UltimateRescueOffer - nueva oferta de rescate */}
+        {showRescueOffer && (
+          <UltimateRescueOffer
+            levelNumber={rescueData.levelNumber}
+            attempts={rescueData.attempts}
+            movesShort={rescueData.movesShort}
+            starsEarned={0}
+            onBuy={handleRescueBuy}
+            onDismiss={handleRescueDismiss}
+          />
+        )}
+
+        {/* Game Over Overlay */}
+        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && !showRescueOffer && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
               <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>

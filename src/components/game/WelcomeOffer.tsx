@@ -20,6 +20,8 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
   const [visible, setVisible] = useState(false);
   const [canDismiss, setCanDismiss] = useState(false);
 
+  return null; // DESACTIVADO
+
   useEffect(() => {
     // Analytics movidos a GameScreen/Index (componente estable) para Android
     

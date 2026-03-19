@@ -12,9 +12,11 @@ interface FirstDayOfferProps {
 
 export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDayOfferProps) => {
   const [show, setShow] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(900); // 15 minutos - más urgencia
+  const [timeLeft, setTimeLeft] = useState(900);
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
+
+  return null; // DESACTIVADO - oferta muy temprana
 
   const price = getPrice('mega_pack_inicial', '€0.99');
   const odId = user?.id || 'guest';

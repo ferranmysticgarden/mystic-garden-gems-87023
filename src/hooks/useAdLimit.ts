@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 
-const MAX_ADS_PER_HOUR = 3;
+const MAX_ADS_PER_HOUR = 2;
 
 export const useAdLimit = () => {
   const { user } = useAuth();

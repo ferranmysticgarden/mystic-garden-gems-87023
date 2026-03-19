@@ -22,8 +22,8 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const price = getPrice('starter_pack', '€0.99');
 
   useEffect(() => {
-    // Trigger SOLO después de nivel 4 (única oferta temprana del embudo)
-    if (levelJustCompleted !== 4) return;
+    // Trigger SOLO después de nivel 10+ (no molestar en niveles tempranos)
+    if (levelJustCompleted < 10) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';

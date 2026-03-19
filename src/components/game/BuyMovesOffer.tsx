@@ -14,6 +14,8 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
   const { createPayment, loading, getPrice } = usePayment();
   const [pulse, setPulse] = useState(true);
 
+  return null; // DESACTIVADO - reemplazado por UltimateRescueOffer
+
   // Soft paywall: if player lost by 1-2 moves, hide free exit
   const isSoftPaywall = movesShort <= 2;
 

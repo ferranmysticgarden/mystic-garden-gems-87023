@@ -19,7 +19,9 @@ interface Level6OfferProps {
  */
 export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6OfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(300);
+
+  return null; // DESACTIVADO
 
   console.log("LEVEL6 POPUP RENDER");
 
