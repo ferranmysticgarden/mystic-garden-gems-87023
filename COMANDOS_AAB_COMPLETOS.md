@@ -34,8 +34,8 @@ call build-android-aab.cmd
 
 ## Versión Actual
 
-- **Versión:** 9.5.0
-- **Code:** 950
+- **Versión:** 2.0.0.0
+- **Code:** 2000
 
 ## Salida
 
