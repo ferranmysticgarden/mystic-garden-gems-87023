@@ -108,7 +108,7 @@ serve(async (req) => {
       victory_multiplier: { amount: 50, name: "Victory Multiplier" },
       finish_level: { amount: 50, name: "Finish Level" },
       no_ads_month: { amount: 199, name: "No Ads Month" },
-      no_ads_forever: { amount: 499, name: "No Ads Forever" },
+      no_ads_forever: { amount: 999, name: "No Ads Forever" },
       garden_pass: { amount: 299, name: "Garden Pass" },
       lifesaver_pack: { amount: 50, name: "Lifesaver Pack" },
       streak_protection: { amount: 50, name: "Streak Protection" },
