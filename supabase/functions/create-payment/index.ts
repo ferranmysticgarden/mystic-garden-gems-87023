@@ -101,7 +101,7 @@ serve(async (req) => {
       buy_moves: { amount: 50, name: "Buy Moves" },
       extra_moves: { amount: 50, name: "Extra Moves" },
       quick_pack: { amount: 99, name: "Quick Pack" },
-      starter_pack: { amount: 199, name: "Starter Pack" },
+      starter_pack: { amount: 99, name: "Starter Pack" },
       continue_game: { amount: 50, name: "Continue Game" },
       welcome_pack: { amount: 50, name: "Welcome Pack" },
       flash_offer: { amount: 50, name: "Flash Offer" },
