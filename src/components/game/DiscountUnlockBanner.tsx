@@ -33,6 +33,8 @@ interface DiscountUnlockBannerProps {
 export const DiscountUnlockBanner = ({ currentLevel }: DiscountUnlockBannerProps) => {
   const [visibleTier, setVisibleTier] = useState<typeof DISCOUNT_TIERS[number] | null>(null);
 
+  return null; // DESACTIVADO
+
   useEffect(() => {
     const seen = getSeenTiers();
     // Find the highest tier the player just unlocked but hasn't seen

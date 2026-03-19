@@ -25,16 +25,16 @@ export const LEVELS: Level[] = [
   { id: 4, objective: { type: 'score', target: 'points', count: 800 }, moves: 24, stars: { one: 800, two: 1100, three: 1400 }, reward: { gems: 10 } },
   { id: 5, objective: { type: 'collect', target: '🌺', count: 8 }, moves: 20, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
   
-  // Nivel 6: Transición - todavía ganable pero ajustado (primer bloqueo real inminente)
-  { id: 6, objective: { type: 'collect', target: '🌼', count: 10 }, moves: 22, stars: { one: 10, two: 12, three: 14 }, reward: {} },
+  // Nivel 6: Transición - reducido 20% (22→18)
+  { id: 6, objective: { type: 'collect', target: '🌼', count: 10 }, moves: 18, stars: { one: 10, two: 12, three: 14 }, reward: {} },
   
-  // Niveles 7-10: PRIMER BLOQUEO REAL - diseñados para generar "casi" y monetizar
-  // Menos movimientos, objetivos más altos → frustración emocional → compra
-  { id: 7, objective: { type: 'score', target: 'points', count: 1100 }, moves: 20, stars: { one: 1100, two: 1400, three: 1700 }, reward: {} },
-  { id: 8, objective: { type: 'collect', target: '🌸', count: 12 }, moves: 19, stars: { one: 12, two: 14, three: 16 }, reward: {} },
-  { id: 9, objective: { type: 'collect', target: '🍃', count: 14 }, moves: 20, stars: { one: 14, two: 16, three: 19 }, reward: {} },
-   // NIVEL 10: MURO DE CONVERSIÓN - Diseñado para perder por 1-2 movimientos (90-98% progreso)
-   { id: 10, objective: { type: 'score', target: 'points', count: 1400 }, moves: 17, stars: { one: 1400, two: 1700, three: 2000 }, reward: { gems: 10 } },
+  // Niveles 7-8: PRIMER BLOQUEO REAL - reducidos 20%
+  { id: 7, objective: { type: 'score', target: 'points', count: 1100 }, moves: 16, stars: { one: 1100, two: 1400, three: 1700 }, reward: {} },
+  { id: 8, objective: { type: 'collect', target: '🌸', count: 12 }, moves: 15, stars: { one: 12, two: 14, three: 16 }, reward: {} },
+  // Niveles 9-10: Reducidos 30%
+  { id: 9, objective: { type: 'collect', target: '🍃', count: 14 }, moves: 14, stars: { one: 14, two: 16, three: 19 }, reward: {} },
+   // NIVEL 10: MURO DE CONVERSIÓN - reducido 30% (17→12)
+   { id: 10, objective: { type: 'score', target: 'points', count: 1400 }, moves: 12, stars: { one: 1400, two: 1700, three: 2000 }, reward: { gems: 10 } },
   
   // Niveles 11-12: Continúa el challenge
   { id: 11, objective: { type: 'collect', target: '🌺', count: 20 }, moves: 19, stars: { one: 20, two: 24, three: 28 }, reward: {} },

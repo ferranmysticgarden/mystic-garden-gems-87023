@@ -12,6 +12,8 @@ interface Day2UnlockBannerProps {
 export const Day2UnlockBanner = ({ streak, onClaimReward }: Day2UnlockBannerProps) => {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
+
+  return null; // DESACTIVADO
   const [claiming, setClaiming] = useState(false);
   const [showGlow, setShowGlow] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(0);
