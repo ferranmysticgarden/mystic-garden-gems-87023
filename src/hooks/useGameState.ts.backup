@@ -56,8 +56,6 @@ export const useGameState = () => {
   // Track if we've loaded from DB at least once
   const hasLoadedRef = useRef(false);
 
-  // Block saves during reload to prevent race conditions
-  const blockSaveRef = useRef(false);
   // Load game progress — from DB if logged in, from localStorage if guest
   useEffect(() => {
     if (!user) {
@@ -147,7 +145,6 @@ export const useGameState = () => {
   useEffect(() => {
     if (loading || !hasLoadedRef.current) return;
 
-      if (blockSaveRef.current) return; // 🔒 Don't save if blocked
     if (user) {
       // Debounce DB saves by 400ms to prevent concurrent upserts
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -347,37 +344,6 @@ export const useGameState = () => {
     return Math.ceil(timeUntilNext / 1000);
   }, [gameState.lastLifeRefill, gameState.lives, hasUnlimitedLives]);
 
-  const reloadFromDB = useCallback(async () => {
-    if (!user) return;
-    blockSaveRef.current = true;
-    try {
-      const { data, error } = await supabase
-        .from('game_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (error) throw error;
-      if (data) {
-        const dbState: GameState = {
-          lives: data.lives,
-          gems: data.gems,
-          currentLevel: data.current_level,
-          completedLevels: data.completed_levels || [],
-          hammers: data.hammer_count,
-          undos: data.undo_count,
-          shuffles: data.shuffle_count,
-          lastLifeRefill: new Date(data.last_life_refill).getTime(),
-          unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
-        };
-        setGameState(dbState);
-        console.log('[GAME] 🔄 Reloaded from DB after purchase:', dbState);
-      }
-    } catch (error) {
-      console.error('Error reloading from DB:', error);
-    } finally {
-      setTimeout(() => { blockSaveRef.current = false; }, 2000);
-    }
-  }, [user]);
   return {
     gameState,
     loading,
@@ -396,7 +362,6 @@ export const useGameState = () => {
     activateUnlimitedLives,
     hasUnlimitedLives,
     getTimeUntilNextLife,
-    reloadFromDB,
     setOnLivesFull,
   };
 };

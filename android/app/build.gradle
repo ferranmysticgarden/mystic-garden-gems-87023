@@ -8,6 +8,12 @@ android {
         targetSdk 35
         minSdk 24
         targetSdk 35
+        minSdk 24
+        targetSdk 35
+        minSdk 24
+        targetSdk 35
+        minSdk 24
+        targetSdk 35
         applicationId "com.mysticgarden.game"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
