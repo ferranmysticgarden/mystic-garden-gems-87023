@@ -1,18 +1,3 @@
-## ✅ **SÍ - AQUÍ ESTÁ EL ARCHIVO COMPLETO CORREGIDO:**
-
-**CIERRA EL NOTEPAD SIN GUARDAR**
-
-Luego ejecuta esto en CMD:
-
-```cmd
-notepad "D:\mystic-garden-gems-87023\src\pages\Index.tsx"
-```
-
-**Cuando se abra, BORRA TODO (Ctrl+A, Delete)**
-
-**Y PEGA TODO ESTO:**
-
-```typescript
 import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useBackButton } from '@/hooks/useBackButton';
@@ -353,51 +338,41 @@ const Index = () => {
   };
 
   const handlePurchase = async (productId: string) => {
-    // For authenticated users on Android, rewards are granted server-side via Edge Function.
+    // For authenticated users on Android, rewards are granted server-side.
     // Only apply local grants for:
     //  - Web Stripe purchases (redirects away, webhook handles DB, but we refresh state on return)
     //  - Guest purchases (no server-side DB to update)
     const isAndroidPlatform = Capacitor.getPlatform() === 'android';
 
     if (user && isAndroidPlatform) {
-      console.log('[PURCHASE] Authenticated Android — refreshing from DB');
+      console.log('[PURCHASE] Authenticated Android — refreshing state from server');
       
-      // Reload state from DB after purchase (rewards granted by Edge Function)
-      await reloadFromDB();
-      toast.success('¡Compra verificada exitosamente! 🎉');
+      // Recargar estado completo desde DB
+      try {
+        const { data: freshProgress } = await supabase
+          .from('game_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (freshProgress) {
+          gameState.setGems(freshProgress.gems || 0);
+          gameState.setLives(freshProgress.lives || 5);
+          gameState.setPowerups({
+            hammer: freshProgress.hammer || 0,
+            shuffle: freshProgress.shuffle || 0,
+            magicWand: freshProgress.magic_wand || 0,
+          });
+          console.log('[PURCHASE] State refreshed:', freshProgress);
+          toast.success('¡Compra completada! Recompensas recibidas ✅');
+        }
+      } catch (error) {
+        console.error('[PURCHASE] Error refreshing state:', error);
+      }
+      
       setScreen('menu');
       return;
     }
-
-    // Guest or Web: apply local grants
-    const product = PRODUCTS.find(p => p.id === productId);
-    if (!product) return;
-
-    if (product.amount) addGems(product.amount);
-    if (product.instantGems) addGems(product.instantGems);
-    if (product.gems) addGems(product.gems);
-
-    if (product.lives && product.lives !== 'unlimited') {
-      addLives(product.lives);
-    }
-    if (product.lives === 'unlimited') {
-      activateUnlimitedLives(0.5); // 30 minutes = 0.5 hours
-    }
-
-    if (product.powerups) {
-      const perType = Math.floor(product.powerups / 3);
-      const remainder = product.powerups % 3;
-      for (let i = 0; i < perType; i++) {
-        addHammer();
-        addShuffle();
-        addUndo();
-      }
-      if (remainder >= 1) addHammer();
-      if (remainder >= 2) addShuffle();
-    }
-
-    setScreen('menu');
-  };
 
     // Guest or Web: apply local grants
     const product = PRODUCTS.find(p => p.id === productId);
