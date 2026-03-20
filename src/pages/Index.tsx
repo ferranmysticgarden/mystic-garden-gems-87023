@@ -1,18 +1,3 @@
-## ✅ **SÍ - AQUÍ ESTÁ EL ARCHIVO COMPLETO CORREGIDO:**
-
-**CIERRA EL NOTEPAD SIN GUARDAR**
-
-Luego ejecuta esto en CMD:
-
-```cmd
-notepad "D:\mystic-garden-gems-87023\src\pages\Index.tsx"
-```
-
-**Cuando se abra, BORRA TODO (Ctrl+A, Delete)**
-
-**Y PEGA TODO ESTO:**
-
-```typescript
 import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useBackButton } from '@/hooks/useBackButton';
@@ -96,6 +81,7 @@ const Index = () => {
     addHammer,
     addUndo,
     addShuffle,
+      reloadFromDB,
   } = useGameState();
   
   const { 
@@ -398,12 +384,6 @@ const Index = () => {
 
     setScreen('menu');
   };
-      if (remainder >= 2) addShuffle();
-    }
-
-    setScreen('menu');
-  };
-
   const handleQuickLifePurchased = ({ lives, gems }: { lives: number; gems: number }) => {
     if (lives > 0) addLives(lives);
     if (gems > 0) addGems(gems);
