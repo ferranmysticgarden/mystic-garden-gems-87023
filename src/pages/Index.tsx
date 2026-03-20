@@ -81,6 +81,7 @@ const Index = () => {
     addHammer,
     addUndo,
     addShuffle,
+      reloadFromDB,
   } = useGameState();
   
   const { 
@@ -338,38 +339,18 @@ const Index = () => {
   };
 
   const handlePurchase = async (productId: string) => {
-    // For authenticated users on Android, rewards are granted server-side.
+    // For authenticated users on Android, rewards are granted server-side via Edge Function.
     // Only apply local grants for:
     //  - Web Stripe purchases (redirects away, webhook handles DB, but we refresh state on return)
     //  - Guest purchases (no server-side DB to update)
     const isAndroidPlatform = Capacitor.getPlatform() === 'android';
 
     if (user && isAndroidPlatform) {
-      console.log('[PURCHASE] Authenticated Android — refreshing state from server');
+      console.log('[PURCHASE] Authenticated Android — refreshing from DB');
       
-      // Recargar estado completo desde DB
-      try {
-        const { data: freshProgress } = await supabase
-          .from('game_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (freshProgress) {
-          gameState.setGems(freshProgress.gems || 0);
-          gameState.setLives(freshProgress.lives || 5);
-          gameState.setPowerups({
-            hammer: freshProgress.hammer || 0,
-            shuffle: freshProgress.shuffle || 0,
-            magicWand: freshProgress.magic_wand || 0,
-          });
-          console.log('[PURCHASE] State refreshed:', freshProgress);
-          toast.success('¡Compra completada! Recompensas recibidas ✅');
-        }
-      } catch (error) {
-        console.error('[PURCHASE] Error refreshing state:', error);
-      }
-      
+      // Reload state from DB after purchase (rewards granted by Edge Function)
+      await reloadFromDB();
+      toast.success('¡Compra verificada exitosamente! 🎉');
       setScreen('menu');
       return;
     }
@@ -403,7 +384,6 @@ const Index = () => {
 
     setScreen('menu');
   };
-
   const handleQuickLifePurchased = ({ lives, gems }: { lives: number; gems: number }) => {
     if (lives > 0) addLives(lives);
     if (gems > 0) addGems(gems);
@@ -973,10 +953,3 @@ const Index = () => {
 };
 
 export default Index;
-```
-
-**Guarda el archivo (Ctrl+S)**
-
----
-
-**Cuando lo guardes, dime "LISTO"** ✅
