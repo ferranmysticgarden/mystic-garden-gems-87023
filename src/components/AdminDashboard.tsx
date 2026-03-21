@@ -111,14 +111,16 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       const userIds = [...new Set((purchasesData || []).map((p: Purchase) => p.user_id))];
       const userProfiles = (profilesData || []).filter((p: Profile) => userIds.includes(p.id));
 
-      // Combine purchases with profile data
-      const purchasesWithProfiles = (purchasesData || []).map((purchase: Purchase) => ({
-        ...purchase,
-        profiles: userProfiles.find((p: Profile) => p.id === purchase.user_id) || {
-          email: 'Unknown',
-          display_name: 'Unknown'
-        }
-      }));
+      // Combine purchases with profile data, filter out non-catalog products (€0)
+      const purchasesWithProfiles = (purchasesData || [])
+        .filter((purchase: Purchase) => PRODUCT_PRICES[purchase.product_id] > 0)
+        .map((purchase: Purchase) => ({
+          ...purchase,
+          profiles: userProfiles.find((p: Profile) => p.id === purchase.user_id) || {
+            email: 'Unknown',
+            display_name: 'Unknown'
+          }
+        }));
 
       setUsers(profilesData || []);
       setPurchases(purchasesWithProfiles);
