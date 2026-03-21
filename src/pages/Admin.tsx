@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { AuthPage } from '@/components/AuthPage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const Admin = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [validating, setValidating] = useState(false);
+  const isSecretAccess = searchParams.get('secret') === '1';
 
   useEffect(() => {
     const validateAdmin = async () => {
@@ -65,6 +67,10 @@ const Admin = () => {
 
   if (!user) {
     return <AuthPage onAuthSuccess={() => {}} onBack={() => navigate('/')} backLabel="Volver al menú principal" mode="admin" />;
+  }
+
+  if (!isAdmin && isSecretAccess) {
+    return <AuthPage onAuthSuccess={() => setIsAdmin(null)} onBack={() => navigate('/')} backLabel="Volver al menú principal" mode="admin" />;
   }
 
   if (!isAdmin) {
