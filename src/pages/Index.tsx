@@ -189,14 +189,16 @@ const Index = () => {
     } else if (productId === 'mega_pack_inicial') {
       addLives(5);
       addGems(100);
-      addHammer(2);
-      addShuffle(2);
-      addUndo(1);
+      addHammer();
+      addHammer();
+      addShuffle();
+      addShuffle();
+      addUndo();
       toast.success('✅ ¡Pago completado! Mega Pack activado');
     } else if (productId === 'starter_pack') {
       addLives(3);
       addGems(50);
-      addHammer(1);
+      addHammer();
       toast.success('✅ ¡Pago completado! Starter Pack activado');
     } else if (productId === 'reward_doubler') {
       addGems(50);
