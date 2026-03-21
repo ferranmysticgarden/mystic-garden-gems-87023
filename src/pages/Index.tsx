@@ -160,17 +160,14 @@ const Index = () => {
     collected: Record<string, number>;
   } | null>(null);
 
-  // Detectar pago Stripe verificado y aplicar recompensas según producto
+  // Detectar pago Stripe verificado — webhook ya aplicó recompensas, solo mostrar modal + recargar DB
   useEffect(() => {
-   if (!paymentSuccess || !verifiedProductId) return;
+    if (!paymentSuccess || !verifiedProductId) return;
 
     const productId = verifiedProductId;
-    console.log('[Index] ✅ Pago Stripe verificado, aplicando producto:', productId);
+    console.log('[Index] ✅ Pago Stripe verificado. Webhook ya aplicó recompensas. Recargando desde DB:', productId);
 
-    let modalProduct = '';
-    let modalReward = '';
-
-    // Restore game state for in-level purchases
+    // Restore game state for in-level purchases (moves context only, no rewards)
     if (['buy_moves', 'finish_level', 'continue_game', 'extra_moves'].includes(productId) && pendingState) {
       selectLevel(pendingState.levelId);
       setRestoredGameState({
@@ -179,89 +176,58 @@ const Index = () => {
         collected: pendingState.collected,
       });
       setScreen('game');
-      modalProduct = '+5 Movimientos';
-      modalReward = '¡Continúa tu partida con 5 movimientos extra!';
-    } else if (productId === 'gems_100') {
-      addGems(100);
-      modalProduct = '100 Gemas 💎';
-      modalReward = '+100 gemas añadidas a tu cuenta';
-    } else if (productId === 'gems_300') {
-      addGems(300);
-      modalProduct = '300 Gemas 💎';
-      modalReward = '+300 gemas añadidas a tu cuenta';
-    } else if (productId === 'gems_1200') {
-      addGems(1200);
-      modalProduct = '1200 Gemas 💎';
-      modalReward = '+1200 gemas añadidas a tu cuenta';
-    } else if (productId === 'quick_pack') {
-      addLives(3);
-      addGems(20);
-      modalProduct = 'Quick Pack';
-      modalReward = '+3 vidas y +20 gemas';
-    } else if (productId === 'mega_pack_inicial') {
-      addLives(5);
-      addGems(100);
-      addHammer(); addHammer();
-      addShuffle(); addShuffle();
-      addUndo();
-      modalProduct = 'Mega Pack';
-      modalReward = '+5 vidas, +100 gemas, +2 martillos, +2 barajadas, +1 deshacer';
-    } else if (productId === 'starter_pack') {
-      addLives(3);
-      addGems(50);
-      addHammer();
-      modalProduct = 'Starter Pack';
-      modalReward = '+3 vidas, +50 gemas, +1 martillo';
-    } else if (productId === 'reward_doubler') {
-      addGems(50);
-      modalProduct = 'Reward Doubler';
-      modalReward = '+50 gemas bonus';
-    } else if (productId === 'extra_spin') {
-      window.dispatchEvent(new Event('first_purchase_completed'));
-      modalProduct = 'Giro Extra';
-      modalReward = '¡Giro extra desbloqueado!';
-    } else if (productId === 'garden_pass') {
-      addGems(1000);
-      modalProduct = 'Garden Pass 🌸';
-      modalReward = '+1000 gemas + Sin anuncios';
-    } else if (productId === 'welcome_pack' || productId === 'first_purchase') {
-      addGems(30);
-      addLives(3);
-      modalProduct = 'Welcome Pack';
-      modalReward = '+30 gemas y +3 vidas';
-    } else if (productId === 'lifesaver_pack') {
-      addLives(5);
-      modalProduct = 'Lifesaver Pack';
-      modalReward = '+5 vidas extra';
-    } else if (productId === 'flash_offer' || productId === 'victory_multiplier') {
-      addGems(50);
-      addHammer();
-      modalProduct = 'Flash Pack';
-      modalReward = '+50 gemas y +1 martillo';
-    } else if (productId === 'pack_revancha') {
-      addLives(5);
-      addGems(30);
-      addHammer();
-      modalProduct = 'Pack Revancha';
-      modalReward = '+5 vidas, +30 gemas, +1 martillo';
-    } else if (productId === 'unlimited_lives_30min') {
-      activateUnlimitedLives(30);
-      modalProduct = 'Vidas Infinitas ♾️';
-      modalReward = '¡30 minutos de vidas ilimitadas activados!';
-    } else {
-      modalProduct = 'Compra';
-      modalReward = '¡Recompensa aplicada con éxito!';
     }
 
-    // Show big success modal
-    setPaymentModal({ show: true, productName: modalProduct, rewardText: modalReward });
+    // Reward text map (display only — rewards come from webhook)
+    const REWARD_DISPLAY: Record<string, { name: string; text: string }> = {
+      gems_100: { name: '100 Gemas 💎', text: '+100 gemas añadidas' },
+      gems_300: { name: '300 Gemas 💎', text: '+300 gemas añadidas' },
+      gems_1200: { name: '1200 Gemas 💎', text: '+1200 gemas añadidas' },
+      quick_pack: { name: 'Quick Pack', text: '+3 vidas y +20 gemas' },
+      mega_pack_inicial: { name: 'Mega Pack', text: '+500 gemas, +10 vidas, +3 powerups, +1 día sin ads' },
+      starter_pack: { name: 'Starter Pack', text: '+500 gemas, +10 vidas, +3 powerups' },
+      reward_doubler: { name: 'Reward Doubler', text: '+50 gemas bonus' },
+      extra_spin: { name: 'Giro Extra', text: '¡Giro extra desbloqueado!' },
+      garden_pass: { name: 'Garden Pass 🌸', text: '+1000 gemas + Sin anuncios 30 días' },
+      welcome_pack: { name: 'Welcome Pack', text: '+5 powerups y +3 vidas' },
+      first_purchase: { name: 'Welcome Pack', text: '+500 gemas, +20 vidas, +1 día sin ads' },
+      lifesaver_pack: { name: 'Lifesaver Pack', text: '+1 vida y +3 powerups' },
+      flash_offer: { name: 'Flash Offer', text: '+10 vidas y +150 gemas' },
+      victory_multiplier: { name: 'Victory Multiplier', text: '+2 vidas' },
+      pack_revancha: { name: 'Pack Revancha', text: '+50 gemas, +5 vidas, +5 powerups' },
+      unlimited_lives_30min: { name: 'Vidas Infinitas ♾️', text: '¡30 minutos de vidas ilimitadas!' },
+      no_ads_month: { name: 'Sin Anuncios 🚫', text: '¡30 días sin anuncios!' },
+      no_ads_forever: { name: 'Sin Anuncios Forever 🚫', text: '¡Sin anuncios para siempre!' },
+      buy_moves: { name: '+5 Movimientos', text: '¡Continúa tu partida con 5 movimientos extra!' },
+      finish_level: { name: '+5 Movimientos', text: '¡Continúa tu partida!' },
+      continue_game: { name: '+5 Movimientos', text: '¡Continúa tu partida!' },
+      extra_moves: { name: '+5 Movimientos', text: '¡Movimientos extra añadidos!' },
+      streak_protection: { name: 'Streak Protection', text: '¡Racha protegida!' },
+      first_day_offer: { name: 'First Day Offer', text: '+5 powerups y +3 vidas' },
+      pack_victoria_segura: { name: 'Pack Victoria Segura', text: '+5 powerups y +3 vidas' },
+      pack_racha_infinita: { name: 'Pack Racha Infinita', text: '+2 vidas' },
+      pack_impulso: { name: 'Pack Impulso', text: '+5 powerups y +3 vidas' },
+      pack_experiencia: { name: 'Pack Experiencia', text: '+2 vidas' },
+      pack_victoria_segura_pro: { name: 'Pack Victoria Segura Pro', text: '+8 powerups y +3 vidas' },
+      chest_silver: { name: 'Cofre de Plata', text: '¡Cofre abierto!' },
+      chest_gold: { name: 'Cofre de Oro', text: '¡Cofre dorado abierto!' },
+    };
+
+    const display = REWARD_DISPLAY[productId] || { name: 'Compra', text: '¡Recompensa aplicada con éxito!' };
+
+    if (productId === 'extra_spin') {
+      window.dispatchEvent(new Event('first_purchase_completed'));
+    }
+
+    // Show success modal
+    setPaymentModal({ show: true, productName: display.name, rewardText: display.text });
     toast.success('✅ ¡Pago completado!');
 
-    // Also reload from DB to sync server-side changes
+    // Reload from DB to get the rewards the webhook already applied
     reloadFromDB?.();
 
     clearPendingState();
-  }, [paymentSuccess, verifiedProductId, pendingState, selectLevel, setScreen, clearPendingState, addGems, addLives, addHammer, addShuffle, addUndo, activateUnlimitedLives, reloadFromDB]);
+  }, [paymentSuccess, verifiedProductId, pendingState, selectLevel, setScreen, clearPendingState, reloadFromDB]);
 
   // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
   useEffect(() => {
