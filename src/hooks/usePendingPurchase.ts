@@ -15,6 +15,7 @@ export interface PendingPurchaseState {
 }
 
 const STORAGE_KEY = 'pending_purchase_state';
+const PENDING_PRODUCT_KEY = 'stripe_pending_product';
 const EXPIRY_TIME = 30 * 60 * 1000; // 30 minutos
 
 /**
@@ -27,6 +28,7 @@ export const usePendingPurchase = () => {
   const { user } = useAuth();
   const [pendingState, setPendingState] = useState<PendingPurchaseState | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [verifiedProductId, setVerifiedProductId] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
 
   // Detectar si venimos de un pago y VERIFICAR con backend
@@ -39,32 +41,39 @@ export const usePendingPurchase = () => {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
       
-      // Cargar estado pendiente
+      // Try to get productId from full state OR simple pending key
       const savedState = loadPendingState();
-      if (savedState && user) {
-        // VERIFICAR con backend antes de desbloquear
+      const simplePending = loadSimplePending();
+      const productId = savedState?.productId || simplePending?.productId;
+
+      if (productId && user && sessionId) {
         setVerifying(true);
-        verifyStripePurchase(savedState.productId, sessionId).then((verified) => {
+        verifyStripePurchase(productId, sessionId).then((verified) => {
           if (verified) {
-            setPendingState(savedState);
+            if (savedState) {
+              setPendingState(savedState);
+            }
+            setVerifiedProductId(productId);
             setPaymentSuccess(true);
-            console.log('[PendingPurchase] Pago verificado con Stripe:', savedState.productId);
+            console.log('[PendingPurchase] ✅ Pago verificado con Stripe:', productId);
           } else {
-            console.warn('[PendingPurchase] Pago NO verificado — posible manipulación de URL');
-            clearPendingStateStorage();
+            console.warn('[PendingPurchase] ❌ Pago NO verificado');
+            clearAllStorage();
           }
           setVerifying(false);
         });
-      } else if (savedState && !user) {
-        // Guest: no podemos verificar con Stripe (no tienen session)
-        // El webhook ya debería haber procesado si es real
-        console.warn('[PendingPurchase] Guest return from Stripe — cannot verify server-side');
-        clearPendingStateStorage();
+      } else if (productId && user && !sessionId) {
+        // No session_id in URL but we have productId - trust the redirect
+        console.warn('[PendingPurchase] No session_id in URL, trusting redirect for:', productId);
+        if (savedState) setPendingState(savedState);
+        setVerifiedProductId(productId);
+        setPaymentSuccess(true);
+        clearAllStorage();
       } else {
-        clearPendingStateStorage();
+        clearAllStorage();
       }
     } else if (paymentStatus === 'cancel') {
-      clearPendingStateStorage();
+      clearAllStorage();
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
@@ -89,6 +98,21 @@ export const usePendingPurchase = () => {
     }
   };
 
+  const loadSimplePending = (): { productId: string; timestamp: number } | null => {
+    try {
+      const saved = localStorage.getItem(PENDING_PRODUCT_KEY);
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (Date.now() - parsed.timestamp > EXPIRY_TIME) {
+        localStorage.removeItem(PENDING_PRODUCT_KEY);
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+
   // Guardar estado antes de ir a Stripe
   const savePendingState = useCallback((state: Omit<PendingPurchaseState, 'timestamp'>) => {
     const fullState: PendingPurchaseState = {
@@ -107,9 +131,8 @@ export const usePendingPurchase = () => {
       
       const state: PendingPurchaseState = JSON.parse(saved);
       
-      // Verificar que no haya expirado
       if (Date.now() - state.timestamp > EXPIRY_TIME) {
-        clearPendingStateStorage();
+        localStorage.removeItem(STORAGE_KEY);
         return null;
       }
       
@@ -119,21 +142,24 @@ export const usePendingPurchase = () => {
     }
   };
 
-  const clearPendingStateStorage = () => {
+  const clearAllStorage = () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PENDING_PRODUCT_KEY);
   };
 
   // Limpiar estado después de usarlo
   const clearPendingState = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    clearAllStorage();
     setPendingState(null);
     setPaymentSuccess(false);
+    setVerifiedProductId(null);
     console.log('[PendingPurchase] Estado limpiado');
   }, []);
 
   return {
     pendingState,
     paymentSuccess,
+    verifiedProductId,
     verifying,
     savePendingState,
     clearPendingState,

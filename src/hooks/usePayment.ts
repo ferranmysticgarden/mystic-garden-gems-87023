@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 
 import { trackEvent } from '@/lib/trackEvent';
 
+const PENDING_PRODUCT_KEY = 'stripe_pending_product';
+
 /**
  * Hook unificado de pagos:
  * - Android: Google Play Billing (INAPP consumables)
@@ -22,7 +24,7 @@ export const usePayment = () => {
     setLoading(true);
 
     try {
-      // Android → Google Play Billing (intenta siempre; el hook interno gestiona readiness/reintentos)
+      // Android → Google Play Billing
       if (isAndroid) {
         trackEvent('payment_bridge_start', {
           product: productId,
@@ -46,7 +48,7 @@ export const usePayment = () => {
         }
       }
 
-      // Web → Stripe (solo plataforma web)
+      // Web → Stripe
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -61,6 +63,12 @@ export const usePayment = () => {
       if (error) throw error;
 
       if (data?.url) {
+        // ✅ CRITICAL: Save productId BEFORE redirecting to Stripe
+        localStorage.setItem(PENDING_PRODUCT_KEY, JSON.stringify({
+          productId,
+          timestamp: Date.now(),
+        }));
+        console.log('[PAYMENT] Saved pending product before Stripe redirect:', productId);
         toast.success('Redirigiendo a la pasarela de pago...');
         window.location.assign(data.url);
         return false;
