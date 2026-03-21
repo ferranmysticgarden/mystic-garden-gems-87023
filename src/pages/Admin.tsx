@@ -69,7 +69,7 @@ const Admin = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center px-4 py-8">
         <Card className="max-w-md w-full p-6 text-center space-y-4">
           <div>
             <h1 className="text-2xl font-bold mb-2">Sin acceso al panel admin</h1>
