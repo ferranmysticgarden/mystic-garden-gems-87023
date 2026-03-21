@@ -127,6 +127,9 @@ const Index = () => {
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
 
+  // Payment success modal
+  const [paymentModal, setPaymentModal] = useState<{ show: boolean; productName: string; rewardText: string }>({ show: false, productName: '', rewardText: '' });
+
 
   // State for login prompt (guest mode)
   const [showLoginPrompt, setShowLoginPrompt] = useState<'purchase' | 'save_progress' | 'general' | null>(null);
