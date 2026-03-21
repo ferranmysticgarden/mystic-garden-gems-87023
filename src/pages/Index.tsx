@@ -1026,6 +1026,14 @@ const Index = () => {
 
       {/* Spring Event - SOLO después de nivel 8, respetar dismiss */}
       {gameState.completedLevels.length >= 8 && !springEventDismissed && <SpringEvent onClose={() => setSpringEventDismissed(true)} />}
+
+      {/* Payment Success Modal */}
+      <PaymentSuccessModal
+        show={paymentModal.show}
+        productName={paymentModal.productName}
+        rewardText={paymentModal.rewardText}
+        onClose={() => setPaymentModal({ show: false, productName: '', rewardText: '' })}
+      />
     </div>
   );
 };
