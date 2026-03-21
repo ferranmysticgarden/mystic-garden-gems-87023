@@ -307,11 +307,24 @@ serve(async (req) => {
   try {
     let userId: string | null = null;
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
       const token = authHeader.replace("Bearer ", "");
-      const supabaseAnonClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
-      const { data: userData } = await supabaseAnonClient.auth.getUser(token);
-      userId = userData.user?.id || null;
+      if (supabaseAnonKey) {
+        const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: supabaseAnonKey,
+          },
+        });
+
+        if (authResponse.ok) {
+          const user = await authResponse.json() as { id?: string | null };
+          userId = user?.id ?? null;
+        } else {
+          console.warn('[WARN] verify-google-purchase auth lookup failed with status', authResponse.status);
+        }
+      }
     }
 
     const { purchaseToken, productId: rawProductId, orderId, packageName: purchasePackageName } = await req.json();
