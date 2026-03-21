@@ -63,6 +63,8 @@ import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const adminTapsRef = useRef<number[]>([]);
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasActiveProduct } = usePurchases(user);
