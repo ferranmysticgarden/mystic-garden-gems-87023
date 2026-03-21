@@ -1,7 +1,5 @@
 import { PRODUCTS } from '@/data/products';
 
-// EXTRA_PRODUCT_IDS ya no es necesario — todos los productos están en PRODUCTS
-
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   welcome_pack: ['welcomepack'],
   pack_impulso: ['packimpulso'],
@@ -18,7 +16,6 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   garden_pass: ['gardenpass'],
   extra_moves: ['extramoves'],
   first_purchase: ['firstpurchase'],
-  // Productos que antes faltaban en el catálogo
   flash_offer: ['flashoffer'],
   buy_moves: ['buymoves'],
   finish_level: ['finishlevel'],
@@ -40,14 +37,19 @@ const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
 
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
 
+const getPreferredGooglePlayProductId = (productId: string): string => {
+  const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId]?.[0];
+  return explicit ?? normalizeId(productId);
+};
+
 const getPrimaryGooglePlayCandidates = (productId: string): string[] => {
   const normalized = normalizeId(productId);
   const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
 
   return unique([
-    productId,
     ...explicit,
     normalized,
+    productId,
   ]);
 };
 
@@ -56,15 +58,15 @@ export const getGooglePlayCandidates = (productId: string): string[] => {
 
   return unique([
     ...getPrimaryGooglePlayCandidates(productId),
-    `${productId}1`,
     `${normalized}1`,
+    `${productId}1`,
   ]);
 };
 
 const KNOWN_PRODUCT_IDS = PRODUCTS.map((product) => product.id);
 
 export const getGooglePlayQueryProductIds = (): string[] => {
-  return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getPrimaryGooglePlayCandidates(productId)));
+  return unique(KNOWN_PRODUCT_IDS.map((productId) => getPreferredGooglePlayProductId(productId)));
 };
 
 export const resolveGooglePlayProductId = (

@@ -21,10 +21,41 @@ export const useGooglePlayBilling = () => {
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
 
+  const queryProductsIndividually = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
+    const merged: Record<string, ProductDetails> = {};
+
+    for (const id of productIds) {
+      try {
+        const singleResult = await GooglePlayBilling.queryProducts({ productIds: [id] });
+        if (Object.keys(singleResult).length > 0) {
+          Object.assign(merged, singleResult);
+        }
+      } catch (error) {
+        trackEvent('billing_error', {
+          error: String(error),
+          phase: 'query_single',
+          product_id: id,
+        });
+      }
+    }
+
+    return merged;
+  }, []);
+
   const queryProductsWithFallback = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
     try {
       const fullBatch = await GooglePlayBilling.queryProducts({ productIds });
-      if (Object.keys(fullBatch).length > 0) return fullBatch;
+      const loadedIds = Object.keys(fullBatch);
+
+      if (loadedIds.length > 0) {
+        const missingIds = productIds.filter((id) => !fullBatch[id]);
+        if (missingIds.length === 0) {
+          return fullBatch;
+        }
+
+        const recoveredProducts = await queryProductsIndividually(missingIds);
+        return { ...fullBatch, ...recoveredProducts };
+      }
     } catch (error) {
       trackEvent('billing_error', {
         error: String(error),
@@ -33,25 +64,19 @@ export const useGooglePlayBilling = () => {
       });
     }
 
-    const settled = await Promise.allSettled(
-      productIds.map(async (id) => GooglePlayBilling.queryProducts({ productIds: [id] }))
-    );
+    return queryProductsIndividually(productIds);
+  }, [queryProductsIndividually]);
 
-    const merged: Record<string, ProductDetails> = {};
-    settled.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        Object.assign(merged, result.value);
-      } else {
-        trackEvent('billing_error', {
-          error: String(result.reason),
-          phase: 'query_single',
-          product_id: productIds[index],
-        });
+  const queryFirstAvailableCandidate = useCallback(async (candidateIds: string[]): Promise<Record<string, ProductDetails>> => {
+    for (const candidateId of candidateIds) {
+      const productDetails = await queryProductsIndividually([candidateId]);
+      if (Object.keys(productDetails).length > 0) {
+        return productDetails;
       }
-    });
+    }
 
-    return merged;
-  }, []);
+    return {};
+  }, [queryProductsIndividually]);
 
   const loadProducts = useCallback(async (retryCount = 0): Promise<Record<string, ProductDetails>> => {
     const productIds = getGooglePlayQueryProductIds();
@@ -343,7 +368,7 @@ export const useGooglePlayBilling = () => {
 
       if (!googlePlayProductId) {
         try {
-          const directProductDetails = await GooglePlayBilling.queryProducts({ productIds: candidates });
+          const directProductDetails = await queryFirstAvailableCandidate(candidates);
           if (Object.keys(directProductDetails).length > 0) {
             cachedProducts = { ...cachedProducts, ...directProductDetails };
             setProducts((prev) => ({ ...prev, ...directProductDetails }));
@@ -377,7 +402,6 @@ export const useGooglePlayBilling = () => {
         google_id: googlePlayProductId,
         has_token: !!result?.purchaseToken,
       });
-      // Mark token so the listener skips this purchase
       if (result?.purchaseToken) {
         purchaseInitiatedByUserRef.current.add(result.purchaseToken);
       }
@@ -405,7 +429,7 @@ export const useGooglePlayBilling = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase]);
+  }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase, queryFirstAvailableCandidate]);
 
   const getProductPrice = useCallback((productId: string): string | null => {
     const resolvedProductId = resolveGooglePlayProductId(productId, products);
