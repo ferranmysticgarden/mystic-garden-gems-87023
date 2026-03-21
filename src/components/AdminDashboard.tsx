@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { PRODUCTS } from '@/data/products';
+import { UserDetailModal } from './admin/UserDetailModal';
 
 interface Profile {
   id: string;
