@@ -478,7 +478,7 @@ const Index = () => {
     if (nextCount >= 5) {
       adminTapsRef.current = [];
       toast.success('Abriendo panel admin…');
-      navigate('/admin');
+      navigate('/admin?secret=1');
       return;
     }
 
