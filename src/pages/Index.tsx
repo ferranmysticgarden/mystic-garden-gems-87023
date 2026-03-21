@@ -147,7 +147,7 @@ const Index = () => {
   }, [screen, setScreen]));
 
   // Estado de pago pendiente (para restaurar después de Stripe)
-  const { pendingState, paymentSuccess, clearPendingState } = usePendingPurchase();
+  const { pendingState, paymentSuccess, verifiedProductId, clearPendingState } = usePendingPurchase();
   
   // Estado para restaurar el juego después de pago
   const [restoredGameState, setRestoredGameState] = useState<{
@@ -156,14 +156,15 @@ const Index = () => {
     collected: Record<string, number>;
   } | null>(null);
 
-  // Detectar pago Stripe verificado y restaurar efecto correcto por producto
+  // Detectar pago Stripe verificado y aplicar recompensas según producto
   useEffect(() => {
-    if (!paymentSuccess || !pendingState) return;
+    if (!paymentSuccess || !verifiedProductId) return;
 
-    const { productId } = pendingState;
-    console.log('[Index] Pago Stripe verificado, aplicando producto:', productId);
+    const productId = verifiedProductId;
+    console.log('[Index] ✅ Pago Stripe verificado, aplicando producto:', productId);
 
-    if (['buy_moves', 'finish_level', 'continue_game'].includes(productId)) {
+    // Restore game state for in-level purchases
+    if (['buy_moves', 'finish_level', 'continue_game', 'extra_moves'].includes(productId) && pendingState) {
       selectLevel(pendingState.levelId);
       setRestoredGameState({
         moves: 5,
@@ -171,19 +172,70 @@ const Index = () => {
         collected: pendingState.collected,
       });
       setScreen('game');
-      toast.success('¡Pago verificado! +5 movimientos');
+      toast.success('✅ ¡Pago completado! +5 movimientos');
+    } else if (productId === 'gems_100') {
+      addGems(100);
+      toast.success('✅ ¡Pago completado! +100 💎');
+    } else if (productId === 'gems_300') {
+      addGems(300);
+      toast.success('✅ ¡Pago completado! +300 💎');
+    } else if (productId === 'gems_1200') {
+      addGems(1200);
+      toast.success('✅ ¡Pago completado! +1200 💎');
+    } else if (productId === 'quick_pack') {
+      addLives(3);
+      addGems(20);
+      toast.success('✅ ¡Pago completado! +3 vidas +20 💎');
+    } else if (productId === 'mega_pack_inicial') {
+      addLives(5);
+      addGems(100);
+      addHammer(2);
+      addShuffle(2);
+      addUndo(1);
+      toast.success('✅ ¡Pago completado! Mega Pack activado');
+    } else if (productId === 'starter_pack') {
+      addLives(3);
+      addGems(50);
+      addHammer(1);
+      toast.success('✅ ¡Pago completado! Starter Pack activado');
     } else if (productId === 'reward_doubler') {
       addGems(50);
-      toast.success('¡Pago verificado! +50💎');
+      toast.success('✅ ¡Pago completado! +50 💎');
     } else if (productId === 'extra_spin') {
       window.dispatchEvent(new Event('first_purchase_completed'));
-      toast.success('¡Pago verificado! Giro extra desbloqueado');
+      toast.success('✅ ¡Pago completado! Giro extra desbloqueado');
+    } else if (productId === 'garden_pass') {
+      addGems(1000);
+      toast.success('✅ ¡Garden Pass activado! +1000 💎 + Sin anuncios');
+    } else if (productId === 'welcome_pack' || productId === 'first_purchase') {
+      addGems(30);
+      addLives(3);
+      toast.success('✅ ¡Pago completado! +30 💎 +3 vidas');
+    } else if (productId === 'lifesaver_pack') {
+      addLives(5);
+      toast.success('✅ ¡Pago completado! +5 vidas');
+    } else if (productId === 'flash_offer' || productId === 'victory_multiplier') {
+      addGems(50);
+      addHammer(1);
+      toast.success('✅ ¡Pago completado! +50 💎 +1 martillo');
+    } else if (productId === 'pack_revancha') {
+      addLives(5);
+      addGems(30);
+      addHammer(1);
+      toast.success('✅ ¡Pago completado! Pack Revancha activado');
+    } else if (productId === 'unlimited_lives_30min') {
+      activateUnlimitedLives(30);
+      toast.success('✅ ¡Vidas infinitas 30 min activadas!');
     } else {
-      toast.success('¡Pago verificado!');
+      // Generic fallback
+      toast.success('✅ ¡Pago completado con éxito! Recompensa aplicada');
     }
 
+    // Also reload from DB to sync server-side changes
+    reloadFromDB?.();
+
     clearPendingState();
-  }, [paymentSuccess, pendingState, selectLevel, setScreen, clearPendingState, addGems]);
+  }, [paymentSuccess, verifiedProductId, pendingState, selectLevel, setScreen, clearPendingState, addGems, addLives, addHammer, addShuffle, addUndo, activateUnlimitedLives, reloadFromDB]);
 
   // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
   useEffect(() => {
