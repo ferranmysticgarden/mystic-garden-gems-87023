@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "npm:stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,12 +31,24 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-    const { data, error: authError } = await supabaseClient.auth.getUser(token);
-    if (authError || !data.user) {
+    const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+      },
+    });
+
+    if (!authResponse.ok) {
+      const authText = await authResponse.text();
+      console.error("[verify-stripe] Auth lookup failed:", authResponse.status, authText);
       throw new Error("User not authenticated");
     }
-    const userId = data.user.id;
+
+    const user = await authResponse.json() as { id: string };
+    if (!user?.id) {
+      throw new Error("User not authenticated");
+    }
+    const userId = user.id;
 
     const { productId, sessionId } = await req.json();
     if (!productId || typeof productId !== "string") {
