@@ -218,7 +218,7 @@ const Index = () => {
       toast.success('✅ ¡Pago completado! +5 vidas');
     } else if (productId === 'flash_offer' || productId === 'victory_multiplier') {
       addGems(50);
-      addHammer(1);
+      addHammer();
       toast.success('✅ ¡Pago completado! +50 💎 +1 martillo');
     } else if (productId === 'pack_revancha') {
       addLives(5);
