@@ -31,53 +31,67 @@ export const usePendingPurchase = () => {
   const [verifiedProductId, setVerifiedProductId] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
 
-  // Detectar si venimos de un pago y VERIFICAR con backend
-  useEffect(() => {
+  // Capturar parámetros de URL al montar (antes de que user esté listo)
+  const [capturedParams, setCapturedParams] = useState<{ paymentStatus: string | null; sessionId: string | null }>(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const sessionId = urlParams.get('session_id');
-    if (paymentStatus === 'success') {
-      // Limpiar URL inmediatamente
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
-      
-      // Try to get productId from full state OR simple pending key
-      const savedState = loadPendingState();
-      const simplePending = loadSimplePending();
-      const productId = savedState?.productId || simplePending?.productId;
-
-      if (productId && user && sessionId) {
-        setVerifying(true);
-        verifyStripePurchase(productId, sessionId).then((verified) => {
-          if (verified) {
-            if (savedState) {
-              setPendingState(savedState);
-            }
-            setVerifiedProductId(productId);
-            setPaymentSuccess(true);
-            console.log('[PendingPurchase] ✅ Pago verificado con Stripe:', productId);
-          } else {
-            console.warn('[PendingPurchase] ❌ Pago NO verificado');
-            clearAllStorage();
-          }
-          setVerifying(false);
-        });
-      } else if (productId && user && !sessionId) {
-        // No session_id in URL but we have productId - trust the redirect
-        console.warn('[PendingPurchase] No session_id in URL, trusting redirect for:', productId);
-        if (savedState) setPendingState(savedState);
-        setVerifiedProductId(productId);
-        setPaymentSuccess(true);
-        clearAllStorage();
-      } else {
-        clearAllStorage();
-      }
-    } else if (paymentStatus === 'cancel') {
-      clearAllStorage();
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+    // Limpiar URL inmediatamente para evitar re-procesamiento
+    if (paymentStatus) {
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [user]);
+    return { paymentStatus, sessionId };
+  });
+
+  // Procesar pago cuando user esté disponible
+  useEffect(() => {
+    const { paymentStatus, sessionId } = capturedParams;
+    
+    if (paymentStatus === 'cancel') {
+      clearAllStorage();
+      setCapturedParams({ paymentStatus: null, sessionId: null });
+      return;
+    }
+
+    if (paymentStatus !== 'success') return;
+    if (!user) return; // Esperar a que user cargue
+
+    const savedState = loadPendingState();
+    const simplePending = loadSimplePending();
+    const productId = savedState?.productId || simplePending?.productId;
+
+    if (!productId) {
+      console.warn('[PendingPurchase] No productId found in storage');
+      clearAllStorage();
+      setCapturedParams({ paymentStatus: null, sessionId: null });
+      return;
+    }
+
+    if (sessionId) {
+      setVerifying(true);
+      verifyStripePurchase(productId, sessionId).then((verified) => {
+        if (verified) {
+          if (savedState) setPendingState(savedState);
+          setVerifiedProductId(productId);
+          setPaymentSuccess(true);
+          console.log('[PendingPurchase] ✅ Pago verificado con Stripe:', productId);
+        } else {
+          console.warn('[PendingPurchase] ❌ Pago NO verificado');
+          clearAllStorage();
+        }
+        setVerifying(false);
+        setCapturedParams({ paymentStatus: null, sessionId: null });
+      });
+    } else {
+      // No session_id but we have productId - trust the redirect
+      console.warn('[PendingPurchase] No session_id, trusting redirect for:', productId);
+      if (savedState) setPendingState(savedState);
+      setVerifiedProductId(productId);
+      setPaymentSuccess(true);
+      clearAllStorage();
+      setCapturedParams({ paymentStatus: null, sessionId: null });
+    }
+  }, [user, capturedParams]);
 
   const verifyStripePurchase = async (productId: string, sessionId: string | null): Promise<boolean> => {
     if (!sessionId) return false;
