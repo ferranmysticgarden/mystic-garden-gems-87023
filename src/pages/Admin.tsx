@@ -64,7 +64,7 @@ const Admin = () => {
   }
 
   if (!user) {
-    return <AuthPage onAuthSuccess={() => {}} onBack={() => navigate('/')} backLabel="Volver al menú principal" />;
+    return <AuthPage onAuthSuccess={() => {}} onBack={() => navigate('/')} backLabel="Volver al menú principal" mode="admin" />;
   }
 
   if (!isAdmin) {
