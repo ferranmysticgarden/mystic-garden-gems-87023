@@ -466,7 +466,9 @@ const Index = () => {
     }
   };
 
-  const handleAdminAccessTap = useCallback(() => {
+  const handleAdminAccessTap = useCallback((event?: { preventDefault?: () => void }) => {
+    event?.preventDefault?.();
+
     const now = Date.now();
     const recentTaps = adminTapsRef.current.filter((tap) => now - tap < 3500);
     const nextCount = recentTaps.length + 1;
@@ -541,8 +543,8 @@ const Index = () => {
   const isNewUser = gameState.completedLevels.length < 5;
 
   return (
-    <div className="min-h-screen p-4 relative z-10">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen px-4 py-6 md:py-10 relative z-10">
+      <div className="max-w-md mx-auto flex min-h-[calc(100vh-3rem)] flex-col justify-center">
         {/* User Info & Music Control */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
@@ -610,17 +612,18 @@ const Index = () => {
         )}
 
         {/* Logo - hidden admin access: tap 5 times */}
-        <div className="text-center mb-6 animate-float">
+        <div className="mb-6 flex justify-center text-center">
           <button
             type="button"
-            className="mx-auto flex flex-col items-center rounded-2xl px-4 py-2 transition-transform active:scale-[0.98]"
-            onClick={handleAdminAccessTap}
+            className="mx-auto flex w-full max-w-xs flex-col items-center rounded-3xl px-6 py-4 transition-transform duration-150 active:scale-[0.98] touch-manipulation"
+            onPointerUp={handleAdminAccessTap}
             aria-label="Mystic Garden"
           >
             <h1 className="text-5xl font-bold text-gold mb-2 drop-shadow-lg select-none">
               {t('game.title')}
             </h1>
             <div className="text-6xl mb-4">🌸🌺🌼</div>
+            <span className="sr-only">Pulsa 5 veces para abrir el panel de administración</span>
           </button>
         </div>
 
