@@ -67,6 +67,8 @@ export const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
 
   useEffect(() => {
     loadData();
