@@ -180,7 +180,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 md:px-8 md:py-10">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6 flex min-h-[calc(100vh-3rem)] flex-col justify-center">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             {onBack && (
