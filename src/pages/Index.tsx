@@ -223,7 +223,7 @@ const Index = () => {
     } else if (productId === 'pack_revancha') {
       addLives(5);
       addGems(30);
-      addHammer(1);
+      addHammer();
       toast.success('✅ ¡Pago completado! Pack Revancha activado');
     } else if (productId === 'unlimited_lives_30min') {
       activateUnlimitedLives(30);
