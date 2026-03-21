@@ -162,10 +162,13 @@ const Index = () => {
 
   // Detectar pago Stripe verificado y aplicar recompensas según producto
   useEffect(() => {
-    if (!paymentSuccess || !verifiedProductId) return;
+   if (!paymentSuccess || !verifiedProductId) return;
 
     const productId = verifiedProductId;
     console.log('[Index] ✅ Pago Stripe verificado, aplicando producto:', productId);
+
+    let modalProduct = '';
+    let modalReward = '';
 
     // Restore game state for in-level purchases
     if (['buy_moves', 'finish_level', 'continue_game', 'extra_moves'].includes(productId) && pendingState) {
@@ -176,66 +179,83 @@ const Index = () => {
         collected: pendingState.collected,
       });
       setScreen('game');
-      toast.success('✅ ¡Pago completado! +5 movimientos');
+      modalProduct = '+5 Movimientos';
+      modalReward = '¡Continúa tu partida con 5 movimientos extra!';
     } else if (productId === 'gems_100') {
       addGems(100);
-      toast.success('✅ ¡Pago completado! +100 💎');
+      modalProduct = '100 Gemas 💎';
+      modalReward = '+100 gemas añadidas a tu cuenta';
     } else if (productId === 'gems_300') {
       addGems(300);
-      toast.success('✅ ¡Pago completado! +300 💎');
+      modalProduct = '300 Gemas 💎';
+      modalReward = '+300 gemas añadidas a tu cuenta';
     } else if (productId === 'gems_1200') {
       addGems(1200);
-      toast.success('✅ ¡Pago completado! +1200 💎');
+      modalProduct = '1200 Gemas 💎';
+      modalReward = '+1200 gemas añadidas a tu cuenta';
     } else if (productId === 'quick_pack') {
       addLives(3);
       addGems(20);
-      toast.success('✅ ¡Pago completado! +3 vidas +20 💎');
+      modalProduct = 'Quick Pack';
+      modalReward = '+3 vidas y +20 gemas';
     } else if (productId === 'mega_pack_inicial') {
       addLives(5);
       addGems(100);
-      addHammer();
-      addHammer();
-      addShuffle();
-      addShuffle();
+      addHammer(); addHammer();
+      addShuffle(); addShuffle();
       addUndo();
-      toast.success('✅ ¡Pago completado! Mega Pack activado');
+      modalProduct = 'Mega Pack';
+      modalReward = '+5 vidas, +100 gemas, +2 martillos, +2 barajadas, +1 deshacer';
     } else if (productId === 'starter_pack') {
       addLives(3);
       addGems(50);
       addHammer();
-      toast.success('✅ ¡Pago completado! Starter Pack activado');
+      modalProduct = 'Starter Pack';
+      modalReward = '+3 vidas, +50 gemas, +1 martillo';
     } else if (productId === 'reward_doubler') {
       addGems(50);
-      toast.success('✅ ¡Pago completado! +50 💎');
+      modalProduct = 'Reward Doubler';
+      modalReward = '+50 gemas bonus';
     } else if (productId === 'extra_spin') {
       window.dispatchEvent(new Event('first_purchase_completed'));
-      toast.success('✅ ¡Pago completado! Giro extra desbloqueado');
+      modalProduct = 'Giro Extra';
+      modalReward = '¡Giro extra desbloqueado!';
     } else if (productId === 'garden_pass') {
       addGems(1000);
-      toast.success('✅ ¡Garden Pass activado! +1000 💎 + Sin anuncios');
+      modalProduct = 'Garden Pass 🌸';
+      modalReward = '+1000 gemas + Sin anuncios';
     } else if (productId === 'welcome_pack' || productId === 'first_purchase') {
       addGems(30);
       addLives(3);
-      toast.success('✅ ¡Pago completado! +30 💎 +3 vidas');
+      modalProduct = 'Welcome Pack';
+      modalReward = '+30 gemas y +3 vidas';
     } else if (productId === 'lifesaver_pack') {
       addLives(5);
-      toast.success('✅ ¡Pago completado! +5 vidas');
+      modalProduct = 'Lifesaver Pack';
+      modalReward = '+5 vidas extra';
     } else if (productId === 'flash_offer' || productId === 'victory_multiplier') {
       addGems(50);
       addHammer();
-      toast.success('✅ ¡Pago completado! +50 💎 +1 martillo');
+      modalProduct = 'Flash Pack';
+      modalReward = '+50 gemas y +1 martillo';
     } else if (productId === 'pack_revancha') {
       addLives(5);
       addGems(30);
       addHammer();
-      toast.success('✅ ¡Pago completado! Pack Revancha activado');
+      modalProduct = 'Pack Revancha';
+      modalReward = '+5 vidas, +30 gemas, +1 martillo';
     } else if (productId === 'unlimited_lives_30min') {
       activateUnlimitedLives(30);
-      toast.success('✅ ¡Vidas infinitas 30 min activadas!');
+      modalProduct = 'Vidas Infinitas ♾️';
+      modalReward = '¡30 minutos de vidas ilimitadas activados!';
     } else {
-      // Generic fallback
-      toast.success('✅ ¡Pago completado con éxito! Recompensa aplicada');
+      modalProduct = 'Compra';
+      modalReward = '¡Recompensa aplicada con éxito!';
     }
+
+    // Show big success modal
+    setPaymentModal({ show: true, productName: modalProduct, rewardText: modalReward });
+    toast.success('✅ ¡Pago completado!');
 
     // Also reload from DB to sync server-side changes
     reloadFromDB?.();
