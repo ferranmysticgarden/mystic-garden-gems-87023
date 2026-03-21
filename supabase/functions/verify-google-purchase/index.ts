@@ -401,90 +401,94 @@ serve(async (req) => {
     }
 
     if (userId) {
-      const { data: existingPurchase } = await supabaseClient
-        .from('user_purchases')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('product_id', purchaseRecordId)
-        .single();
-
-      if (existingPurchase) {
-        console.log('[INFO] Purchase already processed');
-        return new Response(JSON.stringify({ success: true, message: 'Already processed', rewards }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
-      const { data: progress, error: progressError } = await supabaseClient
-        .from('game_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (progressError && progressError.code !== 'PGRST116') throw progressError;
-
-      const currentGems = progress?.gems || 0;
-      const currentLives = progress?.lives || 5;
-      const currentHammer = progress?.hammer_count || 0;
-      const currentShuffle = progress?.shuffle_count || 0;
-      const currentUndo = progress?.undo_count || 0;
-
-      const updates: Record<string, any> = {
+      const idempotencyId = `google_${purchaseKey}`;
+      const { error: lockError } = await supabaseClient.from('processed_webhook_events').insert({
+        id: idempotencyId,
         user_id: userId,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (rewards.gems) updates.gems = currentGems + rewards.gems;
-      if (rewards.lives) updates.lives = Math.min(currentLives + rewards.lives, 99);
-      if (rewards.powerups) {
-        const perType = Math.floor(rewards.powerups / 3);
-        const remainder = rewards.powerups % 3;
-        updates.hammer_count = currentHammer + perType + (remainder >= 1 ? 1 : 0);
-        updates.shuffle_count = currentShuffle + perType + (remainder >= 2 ? 1 : 0);
-        updates.undo_count = currentUndo + perType;
-      }
-      if (rewards.noAdsDays) {
-        const expireDate = new Date();
-        expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
-        updates.no_ads_until = expireDate.toISOString();
-      }
-      if (rewards.noAdsForever) {
-        updates.no_ads_until = '2099-12-31T23:59:59.000Z';
-      }
-      if (rewards.unlimitedLivesMinutes) {
-        const now = new Date();
-        const currentUL = progress?.unlimited_lives_until ? new Date(progress.unlimited_lives_until as string) : null;
-        const base = (currentUL && currentUL > now) ? currentUL : now;
-        updates.unlimited_lives_until = new Date(base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000).toISOString();
-      }
-
-      if (progress) {
-        await supabaseClient.from('game_progress').update(updates).eq('user_id', userId);
-      } else {
-        updates.lives = updates.lives || 5;
-        updates.gems = updates.gems || 0;
-        await supabaseClient.from('game_progress').insert(updates);
-      }
-
-      await supabaseClient.from('user_purchases').insert({
-        user_id: userId,
-        product_id: purchaseRecordId,
-        expires_at: rewards.noAdsDays ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString() : null,
+        product_id: productId,
+        stripe_session_id: orderId || null,
       });
 
-      if (rewards.noAdsDays || rewards.noAdsForever) {
-        const canonicalExpiresAt = rewards.noAdsForever ? null : new Date(Date.now() + (rewards.noAdsDays || 0) * 24 * 60 * 60 * 1000).toISOString();
+      if (lockError) {
+        if (lockError.code === '23505') {
+          console.log('[INFO] Google purchase already processed');
+          return new Response(JSON.stringify({ success: true, message: 'Already processed', rewards }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
 
-        await supabaseClient.from('user_purchases').delete().eq('user_id', userId).eq('product_id', productId);
+        throw lockError;
+      }
 
-        const { error: insertCanonicalError } = await supabaseClient.from('user_purchases').insert({
+      try {
+        const { data: progress, error: progressError } = await supabaseClient
+          .from('game_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (progressError && progressError.code !== 'PGRST116') throw progressError;
+
+        const currentGems = progress?.gems || 0;
+        const currentLives = progress?.lives || 5;
+        const currentHammer = progress?.hammer_count || 0;
+        const currentShuffle = progress?.shuffle_count || 0;
+        const currentUndo = progress?.undo_count || 0;
+
+        const updates: Record<string, any> = {
+          user_id: userId,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (rewards.gems) updates.gems = currentGems + rewards.gems;
+        if (rewards.lives) updates.lives = Math.min(currentLives + rewards.lives, 99);
+        if (rewards.powerups) {
+          const perType = Math.floor(rewards.powerups / 3);
+          const remainder = rewards.powerups % 3;
+          updates.hammer_count = currentHammer + perType + (remainder >= 1 ? 1 : 0);
+          updates.shuffle_count = currentShuffle + perType + (remainder >= 2 ? 1 : 0);
+          updates.undo_count = currentUndo + perType;
+        }
+        if (rewards.noAdsDays) {
+          const expireDate = new Date();
+          expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
+          updates.no_ads_until = expireDate.toISOString();
+        }
+        if (rewards.noAdsForever) {
+          updates.no_ads_until = '2099-12-31T23:59:59.000Z';
+        }
+        if (rewards.unlimitedLivesMinutes) {
+          const now = new Date();
+          const currentUL = progress?.unlimited_lives_until ? new Date(progress.unlimited_lives_until as string) : null;
+          const base = (currentUL && currentUL > now) ? currentUL : now;
+          updates.unlimited_lives_until = new Date(base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000).toISOString();
+        }
+
+        if (progress) {
+          await supabaseClient.from('game_progress').update(updates).eq('user_id', userId);
+        } else {
+          updates.lives = updates.lives || 5;
+          updates.gems = updates.gems || 0;
+          await supabaseClient.from('game_progress').insert(updates);
+        }
+
+        const purchaseExpiresAt = rewards.noAdsForever
+          ? null
+          : rewards.noAdsDays
+            ? new Date(Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000).toISOString()
+            : null;
+
+        const { error: insertPurchaseError } = await supabaseClient.from('user_purchases').insert({
           user_id: userId,
           product_id: productId,
-          expires_at: canonicalExpiresAt,
+          expires_at: purchaseExpiresAt,
         });
 
-        if (insertCanonicalError) throw insertCanonicalError;
+        if (insertPurchaseError) throw insertPurchaseError;
+      } catch (grantError) {
+        await supabaseClient.from('processed_webhook_events').delete().eq('id', idempotencyId);
+        throw grantError;
       }
 
       if (rewards.noAdsForever && productId !== 'no_ads_forever') {

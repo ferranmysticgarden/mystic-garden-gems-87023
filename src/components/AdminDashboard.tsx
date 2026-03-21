@@ -213,13 +213,13 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Ingresos Totales</p>
+                <p className="text-sm text-muted-foreground">Facturación catálogo</p>
                 <p className="text-3xl font-bold">€{stats.totalRevenue.toFixed(2)}</p>
               </div>
               <DollarSign className="w-8 h-8 text-green-500" />
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              +€{stats.todayRevenue.toFixed(2)} hoy
+              +€{stats.todayRevenue.toFixed(2)} hoy · antes de comisiones e impuestos
             </p>
           </Card>
 
