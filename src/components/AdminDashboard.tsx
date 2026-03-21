@@ -56,7 +56,11 @@ const PRODUCT_NAMES: Record<string, string> = {
   "quick_life": "Vida Rápida",
 };
 
-export const AdminDashboard = () => {
+interface AdminDashboardProps {
+  onBack?: () => void;
+}
+
+export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -175,10 +179,17 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background px-4 py-6 md:px-8 md:py-10">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold">Dashboard de Administración</h1>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            {onBack && (
+              <Button onClick={onBack} variant="outline" className="w-fit">
+                ← Menú principal
+              </Button>
+            )}
+            <h1 className="text-3xl md:text-4xl font-bold">Dashboard de Administración</h1>
+          </div>
           <Button onClick={loadData} variant="outline">
             Actualizar
           </Button>

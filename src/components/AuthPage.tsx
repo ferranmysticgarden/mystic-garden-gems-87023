@@ -9,6 +9,8 @@ import { z } from 'zod';
 
 interface AuthPageProps {
   onAuthSuccess: () => void;
+  onBack?: () => void;
+  backLabel?: string;
 }
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" });
@@ -17,7 +19,7 @@ const passwordSchema = z.string().min(6, { message: "La contraseña debe tener a
 // Para login/confirmación en móvil nativo usamos una URL https permitida por el backend
 // que luego “salta” de vuelta a la app con deep link.
 
-export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
+export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver' }: AuthPageProps) => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -115,6 +117,17 @@ export const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
       <div className="gradient-card shadow-card rounded-2xl p-8 max-w-md w-full border border-primary/20">
+        {onBack && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="mb-4 px-0 text-muted-foreground hover:text-foreground"
+            onClick={onBack}
+          >
+            ← {backLabel}
+          </Button>
+        )}
+
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🌸</div>
           <h1 className="text-3xl font-bold text-gold mb-2">Mystic Garden Pro</h1>

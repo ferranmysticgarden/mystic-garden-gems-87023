@@ -466,6 +466,27 @@ const Index = () => {
     }
   };
 
+  const handleAdminAccessTap = useCallback(() => {
+    const now = Date.now();
+    const recentTaps = adminTapsRef.current.filter((tap) => now - tap < 3500);
+    const nextCount = recentTaps.length + 1;
+
+    adminTapsRef.current = [...recentTaps, now];
+
+    if (nextCount >= 5) {
+      adminTapsRef.current = [];
+      toast.success('Abriendo panel admin…');
+      navigate('/admin');
+      return;
+    }
+
+    if (nextCount >= 3) {
+      toast(`Acceso admin ${nextCount}/5`, {
+        duration: 900,
+      });
+    }
+  }, [navigate]);
+
   if (authLoading || gameLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -590,21 +611,17 @@ const Index = () => {
 
         {/* Logo - hidden admin access: tap 5 times */}
         <div className="text-center mb-6 animate-float">
-          <h1
-            className="text-5xl font-bold text-gold mb-2 drop-shadow-lg select-none"
-            onClick={() => {
-              const now = Date.now();
-              adminTapsRef.current = adminTapsRef.current.filter(t => now - t < 3000);
-              adminTapsRef.current.push(now);
-              if (adminTapsRef.current.length >= 5) {
-                adminTapsRef.current = [];
-                navigate('/admin');
-              }
-            }}
+          <button
+            type="button"
+            className="mx-auto flex flex-col items-center rounded-2xl px-4 py-2 transition-transform active:scale-[0.98]"
+            onClick={handleAdminAccessTap}
+            aria-label="Mystic Garden"
           >
-            {t('game.title')}
-          </h1>
-          <div className="text-6xl mb-4">🌸🌺🌼</div>
+            <h1 className="text-5xl font-bold text-gold mb-2 drop-shadow-lg select-none">
+              {t('game.title')}
+            </h1>
+            <div className="text-6xl mb-4">🌸🌺🌼</div>
+          </button>
         </div>
 
         {/* Main Menu */}
