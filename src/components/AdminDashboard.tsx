@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { PRODUCTS } from '@/data/products';
+import { UserDetailModal } from './admin/UserDetailModal';
 
 interface Profile {
   id: string;
@@ -66,6 +67,8 @@ export const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -290,22 +293,36 @@ export const AdminDashboard = () => {
                   <th className="text-left p-2">Fecha de Registro</th>
                   <th className="text-left p-2">Nombre</th>
                   <th className="text-left p-2">Email</th>
+                  <th className="text-left p-2">Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {users.slice(0, 10).map((user) => (
+                {users.slice(0, 20).map((user) => (
                   <tr key={user.id} className="border-b hover:bg-muted/50">
                     <td className="p-2">
                       {new Date(user.created_at).toLocaleString('es-ES')}
                     </td>
                     <td className="p-2">{user.display_name}</td>
                     <td className="p-2">{user.email}</td>
+                    <td className="p-2">
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs"
+                        onClick={() => { setSelectedUserId(user.id); setShowUserModal(true); }}>
+                        <Eye className="w-3 h-3 mr-1" /> Ver
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </Card>
+
+        <UserDetailModal
+          userId={selectedUserId}
+          open={showUserModal}
+          onClose={() => setShowUserModal(false)}
+          onRefresh={loadData}
+        />
       </div>
     </div>
   );

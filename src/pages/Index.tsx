@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useBackButton } from '@/hooks/useBackButton';
 import { useGameState } from '@/hooks/useGameState';
@@ -62,6 +63,8 @@ import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target 
 type Screen = 'menu' | 'game' | 'levels' | 'shop';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const adminTapsRef = useRef<number[]>([]);
   const { t } = useLanguage();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasActiveProduct } = usePurchases(user);
@@ -585,9 +588,20 @@ const Index = () => {
           </div>
         )}
 
-        {/* Logo */}
+        {/* Logo - hidden admin access: tap 5 times */}
         <div className="text-center mb-6 animate-float">
-          <h1 className="text-5xl font-bold text-gold mb-2 drop-shadow-lg">
+          <h1
+            className="text-5xl font-bold text-gold mb-2 drop-shadow-lg select-none"
+            onClick={() => {
+              const now = Date.now();
+              adminTapsRef.current = adminTapsRef.current.filter(t => now - t < 3000);
+              adminTapsRef.current.push(now);
+              if (adminTapsRef.current.length >= 5) {
+                adminTapsRef.current = [];
+                navigate('/admin');
+              }
+            }}
+          >
             {t('game.title')}
           </h1>
           <div className="text-6xl mb-4">🌸🌺🌼</div>
