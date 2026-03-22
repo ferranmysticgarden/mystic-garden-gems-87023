@@ -122,6 +122,7 @@ const Index = () => {
 
   // State for first session reward
   const [showFirstSessionReward, setShowFirstSessionReward] = useState(false);
+  const [suppressAutoPopups, setSuppressAutoPopups] = useState(false);
 
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
@@ -228,7 +229,23 @@ const Index = () => {
       localStorage.setItem(autoShownKey, "true");
     }, 1200);
     return () => clearTimeout(timer);
-  }, [streakData.canClaimToday, user, gameState.completedLevels.length]);
+  }, [streakData.canClaimToday, user, gameState.completedLevels.length, showFirstSessionReward, suppressAutoPopups]);
+
+  useEffect(() => {
+    if (showFirstSessionReward || suppressAutoPopups) return;
+    if (screen !== "menu") return;
+    if (isNaN(lastCompletedLevel) || lastCompletedLevel !== 5) return;
+    if (localStorage.getItem("first_session_reward_claimed") === "true") return;
+
+    setShowFirstSessionReward(true);
+    setSuppressAutoPopups(true);
+  }, [lastCompletedLevel, screen, showFirstSessionReward, suppressAutoPopups]);
+
+  useEffect(() => {
+    if (screen !== "menu") {
+      setSuppressAutoPopups(false);
+    }
+  }, [screen]);
   // Schedule streak reminder if user has a streak (at 20:30 prime time)
   useEffect(() => {
     if (streakData.currentStreak > 0 && !streakData.canClaimToday) {
@@ -304,7 +321,7 @@ const Index = () => {
       }
 
       // Show post-victory offer ONLY after level 5+ win (no distracciones tempranas)
-      if (currentLevel.id >= 5 && reward.gems && reward.gems > 0) {
+      if (currentLevel.id >= 6 && reward.gems && reward.gems > 0) {
         setLastWinGems(reward.gems);
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "victory_multiplier", level: currentLevel.id });
         trackEvent("offer_shown", { product: "victory_multiplier", level: currentLevel.id });
@@ -498,6 +515,7 @@ const Index = () => {
   }
   // ¿Es usuario nuevo? (menos de 5 niveles completados)
   const isNewUser = gameState.completedLevels.length < 5;
+  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward;
   return (
     <div className="min-h-screen px-4 py-6 md:py-10 relative z-10">
       <div className="max-w-md mx-auto flex min-h-[calc(100vh-3rem)] flex-col justify-center">
@@ -728,7 +746,7 @@ const Index = () => {
         />
       )}
       {/* Daily Streak Calendar Modal */}
-      {showStreakCalendar && (
+      {!autoPopupsBlocked && showStreakCalendar && (
         <DailyStreakCalendar
           onClose={() => setShowStreakCalendar(false)}
           onRewardClaimed={(gems, lives) => {
@@ -772,15 +790,15 @@ const Index = () => {
         />
       )}
       {/* Lucky Spin - SOLO después de nivel 5 */}
-      {gameState.completedLevels.length >= 5 && <LuckySpin />}
+      {!autoPopupsBlocked && gameState.completedLevels.length >= 5 && <LuckySpin />}
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
       {/* Achievement Modal */}
       {newlyUnlocked && <AchievementModal achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />}
       {/* Push Notification Prompt - SOLO después de nivel 2 */}
-      {!isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
+      {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
       {/* Come Back Banner - SOLO después de nivel 2 */}
-      {!isNewUser && (
+      {!autoPopupsBlocked && !isNewUser && (
         <ComeBackBanner
           onClaimReward={(gems, lives) => {
             addGems(gems);
@@ -790,7 +808,7 @@ const Index = () => {
         />
       )}
       {/* Review Request Modal - SOLO después de nivel 2 */}
-      {!isNewUser && <ReviewRequestModal gamesPlayed={gamesPlayed} />}
+      {!autoPopupsBlocked && !isNewUser && <ReviewRequestModal gamesPlayed={gamesPlayed} />}
       {/* Exit Confirmation Modal */}
       {showExitModal && (
         <ExitConfirmModal
@@ -859,19 +877,20 @@ const Index = () => {
         />
       )}
       {/* First Session Reward - SOLO después de nivel 5 */}
-      {!isNewUser && lastCompletedLevel === 5 && (
+      {!isNewUser && showFirstSessionReward && lastCompletedLevel === 5 && (
         <FirstSessionReward
           levelJustCompleted={lastCompletedLevel}
           onClaim={(gems, lives) => {
             addGems(gems);
             addLives(lives);
             toast.success(`¡Bienvenido! +${gems}💎 +${lives}❤️`);
+            setShowFirstSessionReward(false);
           }}
           onClose={() => setShowFirstSessionReward(false)}
         />
       )}
       {/* Share Prompt - SOLO después de nivel 3 */}
-      {!isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} />}
+      {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} />}
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
         <FlashOffer
