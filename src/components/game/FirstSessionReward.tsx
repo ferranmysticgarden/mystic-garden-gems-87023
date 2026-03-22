@@ -15,13 +15,11 @@ export const FirstSessionReward = ({ levelJustCompleted, onClaim, onClose }: Fir
 
   // Only show after completing level 5 for the first time
   useEffect(() => {
-    const hasClaimedFirstSession = localStorage.getItem('first_session_reward_claimed');
+    const hasClaimedFirstSession = localStorage.getItem('first_session_reward_claimed') === 'true';
     
     if (levelJustCompleted === 5 && !hasClaimedFirstSession) {
-      // Delay to let victory screen settle
       const timer = setTimeout(() => {
         setVisible(true);
-        // Celebration effect
         confetti({
           particleCount: 150,
           spread: 100,
@@ -30,6 +28,8 @@ export const FirstSessionReward = ({ levelJustCompleted, onClaim, onClose }: Fir
         });
       }, 2500);
       return () => clearTimeout(timer);
+    } else {
+      setVisible(false);
     }
   }, [levelJustCompleted]);
 
