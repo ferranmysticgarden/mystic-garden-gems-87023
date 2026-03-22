@@ -13,6 +13,11 @@ export const FirstSessionReward = ({ levelJustCompleted, onClaim, onClose }: Fir
   const [visible, setVisible] = useState(false);
   const [claimed, setClaimed] = useState(false);
 
+  const handleDismiss = () => {
+    setVisible(false);
+    onClose();
+  };
+
   // Only show after completing level 5 for the first time
   useEffect(() => {
     const hasClaimedFirstSession = localStorage.getItem('first_session_reward_claimed') === 'true';
@@ -47,7 +52,7 @@ export const FirstSessionReward = ({ levelJustCompleted, onClaim, onClose }: Fir
     // Delay to show celebration
     setTimeout(() => {
       onClaim(100, 5); // 100 gems + 5 lives (full refill)
-      onClose();
+      handleDismiss();
     }, 1500);
   };
 
@@ -62,7 +67,7 @@ export const FirstSessionReward = ({ levelJustCompleted, onClaim, onClose }: Fir
         <div className="relative bg-gradient-to-b from-amber-900/95 via-orange-900/95 to-red-900/95 rounded-2xl p-6 border-2 border-yellow-500/50 shadow-2xl">
           {/* Close button */}
           <button 
-            onClick={onClose}
+            onClick={handleDismiss}
             className="absolute top-3 right-3 text-white/60 hover:text-white"
           >
             <X className="w-5 h-5" />
