@@ -858,8 +858,8 @@ const Index = () => {
           onDismiss={() => setShowWelcomeOffer(false)}
         />
       )}
-      {/* First Session Reward - SOLO después de nivel 2 */}
-      {!isNewUser && (
+      {/* First Session Reward - SOLO después de nivel 5 */}
+      {!isNewUser && lastCompletedLevel === 5 && (
         <FirstSessionReward
           levelJustCompleted={lastCompletedLevel}
           onClaim={(gems, lives) => {

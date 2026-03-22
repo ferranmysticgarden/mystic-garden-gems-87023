@@ -197,4 +197,13 @@ All colors MUST be HSL.
   .animate-shake {
     animation: shake 0.5s ease-in-out;
   }
+
+  /* Spin speed variants */
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+
+  .animate-spin-fast {
+    animation: spin 0.5s linear infinite;
+  }
 }
