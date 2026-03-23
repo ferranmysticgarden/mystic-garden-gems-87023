@@ -124,6 +124,14 @@ const Index = () => {
   const [showFirstSessionReward, setShowFirstSessionReward] = useState(false);
   const [suppressAutoPopups, setSuppressAutoPopups] = useState(false);
 
+  // Track guest session on mount (anonymous users)
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      trackEvent('guest_session', { screen: 'menu' });
+    }
+  }, [authLoading, user]);
+
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
   // Payment success modal

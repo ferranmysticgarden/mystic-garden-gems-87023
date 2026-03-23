@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert, Eye } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert, Eye, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PRODUCTS } from '@/data/products';
 import { UserDetailModal } from './admin/UserDetailModal';
@@ -31,6 +31,15 @@ interface Stats {
   totalRevenue: number;
   todayUsers: number;
   todayRevenue: number;
+}
+
+interface GuestStats {
+  todaySessions: number;
+  weekSessions: number;
+  totalSessions: number;
+  uniqueToday: number;
+  uniqueWeek: number;
+  uniqueTotal: number;
 }
 
 // Revenue calculation uses actual prices from products catalog
@@ -73,6 +82,10 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [guestStats, setGuestStats] = useState<GuestStats>({
+    todaySessions: 0, weekSessions: 0, totalSessions: 0,
+    uniqueToday: 0, uniqueWeek: 0, uniqueTotal: 0,
+  });
 
   useEffect(() => {
     loadData();
@@ -102,10 +115,13 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
     try {
       // Fetch all data through secure Edge Function
-      const [profilesData, purchasesData] = await Promise.all([
+      const [profilesData, purchasesData, guestData] = await Promise.all([
         fetchAdminData('profiles'),
         fetchAdminData('purchases'),
+        fetchAdminData('guest_stats'),
       ]);
+
+      if (guestData) setGuestStats(guestData);
 
       // Get user emails for purchases
       const userIds = [...new Set((purchasesData || []).map((p: Purchase) => p.user_id))];
@@ -250,7 +266,32 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </Card>
         </div>
 
-        {/* Recent Purchases */}
+        {/* Guest Session Stats */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <UserCheck className="w-6 h-6 text-secondary" />
+            <h2 className="text-2xl font-bold">Sesiones de Invitados (sin login)</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Hoy</p>
+              <p className="text-3xl font-bold">{guestStats.uniqueToday}</p>
+              <p className="text-xs text-muted-foreground">dispositivos únicos · {guestStats.todaySessions} sesiones</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Últimos 7 días</p>
+              <p className="text-3xl font-bold">{guestStats.uniqueWeek}</p>
+              <p className="text-xs text-muted-foreground">dispositivos únicos · {guestStats.weekSessions} sesiones</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Total histórico</p>
+              <p className="text-3xl font-bold">{guestStats.uniqueTotal}</p>
+              <p className="text-xs text-muted-foreground">dispositivos únicos · {guestStats.totalSessions} sesiones</p>
+            </div>
+          </div>
+        </Card>
+
+
         <Card className="p-6">
           <h2 className="text-2xl font-bold mb-4">Compras Recientes</h2>
           <div className="overflow-x-auto">

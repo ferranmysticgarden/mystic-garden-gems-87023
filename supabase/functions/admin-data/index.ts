@@ -114,6 +114,61 @@ serve(async (req) => {
         data = { totalUsers, totalPurchases, avgLevel: avgLevel.toFixed(1), totalGems };
         break;
 
+      case "guest_stats": {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+
+        const { count: todayGuests } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "guest_session")
+          .gte("created_at", todayStart);
+
+        const { count: weekGuests } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "guest_session")
+          .gte("created_at", weekStart);
+
+        const { count: totalGuests } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "guest_session");
+
+        // Unique devices
+        const { data: todayDevices } = await supabase
+          .from("app_events")
+          .select("device_id")
+          .eq("event_name", "guest_session")
+          .gte("created_at", todayStart);
+
+        const { data: weekDevices } = await supabase
+          .from("app_events")
+          .select("device_id")
+          .eq("event_name", "guest_session")
+          .gte("created_at", weekStart);
+
+        const { data: allDevices } = await supabase
+          .from("app_events")
+          .select("device_id")
+          .eq("event_name", "guest_session");
+
+        const uniqueToday = new Set(todayDevices?.map(d => d.device_id)).size;
+        const uniqueWeek = new Set(weekDevices?.map(d => d.device_id)).size;
+        const uniqueTotal = new Set(allDevices?.map(d => d.device_id)).size;
+
+        data = {
+          todaySessions: todayGuests || 0,
+          weekSessions: weekGuests || 0,
+          totalSessions: totalGuests || 0,
+          uniqueToday,
+          uniqueWeek,
+          uniqueTotal,
+        };
+        break;
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: "Invalid data type" }),
