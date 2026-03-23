@@ -82,6 +82,10 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [guestStats, setGuestStats] = useState<GuestStats>({
+    todaySessions: 0, weekSessions: 0, totalSessions: 0,
+    uniqueToday: 0, uniqueWeek: 0, uniqueTotal: 0,
+  });
 
   useEffect(() => {
     loadData();
