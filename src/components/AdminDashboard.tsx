@@ -266,7 +266,32 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </Card>
         </div>
 
-        {/* Recent Purchases */}
+        {/* Guest Session Stats */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <UserCheck className="w-6 h-6 text-secondary" />
+            <h2 className="text-2xl font-bold">Sesiones de Invitados (sin login)</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Hoy</p>
+              <p className="text-3xl font-bold">{guestStats.uniqueToday}</p>
+              <p className="text-xs text-muted-foreground">dispositivos únicos · {guestStats.todaySessions} sesiones</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Últimos 7 días</p>
+              <p className="text-3xl font-bold">{guestStats.uniqueWeek}</p>
+              <p className="text-xs text-muted-foreground">dispositivos únicos · {guestStats.weekSessions} sesiones</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Total histórico</p>
+              <p className="text-3xl font-bold">{guestStats.uniqueTotal}</p>
+              <p className="text-xs text-muted-foreground">dispositivos únicos · {guestStats.totalSessions} sesiones</p>
+            </div>
+          </div>
+        </Card>
+
+
         <Card className="p-6">
           <h2 className="text-2xl font-bold mb-4">Compras Recientes</h2>
           <div className="overflow-x-auto">
