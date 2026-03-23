@@ -33,6 +33,15 @@ interface Stats {
   todayRevenue: number;
 }
 
+interface GuestStats {
+  todaySessions: number;
+  weekSessions: number;
+  totalSessions: number;
+  uniqueToday: number;
+  uniqueWeek: number;
+  uniqueTotal: number;
+}
+
 // Revenue calculation uses actual prices from products catalog
 const PRODUCT_PRICES: Record<string, number> = Object.fromEntries(
   PRODUCTS.map(p => [p.id, p.price])
