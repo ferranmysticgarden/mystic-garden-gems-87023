@@ -115,10 +115,13 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
     try {
       // Fetch all data through secure Edge Function
-      const [profilesData, purchasesData] = await Promise.all([
+      const [profilesData, purchasesData, guestData] = await Promise.all([
         fetchAdminData('profiles'),
         fetchAdminData('purchases'),
+        fetchAdminData('guest_stats'),
       ]);
+
+      if (guestData) setGuestStats(guestData);
 
       // Get user emails for purchases
       const userIds = [...new Set((purchasesData || []).map((p: Purchase) => p.user_id))];
