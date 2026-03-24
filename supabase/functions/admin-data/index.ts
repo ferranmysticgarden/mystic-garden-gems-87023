@@ -118,7 +118,9 @@ serve(async (req) => {
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
         const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
+        // Guest sessions
         const { count: todayGuests } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
@@ -158,6 +160,56 @@ serve(async (req) => {
         const uniqueWeek = new Set(weekDevices?.map(d => d.device_id)).size;
         const uniqueTotal = new Set(allDevices?.map(d => d.device_id)).size;
 
+        // === FUNNEL METRICS (last 24h) ===
+        const { data: last24hDevices } = await supabase
+          .from("app_events")
+          .select("device_id")
+          .eq("event_name", "guest_session")
+          .gte("created_at", last24h);
+        const uniqueLast24h = new Set(last24hDevices?.map(d => d.device_id)).size;
+
+        const { count: sessions24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "guest_session")
+          .gte("created_at", last24h);
+
+        const { count: purchaseAttempts24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "purchase_attempt")
+          .gte("created_at", last24h);
+
+        const { count: purchaseCancelled24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "purchase_cancelled")
+          .gte("created_at", last24h);
+
+        const { count: offersShown24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "offer_shown")
+          .gte("created_at", last24h);
+
+        const { count: noLivesModal24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "no_lives_modal_shown")
+          .gte("created_at", last24h);
+
+        const { count: billingErrors24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "billing_error")
+          .gte("created_at", last24h);
+
+        const { count: purchaseSuccess24h } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "purchase_success")
+          .gte("created_at", last24h);
+
         data = {
           todaySessions: todayGuests || 0,
           weekSessions: weekGuests || 0,
@@ -165,6 +217,15 @@ serve(async (req) => {
           uniqueToday,
           uniqueWeek,
           uniqueTotal,
+          // Funnel 24h
+          uniqueLast24h,
+          sessions24h: sessions24h || 0,
+          purchaseAttempts24h: purchaseAttempts24h || 0,
+          purchaseCancelled24h: purchaseCancelled24h || 0,
+          offersShown24h: offersShown24h || 0,
+          noLivesModal24h: noLivesModal24h || 0,
+          billingErrors24h: billingErrors24h || 0,
+          purchaseSuccess24h: purchaseSuccess24h || 0,
         };
         break;
       }
