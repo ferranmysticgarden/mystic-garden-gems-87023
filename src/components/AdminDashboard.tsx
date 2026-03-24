@@ -101,11 +101,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const fetchAdminData = async (dataType: string) => {
+  const fetchAdminData = useCallback(async (dataType: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('No session');
 
@@ -121,7 +117,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     }
 
     return response.data?.data;
-  };
+  }, []);
 
   const loadData = useCallback(async (background = false) => {
     if (background) {
@@ -192,8 +188,12 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       setLastUpdatedAt(new Date());
     } catch (err) {
       console.error('Error loading dashboard data:', err);
-      setError('Error al cargar los datos. Verifica que tienes permisos de administrador.');
-      toast.error('Error al cargar los datos');
+      if (background) {
+        toast.error('No se pudo actualizar el dashboard');
+      } else {
+        setError('Error al cargar los datos. Verifica que tienes permisos de administrador.');
+        toast.error('Error al cargar los datos');
+      }
     } finally {
       if (background) {
         setRefreshing(false);
@@ -201,7 +201,11 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         setLoading(false);
       }
     }
-  }, []);
+  }, [fetchAdminData]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -253,7 +257,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </p>
             </div>
           </div>
-          <Button onClick={() => loadData()} variant="outline" disabled={loading || refreshing}>
+          <Button onClick={() => void loadData()} variant="outline" disabled={loading || refreshing}>
             {refreshing ? 'Actualizando…' : 'Actualizar'}
           </Button>
         </div>
