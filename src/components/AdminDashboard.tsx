@@ -285,11 +285,53 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </Card>
         </div>
 
-        {/* Guest Session Stats */}
+        {/* Funnel Metrics - Last 24h */}
+        <Card className="p-6 border-2 border-primary/30">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold">📊 Embudo últimas 24h (datos reales)</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">🔵 Dispositivos únicos</p>
+              <p className="text-3xl font-bold text-primary">{guestStats.uniqueLast24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">👥 Sesiones invitados</p>
+              <p className="text-3xl font-bold">{guestStats.sessions24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">🎁 Ofertas mostradas</p>
+              <p className="text-3xl font-bold text-blue-500">{guestStats.offersShown24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">💀 Sin vidas (modal)</p>
+              <p className="text-3xl font-bold text-orange-500">{guestStats.noLivesModal24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">🛒 Intentos compra</p>
+              <p className="text-3xl font-bold text-green-500">{guestStats.purchaseAttempts24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">❌ Canceladas usuario</p>
+              <p className="text-3xl font-bold text-red-500">{guestStats.purchaseCancelled24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">⚠️ Errores billing</p>
+              <p className="text-3xl font-bold text-destructive">{guestStats.billingErrors24h}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">✅ Compras exitosas</p>
+              <p className="text-3xl font-bold text-green-600">{guestStats.purchaseSuccess24h}</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Guest Session Stats - Historical */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <UserCheck className="w-6 h-6 text-secondary" />
-            <h2 className="text-2xl font-bold">Sesiones de Invitados (sin login)</h2>
+            <h2 className="text-2xl font-bold">Sesiones de Invitados (histórico)</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-muted rounded-lg p-4 text-center">
