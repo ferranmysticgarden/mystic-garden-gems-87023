@@ -40,6 +40,15 @@ interface GuestStats {
   uniqueToday: number;
   uniqueWeek: number;
   uniqueTotal: number;
+  // Funnel 24h
+  uniqueLast24h: number;
+  sessions24h: number;
+  purchaseAttempts24h: number;
+  purchaseCancelled24h: number;
+  offersShown24h: number;
+  noLivesModal24h: number;
+  billingErrors24h: number;
+  purchaseSuccess24h: number;
 }
 
 // Revenue calculation uses actual prices from products catalog
