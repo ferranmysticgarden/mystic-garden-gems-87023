@@ -138,8 +138,15 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           }
         }));
 
-      setUsers(profilesData || []);
-      setPurchases(purchasesWithProfiles);
+      // Sort by most recent first
+      const sortedUsers = (profilesData || []).sort(
+        (a: Profile, b: Profile) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const sortedPurchases = purchasesWithProfiles.sort(
+        (a: Purchase, b: Purchase) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setUsers(sortedUsers);
+      setPurchases(sortedPurchases);
 
       // Calculate stats
       const today = new Date();
