@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
@@ -98,12 +98,10 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     purchaseCancelled24h: 0, offersShown24h: 0, noLivesModal24h: 0,
     billingErrors24h: 0, purchaseSuccess24h: 0,
   });
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const fetchAdminData = async (dataType: string) => {
+  const fetchAdminData = useCallback(async (dataType: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('No session');
 
@@ -119,10 +117,14 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     }
 
     return response.data?.data;
-  };
+  }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = useCallback(async (background = false) => {
+    if (background) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -183,14 +185,35 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         todayUsers,
         todayRevenue,
       });
+      setLastUpdatedAt(new Date());
     } catch (err) {
       console.error('Error loading dashboard data:', err);
-      setError('Error al cargar los datos. Verifica que tienes permisos de administrador.');
-      toast.error('Error al cargar los datos');
+      if (background) {
+        toast.error('No se pudo actualizar el dashboard');
+      } else {
+        setError('Error al cargar los datos. Verifica que tienes permisos de administrador.');
+        toast.error('Error al cargar los datos');
+      }
     } finally {
-      setLoading(false);
+      if (background) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
-  };
+  }, [fetchAdminData]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void loadData(true);
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [loadData]);
 
   if (loading) {
     return (
@@ -207,7 +230,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <ShieldAlert className="w-16 h-16 text-destructive mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Acceso Denegado</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={loadData} variant="outline">
+          <Button onClick={() => void loadData()} variant="outline">
             Reintentar
           </Button>
         </Card>
@@ -225,10 +248,17 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 ← Menú principal
               </Button>
             )}
-            <h1 className="text-3xl md:text-4xl font-bold">Dashboard de Administración</h1>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold">Dashboard de Administración</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {lastUpdatedAt
+                  ? `Última actualización: ${lastUpdatedAt.toLocaleString('es-ES')}${refreshing ? ' · actualizando…' : ''}`
+                  : 'Cargando datos reales…'}
+              </p>
+            </div>
           </div>
-          <Button onClick={loadData} variant="outline">
-            Actualizar
+          <Button onClick={() => void loadData()} variant="outline" disabled={loading || refreshing}>
+            {refreshing ? 'Actualizando…' : 'Actualizar'}
           </Button>
         </div>
 
