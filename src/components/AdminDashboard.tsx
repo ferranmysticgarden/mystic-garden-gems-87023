@@ -94,6 +94,9 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [guestStats, setGuestStats] = useState<GuestStats>({
     todaySessions: 0, weekSessions: 0, totalSessions: 0,
     uniqueToday: 0, uniqueWeek: 0, uniqueTotal: 0,
+    uniqueLast24h: 0, sessions24h: 0, purchaseAttempts24h: 0,
+    purchaseCancelled24h: 0, offersShown24h: 0, noLivesModal24h: 0,
+    billingErrors24h: 0, purchaseSuccess24h: 0,
   });
 
   useEffect(() => {
