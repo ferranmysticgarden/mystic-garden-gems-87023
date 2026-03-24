@@ -230,7 +230,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <ShieldAlert className="w-16 h-16 text-destructive mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Acceso Denegado</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={loadData} variant="outline">
+          <Button onClick={() => void loadData()} variant="outline">
             Reintentar
           </Button>
         </Card>
