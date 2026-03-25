@@ -285,11 +285,21 @@ serve(async (req) => {
           .eq("event_name", "purchase_cancelled")
           .gte("created_at", funnelStart);
 
+        const { count: purchaseCancelledTotal } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "purchase_cancelled");
+
         const { count: offersShown24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "offer_shown")
           .gte("created_at", funnelStart);
+
+        const { count: offersShownTotal } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "offer_shown");
 
         const { count: noLivesModal24h } = await supabase
           .from("app_events")
@@ -297,18 +307,38 @@ serve(async (req) => {
           .eq("event_name", "no_lives_modal_shown")
           .gte("created_at", funnelStart);
 
+        const { count: noLivesModalTotal } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "no_lives_modal_shown");
+
         const { count: billingErrors24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "billing_error")
           .gte("created_at", funnelStart);
 
+        const { count: billingErrorsTotal } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "billing_error");
+
+        const { count: purchaseAttemptsTotal } = await supabase
+          .from("app_events")
+          .select("*", { count: "exact", head: true })
+          .eq("event_name", "purchase_attempt");
+
         const { data: purchaseRows24h } = await supabase
           .from("user_purchases")
           .select("product_id")
           .gte("created_at", funnelStart > DASHBOARD_EPOCH ? funnelStart : DASHBOARD_EPOCH);
 
+        const { data: purchaseRowsTotal } = await supabase
+          .from("user_purchases")
+          .select("product_id");
+
         const purchaseSuccess24h = (purchaseRows24h || []).filter((purchase) => getProductPrice(purchase.product_id) > 0).length;
+        const purchaseSuccessTotal = (purchaseRowsTotal || []).filter((purchase) => getProductPrice(purchase.product_id) > 0).length;
 
         data = {
           todaySessions: todayGuests || 0,
@@ -321,11 +351,17 @@ serve(async (req) => {
           uniqueLast24h,
           sessions24h: sessions24h || 0,
           purchaseAttempts24h: purchaseAttempts24h || 0,
+          purchaseAttemptsTotal: purchaseAttemptsTotal || 0,
           purchaseCancelled24h: purchaseCancelled24h || 0,
+          purchaseCancelledTotal: purchaseCancelledTotal || 0,
           offersShown24h: offersShown24h || 0,
+          offersShownTotal: offersShownTotal || 0,
           noLivesModal24h: noLivesModal24h || 0,
+          noLivesModalTotal: noLivesModalTotal || 0,
           billingErrors24h: billingErrors24h || 0,
+          billingErrorsTotal: billingErrorsTotal || 0,
           purchaseSuccess24h,
+          purchaseSuccessTotal,
         };
         break;
       }
