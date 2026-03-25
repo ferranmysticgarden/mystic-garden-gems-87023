@@ -30,8 +30,10 @@ interface Stats {
   totalUsers: number;
   totalPurchases: number;
   totalRevenue: number;
-  todayUsers: number;
-  todayRevenue: number;
+  historicalUsers?: number;
+  historicalPurchases?: number;
+  historicalRevenue?: number;
+  resetStartedAt?: string;
 }
 
 interface GuestStats {
@@ -56,6 +58,7 @@ interface GuestStats {
   billingErrorsTotal: number;
   purchaseSuccess24h: number;
   purchaseSuccessTotal: number;
+  resetStartedAt?: string;
 }
 
 // Revenue calculation uses actual prices from products catalog
@@ -92,8 +95,10 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     totalUsers: 0,
     totalPurchases: 0,
     totalRevenue: 0,
-    todayUsers: 0,
-    todayRevenue: 0,
+    historicalUsers: 0,
+    historicalPurchases: 0,
+    historicalRevenue: 0,
+    resetStartedAt: undefined,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +111,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     purchaseAttemptsTotal: 0, purchaseCancelled24h: 0, purchaseCancelledTotal: 0,
     offersShown24h: 0, offersShownTotal: 0, noLivesModal24h: 0, noLivesModalTotal: 0,
     billingErrors24h: 0, billingErrorsTotal: 0, purchaseSuccess24h: 0, purchaseSuccessTotal: 0,
+    resetStartedAt: undefined,
   });
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -176,8 +182,10 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         totalUsers: statsData?.totalUsers || profilesData?.length || 0,
         totalPurchases: statsData?.totalPurchases || purchasesWithProfiles.length,
         totalRevenue: statsData?.totalRevenue || 0,
-        todayUsers: statsData?.todayUsers || 0,
-        todayRevenue: statsData?.todayRevenue || 0,
+        historicalUsers: statsData?.historicalUsers || 0,
+        historicalPurchases: statsData?.historicalPurchases || 0,
+        historicalRevenue: statsData?.historicalRevenue || 0,
+        resetStartedAt: statsData?.resetStartedAt,
       });
       setLastUpdatedAt(new Date());
     } catch (err) {
@@ -249,6 +257,11 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                   ? `Última actualización: ${lastUpdatedAt.toLocaleString('es-ES')}${refreshing ? ' · actualizando…' : ''}`
                   : 'Cargando datos reales…'}
               </p>
+              {stats.resetStartedAt && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Reset activo desde: {new Date(stats.resetStartedAt).toLocaleString('es-ES', { timeZone: 'UTC' })} UTC
+                </p>
+              )}
             </div>
           </div>
           <Button onClick={() => void loadData()} variant="outline" disabled={loading || refreshing}>
@@ -267,7 +280,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               <Users className="w-8 h-8 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              +{stats.todayUsers} hoy
+              histórico: {stats.historicalUsers || 0}
             </p>
           </Card>
 
@@ -280,7 +293,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               <DollarSign className="w-8 h-8 text-green-500" />
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              +€{stats.todayRevenue.toFixed(2)} hoy · antes de comisiones e impuestos
+              histórico: €{(stats.historicalRevenue || 0).toFixed(2)} · antes de comisiones e impuestos
             </p>
           </Card>
 
@@ -292,6 +305,9 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </div>
               <TrendingUp className="w-8 h-8 text-blue-500" />
             </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              histórico: {stats.historicalPurchases || 0}
+            </p>
           </Card>
 
           <Card className="p-6">
@@ -306,14 +322,17 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </div>
               <Calendar className="w-8 h-8 text-purple-500" />
             </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              desde reset
+            </p>
           </Card>
         </div>
 
-        {/* Funnel Metrics - Last 24h */}
+        {/* Funnel Metrics - Since reset */}
         <Card className="p-6 border-2 border-primary/30">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">📊 Embudo de hoy (se reinicia a medianoche UTC)</h2>
+            <h2 className="text-2xl font-bold">📊 Embudo desde el reset</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-muted rounded-lg p-4 text-center">
