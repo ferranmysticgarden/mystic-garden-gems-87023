@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean; unlimitedLivesMinutes?: number }> = {
+  "starter_gems": { gems: 50 },
   "chest_wooden": {},
   "chest_silver": {},
   "chest_gold": {},
