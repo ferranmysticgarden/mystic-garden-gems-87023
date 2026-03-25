@@ -23,6 +23,8 @@ export const useGooglePlayBilling = () => {
 
   const queryProductsIndividually = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
     const merged: Record<string, ProductDetails> = {};
+    const failedIds: string[] = [];
+    let lastError = '';
 
     for (const id of productIds) {
       try {
@@ -31,12 +33,20 @@ export const useGooglePlayBilling = () => {
           Object.assign(merged, singleResult);
         }
       } catch (error) {
-        trackEvent('billing_error', {
-          error: String(error),
-          phase: 'query_single',
-          product_id: id,
-        });
+        failedIds.push(id);
+        lastError = String(error);
       }
+    }
+
+    // Single summary event instead of one per product
+    if (failedIds.length > 0) {
+      trackEvent('billing_error', {
+        error: lastError,
+        phase: 'query_single_batch',
+        failed_count: failedIds.length,
+        total_queried: productIds.length,
+        failed_ids: failedIds.slice(0, 5).join(','), // cap to avoid huge payloads
+      });
     }
 
     return merged;
