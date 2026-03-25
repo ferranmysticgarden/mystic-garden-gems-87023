@@ -107,7 +107,7 @@ serve(async (req) => {
     }
 
     const FALLBACK_PRICE_DATA: Record<string, { amount: number; name: string }> = {
-      starter_gems: { amount: 49, name: "💎 Inicio Mágico" },
+      starter_gems: { amount: 50, name: "💎 Inicio Mágico" },
       gems_100: { amount: 99, name: "100 Gems" },
       gems_300: { amount: 399, name: "300 Gems" },
       gems_1200: { amount: 999, name: "1200 Gems" },
