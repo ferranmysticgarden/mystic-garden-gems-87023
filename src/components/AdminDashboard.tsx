@@ -351,7 +351,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               <p className="text-3xl font-bold text-destructive">{guestStats.billingErrors24h}</p>
             </div>
             <div className="bg-muted rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground">✅ Compras exitosas</p>
+              <p className="text-sm text-muted-foreground">✅ Compras registradas</p>
               <p className="text-3xl font-bold text-green-600">{guestStats.purchaseSuccess24h}</p>
             </div>
           </div>

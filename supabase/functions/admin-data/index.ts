@@ -116,8 +116,16 @@ serve(async (req) => {
 
       case "guest_stats": {
         const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+        const todayStart = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+        )).toISOString();
+        const weekStart = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() - 7,
+        )).toISOString();
         // Funnel uses "today since midnight UTC" so it resets daily
         const funnelStart = todayStart;
 
@@ -161,7 +169,7 @@ serve(async (req) => {
         const uniqueWeek = new Set(weekDevices?.map(d => d.device_id)).size;
         const uniqueTotal = new Set(allDevices?.map(d => d.device_id)).size;
 
-        // === FUNNEL METRICS (last 24h) ===
+        // === FUNNEL METRICS (today since midnight UTC) ===
         const { data: funnelDevices } = await supabase
           .from("app_events")
           .select("device_id")
@@ -206,9 +214,8 @@ serve(async (req) => {
           .gte("created_at", funnelStart);
 
         const { count: purchaseSuccess24h } = await supabase
-          .from("app_events")
+          .from("user_purchases")
           .select("*", { count: "exact", head: true })
-          .eq("event_name", "purchase_success")
           .gte("created_at", funnelStart);
 
         data = {
