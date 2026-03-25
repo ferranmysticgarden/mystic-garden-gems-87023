@@ -18,6 +18,7 @@ const PRODUCT_REWARDS: Record<
     unlimitedLivesMinutes?: number;
   }
 > = {
+  starter_gems: { gems: 50 },
   gems_100: { gems: 100 },
   gems_300: { gems: 300 },
   gems_1200: { gems: 1200 },
