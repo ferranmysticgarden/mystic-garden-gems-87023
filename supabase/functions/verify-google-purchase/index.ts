@@ -42,6 +42,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
+  startergems: 'starter_gems',
   welcomepack: 'welcome_pack',
   packimpulso: 'pack_impulso',
   packexperiencia: 'pack_experiencia',

@@ -16,6 +16,15 @@ export interface Product {
 }
 
 export const PRODUCTS: Product[] = [
+  // STARTER GEMS - Welcome micro-offer €0.49
+  {
+    id: 'starter_gems',
+    nameKey: 'shop.starterGems',
+    name: '💎 Inicio Mágico',
+    price: 0.49,
+    currency: 'EUR',
+    gems: 50,
+  },
   { 
     id: 'quick_pack', 
     nameKey: 'shop.quickPack',

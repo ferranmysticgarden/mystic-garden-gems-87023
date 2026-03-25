@@ -1,6 +1,7 @@
 import { PRODUCTS } from '@/data/products';
 
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
+  starter_gems: ['startergems'],
   welcome_pack: ['welcomepack'],
   pack_impulso: ['packimpulso'],
   pack_experiencia: ['packexperiencia'],
