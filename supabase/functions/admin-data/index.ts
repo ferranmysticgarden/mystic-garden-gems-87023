@@ -6,6 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Dashboard reset point — only data AFTER this timestamp counts
+const DASHBOARD_EPOCH = "2026-03-25T12:30:00.000Z";
+
 const PRODUCT_PRICES: Record<string, number> = {
   starter_gems: 0.5,
   quick_pack: 0.99,
@@ -108,6 +111,7 @@ serve(async (req) => {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("*")
+          .gte("created_at", DASHBOARD_EPOCH)
           .order("created_at", { ascending: false })
           .limit(100);
         data = profiles;
@@ -117,6 +121,7 @@ serve(async (req) => {
         const { data: purchases } = await supabase
           .from("user_purchases")
           .select("*")
+          .gte("created_at", DASHBOARD_EPOCH)
           .order("created_at", { ascending: false })
           .limit(100);
         data = purchases;
@@ -150,7 +155,8 @@ serve(async (req) => {
 
         const { count: totalUsers } = await supabase
           .from("profiles")
-          .select("*", { count: "exact", head: true });
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", DASHBOARD_EPOCH);
 
         const { count: todayUsers } = await supabase
           .from("profiles")
@@ -159,7 +165,8 @@ serve(async (req) => {
 
         const { data: purchaseRows } = await supabase
           .from("user_purchases")
-          .select("product_id, created_at");
+          .select("product_id, created_at")
+          .gte("created_at", DASHBOARD_EPOCH);
 
         const validPurchases = (purchaseRows || []).filter((purchase) => getProductPrice(purchase.product_id) > 0);
         const todayPurchases = validPurchases.filter((purchase) => purchase.created_at >= statsDayStart);
@@ -215,36 +222,38 @@ serve(async (req) => {
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "guest_session")
-          .gte("created_at", todayStart);
+          .gte("created_at", todayStart > DASHBOARD_EPOCH ? todayStart : DASHBOARD_EPOCH);
 
         const { count: weekGuests } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "guest_session")
-          .gte("created_at", weekStart);
+          .gte("created_at", weekStart > DASHBOARD_EPOCH ? weekStart : DASHBOARD_EPOCH);
 
         const { count: totalGuests } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
-          .eq("event_name", "guest_session");
+          .eq("event_name", "guest_session")
+          .gte("created_at", DASHBOARD_EPOCH);
 
         // Unique devices
         const { data: todayDevices } = await supabase
           .from("app_events")
           .select("device_id")
           .eq("event_name", "guest_session")
-          .gte("created_at", todayStart);
+          .gte("created_at", todayStart > DASHBOARD_EPOCH ? todayStart : DASHBOARD_EPOCH);
 
         const { data: weekDevices } = await supabase
           .from("app_events")
           .select("device_id")
           .eq("event_name", "guest_session")
-          .gte("created_at", weekStart);
+          .gte("created_at", weekStart > DASHBOARD_EPOCH ? weekStart : DASHBOARD_EPOCH);
 
         const { data: allDevices } = await supabase
           .from("app_events")
           .select("device_id")
-          .eq("event_name", "guest_session");
+          .eq("event_name", "guest_session")
+          .gte("created_at", DASHBOARD_EPOCH);
 
         const uniqueToday = new Set(todayDevices?.map(d => d.device_id)).size;
         const uniqueWeek = new Set(weekDevices?.map(d => d.device_id)).size;
@@ -297,7 +306,7 @@ serve(async (req) => {
         const { data: purchaseRows24h } = await supabase
           .from("user_purchases")
           .select("product_id")
-          .gte("created_at", funnelStart);
+          .gte("created_at", funnelStart > DASHBOARD_EPOCH ? funnelStart : DASHBOARD_EPOCH);
 
         const purchaseSuccess24h = (purchaseRows24h || []).filter((purchase) => getProductPrice(purchase.product_id) > 0).length;
 
