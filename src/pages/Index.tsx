@@ -391,14 +391,14 @@ const Index = () => {
   };
   const handlePurchase = async (productId: string) => {
     const isAndroidPlatform = Capacitor.getPlatform() === "android";
-    if (user && isAndroidPlatform) {
-      console.log("[PURCHASE] Authenticated Android — refreshing from DB");
-      await reloadFromDB();
-      toast.success("¡Compra verificada exitosamente! 🎉");
+    if (isAndroidPlatform) {
+      // Android purchases are handled by the first_purchase_completed listener above
+      // (server rewards for guests, reloadFromDB for authenticated users)
+      console.log("[PURCHASE] Android purchase completed for:", productId);
       setScreen("menu");
       return;
     }
-    // Guest or Web: apply local grants
+    // Web: apply local grants (Stripe flow reloads from DB via payment success handler)
     const product = PRODUCTS.find((p) => p.id === productId);
     if (!product) return;
     if (product.amount) addGems(product.amount);
@@ -408,7 +408,7 @@ const Index = () => {
       addLives(product.lives);
     }
     if (product.lives === "unlimited") {
-      activateUnlimitedLives(0.5); // 30 minutes = 0.5 hours
+      activateUnlimitedLives(0.5);
     }
     if (product.powerups) {
       const perType = Math.floor(product.powerups / 3);
@@ -423,6 +423,48 @@ const Index = () => {
     }
     setScreen("menu");
   };
+
+  // 🔑 Listen for Android Google Play purchases — apply server rewards for guests
+  useEffect(() => {
+    const handleGooglePlayRewards = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.rewards) return; // No rewards data (degraded mode or non-Android)
+      
+      const isAndroidPlatform = Capacitor.getPlatform() === "android";
+      if (!isAndroidPlatform) return; // Only for Android purchases
+      
+      if (user) {
+        // Authenticated user: server already applied rewards to DB, just reload
+        console.log("[PURCHASE] Authenticated Android — reloading from DB after Google Play purchase");
+        reloadFromDB();
+        return;
+      }
+
+      // Guest Android: apply server rewards locally
+      const rewards = detail.rewards;
+      console.log("[PURCHASE] Guest Android — applying server rewards locally:", rewards);
+      
+      if (rewards.gems) addGems(rewards.gems);
+      if (rewards.lives) addLives(rewards.lives);
+      if (rewards.powerups) {
+        const perType = Math.floor(rewards.powerups / 3);
+        const remainder = rewards.powerups % 3;
+        for (let i = 0; i < perType; i++) {
+          addHammer();
+          addShuffle();
+          addUndo();
+        }
+        if (remainder >= 1) addHammer();
+        if (remainder >= 2) addShuffle();
+      }
+      if (rewards.unlimitedLivesMinutes) {
+        activateUnlimitedLives(rewards.unlimitedLivesMinutes / 60);
+      }
+    };
+
+    window.addEventListener("first_purchase_completed", handleGooglePlayRewards);
+    return () => window.removeEventListener("first_purchase_completed", handleGooglePlayRewards);
+  }, [user, reloadFromDB, addGems, addLives, addHammer, addShuffle, addUndo, activateUnlimitedLives]);
   const handleQuickLifePurchased = ({ lives, gems }: { lives: number; gems: number }) => {
     if (lives > 0) addLives(lives);
     if (gems > 0) addGems(gems);
