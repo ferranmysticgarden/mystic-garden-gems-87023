@@ -6,6 +6,54 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const PRODUCT_PRICES: Record<string, number> = {
+  starter_gems: 0.5,
+  quick_pack: 0.99,
+  gems_100: 0.99,
+  gems_300: 3.99,
+  gems_1200: 9.99,
+  no_ads_month: 4.99,
+  no_ads_forever: 9.99,
+  garden_pass: 9.99,
+  flash_offer: 0.99,
+  victory_multiplier: 0.99,
+  finish_level: 0.99,
+  extra_moves: 0.5,
+  chest_silver: 0.99,
+  chest_gold: 2.99,
+  first_purchase: 0.99,
+  starter_pack: 0.99,
+  continue_game: 0.99,
+  buy_moves: 0.49,
+  welcome_pack: 0.5,
+  reward_doubler: 0.5,
+  pack_victoria_segura: 2.99,
+  pack_racha_infinita: 1.99,
+  pack_impulso: 0.99,
+  pack_experiencia: 1.99,
+  pack_victoria_segura_pro: 2.99,
+  mega_pack_inicial: 0.99,
+  pack_revancha: 0.99,
+  lifesaver_pack: 0.5,
+  streak_protection: 0.5,
+  extra_spin: 0.5,
+  unlimited_lives_30min: 0.99,
+  first_day_offer: 0.99,
+};
+
+const normalizeProductId = (productId: string | null | undefined) => {
+  if (!productId || productId.startsWith("gp_GPA")) return null;
+  if (productId.startsWith("stripe_")) return productId.slice(7);
+  if (productId.startsWith("gp_")) return productId.slice(3);
+  return productId;
+};
+
+const getProductPrice = (productId: string | null | undefined) => {
+  const normalized = normalizeProductId(productId);
+  if (!normalized) return 0;
+  return PRODUCT_PRICES[normalized] ?? 0;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -93,13 +141,38 @@ serve(async (req) => {
         break;
 
       case "stats":
+        const statsNow = new Date();
+        const statsDayStart = new Date(Date.UTC(
+          statsNow.getUTCFullYear(),
+          statsNow.getUTCMonth(),
+          statsNow.getUTCDate(),
+        )).toISOString();
+
         const { count: totalUsers } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true });
 
-        const { count: totalPurchases } = await supabase
+        const { count: todayUsers } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", statsDayStart);
+
+        const { data: purchaseRows } = await supabase
           .from("user_purchases")
-          .select("*", { count: "exact", head: true });
+          .select("product_id, created_at");
+
+        const validPurchases = (purchaseRows || []).filter((purchase) => getProductPrice(purchase.product_id) > 0);
+        const todayPurchases = validPurchases.filter((purchase) => purchase.created_at >= statsDayStart);
+
+        const totalPurchases = validPurchases.length;
+        const totalRevenue = validPurchases.reduce(
+          (sum, purchase) => sum + getProductPrice(purchase.product_id),
+          0,
+        );
+        const todayRevenue = todayPurchases.reduce(
+          (sum, purchase) => sum + getProductPrice(purchase.product_id),
+          0,
+        );
 
         const { data: avgProgress } = await supabase
           .from("game_progress")
@@ -111,7 +184,15 @@ serve(async (req) => {
 
         const totalGems = avgProgress?.reduce((sum, p) => sum + p.gems, 0) || 0;
 
-        data = { totalUsers, totalPurchases, avgLevel: avgLevel.toFixed(1), totalGems };
+        data = {
+          totalUsers: totalUsers || 0,
+          todayUsers: todayUsers || 0,
+          totalPurchases,
+          totalRevenue,
+          todayRevenue,
+          avgLevel: avgLevel.toFixed(1),
+          totalGems,
+        };
         break;
 
       case "guest_stats": {
@@ -213,10 +294,12 @@ serve(async (req) => {
           .eq("event_name", "billing_error")
           .gte("created_at", funnelStart);
 
-        const { count: purchaseSuccess24h } = await supabase
+        const { data: purchaseRows24h } = await supabase
           .from("user_purchases")
-          .select("*", { count: "exact", head: true })
+          .select("product_id")
           .gte("created_at", funnelStart);
+
+        const purchaseSuccess24h = (purchaseRows24h || []).filter((purchase) => getProductPrice(purchase.product_id) > 0).length;
 
         data = {
           todaySessions: todayGuests || 0,
@@ -233,7 +316,7 @@ serve(async (req) => {
           offersShown24h: offersShown24h || 0,
           noLivesModal24h: noLivesModal24h || 0,
           billingErrors24h: billingErrors24h || 0,
-          purchaseSuccess24h: purchaseSuccess24h || 0,
+          purchaseSuccess24h,
         };
         break;
       }
