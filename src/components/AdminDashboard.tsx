@@ -28,6 +28,7 @@ interface Purchase {
 
 interface Stats {
   totalUsers: number;
+  totalPurchases: number;
   totalRevenue: number;
   todayUsers: number;
   todayRevenue: number;
@@ -83,6 +84,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
+    totalPurchases: 0,
     totalRevenue: 0,
     todayUsers: 0,
     todayRevenue: 0,
@@ -129,10 +131,11 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
     try {
       // Fetch all data through secure Edge Function
-      const [profilesData, purchasesData, guestData] = await Promise.all([
+      const [profilesData, purchasesData, guestData, statsData] = await Promise.all([
         fetchAdminData('profiles'),
         fetchAdminData('purchases'),
         fetchAdminData('guest_stats'),
+        fetchAdminData('stats'),
       ]);
 
       if (guestData) setGuestStats(guestData);
@@ -162,28 +165,12 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       setUsers(sortedUsers);
       setPurchases(sortedPurchases);
 
-      // Calculate stats
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const todayUsers = (profilesData || []).filter(
-        (u: Profile) => new Date(u.created_at) >= today
-      ).length;
-
-      const totalRevenue = purchasesWithProfiles.reduce(
-        (sum: number, p: Purchase) => sum + (PRODUCT_PRICES[p.product_id] || 0),
-        0
-      );
-
-      const todayRevenue = purchasesWithProfiles
-        .filter((p: Purchase) => new Date(p.created_at) >= today)
-        .reduce((sum: number, p: Purchase) => sum + (PRODUCT_PRICES[p.product_id] || 0), 0);
-
       setStats({
-        totalUsers: profilesData?.length || 0,
-        totalRevenue,
-        todayUsers,
-        todayRevenue,
+        totalUsers: statsData?.totalUsers || profilesData?.length || 0,
+        totalPurchases: statsData?.totalPurchases || purchasesWithProfiles.length,
+        totalRevenue: statsData?.totalRevenue || 0,
+        todayUsers: statsData?.todayUsers || 0,
+        todayRevenue: statsData?.todayRevenue || 0,
       });
       setLastUpdatedAt(new Date());
     } catch (err) {
@@ -294,7 +281,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Compras Totales</p>
-                <p className="text-3xl font-bold">{purchases.length}</p>
+                <p className="text-3xl font-bold">{stats.totalPurchases}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-blue-500" />
             </div>
@@ -306,7 +293,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 <p className="text-sm text-muted-foreground">Conversión</p>
                 <p className="text-3xl font-bold">
                   {stats.totalUsers > 0 
-                    ? ((purchases.length / stats.totalUsers) * 100).toFixed(1)
+                    ? ((stats.totalPurchases / stats.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </p>
               </div>
