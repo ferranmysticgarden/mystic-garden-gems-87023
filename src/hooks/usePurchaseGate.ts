@@ -78,11 +78,23 @@ export const usePurchaseGate = () => {
   };
 };
 
-// Función helper para disparar el evento global
-export const dispatchPurchaseCompleted = (productId?: string) => {
+// Rewards shape from server
+export interface ServerRewards {
+  gems?: number;
+  lives?: number;
+  powerups?: number;
+  noAdsDays?: number;
+  noAdsForever?: boolean;
+  unlimitedLivesMinutes?: number;
+}
+
+// Función helper para disparar el evento global (con rewards opcionales del servidor)
+export const dispatchPurchaseCompleted = (productId?: string, rewards?: ServerRewards) => {
   localStorage.setItem(PURCHASE_FLAG_KEY, 'true');
   localStorage.setItem('first_purchase_completed', 'true');
-  window.dispatchEvent(new Event('first_purchase_completed'));
+  window.dispatchEvent(new CustomEvent('first_purchase_completed', {
+    detail: { productId, rewards },
+  }));
   
   // Emit to Firebase/Google Ads so campaigns can optimize
   emitAnalyticsEvent('first_purchase_completed', { product: productId });

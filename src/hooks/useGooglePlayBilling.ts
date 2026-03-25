@@ -237,6 +237,7 @@ export const useGooglePlayBilling = () => {
             });
           }
 
+          // Degraded mode: no server rewards available, pass undefined (Index.tsx will fallback to PRODUCTS)
           dispatchPurchaseCompleted(purchase.productId);
           toast.success('¡Compra completada! (modo de respaldo activado)');
           return true;
