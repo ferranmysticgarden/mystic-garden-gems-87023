@@ -391,14 +391,14 @@ const Index = () => {
   };
   const handlePurchase = async (productId: string) => {
     const isAndroidPlatform = Capacitor.getPlatform() === "android";
-    if (user && isAndroidPlatform) {
-      console.log("[PURCHASE] Authenticated Android — refreshing from DB");
-      await reloadFromDB();
-      toast.success("¡Compra verificada exitosamente! 🎉");
+    if (isAndroidPlatform) {
+      // Android purchases are handled by the first_purchase_completed listener above
+      // (server rewards for guests, reloadFromDB for authenticated users)
+      console.log("[PURCHASE] Android purchase completed for:", productId);
       setScreen("menu");
       return;
     }
-    // Guest or Web: apply local grants
+    // Web: apply local grants (Stripe flow reloads from DB via payment success handler)
     const product = PRODUCTS.find((p) => p.id === productId);
     if (!product) return;
     if (product.amount) addGems(product.amount);
@@ -408,7 +408,7 @@ const Index = () => {
       addLives(product.lives);
     }
     if (product.lives === "unlimited") {
-      activateUnlimitedLives(0.5); // 30 minutes = 0.5 hours
+      activateUnlimitedLives(0.5);
     }
     if (product.powerups) {
       const perType = Math.floor(product.powerups / 3);
