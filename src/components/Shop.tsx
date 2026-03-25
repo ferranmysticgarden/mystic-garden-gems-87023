@@ -304,6 +304,26 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
                 <h3 className="font-bold text-lg text-white mb-3 mt-2">{t(product.nameKey)}</h3>
                 
                 <div className="text-sm text-purple-200/80 mb-4 space-y-2">
+                  {product.gems && (
+                    <p className="flex items-center gap-2">
+                      <span className="text-2xl">💎</span>
+                      <span className="font-medium">+{product.gems} {t('resources.gems')}</span>
+                    </p>
+                  )}
+                  {product.lives && (
+                    <p className="flex items-center gap-2">
+                      <span className="text-2xl">❤️</span>
+                      <span className="font-medium">
+                        {product.lives === 'unlimited' ? t('resources.unlimited') : `+${product.lives}`} {t('resources.lives')}
+                      </span>
+                    </p>
+                  )}
+                  {product.powerups && (
+                    <p className="flex items-center gap-2">
+                      <span className="text-2xl">✨</span>
+                      <span className="font-medium">+{product.powerups} Power-ups</span>
+                    </p>
+                  )}
                   {product.amount && (
                     <p className="flex items-center gap-2">
                       <span className="text-2xl">💎</span>
