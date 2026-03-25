@@ -21,7 +21,7 @@ const BEST_VALUE_ID = 'gems_300';
 
 // Always purchasable - entry/rescue products
 const ALWAYS_OPEN_IDS = new Set([
-  'starter_pack', 'welcome_pack', 'buy_moves', 'unlimited_lives_30min',
+  'starter_gems', 'starter_pack', 'welcome_pack', 'buy_moves', 'unlimited_lives_30min',
   'quick_pack', 'gems_100', 'gems_300', 'gems_1200', 'no_ads_month',
   'flash_offer', 'finish_level', 'extra_moves', 'continue_game',
   'lifesaver_pack', 'extra_spin', 'first_purchase', 'reward_doubler',
