@@ -8,6 +8,8 @@ const corsHeaders = {
 
 // ✅ Price IDs de cuenta Stripe FCG (acct_1SA78ZB6GI8NmIPn) - sufijo B6GI8NmIPn
 const PRODUCT_PRICES: Record<string, string> = {
+  // Starter gems
+  "starter_gems": "price_starter_gems_049",
   // Gemas
   "gems_100": "price_1TAmg2B6GI8NmIPniADboyZd",
   "gems_300": "price_1TAolMB6GI8NmIPny1IrmuBB",
