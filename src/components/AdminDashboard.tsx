@@ -319,7 +319,7 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         <Card className="p-6 border-2 border-primary/30">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">📊 Embudo últimas 24h (datos reales)</h2>
+            <h2 className="text-2xl font-bold">📊 Embudo de hoy (se reinicia a medianoche UTC)</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-muted rounded-lg p-4 text-center">
