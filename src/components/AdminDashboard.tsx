@@ -45,11 +45,17 @@ interface GuestStats {
   uniqueLast24h: number;
   sessions24h: number;
   purchaseAttempts24h: number;
+  purchaseAttemptsTotal: number;
   purchaseCancelled24h: number;
+  purchaseCancelledTotal: number;
   offersShown24h: number;
+  offersShownTotal: number;
   noLivesModal24h: number;
+  noLivesModalTotal: number;
   billingErrors24h: number;
+  billingErrorsTotal: number;
   purchaseSuccess24h: number;
+  purchaseSuccessTotal: number;
 }
 
 // Revenue calculation uses actual prices from products catalog
@@ -97,8 +103,9 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     todaySessions: 0, weekSessions: 0, totalSessions: 0,
     uniqueToday: 0, uniqueWeek: 0, uniqueTotal: 0,
     uniqueLast24h: 0, sessions24h: 0, purchaseAttempts24h: 0,
-    purchaseCancelled24h: 0, offersShown24h: 0, noLivesModal24h: 0,
-    billingErrors24h: 0, purchaseSuccess24h: 0,
+    purchaseAttemptsTotal: 0, purchaseCancelled24h: 0, purchaseCancelledTotal: 0,
+    offersShown24h: 0, offersShownTotal: 0, noLivesModal24h: 0, noLivesModalTotal: 0,
+    billingErrors24h: 0, billingErrorsTotal: 0, purchaseSuccess24h: 0, purchaseSuccessTotal: 0,
   });
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -320,26 +327,32 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             <div className="bg-muted rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">🎁 Ofertas mostradas</p>
               <p className="text-3xl font-bold text-blue-500">{guestStats.offersShown24h}</p>
+              <p className="text-xs text-muted-foreground mt-1">histórico: {guestStats.offersShownTotal}</p>
             </div>
             <div className="bg-muted rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">💀 Sin vidas (modal)</p>
               <p className="text-3xl font-bold text-orange-500">{guestStats.noLivesModal24h}</p>
+              <p className="text-xs text-muted-foreground mt-1">histórico: {guestStats.noLivesModalTotal}</p>
             </div>
             <div className="bg-muted rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">🛒 Intentos compra</p>
               <p className="text-3xl font-bold text-green-500">{guestStats.purchaseAttempts24h}</p>
+              <p className="text-xs text-muted-foreground mt-1">histórico: {guestStats.purchaseAttemptsTotal}</p>
             </div>
             <div className="bg-muted rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">❌ Canceladas usuario</p>
               <p className="text-3xl font-bold text-red-500">{guestStats.purchaseCancelled24h}</p>
+              <p className="text-xs text-muted-foreground mt-1">histórico: {guestStats.purchaseCancelledTotal}</p>
             </div>
             <div className="bg-muted rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">⚠️ Errores billing</p>
               <p className="text-3xl font-bold text-destructive">{guestStats.billingErrors24h}</p>
+              <p className="text-xs text-muted-foreground mt-1">histórico: {guestStats.billingErrorsTotal}</p>
             </div>
             <div className="bg-muted rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">✅ Compras registradas</p>
               <p className="text-3xl font-bold text-green-600">{guestStats.purchaseSuccess24h}</p>
+              <p className="text-xs text-muted-foreground mt-1">histórico: {guestStats.purchaseSuccessTotal}</p>
             </div>
           </div>
         </Card>
