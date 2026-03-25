@@ -118,7 +118,8 @@ serve(async (req) => {
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
         const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
-        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+        // Funnel uses "today since midnight UTC" so it resets daily
+        const funnelStart = todayStart;
 
         // Guest sessions
         const { count: todayGuests } = await supabase
