@@ -186,7 +186,8 @@ export const useGooglePlayBilling = () => {
           product: purchase.productId,
           guest: Boolean(data?.isGuest),
         });
-        dispatchPurchaseCompleted(purchase.productId);
+        // Pass server rewards so guest clients can apply them locally
+        dispatchPurchaseCompleted(purchase.productId, data?.rewards ?? undefined);
         console.log('[PURCHASE] gate unlocked');
         toast.success('¡Compra completada!');
         return true;
