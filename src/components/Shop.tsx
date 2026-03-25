@@ -12,7 +12,7 @@ interface ShopProps {
 }
 
 // Products for new users (max 3 - simple)
-const NEW_USER_PRODUCTS = ['starter_pack', 'gems_100', 'no_ads_forever'];
+const NEW_USER_PRODUCTS = ['starter_gems', 'starter_pack', 'gems_100', 'no_ads_forever'];
 
 // Products to show in main shop (exclude special offers)
 const SHOP_PRODUCTS = ['gems_100', 'gems_300', 'gems_1200', 'no_ads_month', 'no_ads_forever', 'garden_pass'];
