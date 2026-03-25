@@ -118,7 +118,8 @@ serve(async (req) => {
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
         const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
-        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+        // Funnel uses "today since midnight UTC" so it resets daily
+        const funnelStart = todayStart;
 
         // Guest sessions
         const { count: todayGuests } = await supabase
@@ -161,54 +162,54 @@ serve(async (req) => {
         const uniqueTotal = new Set(allDevices?.map(d => d.device_id)).size;
 
         // === FUNNEL METRICS (last 24h) ===
-        const { data: last24hDevices } = await supabase
+        const { data: funnelDevices } = await supabase
           .from("app_events")
           .select("device_id")
           .eq("event_name", "guest_session")
-          .gte("created_at", last24h);
-        const uniqueLast24h = new Set(last24hDevices?.map(d => d.device_id)).size;
+          .gte("created_at", funnelStart);
+        const uniqueLast24h = new Set(funnelDevices?.map(d => d.device_id)).size;
 
         const { count: sessions24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "guest_session")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         const { count: purchaseAttempts24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "purchase_attempt")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         const { count: purchaseCancelled24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "purchase_cancelled")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         const { count: offersShown24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "offer_shown")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         const { count: noLivesModal24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "no_lives_modal_shown")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         const { count: billingErrors24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "billing_error")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         const { count: purchaseSuccess24h } = await supabase
           .from("app_events")
           .select("*", { count: "exact", head: true })
           .eq("event_name", "purchase_success")
-          .gte("created_at", last24h);
+          .gte("created_at", funnelStart);
 
         data = {
           todaySessions: todayGuests || 0,
