@@ -94,6 +94,55 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
           </div>
         )}
 
+        {/* STARTER GEMS WELCOME BANNER */}
+        {(() => {
+          const starterGems = PRODUCTS.find(p => p.id === 'starter_gems');
+          if (!starterGems) return null;
+          return (
+            <div className="mb-6">
+              <div className="relative rounded-2xl p-5 bg-gradient-to-br from-cyan-600/40 via-blue-500/30 to-purple-600/40 border-2 border-cyan-400 shadow-xl shadow-cyan-500/30 hover:scale-[1.02] transition-all overflow-hidden">
+                {/* Animated sparkle background */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-400/10 via-transparent to-transparent" />
+                
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-1.5 rounded-full flex items-center gap-2 shadow-lg z-10">
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span className="text-white text-sm font-bold">¡OFERTA DE BIENVENIDA!</span>
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+
+                <div className="relative z-10 mt-4 text-center">
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <span className="text-4xl">💎</span>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Inicio Mágico</h3>
+                      <p className="text-cyan-200 text-sm">+50 gemas para empezar tu aventura</p>
+                    </div>
+                    <span className="text-4xl">✨</span>
+                  </div>
+
+                  <Button
+                    onClick={() => handlePurchase('starter_gems', starterGems.name)}
+                    className="w-full max-w-xs mx-auto mt-3 font-bold py-4 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white shadow-lg shadow-cyan-500/40 text-lg transition-all"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        {getPrice('starter_gems', '€0.49')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* PREMIUM PACKS SECTION */}
         {premiumPacks.length > 0 && (
           <div className="mb-6">
