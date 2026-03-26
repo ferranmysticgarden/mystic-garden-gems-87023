@@ -68,6 +68,9 @@ export const usePayment = () => {
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { productId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
