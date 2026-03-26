@@ -11,7 +11,7 @@ import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useDailyStreak } from "@/hooks/useDailyStreak";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { usePurchaseGate } from "@/hooks/usePurchaseGate";
+import { usePurchaseGate, dispatchPurchaseCompleted } from "@/hooks/usePurchaseGate";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { AuthPage } from "@/components/AuthPage";
@@ -217,9 +217,7 @@ const Index = () => {
       chest_gold: { name: "Cofre de Oro", text: "¡Cofre dorado abierto!" },
     };
     const display = REWARD_DISPLAY[productId] || { name: "Compra", text: "¡Recompensa aplicada con éxito!" };
-    if (productId === "extra_spin") {
-      window.dispatchEvent(new Event("first_purchase_completed"));
-    }
+    dispatchPurchaseCompleted(productId);
     // Show success modal
     setPaymentModal({ show: true, productName: display.name, rewardText: display.text });
     toast.success("✅ ¡Pago completado!");
@@ -227,6 +225,19 @@ const Index = () => {
     reloadFromDB?.();
     clearPendingState();
   }, [paymentSuccess, verifiedProductId, pendingState, selectLevel, setScreen, clearPendingState, reloadFromDB]);
+
+  useEffect(() => {
+    const handleLuckySpinReward = (event: Event) => {
+      const detail = (event as CustomEvent<{ gems?: number }>).detail;
+      const gems = detail?.gems ?? 0;
+      if (gems > 0) {
+        addGems(gems);
+      }
+    };
+
+    window.addEventListener("lucky_spin_reward", handleLuckySpinReward);
+    return () => window.removeEventListener("lucky_spin_reward", handleLuckySpinReward);
+  }, [addGems]);
   // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
   useEffect(() => {
     if (!streakData.canClaimToday || !user || gameState.completedLevels.length < 5) return;
