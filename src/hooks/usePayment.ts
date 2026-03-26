@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useGooglePlayBilling } from './useGooglePlayBilling';
@@ -9,6 +9,11 @@ import { trackEvent } from '@/lib/trackEvent';
 
 const PENDING_PRODUCT_KEY = 'stripe_pending_product';
 let activePaymentProduct: string | null = null;
+const paymentLoadingSubscribers = new Set<(productId: string | null) => void>();
+
+const broadcastPaymentLoading = () => {
+  paymentLoadingSubscribers.forEach((listener) => listener(activePaymentProduct));
+};
 
 const getProductFallbackPrice = (productId: string, fallbackPrice?: string): string => {
   const product = PRODUCTS.find((item) => item.id === productId);
@@ -25,11 +30,20 @@ const getProductFallbackPrice = (productId: string, fallbackPrice?: string): str
  * - Web: Stripe Checkout
  */
 export const usePayment = () => {
-  const [loading, setLoading] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState<string | null>(activePaymentProduct);
   const googlePlayBilling = useGooglePlayBilling();
 
   const isAndroid = Capacitor.getPlatform() === 'android';
   const isWeb = Capacitor.getPlatform() === 'web';
+
+  useEffect(() => {
+    paymentLoadingSubscribers.add(setLoadingProduct);
+    setLoadingProduct(activePaymentProduct);
+
+    return () => {
+      paymentLoadingSubscribers.delete(setLoadingProduct);
+    };
+  }, []);
 
   const createPayment = async (productId: string): Promise<boolean> => {
     if (activePaymentProduct) {
@@ -44,7 +58,7 @@ export const usePayment = () => {
     }
 
     activePaymentProduct = productId;
-    setLoading(true);
+    broadcastPaymentLoading();
 
     try {
       // Android → Google Play Billing
@@ -108,7 +122,7 @@ export const usePayment = () => {
       return false;
     } finally {
       activePaymentProduct = null;
-      setLoading(false);
+      broadcastPaymentLoading();
     }
   };
 
@@ -125,7 +139,8 @@ export const usePayment = () => {
   return {
     createPayment,
     getPrice,
-    loading: loading || googlePlayBilling.loading,
+    loading: Boolean(loadingProduct) || googlePlayBilling.loading,
+    loadingProduct,
     isAndroid,
     isWeb,
     isGooglePlayAvailable: googlePlayBilling.isAvailable,
