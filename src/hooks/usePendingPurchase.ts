@@ -25,7 +25,7 @@ const EXPIRY_TIME = 30 * 60 * 1000; // 30 minutos
  * CRITICAL: No confia en ?payment=success. Verifica contra Stripe real.
  */
 export const usePendingPurchase = () => {
-  const { user } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [pendingState, setPendingState] = useState<PendingPurchaseState | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [verifiedProductId, setVerifiedProductId] = useState<string | null>(null);
@@ -54,7 +54,8 @@ export const usePendingPurchase = () => {
     }
 
     if (paymentStatus !== 'success') return;
-    if (!user) return; // Esperar a que user cargue
+    if (authLoading) return;
+    if (!user || !session?.access_token) return; // Esperar sesión real para invocar backend con auth
 
     const savedState = loadPendingState();
     const simplePending = loadSimplePending();
@@ -69,7 +70,7 @@ export const usePendingPurchase = () => {
 
     if (sessionId) {
       setVerifying(true);
-      verifyStripePurchase(productId, sessionId).then((verified) => {
+      verifyStripePurchase(productId, sessionId, session.access_token).then((verified) => {
         if (verified) {
           if (savedState) setPendingState(savedState);
           setVerifiedProductId(productId);
@@ -87,13 +88,20 @@ export const usePendingPurchase = () => {
       clearAllStorage();
       setCapturedParams({ paymentStatus: null, sessionId: null });
     }
-  }, [user, capturedParams]);
+  }, [user, session, authLoading, capturedParams]);
 
-  const verifyStripePurchase = async (productId: string, sessionId: string | null): Promise<boolean> => {
+  const verifyStripePurchase = async (
+    productId: string,
+    sessionId: string | null,
+    accessToken: string,
+  ): Promise<boolean> => {
     if (!sessionId) return false;
     try {
       const { data, error } = await supabase.functions.invoke('verify-stripe-purchase', {
         body: { productId, sessionId },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
       
       if (error) {
