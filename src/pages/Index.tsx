@@ -609,7 +609,10 @@ const Index = () => {
           gems={gameState.gems}
           hasUnlimitedLives={hasUnlimitedLives()}
           timeUntilNextLife={getTimeUntilNextLife()}
-          onShopClick={() => setScreen("shop")}
+          onShopClick={() => {
+            trackEvent('shop_opened', { source: 'header_gems' });
+            setScreen("shop");
+          }}
         />
         {/* Streak Reminder Banner - SOLO después de nivel 2 */}
         {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
