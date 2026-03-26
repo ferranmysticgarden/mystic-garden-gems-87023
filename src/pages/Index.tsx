@@ -698,7 +698,10 @@ const Index = () => {
                 </Button>
 
                 <Button
-                  onClick={() => setScreen("shop")}
+                  onClick={() => {
+                    trackEvent('shop_opened', { source: 'secondary_button' });
+                    setScreen("shop");
+                  }}
                   variant="outline"
                   className="hover:scale-105 active:scale-95 transition-transform duration-100"
                 >
