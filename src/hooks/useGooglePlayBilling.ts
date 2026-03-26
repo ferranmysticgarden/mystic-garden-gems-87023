@@ -328,7 +328,7 @@ export const useGooglePlayBilling = () => {
     });
 
     const cancelListener = GooglePlayBilling.addListener('purchaseCancelled', () => {
-      trackEvent('purchase_cancelled', { platform: 'android' });
+      trackEvent('purchase_cancelled', { platform: 'android', productId: lastAttemptedProductRef.current ?? 'unknown' });
     });
 
     const errorListener = GooglePlayBilling.addListener('purchaseError', ({ error }) => {
