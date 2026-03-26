@@ -102,6 +102,16 @@ export const GameScreen = ({
     return Math.ceil((100 - progress) / 8);
   }, [getProgressPercentage]);
 
+  const saveCurrentLevelPurchaseState = useCallback((productId: string) => {
+    savePendingState({
+      levelId: level.id,
+      moves,
+      score,
+      collected,
+      productId,
+    });
+  }, [savePendingState, level.id, moves, score, collected]);
+
   useEffect(() => {
     if (checkWinCondition() && !gameOver) {
       setGameOver(true);
@@ -135,13 +145,7 @@ export const GameScreen = ({
         // MURO NIVEL 10
         const paywallAlreadyShown = localStorage.getItem('level10_paywall_dismissed') === 'true';
         if (level.id === 10 && !hasPurchasedOnce && !paywallAlreadyShown) {
-          savePendingState({
-            levelId: level.id,
-            moves: 0,
-            score,
-            collected,
-            productId: 'buy_moves',
-          });
+          saveCurrentLevelPurchaseState('buy_moves');
           setProgressAtLoss(progress);
           setMovesShortBy(movesNeeded);
           emitAnalyticsEvent('level10_popup_shown', { level: 10, progress, movesShort: movesNeeded });
@@ -158,6 +162,7 @@ export const GameScreen = ({
             !showRescueOffer;
           
           if (shouldShowRescue) {
+            saveCurrentLevelPurchaseState('continue_game');
             setRescueData({ 
               attempts, 
               movesShort: movesNeeded,
@@ -202,7 +207,7 @@ export const GameScreen = ({
         showDefeatOffer();
       }
     }
-  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded, hasPurchasedOnce]);
+  }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded, hasPurchasedOnce, saveCurrentLevelPurchaseState]);
 
   const handleMatch = useCallback((tiles: string[], count: number) => {
     setScore((prev) => prev + count * 10);
@@ -271,8 +276,6 @@ export const GameScreen = ({
   };
 
   const handleDefeatPacksBuy = () => {
-    setMoves(5);
-    setGameOver(false);
     setShowDefeatPacksOffer(false);
   };
 
@@ -459,10 +462,6 @@ export const GameScreen = ({
           <FlashOffer 
             trigger="loss"
             onClose={handleFlashOfferClose}
-            onPurchaseSuccess={() => {
-              setMoves(5);
-              setGameOver(false);
-            }}
           />
         )}
 

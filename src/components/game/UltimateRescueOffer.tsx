@@ -24,7 +24,7 @@ export const UltimateRescueOffer = ({
   const [isShaking, setIsShaking] = useState(true);
   const { createPayment, loading, getPrice } = usePayment();
   
-  const price = getPrice('continue_game', '€0.99');
+  const price = getPrice('continue_game', '€0.50');
 
   // Efecto de entrada: vibración + shake
   useEffect(() => {

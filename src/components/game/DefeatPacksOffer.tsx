@@ -13,7 +13,7 @@ interface DefeatPacksOfferProps {
 /**
  * DefeatPacksOffer - Modal con 3 packs de monetización multi-tier
  * Se muestra tras perder o quedarse a 1 movimiento
- * Destaca €0.99 como "MEJOR VALOR"
+ * Destaca el pack recomendado con precios alineados al catálogo.
  */
 export const DefeatPacksOffer = ({ 
   progressPercent, 
@@ -72,7 +72,7 @@ export const DefeatPacksOffer = ({
 
         {/* Packs Grid */}
         <div className="space-y-3">
-          {/* Pack Impulso €0.99 - RECOMENDADO */}
+          {/* Pack Impulso €1.99 - RECOMENDADO */}
           <div className="relative bg-gradient-to-r from-yellow-900/80 via-amber-900/80 to-orange-900/80 rounded-2xl p-4 border-2 border-yellow-400 shadow-lg shadow-yellow-500/30">
             {/* Best Value Badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
@@ -87,8 +87,8 @@ export const DefeatPacksOffer = ({
                   <span className="text-lg font-bold text-white">Pack Impulso</span>
                 </div>
                 <div className="text-sm text-yellow-200 space-y-0.5">
-                  <p>✨ +5 movimientos</p>
-                  <p>🚀 +3 boosters</p>
+                  <p>❤️ +3 vidas</p>
+                  <p>🧰 +5 powerups</p>
                 </div>
                 <p className="text-xs text-yellow-400 mt-1 font-medium">
                   "La mejor opción"
@@ -102,13 +102,13 @@ export const DefeatPacksOffer = ({
                   size="md"
                   className="whitespace-nowrap min-w-[100px]"
                 >
-                  {getPrice('pack_impulso', '€0.99')}
+                  {getPrice('pack_impulso', '€1.99')}
                 </PremiumButton>
               </div>
             </div>
           </div>
 
-          {/* Pack Experiencia €1.99 */}
+          {/* Pack Experiencia €2.99 */}
           <div className="bg-gradient-to-r from-purple-900/70 via-violet-900/70 to-indigo-900/70 rounded-2xl p-4 border border-purple-500/50">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -128,7 +128,7 @@ export const DefeatPacksOffer = ({
                   size="md"
                   className="whitespace-nowrap min-w-[100px]"
                 >
-                  {getPrice('pack_experiencia', '€1.99')}
+                  {getPrice('pack_experiencia', '€2.99')}
                 </PremiumButton>
               </div>
             </div>
@@ -143,8 +143,8 @@ export const DefeatPacksOffer = ({
                   <span className="text-lg font-bold text-white">Pack Victoria Segura</span>
                 </div>
                 <div className="text-sm text-red-200 space-y-0.5">
-                  <p>💪 +5 movimientos</p>
-                  <p>🧰 +3 boosters</p>
+                  <p>❤️ +3 vidas</p>
+                  <p>🧰 +5 powerups</p>
                 </div>
               </div>
               <div className="ml-4">
