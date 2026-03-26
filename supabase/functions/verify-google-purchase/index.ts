@@ -428,7 +428,7 @@ serve(async (req) => {
       if (lockError) {
         if (lockError.code === '23505') {
           console.log('[INFO] Google purchase already processed');
-          return new Response(JSON.stringify({ success: true, message: 'Already processed', rewards }), {
+          return new Response(JSON.stringify({ success: true, message: 'Already processed', rewards, isGuest: false, productId }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
           });
@@ -534,7 +534,7 @@ serve(async (req) => {
       console.log(`[INFO] ✅ Purchase verified (guest): ${productId} — rewards applied client-side`);
     }
 
-    return new Response(JSON.stringify({ success: true, rewards, isGuest }), {
+    return new Response(JSON.stringify({ success: true, rewards, isGuest, productId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

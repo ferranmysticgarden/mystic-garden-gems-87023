@@ -9,6 +9,7 @@ import { trackEvent } from '@/lib/trackEvent';
 
 const PENDING_PRODUCT_KEY = 'stripe_pending_product';
 let activePaymentProduct: string | null = null;
+let stripeRedirectInProgress = false;
 const paymentLoadingSubscribers = new Set<(productId: string | null) => void>();
 
 const broadcastPaymentLoading = () => {
@@ -58,6 +59,7 @@ export const usePayment = () => {
     }
 
     activePaymentProduct = productId;
+    stripeRedirectInProgress = false;
     broadcastPaymentLoading();
 
     try {
@@ -108,6 +110,7 @@ export const usePayment = () => {
           productId,
           timestamp: Date.now(),
         }));
+        stripeRedirectInProgress = true;
         console.log('[PAYMENT] Saved pending product before Stripe redirect:', productId);
         toast.success('Redirigiendo a la pasarela de pago...');
         window.location.assign(data.url);
@@ -116,13 +119,16 @@ export const usePayment = () => {
 
       return false;
     } catch (error: any) {
+      stripeRedirectInProgress = false;
       console.error('Error creating payment:', error);
       trackEvent('payment_bridge_error', { product: productId, platform: isAndroid ? 'android' : 'web', error: error?.message });
       toast.error('Error al crear el pago: ' + error.message);
       return false;
     } finally {
-      activePaymentProduct = null;
-      broadcastPaymentLoading();
+      if (!stripeRedirectInProgress) {
+        activePaymentProduct = null;
+        broadcastPaymentLoading();
+      }
     }
   };
 

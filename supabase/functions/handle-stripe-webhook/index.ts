@@ -197,124 +197,189 @@ serve(async (req) => {
     const rewards = PRODUCT_REWARDS[productId];
     logStep("Rewards lookup", { productId, rewards });
 
-    let expiresAt: Date | null = null;
-    if (rewards?.noAdsDays) {
-      expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + rewards.noAdsDays);
-    }
+    let purchaseRecordId: string | null = null;
+    let noAdsForeverPurchaseId: string | null = null;
+    let createdProgressRecord = false;
+    let previousProgressSnapshot: {
+      gems: number;
+      lives: number;
+      hammer_count: number;
+      shuffle_count: number;
+      undo_count: number;
+      no_ads_until: string | null;
+      unlimited_lives_until: string | null;
+      updated_at: string;
+    } | null = null;
 
-    const { error: purchaseError } = await supabaseAdmin.from("user_purchases").insert({
-      user_id: userId,
-      product_id: `stripe_${productId}`,
-      expires_at: expiresAt?.toISOString() || null,
-    });
-
-    if (purchaseError) {
-      logStep("ERROR saving purchase", { error: purchaseError.message });
-    }
-
-    if (rewards?.noAdsForever) {
-      await supabaseAdmin.from("user_purchases").insert({
-        user_id: userId,
-        product_id: "no_ads_forever",
-        expires_at: null,
-      });
-    }
-
-    if (rewards && (rewards.gems || rewards.lives || rewards.powerups || rewards.noAdsDays || rewards.unlimitedLivesMinutes)) {
-      const { data: progressData, error: progressError } = await supabaseAdmin
-        .from("game_progress")
-        .select("gems, lives, hammer_count, shuffle_count, undo_count, no_ads_until, unlimited_lives_until")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (progressError) {
-        logStep("ERROR fetching game progress", { error: progressError.message });
+    try {
+      let expiresAt: Date | null = null;
+      if (rewards?.noAdsDays) {
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + rewards.noAdsDays);
       }
 
-      const currentGems = progressData?.gems || 0;
-      const currentLives = progressData?.lives || 5;
-      const currentHammer = progressData?.hammer_count || 0;
-      const currentShuffle = progressData?.shuffle_count || 0;
-      const currentUndo = progressData?.undo_count || 0;
-
-      const updates: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (rewards.gems) updates.gems = currentGems + rewards.gems;
-      if (rewards.lives) updates.lives = Math.min(currentLives + rewards.lives, 99);
-
-      if (rewards.powerups) {
-        const perType = Math.floor(rewards.powerups / 3);
-        const remainder = rewards.powerups % 3;
-        updates.hammer_count = currentHammer + perType + (remainder >= 1 ? 1 : 0);
-        updates.shuffle_count = currentShuffle + perType + (remainder >= 2 ? 1 : 0);
-        updates.undo_count = currentUndo + perType;
-      }
-
-      if (rewards.noAdsDays) {
-        const expireDate = new Date();
-        expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
-        updates.no_ads_until = expireDate.toISOString();
-      }
-
-      if (rewards.unlimitedLivesMinutes) {
-        const now = new Date();
-        const currentUL = progressData?.unlimited_lives_until
-          ? new Date(progressData.unlimited_lives_until)
-          : null;
-        const base = currentUL && currentUL > now ? currentUL : now;
-        updates.unlimited_lives_until = new Date(
-          base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000,
-        ).toISOString();
-      }
-
-      if (progressData) {
-        const { error: updateError } = await supabaseAdmin
-          .from("game_progress")
-          .update(updates)
-          .eq("user_id", userId);
-
-        if (updateError) {
-          logStep("ERROR updating game progress", { error: updateError.message });
-        } else {
-          logStep("✅ Game progress updated");
-        }
-      } else {
-        const insertData: Record<string, unknown> = {
+      const { data: purchaseRow, error: purchaseError } = await supabaseAdmin
+        .from("user_purchases")
+        .insert({
           user_id: userId,
-          gems: rewards.gems || 0,
-          lives: rewards.lives || 5,
-          hammer_count: rewards.powerups
-            ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 1 ? 1 : 0)
-            : 0,
-          shuffle_count: rewards.powerups
-            ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 2 ? 1 : 0)
-            : 0,
-          undo_count: rewards.powerups ? Math.floor(rewards.powerups / 3) : 0,
+          product_id: `stripe_${productId}`,
+          expires_at: expiresAt?.toISOString() || null,
+        })
+        .select("id")
+        .single();
+
+      if (purchaseError) {
+        throw purchaseError;
+      }
+      purchaseRecordId = purchaseRow.id;
+
+      if (rewards?.noAdsForever) {
+        const { data: foreverRow, error: foreverError } = await supabaseAdmin
+          .from("user_purchases")
+          .insert({
+            user_id: userId,
+            product_id: "no_ads_forever",
+            expires_at: null,
+          })
+          .select("id")
+          .single();
+
+        if (foreverError) {
+          throw foreverError;
+        }
+        noAdsForeverPurchaseId = foreverRow.id;
+      }
+
+      if (rewards && (rewards.gems || rewards.lives || rewards.powerups || rewards.noAdsDays || rewards.unlimitedLivesMinutes)) {
+        const { data: progressData, error: progressError } = await supabaseAdmin
+          .from("game_progress")
+          .select("gems, lives, hammer_count, shuffle_count, undo_count, no_ads_until, unlimited_lives_until, updated_at")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (progressError) {
+          throw progressError;
+        }
+
+        previousProgressSnapshot = progressData
+          ? {
+              gems: progressData.gems,
+              lives: progressData.lives,
+              hammer_count: progressData.hammer_count,
+              shuffle_count: progressData.shuffle_count,
+              undo_count: progressData.undo_count,
+              no_ads_until: progressData.no_ads_until,
+              unlimited_lives_until: progressData.unlimited_lives_until,
+              updated_at: progressData.updated_at,
+            }
+          : null;
+
+        const currentGems = progressData?.gems || 0;
+        const currentLives = progressData?.lives || 5;
+        const currentHammer = progressData?.hammer_count || 0;
+        const currentShuffle = progressData?.shuffle_count || 0;
+        const currentUndo = progressData?.undo_count || 0;
+
+        const updates: Record<string, unknown> = {
+          updated_at: new Date().toISOString(),
         };
 
+        if (rewards.gems) updates.gems = currentGems + rewards.gems;
+        if (rewards.lives) updates.lives = Math.min(currentLives + rewards.lives, 99);
+
+        if (rewards.powerups) {
+          const perType = Math.floor(rewards.powerups / 3);
+          const remainder = rewards.powerups % 3;
+          updates.hammer_count = currentHammer + perType + (remainder >= 1 ? 1 : 0);
+          updates.shuffle_count = currentShuffle + perType + (remainder >= 2 ? 1 : 0);
+          updates.undo_count = currentUndo + perType;
+        }
+
         if (rewards.noAdsDays) {
-          insertData.no_ads_until = new Date(
-            Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000,
-          ).toISOString();
+          const expireDate = new Date();
+          expireDate.setDate(expireDate.getDate() + rewards.noAdsDays);
+          updates.no_ads_until = expireDate.toISOString();
         }
 
         if (rewards.unlimitedLivesMinutes) {
-          insertData.unlimited_lives_until = new Date(
-            Date.now() + rewards.unlimitedLivesMinutes * 60 * 1000,
+          const now = new Date();
+          const currentUL = progressData?.unlimited_lives_until
+            ? new Date(progressData.unlimited_lives_until)
+            : null;
+          const base = currentUL && currentUL > now ? currentUL : now;
+          updates.unlimited_lives_until = new Date(
+            base.getTime() + rewards.unlimitedLivesMinutes * 60 * 1000,
           ).toISOString();
         }
 
-        const { error: insertError } = await supabaseAdmin.from("game_progress").insert(insertData);
+        if (progressData) {
+          const { error: updateError } = await supabaseAdmin
+            .from("game_progress")
+            .update(updates)
+            .eq("user_id", userId);
 
-        if (insertError) {
-          logStep("ERROR inserting game progress", { error: insertError.message });
+          if (updateError) {
+            throw updateError;
+          }
+          logStep("✅ Game progress updated");
         } else {
+          const insertData: Record<string, unknown> = {
+            user_id: userId,
+            gems: rewards.gems || 0,
+            lives: rewards.lives || 5,
+            hammer_count: rewards.powerups
+              ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 1 ? 1 : 0)
+              : 0,
+            shuffle_count: rewards.powerups
+              ? Math.floor(rewards.powerups / 3) + (rewards.powerups % 3 >= 2 ? 1 : 0)
+              : 0,
+            undo_count: rewards.powerups ? Math.floor(rewards.powerups / 3) : 0,
+          };
+
+          if (rewards.noAdsDays) {
+            insertData.no_ads_until = new Date(
+              Date.now() + rewards.noAdsDays * 24 * 60 * 60 * 1000,
+            ).toISOString();
+          }
+
+          if (rewards.unlimitedLivesMinutes) {
+            insertData.unlimited_lives_until = new Date(
+              Date.now() + rewards.unlimitedLivesMinutes * 60 * 1000,
+            ).toISOString();
+          }
+
+          const { error: insertError } = await supabaseAdmin.from("game_progress").insert(insertData);
+
+          if (insertError) {
+            throw insertError;
+          }
+          createdProgressRecord = true;
           logStep("✅ Game progress created");
         }
       }
+    } catch (grantError) {
+      logStep("ERROR applying Stripe grant", {
+        error: grantError instanceof Error ? grantError.message : String(grantError),
+        sessionId: session.id,
+        userId,
+        productId,
+      });
+
+      if (purchaseRecordId) {
+        await supabaseAdmin.from("user_purchases").delete().eq("id", purchaseRecordId);
+      }
+      if (noAdsForeverPurchaseId) {
+        await supabaseAdmin.from("user_purchases").delete().eq("id", noAdsForeverPurchaseId);
+      }
+
+      if (previousProgressSnapshot) {
+        await supabaseAdmin.from("game_progress").update(previousProgressSnapshot).eq("user_id", userId);
+      } else if (createdProgressRecord) {
+        await supabaseAdmin.from("game_progress").delete().eq("user_id", userId);
+      }
+
+      await supabaseAdmin.from("processed_webhook_events").delete().eq("id", eventKey);
+      throw grantError;
     }
 
     try {
