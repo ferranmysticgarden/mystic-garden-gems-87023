@@ -22,9 +22,9 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   unlimited_lives_30min: ['unlimitedlives30min'],
 
   // Products with BOTH underscore AND no-underscore IDs in Console (duplicates)
-  pack_racha_infinita: ['pack_racha_infinita', 'packrachainfinita'],
-  pack_victoria_segura: ['pack_victoria_segura', 'packvictoriasegura'],
-  pack_victoria_segura_pro: ['pack_victoria_segura_pro', 'packvictoriasegurapro'],
+  pack_racha_infinita: ['packrachainfinita'],
+  pack_victoria_segura: ['packvictoriasegura'],
+  pack_victoria_segura_pro: ['packvictoriasegurapro'],
 
   // Products with only no-underscore IDs in Console (older products)
   welcome_pack: ['welcomepack'],
