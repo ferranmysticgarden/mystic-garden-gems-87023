@@ -801,6 +801,10 @@ const Index = () => {
             setShowNoLivesModal(false);
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
+          onShowStarterOffer={() => {
+            trackEvent('offer_shown', { product: 'starter_gems', source: 'no_lives_no_gems' });
+            setTimeout(() => setShowStarterPack(true), 300);
+          }}
         />
       )}
       {/* Battle Pass Modal */}
