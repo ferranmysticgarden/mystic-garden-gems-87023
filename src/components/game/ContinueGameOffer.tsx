@@ -23,7 +23,7 @@ export const ContinueGameOffer = ({
     }
   };
 
-  const price = getPrice('continue_game', '€0.99');
+  const price = getPrice('continue_game', '€0.50');
 
   // Emotional message based on progress
   const getMessage = () => {
