@@ -34,11 +34,34 @@ const sharedBillingState: SharedBillingState = {
 const billingSubscribers = new Set<(state: SharedBillingState) => void>();
 const verificationTasks = new Map<string, Promise<boolean>>();
 const purchaseInitiatedByUser = new Set<string>();
+const PURCHASE_CANCEL_DEDUP_WINDOW_MS = 1500;
 
 let purchaseInFlightProduct: string | null = null;
 let lastAttemptedProductId: string | null = null;
 let billingSetupStarted = false;
 let billingListenersAttached = false;
+let lastPurchaseCancellation: { productId: string; timestamp: number } | null = null;
+
+const reportPurchaseCancelled = (productId?: string | null, error?: string, source?: string) => {
+  const resolvedProductId = productId ?? lastAttemptedProductId ?? 'unknown';
+  const now = Date.now();
+
+  if (
+    lastPurchaseCancellation &&
+    lastPurchaseCancellation.productId === resolvedProductId &&
+    now - lastPurchaseCancellation.timestamp < PURCHASE_CANCEL_DEDUP_WINDOW_MS
+  ) {
+    return;
+  }
+
+  lastPurchaseCancellation = { productId: resolvedProductId, timestamp: now };
+  trackEvent('purchase_cancelled', {
+    platform: 'android',
+    product: resolvedProductId,
+    ...(error ? { error } : {}),
+    ...(source ? { source } : {}),
+  });
+};
 
 const emitSharedBillingState = () => {
   const snapshot: SharedBillingState = {
@@ -226,13 +249,14 @@ export const useGooglePlayBilling = () => {
     }
   }, [applyBillingStatus, loadProducts]);
 
-  const verifyAndProcessPurchase = useCallback((purchase: PurchaseResult): Promise<boolean> => {
+  const verifyAndProcessPurchase = useCallback((purchase: PurchaseResult, requestedProductId?: string): Promise<boolean> => {
     const purchaseToken = purchase.purchaseToken;
+    const trackedProductId = requestedProductId ?? purchase.productId;
 
     if (!purchaseToken) {
       trackEvent('purchase_verification_failed', {
         platform: 'android',
-        product: purchase.productId,
+        product: trackedProductId,
         reason: 'missing_purchase_token',
       });
       return Promise.resolve(false);
@@ -248,7 +272,7 @@ export const useGooglePlayBilling = () => {
       try {
         trackEvent('purchase_verification_started', {
           platform: 'android',
-          product: purchase.productId,
+          product: trackedProductId,
         });
 
         const { data, error } = await supabase.functions.invoke('verify-google-purchase', {
@@ -269,6 +293,8 @@ export const useGooglePlayBilling = () => {
           throw new Error(data?.error || 'Purchase verification failed');
         }
 
+        const verifiedProductId = data?.productId || trackedProductId;
+
         try {
           await GooglePlayBilling.consumePurchase({ purchaseToken });
           console.log('[PURCHASE] ✅ Consumed after server verification');
@@ -284,11 +310,11 @@ export const useGooglePlayBilling = () => {
         console.log('[PURCHASE] success confirmed via Google Play');
         trackEvent('purchase_verified', {
           platform: 'android',
-          product: purchase.productId,
+          product: verifiedProductId,
           guest: Boolean(data?.isGuest),
         });
         // Pass server rewards so guest clients can apply them locally
-        dispatchPurchaseCompleted(purchase.productId, data?.rewards ?? undefined);
+        dispatchPurchaseCompleted(verifiedProductId, data?.rewards ?? undefined);
         console.log('[PURCHASE] gate unlocked');
         toast.success('¡Compra completada!');
         return true;
@@ -323,7 +349,7 @@ export const useGooglePlayBilling = () => {
         if (isPermissionDenied && !isServerOnlyEntitlement) {
           trackEvent('purchase_verified_degraded', {
             platform: 'android',
-            product: purchase.productId,
+            product: trackedProductId,
             reason: 'google_permission_denied',
           });
 
@@ -339,14 +365,14 @@ export const useGooglePlayBilling = () => {
           }
 
           // Degraded mode: no server rewards available, pass undefined (Index.tsx will fallback to PRODUCTS)
-          dispatchPurchaseCompleted(purchase.productId);
+          dispatchPurchaseCompleted(trackedProductId);
           toast.success('¡Compra completada! (modo de respaldo activado)');
           return true;
         }
 
         trackEvent('purchase_verification_failed', {
           platform: 'android',
-          product: purchase.productId,
+          product: trackedProductId,
           error: errorMessage,
           reason: verificationFailReason ?? undefined,
         });
@@ -453,7 +479,7 @@ export const useGooglePlayBilling = () => {
     });
 
     void GooglePlayBilling.addListener('purchaseCancelled', () => {
-      trackEvent('purchase_cancelled', { platform: 'android', productId: lastAttemptedProductId ?? 'unknown' });
+      reportPurchaseCancelled(lastAttemptedProductId, undefined, 'native_listener');
     });
 
     void GooglePlayBilling.addListener('purchaseError', ({ error }) => {
@@ -577,7 +603,7 @@ export const useGooglePlayBilling = () => {
       if (result?.purchaseToken) {
         purchaseInitiatedByUser.add(result.purchaseToken);
       }
-      return await verifyAndProcessPurchase(result);
+      return await verifyAndProcessPurchase(result, productId);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       if (errorMsg?.includes('cancelled') || errorMsg?.includes('Cancel') || errorMsg?.includes('pending')) {
@@ -585,6 +611,7 @@ export const useGooglePlayBilling = () => {
           return false;
         }
 
+        reportPurchaseCancelled(productId, errorMsg, 'purchase_call');
         toast.info('Compra cancelada');
       } else {
         console.error('Purchase error:', error);
