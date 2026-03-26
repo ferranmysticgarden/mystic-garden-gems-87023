@@ -364,6 +364,7 @@ export const useGooglePlayBilling = () => {
     const candidates = getGooglePlayCandidates(productId);
 
     setLoading(true);
+    lastAttemptedProductRef.current = productId;
     trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
 
     try {
