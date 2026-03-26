@@ -2,7 +2,6 @@ import { Gem, Heart, Infinity, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface NoLivesModalProps {
   gems: number;
@@ -29,7 +28,6 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
     trackEvent('purchase_attempt', { product: 'unlimited_lives_30min', source: 'no_lives_modal' });
     const success = await createPayment('unlimited_lives_30min');
     if (success) {
-      dispatchPurchaseCompleted('unlimited_lives_30min');
       onUnlimitedLivesPurchased?.();
     }
   };

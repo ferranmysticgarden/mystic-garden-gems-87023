@@ -152,6 +152,11 @@ export const useGameState = () => {
       // Debounce DB saves by 400ms to prevent concurrent upserts
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(async () => {
+        if (blockSaveRef.current) {
+          console.log('[SAVE] Skipped because reloadFromDB is in progress');
+          return;
+        }
+
         try {
           console.log('[SAVE] Saving progress:', {
             level: gameState.currentLevel,
@@ -350,6 +355,10 @@ export const useGameState = () => {
   const reloadFromDB = useCallback(async () => {
     if (!user) return;
     blockSaveRef.current = true;
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
     try {
       const { data, error } = await supabase
         .from('game_progress')

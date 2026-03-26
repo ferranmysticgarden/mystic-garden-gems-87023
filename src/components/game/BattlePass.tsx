@@ -4,7 +4,6 @@ import { Crown, Lock, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import { toast } from 'sonner';
 
 const TIERS = [
@@ -69,7 +68,6 @@ export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: Bat
     const success = await createPayment('garden_pass');
     if (!success) return;
 
-    dispatchPurchaseCompleted('garden_pass');
     setGuestPremiumUnlocked(true);
     onPurchaseSuccess?.();
     toast.success('Battle Pass Premium activado');
