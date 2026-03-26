@@ -17,6 +17,7 @@ export const useGooglePlayBilling = () => {
   const [loading, setLoading] = useState(false);
   const verificationTasksRef = useRef<Map<string, Promise<boolean>>>(new Map());
   const purchaseInitiatedByUserRef = useRef<Set<string>>(new Set());
+  const lastAttemptedProductRef = useRef<string | null>(null);
 
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
@@ -327,7 +328,7 @@ export const useGooglePlayBilling = () => {
     });
 
     const cancelListener = GooglePlayBilling.addListener('purchaseCancelled', () => {
-      trackEvent('purchase_cancelled', { platform: 'android' });
+      trackEvent('purchase_cancelled', { platform: 'android', productId: lastAttemptedProductRef.current ?? 'unknown' });
     });
 
     const errorListener = GooglePlayBilling.addListener('purchaseError', ({ error }) => {
@@ -363,6 +364,7 @@ export const useGooglePlayBilling = () => {
     const candidates = getGooglePlayCandidates(productId);
 
     setLoading(true);
+    lastAttemptedProductRef.current = productId;
     trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
 
     try {

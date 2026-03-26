@@ -50,6 +50,7 @@ import { VisualGarden } from "@/components/game/VisualGarden";
 import { WelcomeOffer } from "@/components/game/WelcomeOffer";
 import { PaymentSuccessModal } from "@/components/game/PaymentSuccessModal";
 import { LoginPrompt } from "@/components/game/LoginPrompt";
+import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
 import { signInWithGoogleNative, signInWithGoogleWeb } from "@/lib/googleAuth";
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from "@/lib/analytics";
 import { trackEvent } from "@/lib/trackEvent";
@@ -567,6 +568,8 @@ const Index = () => {
   const isNewUser = gameState.completedLevels.length < 5;
   const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward;
   return (
+    <>
+    <PurchaseLoadingOverlay />
     <div className="min-h-screen px-4 py-6 md:py-10 relative z-10">
       <div className="max-w-md mx-auto flex min-h-[calc(100vh-3rem)] flex-col justify-center">
         {/* User Info & Music Control */}
@@ -1006,6 +1009,7 @@ const Index = () => {
         onClose={() => setPaymentModal({ show: false, productName: "", rewardText: "" })}
       />
     </div>
+    </>
   );
 };
 export default Index;
