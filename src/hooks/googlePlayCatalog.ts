@@ -3,8 +3,8 @@ import { PRODUCTS } from '@/data/products';
 // Map internal product IDs to their ACTUAL Google Play Console IDs.
 // The FIRST entry should be the exact ID as it appears in the Console.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
-  // Products with underscore IDs in Console (newer products)
-  starter_gems: ['starter_gems', 'starter-gems'],
+  // starter_gems had two IDs in circulation; prefer the current canonical Play ID first
+  starter_gems: ['starter-gems', 'starter_gems'],
   victory_multiplier: ['victory_multiplier', 'victorymultiplier'],
   chest_gold: ['chest_gold', 'chestgold'],
   chest_silver: ['chest_silver', 'chestsilver'],

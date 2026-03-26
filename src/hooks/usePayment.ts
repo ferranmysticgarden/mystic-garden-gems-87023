@@ -87,9 +87,10 @@ export const usePayment = () => {
 
   // Get the display price for a product (from Google Play or fallback)
   const getPrice = (productId: string, fallbackPrice: string): string => {
-    if (isAndroid && googlePlayBilling.isAvailable) {
+    if (isAndroid) {
       const googlePrice = googlePlayBilling.getProductPrice(productId);
       if (googlePrice) return googlePrice;
+      return 'Cargando precio…';
     }
     return fallbackPrice;
   };
