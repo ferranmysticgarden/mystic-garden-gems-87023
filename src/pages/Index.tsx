@@ -665,7 +665,10 @@ const Index = () => {
             {t("game.play")}
           </Button>
           <Button
-            onClick={() => setScreen("shop")}
+            onClick={() => {
+              trackEvent('shop_opened', { source: 'main_button' });
+              setScreen("shop");
+            }}
             variant="outline"
             className="w-full mb-2 hover:scale-105 active:scale-95 transition-transform duration-100"
           >
