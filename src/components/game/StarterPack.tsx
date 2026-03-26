@@ -208,7 +208,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               <div className="flex items-center justify-center gap-3 mb-2">
                 <div className="text-center">
                   <p className="text-gray-400 text-xs">Valor real</p>
-                  <span className="text-gray-400 line-through text-xl">€9.99</span>
+                  <span className="text-gray-400 line-through text-xl">€2.99</span>
                 </div>
                 <div className="text-center">
                   <p className="text-yellow-300 text-xs font-bold">HOY</p>
