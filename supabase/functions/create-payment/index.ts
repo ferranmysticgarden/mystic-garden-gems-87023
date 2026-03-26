@@ -131,7 +131,7 @@ serve(async (req) => {
       unlimited_lives_30min: { amount: 50, name: "Unlimited Lives 30min" },
       chest_silver: { amount: 199, name: "Chest Silver" },
       chest_gold: { amount: 399, name: "Chest Gold" },
-      mega_pack_inicial: { amount: 399, name: "Mega Pack" },
+      mega_pack_inicial: { amount: 299, name: "Mega Pack" },
       pack_revancha: { amount: 99, name: "Pack Revancha" },
       first_day_offer: { amount: 99, name: "First Day Offer" },
       pack_victoria_segura: { amount: 299, name: "Pack Victoria Segura" },
