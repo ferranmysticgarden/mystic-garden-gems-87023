@@ -46,7 +46,7 @@ export const PRODUCTS: Product[] = [
     id: 'gems_300', 
     nameKey: 'shop.gems300',
     name: '300 Gemas', 
-    price: 3.99, 
+    price: 2.99, 
     currency: 'EUR',
     amount: 300 
   },
@@ -62,7 +62,7 @@ export const PRODUCTS: Product[] = [
     id: 'no_ads_month', 
     nameKey: 'shop.noAdsMonth',
     name: 'Quitar Anuncios (1 Mes)', 
-    price: 4.99, 
+    price: 1.99, 
     currency: 'EUR',
     noAdsDays: 30
   },
@@ -70,7 +70,7 @@ export const PRODUCTS: Product[] = [
     id: 'no_ads_forever', 
     nameKey: 'shop.noAdsForever',
     name: 'Quitar Anuncios (Para Siempre)', 
-    price: 9.99, 
+    price: 4.99, 
     currency: 'EUR',
     noAdsForever: true
   },
@@ -78,7 +78,7 @@ export const PRODUCTS: Product[] = [
     id: 'garden_pass', 
     nameKey: 'shop.gardenPass',
     name: 'Pase de Jardín Mensual', 
-    price: 9.99, 
+    price: 2.99, 
     currency: 'EUR',
     instantGems: 1000,
     noAdsDays: 30
@@ -99,7 +99,7 @@ export const PRODUCTS: Product[] = [
     id: 'victory_multiplier', 
     nameKey: 'shop.victoryMultiplier',
     name: 'Bono de Victoria (+2 Vidas)', 
-    price: 0.99, 
+    price: 0.50, 
     currency: 'EUR',
     lives: 2
   },
@@ -108,7 +108,7 @@ export const PRODUCTS: Product[] = [
     id: 'finish_level', 
     nameKey: 'shop.finishLevel',
     name: 'Termina Este Nivel', 
-    price: 0.99, 
+    price: 0.50, 
     currency: 'EUR',
     powerups: 5 // +5 movimientos
   },
@@ -126,7 +126,7 @@ export const PRODUCTS: Product[] = [
     id: 'chest_silver', 
     nameKey: 'shop.chestSilver',
     name: 'Cofre Plata', 
-    price: 0.99, 
+    price: 1.99, 
     currency: 'EUR'
   },
   // Chest Gold
@@ -142,7 +142,7 @@ export const PRODUCTS: Product[] = [
     id: 'first_purchase', 
     nameKey: 'shop.firstPurchase',
     name: 'Pack Primera Compra x5', 
-    price: 0.99, 
+    price: 0.50, 
     currency: 'EUR',
     gems: 500,
     lives: 20,
@@ -153,7 +153,7 @@ export const PRODUCTS: Product[] = [
     id: 'starter_pack', 
     nameKey: 'shop.starterPack',
     name: 'Starter Pack', 
-    price: 0.99, 
+    price: 1.99, 
     currency: 'EUR',
     gems: 500,
     lives: 10,
@@ -164,7 +164,7 @@ export const PRODUCTS: Product[] = [
     id: 'continue_game', 
     nameKey: 'shop.continueGame',
     name: 'Continuar Partida', 
-    price: 0.99, 
+    price: 0.50, 
     currency: 'EUR',
     lives: 1,
     powerups: 5 // +5 moves
@@ -174,7 +174,7 @@ export const PRODUCTS: Product[] = [
     id: 'buy_moves',
     nameKey: 'shop.buyMoves',
     name: 'Comprar Movimientos',
-    price: 0.49,
+    price: 0.50,
     currency: 'EUR',
     powerups: 5
   },
@@ -216,43 +216,42 @@ export const PRODUCTS: Product[] = [
     lives: 2
     // + streak protection + 1 spin (handled by webhook)
   },
-  // NEW MULTI-TIER PACKS
-  // Pack Impulso €0.99 - "La mejor opción"
+  // Pack Impulso €1.99
   {
     id: 'pack_impulso',
     nameKey: 'shop.packImpulso',
     name: 'Pack Impulso',
-    price: 0.99,
+    price: 1.99,
     currency: 'EUR',
     powerups: 5, // +5 movimientos
     lives: 3 // +3 boosters
   },
-  // Pack Experiencia €1.99
+  // Pack Experiencia €2.99
   {
     id: 'pack_experiencia',
     nameKey: 'shop.packExperiencia',
     name: 'Pack Experiencia',
-    price: 1.99,
+    price: 2.99,
     currency: 'EUR',
     lives: 2, // 2 vidas extra
     // + protección racha + 1 giro (handled by webhook)
   },
-  // Pack Victoria Segura Pro €2.99
+  // Pack Victoria Segura Pro €3.99
   {
     id: 'pack_victoria_segura_pro',
     nameKey: 'shop.packVictoriaSeguraPro',
     name: 'Pack Victoria Segura Pro',
-    price: 2.99,
+    price: 3.99,
     currency: 'EUR',
     powerups: 8, // +8 movimientos
     // + protección derrota + boosters premium (handled by webhook)
   },
-  // MEGA PACK INICIAL - First Day Offer
+  // MEGA PACK INICIAL - First Day Offer €2.99
   {
     id: 'mega_pack_inicial',
     nameKey: 'shop.megaPackInicial',
     name: 'Mega Pack de Bienvenida',
-    price: 0.99,
+    price: 2.99,
     currency: 'EUR',
     gems: 500,
     lives: 10,
@@ -301,7 +300,7 @@ export const PRODUCTS: Product[] = [
     id: 'unlimited_lives_30min',
     nameKey: 'shop.unlimitedLives30',
     name: 'Vidas Infinitas 30min',
-    price: 0.99,
+    price: 0.50,
     currency: 'EUR',
     lives: 'unlimited',
   },
