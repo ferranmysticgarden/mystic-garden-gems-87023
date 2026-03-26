@@ -28,7 +28,7 @@ const PRODUCT_PRICES: Record<string, string> = {
   "finish_level": "price_1TAmnAB6GI8NmIPngsgoL9pf",
   "starter_pack": "price_1TAmnRB6GI8NmIPnQemntW8N",
   "continue_game": "price_1TAmnjB6GI8NmIPnEZouUfqq",
-  "flash_offer": "price_1TAmmsB6GI8NmIPnATdkUxno",
+  "flash_offer": "price_1TFMdBB6GI8NmIPned42y2eF",
   // Micro-transacciones €0.50
   "buy_moves": "price_1TAolzB6GI8NmIPn3ayBTFXP",
   "welcome_pack": "price_1TAmowB6GI8NmIPnYWc5k1NH",

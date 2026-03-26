@@ -39,6 +39,7 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_experiencia": { lives: 2 },
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
   "unlimited_lives_30min": { unlimitedLivesMinutes: 30 },
+  "first_day_offer": { powerups: 5, lives: 3 },
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
@@ -104,6 +105,8 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   extraspin1: 'extra_spin',
   unlimitedlives30min: 'unlimited_lives_30min',
   unlimitedlives30min1: 'unlimited_lives_30min',
+  firstdayoffer: 'first_day_offer',
+  firstdayoffer1: 'first_day_offer',
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
