@@ -384,7 +384,7 @@ export const useGameState = () => {
     } catch (error) {
       console.error('Error reloading from DB:', error);
     } finally {
-      setTimeout(() => { blockSaveRef.current = false; }, 2000);
+      setTimeout(() => { blockSaveRef.current = false; }, 4000);
     }
   }, [user]);
   return {
