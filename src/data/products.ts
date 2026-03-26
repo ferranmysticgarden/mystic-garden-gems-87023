@@ -134,7 +134,7 @@ export const PRODUCTS: Product[] = [
     id: 'chest_gold', 
     nameKey: 'shop.chestGold',
     name: 'Cofre Oro', 
-    price: 2.99, 
+    price: 3.99, 
     currency: 'EUR'
   },
   // First purchase pack
