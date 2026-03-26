@@ -825,10 +825,8 @@ const Index = () => {
           onUseGems={handleUseGemsForLife}
           onClose={() => setShowNoLivesModal(false)}
           onUnlimitedLivesPurchased={() => {
-            if (shouldApplyClientPersistentRewards) {
-              activateUnlimitedLives(0.5);
-              toast.success("¡Vidas Infinitas activadas! 30 minutos ❤️∞");
-            }
+            reloadFromDB?.();
+            toast.success("¡Vidas Infinitas activadas! 30 minutos ❤️∞");
             setShowNoLivesModal(false);
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
@@ -844,12 +842,8 @@ const Index = () => {
           onClose={() => setShowBattlePass(false)}
           hasPremiumAccess={hasActiveProduct("garden_pass")}
           onPurchaseSuccess={() => {
-            if (shouldApplyClientPersistentRewards) {
-              addGems(1000);
-              toast.success("¡Battle Pass Premium activado! +1000💎 +30 días sin ads");
-            } else {
-              toast.success("¡Battle Pass Premium activado!");
-            }
+            reloadFromDB?.();
+            toast.success("¡Battle Pass Premium activado!");
           }}
         />
       )}
@@ -869,14 +863,8 @@ const Index = () => {
         <FirstDayOffer
           levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
-            if (shouldApplyClientPersistentRewards) {
-              addGems(500);
-              addLives(10);
-              addHammer();
-              addShuffle();
-              addUndo();
-            }
-            toast.success("¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads");
+            reloadFromDB?.();
+            toast.success("¡Mega Pack activado!");
           }}
         />
       )}
@@ -886,14 +874,8 @@ const Index = () => {
           levelJustCompleted={lastCompletedLevel}
           onClose={() => setShowStarterPack(false)}
           onPurchaseSuccess={() => {
-            if (shouldApplyClientPersistentRewards) {
-              addGems(500);
-              addLives(10);
-              addHammer();
-              addShuffle();
-              addUndo();
-            }
-            toast.success("¡Starter Pack activado! +500💎 +10❤️ +3🔨");
+            reloadFromDB?.();
+            toast.success("¡Inicio Mágico activado! +50💎");
           }}
         />
       )}
@@ -970,15 +952,8 @@ const Index = () => {
       {showWelcomeOffer && !isNewUser && (
         <WelcomeOffer
           onPurchase={() => {
-            if (shouldApplyClientPersistentRewards) {
-              addLives(3);
-              addHammer();
-              addHammer();
-              addShuffle();
-              addShuffle();
-              addUndo();
-            }
-            toast.success("¡Pack Bienvenida activado! +5 movimientos, +3 boosters");
+            reloadFromDB?.();
+            toast.success("¡Pack Bienvenida activado!");
             setShowWelcomeOffer(false);
           }}
           onDismiss={() => setShowWelcomeOffer(false)}
@@ -1008,11 +983,8 @@ const Index = () => {
             setConsecutiveLosses(0);
           }}
           onPurchaseSuccess={() => {
-            if (shouldApplyClientPersistentRewards) {
-              addLives(10);
-              addGems(150);
-            }
-            toast.success("¡Pack Relámpago activado! +10❤️ +150💎");
+            reloadFromDB?.();
+            toast.success("¡Pack Relámpago activado!");
           }}
         />
       )}
@@ -1022,12 +994,8 @@ const Index = () => {
           baseGems={lastWinGems}
           onClose={() => setShowPostVictoryOffer(false)}
           onPurchaseSuccess={() => {
-            if (shouldApplyClientPersistentRewards) {
-              addLives(2);
-              toast.success("¡Bonus de victoria activado! +2❤️");
-            } else {
-              toast.success("¡Bonus de victoria activado!");
-            }
+            reloadFromDB?.();
+            toast.success("¡Bonus de victoria activado!");
           }}
         />
       )}
