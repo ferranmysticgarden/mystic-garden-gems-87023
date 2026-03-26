@@ -300,6 +300,7 @@ const Index = () => {
   const handleWin = useCallback(
     async (stars: number, reward: { gems?: number }) => {
       completeLevel(currentLevel.id, reward);
+      trackEvent('level_completed', { level: currentLevel.id });
       toast.success(`${t("game.win")}${reward.gems ? ` +${reward.gems} 💎` : ""}`);
 
       // Reset consecutive losses on win
