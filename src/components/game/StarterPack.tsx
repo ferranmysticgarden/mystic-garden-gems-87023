@@ -81,13 +81,13 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const handleBuy = async () => {
     if (loading) return;
     
-    const success = await createPayment('starter_pack');
+    const success = await createPayment('starter_gems');
     if (success) {
       const odId = user?.id || 'guest';
-      console.log('[PURCHASE] success confirmed via StarterPack');
-      dispatchPurchaseCompleted('starter_pack');
+      console.log('[PURCHASE] success confirmed via StarterPack (starter_gems)');
+      dispatchPurchaseCompleted('starter_gems');
       console.log('[PURCHASE] gate unlocked');
-      localStorage.setItem(`starter-pack-${odId}`, 'true');
+      localStorage.setItem(`starter-gems-${odId}`, 'true');
       onPurchaseSuccess?.();
       setShow(false);
       onClose();
