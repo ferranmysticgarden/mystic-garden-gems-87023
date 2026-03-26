@@ -83,11 +83,7 @@ export const usePendingPurchase = () => {
         setCapturedParams({ paymentStatus: null, sessionId: null });
       });
     } else {
-      // No session_id but we have productId - trust the redirect
-      console.warn('[PendingPurchase] No session_id, trusting redirect for:', productId);
-      if (savedState) setPendingState(savedState);
-      setVerifiedProductId(productId);
-      setPaymentSuccess(true);
+      console.warn('[PendingPurchase] Missing session_id on success redirect, refusing unverified grant for:', productId);
       clearAllStorage();
       setCapturedParams({ paymentStatus: null, sessionId: null });
     }
