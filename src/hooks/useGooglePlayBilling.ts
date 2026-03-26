@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import GooglePlayBilling, { ProductDetails, PurchaseResult } from '@/plugins/GooglePlayBilling';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,22 +17,80 @@ type BillingStatus = {
   debugMessage?: string;
 };
 
+type SharedBillingState = {
+  isReady: boolean;
+  products: Record<string, ProductDetails>;
+  loading: boolean;
+  billingStatus: BillingStatus;
+};
+
+const sharedBillingState: SharedBillingState = {
+  isReady: false,
+  products: {},
+  loading: false,
+  billingStatus: { ready: false },
+};
+
+const billingSubscribers = new Set<(state: SharedBillingState) => void>();
+const verificationTasks = new Map<string, Promise<boolean>>();
+const purchaseInitiatedByUser = new Set<string>();
+
+let purchaseInFlightProduct: string | null = null;
+let lastAttemptedProductId: string | null = null;
+let billingSetupStarted = false;
+let billingListenersAttached = false;
+
+const emitSharedBillingState = () => {
+  const snapshot: SharedBillingState = {
+    isReady: sharedBillingState.isReady,
+    products: { ...sharedBillingState.products },
+    loading: sharedBillingState.loading,
+    billingStatus: { ...sharedBillingState.billingStatus },
+  };
+
+  billingSubscribers.forEach((listener) => listener(snapshot));
+};
+
+const updateSharedBillingState = (updater: (state: SharedBillingState) => void) => {
+  updater(sharedBillingState);
+  emitSharedBillingState();
+};
+
 export const useGooglePlayBilling = () => {
-  const [isReady, setIsReady] = useState(false);
-  const [products, setProducts] = useState<Record<string, ProductDetails>>({});
-  const [loading, setLoading] = useState(false);
-  const verificationTasksRef = useRef<Map<string, Promise<boolean>>>(new Map());
-  const purchaseInitiatedByUserRef = useRef<Set<string>>(new Set());
-  const purchaseInFlightRef = useRef<string | null>(null);
-  const lastAttemptedProductRef = useRef<string | null>(null);
-  const billingStatusRef = useRef<BillingStatus>({ ready: false });
+  const [billingState, setBillingState] = useState<SharedBillingState>(() => ({
+    isReady: sharedBillingState.isReady,
+    products: sharedBillingState.products,
+    loading: sharedBillingState.loading,
+    billingStatus: sharedBillingState.billingStatus,
+  }));
 
   const isAndroid = Capacitor.getPlatform() === 'android';
+  const { isReady, products, loading } = billingState;
   const hasLoadedProducts = Object.keys(products).length > 0;
 
+  useEffect(() => {
+    const listener = (state: SharedBillingState) => {
+      setBillingState(state);
+    };
+
+    billingSubscribers.add(listener);
+    listener({
+      isReady: sharedBillingState.isReady,
+      products: sharedBillingState.products,
+      loading: sharedBillingState.loading,
+      billingStatus: sharedBillingState.billingStatus,
+    });
+
+    return () => {
+      billingSubscribers.delete(listener);
+    };
+  }, []);
+
   const applyBillingStatus = useCallback((status: BillingStatus) => {
-    setIsReady(status.ready);
-    billingStatusRef.current = status;
+    updateSharedBillingState((state) => {
+      state.isReady = status.ready;
+      state.billingStatus = status;
+    });
   }, []);
 
   const queryProductsIndividually = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
@@ -121,7 +179,9 @@ export const useGooglePlayBilling = () => {
         });
       }
 
-      setProducts(productDetails);
+      updateSharedBillingState((state) => {
+        state.products = productDetails;
+      });
       trackEvent('billing_status', {
         ready: loadedCount > 0,
         products_loaded: loadedCount,
@@ -134,7 +194,9 @@ export const useGooglePlayBilling = () => {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
-      setProducts({});
+       updateSharedBillingState((state) => {
+         state.products = {};
+       });
       return {};
     }
   }, [queryProductsWithFallback]);
@@ -145,6 +207,9 @@ export const useGooglePlayBilling = () => {
       applyBillingStatus(status);
 
       if (!status.ready) {
+        updateSharedBillingState((state) => {
+          state.products = {};
+        });
         return { ...status, products: {} };
       }
 
@@ -173,7 +238,7 @@ export const useGooglePlayBilling = () => {
       return Promise.resolve(false);
     }
 
-    const existingTask = verificationTasksRef.current.get(purchaseToken);
+    const existingTask = verificationTasks.get(purchaseToken);
     if (existingTask) {
       return existingTask;
     }
@@ -228,7 +293,7 @@ export const useGooglePlayBilling = () => {
         toast.success('¡Compra completada!');
         return true;
       } catch (error) {
-        verificationTasksRef.current.delete(purchaseToken);
+        verificationTasks.delete(purchaseToken);
         console.error('Error processing purchase:', error);
         const errorMessage = error instanceof Error ? error.message : String(error);
         const normalizedError = errorMessage.toLowerCase();
@@ -306,7 +371,7 @@ export const useGooglePlayBilling = () => {
       }
     })();
 
-    verificationTasksRef.current.set(purchaseToken, verificationTask);
+    verificationTasks.set(purchaseToken, verificationTask);
     return verificationTask;
   }, []);
 
@@ -319,7 +384,9 @@ export const useGooglePlayBilling = () => {
         applyBillingStatus(status);
 
         if (!status.ready) {
-          setProducts({});
+          updateSharedBillingState((state) => {
+            state.products = {};
+          });
           trackEvent('billing_status', {
             ready: false,
             products_loaded: 0,
@@ -332,19 +399,29 @@ export const useGooglePlayBilling = () => {
         await loadProducts();
       } catch (error) {
         console.error('Error setting up billing:', error);
-        setProducts({});
+        updateSharedBillingState((state) => {
+          state.products = {};
+        });
         trackEvent('billing_error', { error: String(error), phase: 'setup' });
       }
     };
 
-    setupBilling();
+    if (!billingSetupStarted) {
+      billingSetupStarted = true;
+      void setupBilling();
+    }
 
-    const readyListener = GooglePlayBilling.addListener('billingReady', async (status) => {
+    if (billingListenersAttached) return;
+    billingListenersAttached = true;
+
+    void GooglePlayBilling.addListener('billingReady', async (status) => {
       const typedStatus = status as BillingStatus;
       applyBillingStatus(typedStatus);
 
       if (!typedStatus.ready) {
-        setProducts({});
+        updateSharedBillingState((state) => {
+          state.products = {};
+        });
         trackEvent('billing_status', {
           ready: false,
           products_loaded: 0,
@@ -358,41 +435,35 @@ export const useGooglePlayBilling = () => {
         await loadProducts();
       } catch (error) {
         console.error('Error loading products after billingReady:', error);
-        setProducts({});
+        updateSharedBillingState((state) => {
+          state.products = {};
+        });
         trackEvent('billing_error', { error: String(error), phase: 'billingReady' });
       }
     });
 
-    const purchaseListener = GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
+    void GooglePlayBilling.addListener('purchaseCompleted', async (purchase) => {
       console.log('Purchase completed (listener):', purchase);
-      if (purchase.purchaseToken && purchaseInitiatedByUserRef.current.has(purchase.purchaseToken)) {
+      if (purchase.purchaseToken && purchaseInitiatedByUser.has(purchase.purchaseToken)) {
         console.log('[PURCHASE] Skipping listener — already handled by purchase()');
-        purchaseInitiatedByUserRef.current.delete(purchase.purchaseToken);
+        purchaseInitiatedByUser.delete(purchase.purchaseToken);
         return;
       }
       await verifyAndProcessPurchase(purchase);
     });
 
-    const cancelListener = GooglePlayBilling.addListener('purchaseCancelled', () => {
-      trackEvent('purchase_cancelled', { platform: 'android', productId: lastAttemptedProductRef.current ?? 'unknown' });
+    void GooglePlayBilling.addListener('purchaseCancelled', () => {
+      trackEvent('purchase_cancelled', { platform: 'android', productId: lastAttemptedProductId ?? 'unknown' });
     });
 
-    const errorListener = GooglePlayBilling.addListener('purchaseError', ({ error }) => {
+    void GooglePlayBilling.addListener('purchaseError', ({ error }) => {
       trackEvent('purchase_error', { platform: 'android', error });
     });
 
-    const pendingListener = GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
+    void GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
       trackEvent('purchase_pending', { platform: 'android', product: productId });
       toast.info('Compra pendiente de confirmación de pago');
     });
-
-    return () => {
-      readyListener.then(l => l.remove());
-      purchaseListener.then(l => l.remove());
-      cancelListener.then(l => l.remove());
-      errorListener.then(l => l.remove());
-      pendingListener.then(l => l.remove());
-    };
   }, [isAndroid, loadProducts, verifyAndProcessPurchase, applyBillingStatus]);
 
   const purchase = useCallback(async (productId: string): Promise<boolean> => {
@@ -401,27 +472,27 @@ export const useGooglePlayBilling = () => {
       return false;
     }
 
-    if (purchaseInFlightRef.current) {
+    if (purchaseInFlightProduct) {
       trackEvent('purchase_blocked', {
         platform: 'android',
         product: productId,
         reason: 'purchase_in_progress',
-        active_product: purchaseInFlightRef.current,
+        active_product: purchaseInFlightProduct,
       });
       toast.info('Ya hay una compra en curso. Espera un momento.');
       return false;
     }
 
-    let cachedProducts = products;
+    let cachedProducts = sharedBillingState.products;
 
-    if (!isReady || Object.keys(cachedProducts).length === 0) {
+    if (!sharedBillingState.isReady || Object.keys(cachedProducts).length === 0) {
       trackEvent('billing_recovery_attempt', {
         platform: 'android',
         product: productId,
-        was_ready: isReady,
+        was_ready: sharedBillingState.isReady,
         products_loaded: Object.keys(cachedProducts).length,
-        response_code: billingStatusRef.current.responseCode,
-        debug_message: billingStatusRef.current.debugMessage,
+        response_code: sharedBillingState.billingStatus.responseCode,
+        debug_message: sharedBillingState.billingStatus.debugMessage,
       });
 
       const refreshedBilling = await refreshBillingState();
@@ -442,9 +513,11 @@ export const useGooglePlayBilling = () => {
 
     const candidates = getGooglePlayCandidates(productId);
 
-    purchaseInFlightRef.current = productId;
-    setLoading(true);
-    lastAttemptedProductRef.current = productId;
+    purchaseInFlightProduct = productId;
+    updateSharedBillingState((state) => {
+      state.loading = true;
+    });
+    lastAttemptedProductId = productId;
     trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
 
     let purchaseFlowStarted = false;
@@ -466,7 +539,9 @@ export const useGooglePlayBilling = () => {
           const directProductDetails = await queryFirstAvailableCandidate(candidates);
           if (Object.keys(directProductDetails).length > 0) {
             cachedProducts = { ...cachedProducts, ...directProductDetails };
-            setProducts((prev) => ({ ...prev, ...directProductDetails }));
+            updateSharedBillingState((state) => {
+              state.products = { ...state.products, ...directProductDetails };
+            });
             googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
           }
         } catch (directQueryError) {
@@ -500,7 +575,7 @@ export const useGooglePlayBilling = () => {
         has_token: !!result?.purchaseToken,
       });
       if (result?.purchaseToken) {
-        purchaseInitiatedByUserRef.current.add(result.purchaseToken);
+        purchaseInitiatedByUser.add(result.purchaseToken);
       }
       return await verifyAndProcessPurchase(result);
     } catch (error: any) {
@@ -522,13 +597,15 @@ export const useGooglePlayBilling = () => {
       }
       return false;
     } finally {
-      purchaseInFlightRef.current = null;
+      purchaseInFlightProduct = null;
       if (purchaseFlowStarted) {
         window.dispatchEvent(new Event('purchase_loading_end'));
       }
-      setLoading(false);
+      updateSharedBillingState((state) => {
+        state.loading = false;
+      });
     }
-  }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase, queryFirstAvailableCandidate, refreshBillingState]);
+  }, [isAndroid, loadProducts, verifyAndProcessPurchase, queryFirstAvailableCandidate, refreshBillingState]);
 
   const getProductPrice = useCallback((productId: string): string | null => {
     const resolvedProductId = resolveGooglePlayProductId(productId, products);
