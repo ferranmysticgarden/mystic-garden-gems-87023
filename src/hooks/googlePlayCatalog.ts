@@ -1,13 +1,35 @@
 import { PRODUCTS } from '@/data/products';
 
+// Map internal product IDs to their ACTUAL Google Play Console IDs.
+// The FIRST entry should be the exact ID as it appears in the Console.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
-  starter_gems: ['starter-gems'],
+  // Products with underscore IDs in Console (newer products)
+  starter_gems: ['starter_gems', 'starter-gems'],
+  victory_multiplier: ['victory_multiplier', 'victorymultiplier'],
+  chest_gold: ['chest_gold', 'chestgold'],
+  chest_silver: ['chest_silver', 'chestsilver'],
+  mega_pack_inicial: ['mega_pack_inicial', 'megapackinicial'],
+  starter_pack: ['starter_pack', 'starterpack'],
+  flash_offer: ['flash_offer', 'flashoffer'],
+  finish_level: ['finish_level', 'finishlevel'],
+  continue_game: ['continue_game', 'continuegame'],
+  buy_moves: ['buy_moves', 'buymoves'],
+  pack_revancha: ['pack_revancha', 'packrevancha'],
+  lifesaver_pack: ['lifesaver_pack', 'lifesaverpack'],
+  streak_protection: ['streak_protection', 'streakprotection'],
+  extra_spin: ['extra_spin', 'extraspin'],
+  reward_doubler: ['reward_doubler', 'rewarddoubler'],
+  unlimited_lives_30min: ['unlimitedlives30min'],
+
+  // Products with BOTH underscore AND no-underscore IDs in Console (duplicates)
+  pack_racha_infinita: ['pack_racha_infinita', 'packrachainfinita'],
+  pack_victoria_segura: ['pack_victoria_segura', 'packvictoriasegura'],
+  pack_victoria_segura_pro: ['pack_victoria_segura_pro', 'packvictoriasegurapro'],
+
+  // Products with only no-underscore IDs in Console (older products)
   welcome_pack: ['welcomepack'],
   pack_impulso: ['packimpulso'],
   pack_experiencia: ['packexperiencia'],
-  pack_racha_infinita: ['pack_racha_infinita', 'packrachainfinita'],
-  pack_victoria_segura: ['pack_victoria_segura', 'packvictoriasegura'],
-  pack_victoria_segura_pro: ['packvictoriasegurapro'],
   quick_pack: ['quickpack'],
   gems_100: ['gems100'],
   gems_300: ['gems300'],
@@ -17,21 +39,6 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   garden_pass: ['gardenpass'],
   extra_moves: ['extramoves'],
   first_purchase: ['firstpurchase'],
-  flash_offer: ['flashoffer'],
-  buy_moves: ['buymoves'],
-  finish_level: ['finishlevel'],
-  starter_pack: ['starterpack'],
-  continue_game: ['continuegame'],
-  victory_multiplier: ['victorymultiplier'],
-  reward_doubler: ['rewarddoubler'],
-  chest_silver: ['chestsilver'],
-  chest_gold: ['chestgold'],
-  mega_pack_inicial: ['megapackinicial'],
-  pack_revancha: ['packrevancha'],
-  lifesaver_pack: ['lifesaverpack'],
-  streak_protection: ['streakprotection'],
-  extra_spin: ['extraspin'],
-  unlimited_lives_30min: ['unlimitedlives30min'],
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
@@ -66,8 +73,9 @@ export const getGooglePlayCandidates = (productId: string): string[] => {
 
 const KNOWN_PRODUCT_IDS = PRODUCTS.map((product) => product.id);
 
+// Query ALL known candidates so the initial catalog load finds every product
 export const getGooglePlayQueryProductIds = (): string[] => {
-  return unique(KNOWN_PRODUCT_IDS.map((productId) => getPreferredGooglePlayProductId(productId)));
+  return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getPrimaryGooglePlayCandidates(productId)));
 };
 
 export const resolveGooglePlayProductId = (
