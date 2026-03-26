@@ -851,7 +851,7 @@ const Index = () => {
               toast.success("¡Battle Pass Premium activado!");
             }
           }}
-        />
+          />
       )}
       {/* Daily Streak Calendar Modal */}
       {!autoPopupsBlocked && showStreakCalendar && (
@@ -878,7 +878,7 @@ const Index = () => {
             }
             toast.success("¡Mega Pack activado! +500💎 +10❤️ +3🔨 +24h sin ads");
           }}
-        />
+          />
       )}
       {/* Starter Pack - después de nivel 4 win */}
       {showStarterPack && (
@@ -895,7 +895,7 @@ const Index = () => {
             }
             toast.success("¡Starter Pack activado! +500💎 +10❤️ +3🔨");
           }}
-        />
+          />
       )}
       {/* Lucky Spin - SOLO después de nivel 5 */}
       {!autoPopupsBlocked && gameState.completedLevels.length >= 5 && <LuckySpin />}
