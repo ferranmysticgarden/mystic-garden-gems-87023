@@ -19,11 +19,11 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
 
-  const price = getPrice('starter_pack', '€0.99');
+  const price = getPrice('starter_gems', '€0.50');
 
   useEffect(() => {
-    // Trigger SOLO después de nivel 10+ (no molestar en niveles tempranos)
-    if (levelJustCompleted < 10) return;
+    // Trigger después de nivel 2+ (primera oferta del embudo)
+    if (levelJustCompleted < 2) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
