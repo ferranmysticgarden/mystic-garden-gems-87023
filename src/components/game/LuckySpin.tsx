@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -33,25 +31,17 @@ export const LuckySpin = () => {
 
   const odId = user?.id || 'guest';
 
-  // Listen for extra_spin purchase completion event (works for both Android and Web)
+  // Listen for verified extra_spin purchases (works for both Android and Web)
   useEffect(() => {
-    const handler = () => {
-      try {
-        const saved = localStorage.getItem('pending_purchase_state');
-        if (saved) {
-          const state = JSON.parse(saved);
-          if (state.productId === 'extra_spin') {
-            console.log('[LUCKY_SPIN] Extra spin purchase completed');
-            setExtraSpinAvailable(true);
-            setCanSpin(true);
-            setShow(true);
-            setReward(null);
-            localStorage.removeItem('pending_purchase_state');
-          }
-        }
-      } catch (e) {
-        console.error('[LUCKY_SPIN] Error handling extra_spin:', e);
-      }
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ productId?: string }>).detail;
+      if (detail?.productId !== 'extra_spin') return;
+
+      console.log('[LUCKY_SPIN] Extra spin purchase completed');
+      setExtraSpinAvailable(true);
+      setCanSpin(true);
+      setShow(true);
+      setReward(null);
     };
     
     window.addEventListener('first_purchase_completed', handler);
@@ -189,26 +179,11 @@ export const LuckySpin = () => {
 
     setTimeout(async () => {
       const wonReward = REWARDS[randomIndex];
-      
-      // Only save to DB if authenticated
-      if (user?.id) {
-        const { data: gameState } = await supabase
-          .from('game_progress')
-          .select('gems')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (gameState) {
-          await supabase
-            .from('game_progress')
-            .update({
-              gems: (gameState.gems || 0) + wonReward.gems
-            })
-            .eq('user_id', user.id);
-        }
-      }
 
       localStorage.setItem(`last-spin-${odId}`, new Date().toISOString());
+      window.dispatchEvent(new CustomEvent('lucky_spin_reward', {
+        detail: { gems: wonReward.gems },
+      }));
       
       setReward(wonReward.gems);
       setCanSpin(false);
@@ -350,17 +325,10 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
   const price = getPrice('extra_spin', '€0.50');
 
   const handleBuy = async () => {
-    // Save pending state ONLY for web Stripe redirect
-    localStorage.setItem('pending_purchase_state', JSON.stringify({
-      productId: 'extra_spin',
-      timestamp: Date.now(),
-    }));
-    
     const success = await createPayment('extra_spin');
     if (success) {
       // Android path: success = true means Google Play verified
       console.log('[PURCHASE] success confirmed via ExtraSpin');
-      localStorage.removeItem('pending_purchase_state');
       onBuy();
     }
     // Web path: createPayment returns false (redirect), 

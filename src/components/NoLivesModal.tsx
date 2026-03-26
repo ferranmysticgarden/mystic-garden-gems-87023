@@ -17,7 +17,7 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
 
   const unlimitedPrice = getPrice('unlimited_lives_30min', '€0.99');
   const starterGemsPrice = getPrice('starter_gems', '€0.50');
-  const canAffordGems = gems >= 10;
+  const canAffordGems = gems >= 5;
 
   const handleUseGemsForLife = () => {
     trackEvent('gems_for_life', { gems_balance: gems, source: 'no_lives_modal' });
