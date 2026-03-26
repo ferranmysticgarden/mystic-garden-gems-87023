@@ -1009,6 +1009,7 @@ const Index = () => {
         onClose={() => setPaymentModal({ show: false, productName: "", rewardText: "" })}
       />
     </div>
+    </>
   );
 };
 export default Index;
