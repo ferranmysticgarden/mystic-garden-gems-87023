@@ -85,6 +85,7 @@ export const usePayment = () => {
       return false;
     } finally {
       setLoading(false);
+      window.dispatchEvent(new Event('purchase_loading_end'));
     }
   };
 
