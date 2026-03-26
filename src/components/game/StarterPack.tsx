@@ -19,20 +19,20 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
 
-  const price = getPrice('starter_pack', '€0.99');
+  const price = getPrice('starter_gems', '€0.50');
 
   useEffect(() => {
-    // Trigger SOLO después de nivel 10+ (no molestar en niveles tempranos)
-    if (levelJustCompleted < 10) return;
+    // Trigger después de nivel 2+ (primera oferta del embudo)
+    if (levelJustCompleted < 2) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
 
     // Reaparece cada 3 sesiones en vez de mostrarse solo 1 vez
-    const seenCount = parseInt(localStorage.getItem(`starter-pack-count-${odId}`) || '0', 10);
-    const hasBought = localStorage.getItem(`starter-pack-${odId}`) === 'true';
+    const seenCount = parseInt(localStorage.getItem(`starter-gems-count-${odId}`) || '0', 10);
+    const hasBought = localStorage.getItem(`starter-gems-${odId}`) === 'true';
     if (!hasBought && seenCount % 3 === 0) {
-      localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
+      localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
       // Delay para que aparezca después de la celebración
       const timer = setTimeout(() => {
         setShow(true);
@@ -40,7 +40,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
       }, 2500);
       return () => clearTimeout(timer);
     } else if (!hasBought) {
-      localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
+      localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
     }
   }, [levelJustCompleted, user?.id]);
 
@@ -81,13 +81,13 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const handleBuy = async () => {
     if (loading) return;
     
-    const success = await createPayment('starter_pack');
+    const success = await createPayment('starter_gems');
     if (success) {
       const odId = user?.id || 'guest';
-      console.log('[PURCHASE] success confirmed via StarterPack');
-      dispatchPurchaseCompleted('starter_pack');
+      console.log('[PURCHASE] success confirmed via StarterPack (starter_gems)');
+      dispatchPurchaseCompleted('starter_gems');
       console.log('[PURCHASE] gate unlocked');
-      localStorage.setItem(`starter-pack-${odId}`, 'true');
+      localStorage.setItem(`starter-gems-${odId}`, 'true');
       onPurchaseSuccess?.();
       setShow(false);
       onClose();
@@ -96,7 +96,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
   const handleDismiss = () => {
     const odId = user?.id || 'guest';
-    localStorage.setItem(`starter-pack-${odId}`, 'true');
+    localStorage.setItem(`starter-gems-${odId}`, 'true');
     setShow(false);
     onClose();
   };
@@ -192,23 +192,15 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
             <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 mb-4 border-2 border-yellow-400/50">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Gift className="w-7 h-7 text-yellow-400 animate-bounce" />
-                <h3 className="text-xl font-bold text-white">
-                  STARTER PACK
+              <h3 className="text-xl font-bold text-white">
+                  INICIO MÁGICO
                 </h3>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 text-white mb-4">
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">💎</span>
-                  <span className="font-bold text-yellow-300 text-sm">500 Gemas</span>
-                </div>
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">❤️</span>
-                  <span className="font-bold text-red-300 text-sm">10 Vidas</span>
-                </div>
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">🔨</span>
-                  <span className="font-bold text-blue-300 text-sm">3 Power-ups</span>
+              <div className="flex justify-center text-white mb-4">
+                <div className="bg-black/30 rounded-lg p-3 flex items-center gap-3">
+                  <span className="text-3xl">💎</span>
+                  <span className="font-bold text-yellow-300 text-lg">+50 Gemas</span>
                 </div>
               </div>
               
@@ -216,7 +208,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               <div className="flex items-center justify-center gap-3 mb-2">
                 <div className="text-center">
                   <p className="text-gray-400 text-xs">Valor real</p>
-                  <span className="text-gray-400 line-through text-xl">€9.99</span>
+                  <span className="text-gray-400 line-through text-xl">€2.99</span>
                 </div>
                 <div className="text-center">
                   <p className="text-yellow-300 text-xs font-bold">HOY</p>

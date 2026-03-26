@@ -300,6 +300,7 @@ const Index = () => {
   const handleWin = useCallback(
     async (stars: number, reward: { gems?: number }) => {
       completeLevel(currentLevel.id, reward);
+      trackEvent('level_completed', { level: currentLevel.id });
       toast.success(`${t("game.win")}${reward.gems ? ` +${reward.gems} 💎` : ""}`);
 
       // Reset consecutive losses on win
@@ -322,10 +323,10 @@ const Index = () => {
       if (completedCount === 1) {
         setShowFirstWin(true);
       }
-      // Show Starter Pack ONLY after level 4 win (primera oferta del embudo)
-      if (currentLevel.id === 4) {
-        emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_pack", level: 4 });
-        trackEvent("offer_shown", { product: "starter_pack", level: 4 });
+      // Show starter_gems offer after level 2 win (primera oferta del embudo)
+      if (currentLevel.id === 2) {
+        emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 2 });
+        trackEvent("offer_shown", { product: "starter_gems", level: 2 });
         setTimeout(() => setShowStarterPack(true), 2000);
       }
 
@@ -609,7 +610,10 @@ const Index = () => {
           gems={gameState.gems}
           hasUnlimitedLives={hasUnlimitedLives()}
           timeUntilNextLife={getTimeUntilNextLife()}
-          onShopClick={() => setScreen("shop")}
+          onShopClick={() => {
+            trackEvent('shop_opened', { source: 'header_gems' });
+            setScreen("shop");
+          }}
         />
         {/* Streak Reminder Banner - SOLO después de nivel 2 */}
         {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
@@ -661,7 +665,10 @@ const Index = () => {
             {t("game.play")}
           </Button>
           <Button
-            onClick={() => setScreen("shop")}
+            onClick={() => {
+              trackEvent('shop_opened', { source: 'main_button' });
+              setScreen("shop");
+            }}
             variant="outline"
             className="w-full mb-2 hover:scale-105 active:scale-95 transition-transform duration-100"
           >
@@ -695,7 +702,10 @@ const Index = () => {
                 </Button>
 
                 <Button
-                  onClick={() => setScreen("shop")}
+                  onClick={() => {
+                    trackEvent('shop_opened', { source: 'secondary_button' });
+                    setScreen("shop");
+                  }}
                   variant="outline"
                   className="hover:scale-105 active:scale-95 transition-transform duration-100"
                 >
