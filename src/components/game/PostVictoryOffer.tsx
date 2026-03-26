@@ -20,7 +20,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
     }
   };
 
-  const price = getPrice('victory_multiplier', '€0.99');
+  const price = getPrice('victory_multiplier', '€0.50');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
