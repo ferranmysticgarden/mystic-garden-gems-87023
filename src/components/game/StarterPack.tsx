@@ -96,7 +96,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
   const handleDismiss = () => {
     const odId = user?.id || 'guest';
-    localStorage.setItem(`starter-pack-${odId}`, 'true');
+    localStorage.setItem(`starter-gems-${odId}`, 'true');
     setShow(false);
     onClose();
   };
