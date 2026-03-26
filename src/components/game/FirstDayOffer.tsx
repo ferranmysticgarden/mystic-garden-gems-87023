@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface FirstDayOfferProps {
   levelJustCompleted?: number;
@@ -83,8 +82,6 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
     const success = await createPayment('mega_pack_inicial');
     if (success) {
       console.log('[PURCHASE] success confirmed via FirstDayOffer');
-      dispatchPurchaseCompleted('mega_pack_inicial');
-      console.log('[PURCHASE] gate unlocked');
       localStorage.setItem(`first-day-offer-${odId}`, 'true');
       onPurchaseSuccess?.();
       setShow(false);

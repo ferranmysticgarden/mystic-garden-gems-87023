@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Zap, Sparkles } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface BuyMovesOfferProps {
   onBuy: () => void;
@@ -31,8 +30,6 @@ export const BuyMovesOffer = ({ onBuy, onDismiss, movesShort = 3 }: BuyMovesOffe
     const success = await createPayment('buy_moves');
     if (success) {
       console.log('[PURCHASE] success confirmed via BuyMovesOffer');
-      dispatchPurchaseCompleted('buy_moves');
-      console.log('[PURCHASE] gate unlocked');
       onBuy();
     }
   };

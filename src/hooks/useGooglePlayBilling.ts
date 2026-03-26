@@ -23,6 +23,7 @@ export const useGooglePlayBilling = () => {
   const [loading, setLoading] = useState(false);
   const verificationTasksRef = useRef<Map<string, Promise<boolean>>>(new Map());
   const purchaseInitiatedByUserRef = useRef<Set<string>>(new Set());
+  const purchaseInFlightRef = useRef<string | null>(null);
   const lastAttemptedProductRef = useRef<string | null>(null);
   const billingStatusRef = useRef<BillingStatus>({ ready: false });
 
@@ -400,6 +401,17 @@ export const useGooglePlayBilling = () => {
       return false;
     }
 
+    if (purchaseInFlightRef.current) {
+      trackEvent('purchase_blocked', {
+        platform: 'android',
+        product: productId,
+        reason: 'purchase_in_progress',
+        active_product: purchaseInFlightRef.current,
+      });
+      toast.info('Ya hay una compra en curso. Espera un momento.');
+      return false;
+    }
+
     let cachedProducts = products;
 
     if (!isReady || Object.keys(cachedProducts).length === 0) {
@@ -430,6 +442,7 @@ export const useGooglePlayBilling = () => {
 
     const candidates = getGooglePlayCandidates(productId);
 
+    purchaseInFlightRef.current = productId;
     setLoading(true);
     lastAttemptedProductRef.current = productId;
     trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
@@ -509,6 +522,7 @@ export const useGooglePlayBilling = () => {
       }
       return false;
     } finally {
+      purchaseInFlightRef.current = null;
       if (purchaseFlowStarted) {
         window.dispatchEvent(new Event('purchase_loading_end'));
       }
