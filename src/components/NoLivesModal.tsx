@@ -1,4 +1,4 @@
-import { Gem, Heart, Infinity } from 'lucide-react';
+import { Gem, Heart, Infinity, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
@@ -10,12 +10,19 @@ interface NoLivesModalProps {
   onClose: () => void;
   onUnlimitedLivesPurchased?: () => void;
   onQuickLifePurchased?: (rewards: { lives: number; gems: number }) => void;
+  onShowStarterOffer?: () => void;
 }
 
-export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchased, onQuickLifePurchased }: NoLivesModalProps) => {
+export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchased, onQuickLifePurchased, onShowStarterOffer }: NoLivesModalProps) => {
   const { createPayment, getPrice, loading } = usePayment();
 
   const unlimitedPrice = getPrice('unlimited_lives_30min', '€0.99');
+  const canAffordGems = gems >= 10;
+
+  const handleUseGemsForLife = () => {
+    trackEvent('gems_for_life', { gems_balance: gems, source: 'no_lives_modal' });
+    onUseGems();
+  };
 
   const handleUnlimitedLivesPurchase = async () => {
     trackEvent('purchase_attempt', { product: 'unlimited_lives_30min', source: 'no_lives_modal' });
@@ -24,6 +31,12 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
       dispatchPurchaseCompleted('unlimited_lives_30min');
       onUnlimitedLivesPurchased?.();
     }
+  };
+
+  const handleNeedGems = () => {
+    trackEvent('need_gems_from_no_lives', { gems_balance: gems });
+    onClose();
+    onShowStarterOffer?.();
   };
 
   return (
@@ -36,35 +49,47 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
         </div>
 
         <div className="space-y-3">
-          {/* MAIN CTA: Unlimited Lives 30min */}
+          {/* PRIMARY CTA: Use gems for 1 life - cheap and easy */}
+          <Button
+            onClick={handleUseGemsForLife}
+            disabled={gems < 5}
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-lg py-6"
+            id="use-gems-for-life"
+          >
+            <Heart className="w-5 h-5 mr-2 text-red-400" />
+            <Gem className="w-5 h-5 mr-2" />
+            {gems >= 5 ? `+1 Vida por 5 Gemas (tienes ${gems}💎)` : 'No tienes gemas suficientes'}
+          </Button>
+
+          {/* If user can't afford gems, show a way to get them cheap */}
+          {!canAffordGems && (
+            <Button
+              onClick={handleNeedGems}
+              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-base py-5 animate-pulse"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              💎 ¡Consigue 50 Gemas por solo €0.49! 💎
+            </Button>
+          )}
+
+          {/* Secondary: Unlimited Lives (higher commitment) */}
           <Button
             onClick={handleUnlimitedLivesPurchase}
             disabled={loading}
-            className="w-full gradient-gold shadow-gold text-lg py-6"
+            className="w-full gradient-gold shadow-gold text-base py-5"
             id="buy-unlimited-lives"
           >
-            <Infinity className="w-6 h-6 mr-2" />
-            <Heart className="w-5 h-5 mr-2 text-red-500" />
-            {loading ? 'Procesando...' : `VIDAS INFINITAS 30min - ${unlimitedPrice}`}
-          </Button>
-
-          <Button
-            onClick={onUseGems}
-            disabled={gems < 5}
-            variant="outline"
-            className="w-full text-lg py-6"
-            id="use-gems-for-life"
-          >
-            <Gem className="w-6 h-6 mr-2" />
-            Usar 5 Gemas {gems < 5 && '(No tienes suficientes)'}
+            <Infinity className="w-5 h-5 mr-2" />
+            <Heart className="w-4 h-4 mr-2 text-red-500" />
+            {loading ? 'Procesando...' : `Vidas Infinitas 30min - ${unlimitedPrice}`}
           </Button>
 
           <Button
             onClick={onClose}
             variant="ghost"
-            className="w-full"
+            className="w-full text-muted-foreground text-sm"
           >
-            Cancelar
+            Esperar a que se recarguen
           </Button>
         </div>
       </div>

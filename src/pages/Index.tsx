@@ -329,6 +329,16 @@ const Index = () => {
         trackEvent("offer_shown", { product: "starter_gems", level: 2 });
         setTimeout(() => setShowStarterPack(true), 2000);
       }
+      // Free gems gift at level 3 — build spending habit before asking to buy
+      if (currentLevel.id === 3) {
+        const giftKey = `level3_gift_${user?.id || 'guest'}`;
+        if (!localStorage.getItem(giftKey)) {
+          localStorage.setItem(giftKey, 'true');
+          addGems(20);
+          toast.success('🎁 ¡Regalo! +20 gemas gratis por completar el nivel 3');
+          trackEvent('free_gems_gifted', { level: 3, gems: 20 });
+        }
+      }
 
       // Show post-victory offer ONLY after level 5+ win (no distracciones tempranas)
       if (currentLevel.id >= 6 && reward.gems && reward.gems > 0) {
@@ -791,6 +801,10 @@ const Index = () => {
             setShowNoLivesModal(false);
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
+          onShowStarterOffer={() => {
+            trackEvent('offer_shown', { product: 'starter_gems', source: 'no_lives_no_gems' });
+            setTimeout(() => setShowStarterPack(true), 300);
+          }}
         />
       )}
       {/* Battle Pass Modal */}
