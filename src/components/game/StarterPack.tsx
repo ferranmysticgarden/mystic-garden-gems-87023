@@ -32,7 +32,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     const seenCount = parseInt(localStorage.getItem(`starter-gems-count-${odId}`) || '0', 10);
     const hasBought = localStorage.getItem(`starter-gems-${odId}`) === 'true';
     if (!hasBought && seenCount % 3 === 0) {
-      localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
+      localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
       // Delay para que aparezca después de la celebración
       const timer = setTimeout(() => {
         setShow(true);
@@ -40,7 +40,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
       }, 2500);
       return () => clearTimeout(timer);
     } else if (!hasBought) {
-      localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
+      localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
     }
   }, [levelJustCompleted, user?.id]);
 
