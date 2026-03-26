@@ -50,6 +50,7 @@ import { VisualGarden } from "@/components/game/VisualGarden";
 import { WelcomeOffer } from "@/components/game/WelcomeOffer";
 import { PaymentSuccessModal } from "@/components/game/PaymentSuccessModal";
 import { LoginPrompt } from "@/components/game/LoginPrompt";
+import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
 import { signInWithGoogleNative, signInWithGoogleWeb } from "@/lib/googleAuth";
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from "@/lib/analytics";
 import { trackEvent } from "@/lib/trackEvent";
