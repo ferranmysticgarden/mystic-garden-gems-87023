@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useGooglePlayBilling } from './useGooglePlayBilling';
@@ -25,12 +25,25 @@ const getProductFallbackPrice = (productId: string, fallbackPrice?: string): str
  */
 export const usePayment = () => {
   const [loading, setLoading] = useState(false);
+  const paymentInFlightRef = useRef<string | null>(null);
   const googlePlayBilling = useGooglePlayBilling();
 
   const isAndroid = Capacitor.getPlatform() === 'android';
   const isWeb = Capacitor.getPlatform() === 'web';
 
   const createPayment = async (productId: string): Promise<boolean> => {
+    if (paymentInFlightRef.current) {
+      trackEvent('payment_bridge_blocked', {
+        product: productId,
+        platform: isAndroid ? 'android' : 'web',
+        active_product: paymentInFlightRef.current,
+        reason: 'payment_in_progress',
+      });
+      toast.info('Ya hay un pago en curso. Espera un momento.');
+      return false;
+    }
+
+    paymentInFlightRef.current = productId;
     setLoading(true);
 
     try {
@@ -94,6 +107,7 @@ export const usePayment = () => {
       toast.error('Error al crear el pago: ' + error.message);
       return false;
     } finally {
+      paymentInFlightRef.current = null;
       setLoading(false);
     }
   };
