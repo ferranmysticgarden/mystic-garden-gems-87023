@@ -29,8 +29,8 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     const odId = user?.id || 'guest';
 
     // Reaparece cada 3 sesiones en vez de mostrarse solo 1 vez
-    const seenCount = parseInt(localStorage.getItem(`starter-pack-count-${odId}`) || '0', 10);
-    const hasBought = localStorage.getItem(`starter-pack-${odId}`) === 'true';
+    const seenCount = parseInt(localStorage.getItem(`starter-gems-count-${odId}`) || '0', 10);
+    const hasBought = localStorage.getItem(`starter-gems-${odId}`) === 'true';
     if (!hasBought && seenCount % 3 === 0) {
       localStorage.setItem(`starter-pack-count-${odId}`, String(seenCount + 1));
       // Delay para que aparezca después de la celebración
