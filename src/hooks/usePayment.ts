@@ -22,9 +22,6 @@ export const usePayment = () => {
 
   const createPayment = async (productId: string): Promise<boolean> => {
     setLoading(true);
-    if (isAndroid) {
-      window.dispatchEvent(new Event('purchase_loading_start'));
-    }
 
     try {
       // Android → Google Play Billing
@@ -85,7 +82,6 @@ export const usePayment = () => {
       return false;
     } finally {
       setLoading(false);
-      window.dispatchEvent(new Event('purchase_loading_end'));
     }
   };
 
