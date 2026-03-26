@@ -52,6 +52,9 @@ const PRODUCT_REWARDS: Record<
   extra_moves: { powerups: 5 },
 };
 
+const getGrantWindowStartIso = (sessionCreatedSeconds: number) =>
+  new Date(Math.max(0, sessionCreatedSeconds - 300) * 1000).toISOString();
+
 async function resolveStripeEvent(
   stripe: Stripe,
   body: string,
@@ -139,6 +142,33 @@ serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
+
+    const sessionCreatedSeconds = session.created ?? Math.floor(Date.now() / 1000);
+    const { data: existingGrant, error: existingGrantError } = await supabaseAdmin
+      .from("user_purchases")
+      .select("id, created_at")
+      .eq("user_id", userId)
+      .eq("product_id", `stripe_${productId}`)
+      .gte("created_at", getGrantWindowStartIso(sessionCreatedSeconds))
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (existingGrantError) {
+      logStep("ERROR checking existing Stripe grant", { error: existingGrantError.message });
+      throw existingGrantError;
+    }
+
+    if (existingGrant?.length) {
+      logStep("⚠️ Stripe grant already exists for session window, skipping duplicate grant", {
+        sessionId: session.id,
+        productId,
+        userId,
+      });
+      return new Response(JSON.stringify({ received: true, duplicate: true, source: "existing_purchase" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     const eventKey = event.id;
     const sessionKey = session.id ?? null;
