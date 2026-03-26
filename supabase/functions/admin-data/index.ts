@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Dashboard reset point — large dashboard metrics count only data AFTER this timestamp.
-const DASHBOARD_EPOCH = "2026-03-25T10:50:30.366Z";
+const DASHBOARD_EPOCH = "2026-03-26T16:30:00.000Z";
 
 const PRODUCT_PRICES: Record<string, number> = {
   starter_gems: 0.5,
