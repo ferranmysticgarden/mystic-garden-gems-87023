@@ -197,18 +197,10 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
                 </h3>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 text-white mb-4">
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">💎</span>
-                  <span className="font-bold text-yellow-300 text-sm">500 Gemas</span>
-                </div>
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">❤️</span>
-                  <span className="font-bold text-red-300 text-sm">10 Vidas</span>
-                </div>
-                <div className="bg-black/30 rounded-lg p-2 flex items-center gap-2">
-                  <span className="text-xl">🔨</span>
-                  <span className="font-bold text-blue-300 text-sm">3 Power-ups</span>
+              <div className="flex justify-center text-white mb-4">
+                <div className="bg-black/30 rounded-lg p-3 flex items-center gap-3">
+                  <span className="text-3xl">💎</span>
+                  <span className="font-bold text-yellow-300 text-lg">+50 Gemas</span>
                 </div>
               </div>
               
