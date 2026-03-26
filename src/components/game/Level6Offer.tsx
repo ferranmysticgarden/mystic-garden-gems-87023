@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { X, Clock } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface Level6OfferProps {
   onBuy: () => void;
@@ -44,8 +43,6 @@ export const Level6Offer = ({ onBuy, onDismiss, progressPercent = 85 }: Level6Of
     const success = await createPayment('buy_moves');
     if (success) {
       console.log('[PURCHASE] success confirmed via Level6Offer');
-      dispatchPurchaseCompleted('buy_moves');
-      console.log('[PURCHASE] gate unlocked');
       localStorage.setItem('level6_offer_dismissed', 'true');
       localStorage.setItem('first_purchase_completed', 'true');
       onBuy();

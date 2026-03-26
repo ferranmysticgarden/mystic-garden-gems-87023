@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Sparkles, Zap } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import confetti from 'canvas-confetti';
 
 interface WelcomeOfferProps {
@@ -46,8 +45,6 @@ export const WelcomeOffer = ({ onPurchase, onDismiss }: WelcomeOfferProps) => {
     const success = await createPayment('welcome_pack');
     if (success) {
       console.log('[PURCHASE] success confirmed via WelcomeOffer');
-      dispatchPurchaseCompleted('welcome_pack');
-      console.log('[PURCHASE] gate unlocked');
       localStorage.setItem('welcome_offer_claimed', 'true');
       localStorage.setItem('first_purchase_completed', 'true');
       
