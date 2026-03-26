@@ -11,6 +11,12 @@ import {
   resolveGooglePlayProductId,
 } from './googlePlayCatalog';
 
+type BillingStatus = {
+  ready: boolean;
+  responseCode?: number;
+  debugMessage?: string;
+};
+
 export const useGooglePlayBilling = () => {
   const [isReady, setIsReady] = useState(false);
   const [products, setProducts] = useState<Record<string, ProductDetails>>({});
@@ -18,9 +24,15 @@ export const useGooglePlayBilling = () => {
   const verificationTasksRef = useRef<Map<string, Promise<boolean>>>(new Map());
   const purchaseInitiatedByUserRef = useRef<Set<string>>(new Set());
   const lastAttemptedProductRef = useRef<string | null>(null);
+  const billingStatusRef = useRef<BillingStatus>({ ready: false });
 
   const isAndroid = Capacitor.getPlatform() === 'android';
   const hasLoadedProducts = Object.keys(products).length > 0;
+
+  const applyBillingStatus = useCallback((status: BillingStatus) => {
+    setIsReady(status.ready);
+    billingStatusRef.current = status;
+  }, []);
 
   const queryProductsIndividually = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
     const merged: Record<string, ProductDetails> = {};
@@ -125,6 +137,28 @@ export const useGooglePlayBilling = () => {
       return {};
     }
   }, [queryProductsWithFallback]);
+
+  const refreshBillingState = useCallback(async (): Promise<BillingStatus & { products: Record<string, ProductDetails> }> => {
+    try {
+      const status = await GooglePlayBilling.isReady() as BillingStatus;
+      applyBillingStatus(status);
+
+      if (!status.ready) {
+        return { ...status, products: {} };
+      }
+
+      const refreshedProducts = await loadProducts();
+      return { ...status, products: refreshedProducts };
+    } catch (error) {
+      const fallbackStatus: BillingStatus = {
+        ready: false,
+        debugMessage: error instanceof Error ? error.message : String(error),
+      };
+
+      applyBillingStatus(fallbackStatus);
+      return { ...fallbackStatus, products: {} };
+    }
+  }, [applyBillingStatus, loadProducts]);
 
   const verifyAndProcessPurchase = useCallback((purchase: PurchaseResult): Promise<boolean> => {
     const purchaseToken = purchase.purchaseToken;
@@ -280,12 +314,17 @@ export const useGooglePlayBilling = () => {
 
     const setupBilling = async () => {
       try {
-        const { ready } = await GooglePlayBilling.isReady();
-        setIsReady(ready);
+        const status = await GooglePlayBilling.isReady() as BillingStatus;
+        applyBillingStatus(status);
 
-        if (!ready) {
+        if (!status.ready) {
           setProducts({});
-          trackEvent('billing_status', { ready: false, products_loaded: 0 });
+          trackEvent('billing_status', {
+            ready: false,
+            products_loaded: 0,
+            response_code: status.responseCode,
+            debug_message: status.debugMessage,
+          });
           return;
         }
 
@@ -299,12 +338,18 @@ export const useGooglePlayBilling = () => {
 
     setupBilling();
 
-    const readyListener = GooglePlayBilling.addListener('billingReady', async ({ ready }) => {
-      setIsReady(ready);
+    const readyListener = GooglePlayBilling.addListener('billingReady', async (status) => {
+      const typedStatus = status as BillingStatus;
+      applyBillingStatus(typedStatus);
 
-      if (!ready) {
+      if (!typedStatus.ready) {
         setProducts({});
-        trackEvent('billing_status', { ready: false, products_loaded: 0 });
+        trackEvent('billing_status', {
+          ready: false,
+          products_loaded: 0,
+          response_code: typedStatus.responseCode,
+          debug_message: typedStatus.debugMessage,
+        });
         return;
       }
 
@@ -347,7 +392,7 @@ export const useGooglePlayBilling = () => {
       errorListener.then(l => l.remove());
       pendingListener.then(l => l.remove());
     };
-  }, [isAndroid, loadProducts, verifyAndProcessPurchase]);
+  }, [isAndroid, loadProducts, verifyAndProcessPurchase, applyBillingStatus]);
 
   const purchase = useCallback(async (productId: string): Promise<boolean> => {
     if (!isAndroid) {
@@ -355,10 +400,32 @@ export const useGooglePlayBilling = () => {
       return false;
     }
 
-    if (!isReady) {
-      toast.error('Sistema de pagos no disponible');
-      trackEvent('purchase_blocked', { platform: 'android', product: productId, reason: 'billing_not_ready' });
-      return false;
+    let cachedProducts = products;
+
+    if (!isReady || Object.keys(cachedProducts).length === 0) {
+      trackEvent('billing_recovery_attempt', {
+        platform: 'android',
+        product: productId,
+        was_ready: isReady,
+        products_loaded: Object.keys(cachedProducts).length,
+        response_code: billingStatusRef.current.responseCode,
+        debug_message: billingStatusRef.current.debugMessage,
+      });
+
+      const refreshedBilling = await refreshBillingState();
+      cachedProducts = refreshedBilling.products;
+
+      if (!refreshedBilling.ready) {
+        toast.error('Google Play no está disponible ahora mismo. Abre Play Store y vuelve a intentarlo en unos segundos.');
+        trackEvent('purchase_blocked', {
+          platform: 'android',
+          product: productId,
+          reason: 'billing_not_ready',
+          response_code: refreshedBilling.responseCode,
+          debug_message: refreshedBilling.debugMessage,
+        });
+        return false;
+      }
     }
 
     const candidates = getGooglePlayCandidates(productId);
@@ -367,8 +434,9 @@ export const useGooglePlayBilling = () => {
     lastAttemptedProductRef.current = productId;
     trackEvent('gp_purchase_flow_start', { product: productId, google_candidates: candidates.join(',') });
 
+    let purchaseFlowStarted = false;
+
     try {
-      let cachedProducts = products;
       let googlePlayProductId = resolveGooglePlayProductId(productId, cachedProducts);
 
       if (!googlePlayProductId) {
@@ -398,7 +466,7 @@ export const useGooglePlayBilling = () => {
       }
 
       if (!googlePlayProductId) {
-        toast.error('Producto no encontrado en Google Play');
+        toast.error('No pudimos cargar el producto desde Google Play. Vuelve a intentarlo en unos segundos.');
         trackEvent('purchase_blocked', {
           platform: 'android',
           product: productId,
@@ -409,6 +477,8 @@ export const useGooglePlayBilling = () => {
         return false;
       }
 
+      purchaseFlowStarted = true;
+      window.dispatchEvent(new Event('purchase_loading_start'));
       trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
       trackEvent('gp_native_call_success', {
@@ -441,9 +511,12 @@ export const useGooglePlayBilling = () => {
       }
       return false;
     } finally {
+      if (purchaseFlowStarted) {
+        window.dispatchEvent(new Event('purchase_loading_end'));
+      }
       setLoading(false);
     }
-  }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase, queryFirstAvailableCandidate]);
+  }, [isAndroid, isReady, products, loadProducts, verifyAndProcessPurchase, queryFirstAvailableCandidate, refreshBillingState]);
 
   const getProductPrice = useCallback((productId: string): string | null => {
     const resolvedProductId = resolveGooglePlayProductId(productId, products);
