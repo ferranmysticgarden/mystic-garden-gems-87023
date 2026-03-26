@@ -145,8 +145,8 @@ const Index = () => {
   const [showLoginPrompt, setShowLoginPrompt] = useState<"purchase" | "save_progress" | "general" | null>(null);
   // Purchase gate - bloquea shop hasta primera compra
   const { hasPurchasedOnce, isShopLocked } = usePurchaseGate();
-  // Evitar doble grant en Android autenticado: rewards persistentes solo backend
-  const shouldApplyClientPersistentRewards = !(user && Capacitor.getPlatform() === "android");
+  // En Android los grants vienen del flujo nativo verificado; los callbacks UI no deben volver a otorgarlos.
+  const shouldApplyClientPersistentRewards = Capacitor.getPlatform() !== "android";
   // Android back button: navegación inmediata y salida solo en menú
   useBackButton(
     useCallback(() => {
@@ -401,6 +401,42 @@ const Index = () => {
       setShowNoLivesModal(true);
     }
   };
+  const applyLocalProductEffects = useCallback(
+    (productId: string) => {
+      const product = PRODUCTS.find((p) => p.id === productId);
+      if (!product) return false;
+
+      if (product.amount) addGems(product.amount);
+      if (product.instantGems) addGems(product.instantGems);
+      if (product.gems) addGems(product.gems);
+
+      if (product.lives && product.lives !== "unlimited") {
+        addLives(product.lives);
+      }
+
+      if (product.lives === "unlimited") {
+        activateUnlimitedLives(0.5);
+      }
+
+      if (product.powerups) {
+        const perType = Math.floor(product.powerups / 3);
+        const remainder = product.powerups % 3;
+
+        for (let i = 0; i < perType; i++) {
+          addHammer();
+          addShuffle();
+          addUndo();
+        }
+
+        if (remainder >= 1) addHammer();
+        if (remainder >= 2) addShuffle();
+      }
+
+      return true;
+    },
+    [activateUnlimitedLives, addGems, addHammer, addLives, addShuffle, addUndo],
+  );
+
   const handlePurchase = async (productId: string) => {
     const isAndroidPlatform = Capacitor.getPlatform() === "android";
     if (isAndroidPlatform) {
@@ -411,36 +447,23 @@ const Index = () => {
       return;
     }
     // Web: apply local grants (Stripe flow reloads from DB via payment success handler)
-    const product = PRODUCTS.find((p) => p.id === productId);
-    if (!product) return;
-    if (product.amount) addGems(product.amount);
-    if (product.instantGems) addGems(product.instantGems);
-    if (product.gems) addGems(product.gems);
-    if (product.lives && product.lives !== "unlimited") {
-      addLives(product.lives);
+    if (applyLocalProductEffects(productId)) {
+      setScreen("menu");
     }
-    if (product.lives === "unlimited") {
-      activateUnlimitedLives(0.5);
-    }
-    if (product.powerups) {
-      const perType = Math.floor(product.powerups / 3);
-      const remainder = product.powerups % 3;
-      for (let i = 0; i < perType; i++) {
-        addHammer();
-        addShuffle();
-        addUndo();
-      }
-      if (remainder >= 1) addHammer();
-      if (remainder >= 2) addShuffle();
-    }
-    setScreen("menu");
   };
 
   // 🔑 Listen for Android Google Play purchases — apply server rewards for guests
   useEffect(() => {
     const handleGooglePlayRewards = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      if (!detail?.rewards) return; // No rewards data (degraded mode or non-Android)
+      const detail = ((event as CustomEvent).detail ?? {}) as {
+        productId?: string;
+        rewards?: {
+          gems?: number;
+          lives?: number;
+          powerups?: number;
+          unlimitedLivesMinutes?: number;
+        };
+      };
       
       const isAndroidPlatform = Capacitor.getPlatform() === "android";
       if (!isAndroidPlatform) return; // Only for Android purchases
@@ -453,7 +476,15 @@ const Index = () => {
       }
 
       // Guest Android: apply server rewards locally
-      const rewards = detail.rewards;
+      const { productId, rewards } = detail;
+
+      if (!rewards) {
+        if (productId && applyLocalProductEffects(productId)) {
+          console.log("[PURCHASE] Guest Android — applying fallback catalog rewards:", productId);
+        }
+        return;
+      }
+
       console.log("[PURCHASE] Guest Android — applying server rewards locally:", rewards);
       
       if (rewards.gems) addGems(rewards.gems);
@@ -476,7 +507,7 @@ const Index = () => {
 
     window.addEventListener("first_purchase_completed", handleGooglePlayRewards);
     return () => window.removeEventListener("first_purchase_completed", handleGooglePlayRewards);
-  }, [user, reloadFromDB, addGems, addLives, addHammer, addShuffle, addUndo, activateUnlimitedLives]);
+  }, [user, reloadFromDB, addGems, addLives, addHammer, addShuffle, addUndo, activateUnlimitedLives, applyLocalProductEffects]);
   const handleQuickLifePurchased = ({ lives, gems }: { lives: number; gems: number }) => {
     if (lives > 0) addLives(lives);
     if (gems > 0) addGems(gems);

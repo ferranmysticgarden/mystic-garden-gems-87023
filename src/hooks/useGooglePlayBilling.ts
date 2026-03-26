@@ -494,12 +494,10 @@ export const useGooglePlayBilling = () => {
       const errorMsg = error instanceof Error ? error.message : String(error);
       if (errorMsg?.includes('cancelled') || errorMsg?.includes('Cancel') || errorMsg?.includes('pending')) {
         if (errorMsg?.includes('pending')) {
-          toast.info('Compra pendiente de pago');
-          trackEvent('purchase_pending', { platform: 'android', product: productId });
-        } else {
-          toast.info('Compra cancelada');
-          trackEvent('purchase_cancelled', { platform: 'android', product: productId, error: errorMsg });
+          return false;
         }
+
+        toast.info('Compra cancelada');
       } else {
         console.error('Purchase error:', error);
         toast.error('Error al realizar la compra');

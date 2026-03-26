@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { trackEvent } from '@/lib/trackEvent';
 
@@ -33,8 +32,6 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
     const success = await createPayment('welcome_pack');
     if (success) {
       trackEvent('purchase_success', { product: 'welcome_pack' });
-      dispatchPurchaseCompleted('welcome_pack');
-      localStorage.setItem('first_purchase_completed', 'true');
       onPurchaseSuccess?.();
       onPurchased?.();
     }

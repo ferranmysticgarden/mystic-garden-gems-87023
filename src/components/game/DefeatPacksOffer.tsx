@@ -3,7 +3,6 @@ import { X, Zap, Shield, Crown, Star } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
 import { toast } from 'sonner';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface DefeatPacksOfferProps {
   progressPercent: number;
@@ -30,8 +29,6 @@ export const DefeatPacksOffer = ({
       const success = await createPayment(productId);
       if (success) {
         console.log('[PURCHASE] success confirmed via DefeatPacksOffer');
-        dispatchPurchaseCompleted(productId);
-        console.log('[PURCHASE] gate unlocked');
         toast.success('¡Compra procesada!');
         onPurchase();
       }

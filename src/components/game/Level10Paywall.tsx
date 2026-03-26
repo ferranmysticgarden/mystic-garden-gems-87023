@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 import { PRODUCTS } from '@/data/products';
 
 interface Level10PaywallProps {
@@ -55,7 +54,6 @@ export const Level10Paywall = ({
     try {
       const success = await createPayment('buy_moves');
       if (success) {
-        dispatchPurchaseCompleted('buy_moves');
         onPurchaseSuccess();
       }
     } catch (error) {

@@ -360,8 +360,6 @@ const ExtraSpinOffer = ({ onBuy }: ExtraSpinOfferProps) => {
     if (success) {
       // Android path: success = true means Google Play verified
       console.log('[PURCHASE] success confirmed via ExtraSpin');
-      dispatchPurchaseCompleted('extra_spin');
-      console.log('[PURCHASE] gate unlocked');
       localStorage.removeItem('pending_purchase_state');
       onBuy();
     }

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
-import { dispatchPurchaseCompleted } from '@/hooks/usePurchaseGate';
 
 interface UltimateRescueOfferProps {
   levelNumber: number;
@@ -54,7 +53,6 @@ export const UltimateRescueOffer = ({
     }
     const success = await createPayment('continue_game');
     if (success) {
-      dispatchPurchaseCompleted('continue_game');
       onBuy();
     }
   };
