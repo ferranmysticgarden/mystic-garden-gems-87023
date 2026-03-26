@@ -3,10 +3,20 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useGooglePlayBilling } from './useGooglePlayBilling';
 import { toast } from 'sonner';
+import { PRODUCTS } from '@/data/products';
 
 import { trackEvent } from '@/lib/trackEvent';
 
 const PENDING_PRODUCT_KEY = 'stripe_pending_product';
+
+const getProductFallbackPrice = (productId: string, fallbackPrice?: string): string => {
+  const product = PRODUCTS.find((item) => item.id === productId);
+  if (product) {
+    return `€${product.price.toFixed(2)}`;
+  }
+
+  return fallbackPrice ?? 'Precio no disponible';
+};
 
 /**
  * Hook unificado de pagos:
@@ -90,9 +100,9 @@ export const usePayment = () => {
     if (isAndroid) {
       const googlePrice = googlePlayBilling.getProductPrice(productId);
       if (googlePrice) return googlePrice;
-      return 'Cargando precio…';
+      return getProductFallbackPrice(productId, fallbackPrice);
     }
-    return fallbackPrice;
+    return getProductFallbackPrice(productId, fallbackPrice);
   };
 
   return {

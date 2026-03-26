@@ -4,6 +4,9 @@ import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 const PURCHASE_FLAG_KEY = 'mystic_has_purchased_once';
+const PURCHASE_EVENT_DEDUP_WINDOW_MS = 1500;
+
+let lastPurchaseDispatch: { productId: string; timestamp: number } | null = null;
 
 /**
  * Hook para gestionar el "muro de primera compra"
@@ -90,6 +93,20 @@ export interface ServerRewards {
 
 // Función helper para disparar el evento global (con rewards opcionales del servidor)
 export const dispatchPurchaseCompleted = (productId?: string, rewards?: ServerRewards) => {
+  const resolvedProductId = productId ?? '__unknown__';
+  const now = Date.now();
+
+  if (
+    lastPurchaseDispatch &&
+    lastPurchaseDispatch.productId === resolvedProductId &&
+    now - lastPurchaseDispatch.timestamp < PURCHASE_EVENT_DEDUP_WINDOW_MS
+  ) {
+    console.warn('[PURCHASE_GATE] Duplicate purchase event ignored:', resolvedProductId);
+    return;
+  }
+
+  lastPurchaseDispatch = { productId: resolvedProductId, timestamp: now };
+
   localStorage.setItem(PURCHASE_FLAG_KEY, 'true');
   localStorage.setItem('first_purchase_completed', 'true');
   window.dispatchEvent(new CustomEvent('first_purchase_completed', {
