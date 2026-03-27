@@ -51,6 +51,19 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         initializeBillingClient();
     }
 
+    private JSObject createBillingResultPayload(@NonNull BillingResult billingResult) {
+        JSObject payload = new JSObject();
+        payload.put("responseCode", billingResult.getResponseCode());
+        payload.put("debugMessage", billingResult.getDebugMessage() != null ? billingResult.getDebugMessage() : "");
+        return payload;
+    }
+
+    private String formatBillingError(@NonNull String prefix, @NonNull BillingResult billingResult) {
+        String debugMessage = billingResult.getDebugMessage();
+        String safeDebugMessage = (debugMessage == null || debugMessage.isEmpty()) ? "no_debug_message" : debugMessage;
+        return prefix + " [code=" + billingResult.getResponseCode() + ", message=" + safeDebugMessage + "]";
+    }
+
     private void initializeBillingClient() {
         Log.d(TAG, "Initializing BillingClient (attempt " + (connectionRetryCount + 1) + ")");
         
@@ -66,13 +79,16 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                JSObject payload = createBillingResultPayload(billingResult);
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     Log.d(TAG, "✅ BillingClient connected successfully");
                     connectionRetryCount = 0;
-                    notifyListeners("billingReady", new JSObject().put("ready", true));
+                    payload.put("ready", true);
+                    notifyListeners("billingReady", payload);
                 } else {
                     Log.e(TAG, "❌ BillingClient setup failed: code=" + billingResult.getResponseCode() + " msg=" + billingResult.getDebugMessage());
-                    notifyListeners("billingReady", new JSObject().put("ready", false));
+                    payload.put("ready", false);
+                    notifyListeners("billingReady", payload);
                 }
             }
 
@@ -102,6 +118,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @PluginMethod
     public void queryProducts(PluginCall call) {
+        if (billingClient == null || !billingClient.isReady()) {
+            call.reject("Billing client not ready");
+            return;
+        }
+
         if (call.getArray("productIds") == null) {
             call.reject("No product IDs provided");
             return;
@@ -165,8 +186,9 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
                     
                     call.resolve(ret);
                 } else {
-                    Log.e(TAG, "❌ Failed to query products: code=" + billingResult.getResponseCode() + " msg=" + billingResult.getDebugMessage());
-                    call.reject("Failed to query products: " + billingResult.getDebugMessage());
+                    String formattedError = formatBillingError("Failed to query products", billingResult);
+                    Log.e(TAG, "❌ " + formattedError);
+                    call.reject(formattedError);
                 }
             }
         });
@@ -175,6 +197,11 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     @PluginMethod
     public void purchase(PluginCall call) {
         String productId = call.getString("productId");
+
+        if (billingClient == null || !billingClient.isReady()) {
+            call.reject("Billing client not ready for purchase");
+            return;
+        }
         
         if (productId == null) {
             call.reject("Product ID is required");
@@ -218,8 +245,9 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
             pendingPurchaseCall = null;
-            Log.e(TAG, "❌ Failed to launch billing flow: " + result.getDebugMessage());
-            call.reject("Failed to launch billing flow: " + result.getDebugMessage());
+            String formattedError = formatBillingError("Failed to launch billing flow", result);
+            Log.e(TAG, "❌ " + formattedError);
+            call.reject(formattedError);
         }
     }
 
@@ -267,18 +295,25 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             }
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d(TAG, "Purchase cancelled by user");
+            JSObject payload = createBillingResultPayload(billingResult);
+            payload.put("stage", "onPurchasesUpdated");
+            payload.put("error", "Purchase cancelled by user");
             if (pendingPurchaseCall != null) {
                 pendingPurchaseCall.reject("Purchase cancelled by user");
                 pendingPurchaseCall = null;
             }
-            notifyListeners("purchaseCancelled", new JSObject());
+            notifyListeners("purchaseCancelled", payload);
         } else {
-            Log.e(TAG, "❌ Purchase failed: code=" + billingResult.getResponseCode() + " msg=" + billingResult.getDebugMessage());
+            String formattedError = formatBillingError("Purchase failed", billingResult);
+            JSObject payload = createBillingResultPayload(billingResult);
+            payload.put("stage", "onPurchasesUpdated");
+            payload.put("error", formattedError);
+            Log.e(TAG, "❌ " + formattedError);
             if (pendingPurchaseCall != null) {
-                pendingPurchaseCall.reject("Purchase failed: " + billingResult.getDebugMessage());
+                pendingPurchaseCall.reject(formattedError);
                 pendingPurchaseCall = null;
             }
-            notifyListeners("purchaseError", new JSObject().put("error", billingResult.getDebugMessage()));
+            notifyListeners("purchaseError", payload);
         }
     }
 
