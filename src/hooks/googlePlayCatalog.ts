@@ -3,24 +3,21 @@ import { PRODUCTS } from '@/data/products';
 // Map internal product IDs to their ACTUAL Google Play Console IDs.
 // The FIRST entry should be the exact ID as it appears in the Console.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
-  // Force exact Console ID first when duplicates/historical aliases exist
   starter_gems: ['startergems'],
-  victory_multiplier: ['victory_multiplier', 'victorymultiplier'],
-  chest_gold: ['chest_gold', 'chestgold'],
-  chest_silver: ['chest_silver', 'chestsilver'],
-  mega_pack_inicial: ['mega_pack_inicial', 'megapackinicial'],
-  starter_pack: ['starter_pack', 'starterpack'],
-  flash_offer: ['flash_offer', 'flashoffer'],
-  finish_level: ['finish_level', 'finishlevel'],
-  continue_game: ['continue_game', 'continuegame'],
-  buy_moves: ['buy_moves', 'buymoves'],
-  pack_revancha: ['pack_revancha', 'packrevancha'],
-  lifesaver_pack: ['lifesaver_pack', 'lifesaverpack'],
-  streak_protection: ['streak_protection', 'streakprotection'],
-  extra_spin: ['extra_spin', 'extraspin'],
-  reward_doubler: ['reward_doubler', 'rewarddoubler'],
-
-  // Products that must use the Console ID WITHOUT underscores
+  victory_multiplier: ['victorymultiplier'],
+  chest_gold: ['chestgold'],
+  chest_silver: ['chestsilver'],
+  mega_pack_inicial: ['megapackinicial'],
+  starter_pack: ['starterpack'],
+  flash_offer: ['flashoffer'],
+  finish_level: ['finishlevel'],
+  continue_game: ['continuegame'],
+  buy_moves: ['buymoves'],
+  pack_revancha: ['packrevancha'],
+  lifesaver_pack: ['lifesaverpack'],
+  streak_protection: ['streakprotection'],
+  extra_spin: ['extraspin'],
+  reward_doubler: ['rewarddoubler'],
   unlimited_lives_30min: ['unlimitedlives30min'],
   first_day_offer: ['firstdayoffer'],
   pack_racha_infinita: ['packrachainfinita'],
