@@ -231,11 +231,22 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         pendingPurchaseCall = call;
 
         List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
-        productDetailsParamsList.add(
+        BillingFlowParams.ProductDetailsParams.Builder productDetailsParamsBuilder =
             BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(productDetails)
-                .build()
-        );
+                .setProductDetails(productDetails);
+
+        ProductDetails.OneTimePurchaseOfferDetails oneTimeOfferDetails = productDetails.getOneTimePurchaseOfferDetails();
+        if (oneTimeOfferDetails != null) {
+            String offerToken = oneTimeOfferDetails.getOfferToken();
+            if (offerToken != null && !offerToken.isEmpty()) {
+                productDetailsParamsBuilder.setOfferToken(offerToken);
+                Log.d(TAG, "Using one-time product offer token for: " + productId);
+            } else {
+                Log.w(TAG, "One-time product missing offer token: " + productId);
+            }
+        }
+
+        productDetailsParamsList.add(productDetailsParamsBuilder.build());
 
         BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(productDetailsParamsList)
