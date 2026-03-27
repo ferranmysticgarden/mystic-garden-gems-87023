@@ -90,6 +90,18 @@ serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      // ── Reset dashboard metrics ──
+      case "reset_dashboard": {
+        const { error } = await supabase.from("app_events").insert({
+          event_name: "dashboard_reset",
+          device_id: "admin",
+          platform: "admin",
+        });
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       // ── Delete a purchase ──
       case "delete_purchase": {
         const { purchaseId } = payload;
