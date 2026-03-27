@@ -3,7 +3,7 @@ import { PRODUCTS } from '@/data/products';
 // Map internal product IDs to their ACTUAL Google Play Console IDs.
 // The FIRST entry should be the exact ID as it appears in the Console.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
-  // starter_gems had two IDs in circulation; prefer the current canonical Play ID first
+  // starter_gems had multiple historical IDs; keep all known working variants
   starter_gems: ['starter-gems', 'startergems', 'starter_gems'],
   victory_multiplier: ['victory_multiplier', 'victorymultiplier'],
   chest_gold: ['chest_gold', 'chestgold'],
@@ -19,14 +19,13 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   streak_protection: ['streak_protection', 'streakprotection'],
   extra_spin: ['extra_spin', 'extraspin'],
   reward_doubler: ['reward_doubler', 'rewarddoubler'],
-  unlimited_lives_30min: ['unlimitedlives30min'],
 
-  // Products with BOTH underscore AND no-underscore IDs in Console (duplicates)
+  // Products that must use the Console ID WITHOUT underscores
+  unlimited_lives_30min: ['unlimitedlives30min'],
+  first_day_offer: ['firstdayoffer'],
   pack_racha_infinita: ['packrachainfinita'],
   pack_victoria_segura: ['packvictoriasegura'],
   pack_victoria_segura_pro: ['packvictoriasegurapro'],
-
-  // Products with only no-underscore IDs in Console (older products)
   welcome_pack: ['welcomepack'],
   pack_impulso: ['packimpulso'],
   pack_experiencia: ['packexperiencia'],
@@ -45,35 +44,37 @@ const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
 
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
 
-const getPreferredGooglePlayProductId = (productId: string): string => {
-  const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId]?.[0];
-  return explicit ?? normalizeId(productId);
+const shouldKeepRawProductId = (productId: string, explicitCandidates: string[]) => {
+  return explicitCandidates.length === 0 || explicitCandidates.includes(productId);
 };
 
 const getPrimaryGooglePlayCandidates = (productId: string): string[] => {
   const normalized = normalizeId(productId);
   const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
+  const keepRawProductId = shouldKeepRawProductId(productId, explicit);
 
   return unique([
     ...explicit,
     normalized,
-    productId,
+    ...(keepRawProductId ? [productId] : []),
   ]);
 };
 
 export const getGooglePlayCandidates = (productId: string): string[] => {
   const normalized = normalizeId(productId);
+  const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
+  const keepRawProductId = shouldKeepRawProductId(productId, explicit);
 
   return unique([
     ...getPrimaryGooglePlayCandidates(productId),
     `${normalized}1`,
-    `${productId}1`,
+    ...(keepRawProductId ? [`${productId}1`] : []),
   ]);
 };
 
 const KNOWN_PRODUCT_IDS = PRODUCTS.map((product) => product.id);
 
-// Query ALL known candidates so the initial catalog load finds every product
+// Query only the canonical candidates for the initial catalog load
 export const getGooglePlayQueryProductIds = (): string[] => {
   return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getPrimaryGooglePlayCandidates(productId)));
 };
