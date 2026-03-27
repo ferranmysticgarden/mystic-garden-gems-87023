@@ -478,12 +478,27 @@ export const useGooglePlayBilling = () => {
       await verifyAndProcessPurchase(purchase);
     });
 
-    void GooglePlayBilling.addListener('purchaseCancelled', () => {
-      reportPurchaseCancelled(lastAttemptedProductId, undefined, 'native_listener');
+    void GooglePlayBilling.addListener('purchaseCancelled', ({ error, responseCode, debugMessage, stage }) => {
+      reportPurchaseCancelled(lastAttemptedProductId, error, 'native_listener');
+      trackEvent('purchase_cancelled_native', {
+        platform: 'android',
+        product: lastAttemptedProductId,
+        error,
+        response_code: responseCode,
+        debug_message: debugMessage,
+        stage,
+      });
     });
 
-    void GooglePlayBilling.addListener('purchaseError', ({ error }) => {
-      trackEvent('purchase_error', { platform: 'android', error });
+    void GooglePlayBilling.addListener('purchaseError', ({ error, responseCode, debugMessage, stage }) => {
+      trackEvent('purchase_error', {
+        platform: 'android',
+        product: lastAttemptedProductId,
+        error,
+        response_code: responseCode,
+        debug_message: debugMessage,
+        stage,
+      });
     });
 
     void GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
@@ -620,6 +635,7 @@ export const useGooglePlayBilling = () => {
           platform: 'android',
           product: productId,
           error: errorMsg,
+          source: 'purchase_call',
         });
       }
       return false;
