@@ -7,8 +7,19 @@ const corsHeaders = {
 };
 
 // Dashboard reset point — large dashboard metrics count only data AFTER this timestamp.
-// IMPORTANT: Keep this value in UTC. A future timestamp will make all "since reset" cards show 0.
-const DASHBOARD_EPOCH = "2026-03-26T13:20:00.000Z";
+// Falls back to a hardcoded default if no dynamic reset has been set.
+const DEFAULT_DASHBOARD_EPOCH = "2026-03-26T13:20:00.000Z";
+
+const getDashboardEpoch = async (supabase: any): Promise<string> => {
+  const { data } = await supabase
+    .from("app_events")
+    .select("created_at")
+    .eq("event_name", "dashboard_reset")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (data && data.length > 0) return data[0].created_at;
+  return DEFAULT_DASHBOARD_EPOCH;
+};
 
 const PRODUCT_PRICES: Record<string, number> = {
   starter_gems: 0.5,
