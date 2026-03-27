@@ -3,8 +3,8 @@ import { PRODUCTS } from '@/data/products';
 // Map internal product IDs to their ACTUAL Google Play Console IDs.
 // The FIRST entry should be the exact ID as it appears in the Console.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
-  // starter_gems had multiple historical IDs; keep all known working variants
-  starter_gems: ['starter-gems', 'startergems', 'starter_gems'],
+  // Force exact Console ID first when duplicates/historical aliases exist
+  starter_gems: ['startergems'],
   victory_multiplier: ['victory_multiplier', 'victorymultiplier'],
   chest_gold: ['chest_gold', 'chestgold'],
   chest_silver: ['chest_silver', 'chestsilver'],
