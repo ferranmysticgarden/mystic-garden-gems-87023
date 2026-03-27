@@ -264,9 +264,33 @@ export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               )}
             </div>
           </div>
-          <Button onClick={() => void loadData()} variant="outline" disabled={loading || refreshing}>
-            {refreshing ? 'Actualizando…' : 'Actualizar'}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => void loadData()} variant="outline" disabled={loading || refreshing}>
+              {refreshing ? 'Actualizando…' : 'Actualizar'}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={loading || refreshing}
+              onClick={async () => {
+                if (!confirm('¿Poner TODAS las métricas del dashboard a 0? (Los datos históricos se conservan)')) return;
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) return;
+                  const { error } = await supabase.functions.invoke('admin-action', {
+                    headers: { Authorization: `Bearer ${session.access_token}` },
+                    body: { action: 'reset_dashboard', payload: {} },
+                  });
+                  if (error) throw error;
+                  toast.success('Dashboard reseteado a 0');
+                  void loadData();
+                } catch (e: any) {
+                  toast.error('Error: ' + e.message);
+                }
+              }}
+            >
+              <RotateCcw className="w-4 h-4 mr-1" /> Reset a 0
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
