@@ -116,6 +116,8 @@ serve(async (req) => {
     // Parse request body for data type
     const { dataType } = await req.json();
 
+    const DASHBOARD_EPOCH = await getDashboardEpoch(supabase);
+
     let data = null;
 
     switch (dataType) {
