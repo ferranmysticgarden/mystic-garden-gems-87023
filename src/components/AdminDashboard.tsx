@@ -90,6 +90,17 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
+  // Pause background music while in dashboard
+  useEffect(() => {
+    backgroundMusic.mute();
+    return () => {
+      // Don't auto-unmute on leave — respect user's saved preference
+      const saved = localStorage.getItem('mystic_music_enabled');
+      if (saved !== 'false') {
+        backgroundMusic.unmute();
+      }
+    };
+  }, []);
   const [users, setUsers] = useState<Profile[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [stats, setStats] = useState<Stats>({
