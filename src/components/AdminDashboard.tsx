@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert, Eye, UserCheck, RotateCcw } from 'lucide-react';
