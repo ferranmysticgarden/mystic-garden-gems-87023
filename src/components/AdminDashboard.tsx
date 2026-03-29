@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Users, DollarSign, TrendingUp, Calendar, ShieldAlert, Eye, UserCheck, RotateCcw } from 'lucide-react';
@@ -89,6 +90,17 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
+  // Pause background music while in dashboard
+  useEffect(() => {
+    backgroundMusic.mute();
+    return () => {
+      // Don't auto-unmute on leave — respect user's saved preference
+      const saved = localStorage.getItem('mystic_music_enabled');
+      if (saved !== 'false') {
+        backgroundMusic.unmute();
+      }
+    };
+  }, []);
   const [users, setUsers] = useState<Profile[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [stats, setStats] = useState<Stats>({
