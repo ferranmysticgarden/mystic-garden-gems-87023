@@ -110,6 +110,12 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   unlimitedlives30min1: 'unlimited_lives_30min',
   firstdayoffer: 'first_day_offer',
   firstdayoffer1: 'first_day_offer',
+  'custom-slots': 'custom_slots',
+  'custom-frames': 'custom_frames',
+  'custom-full': 'custom_full',
+  customslots: 'custom_slots',
+  customframes: 'custom_frames',
+  customfull: 'custom_full',
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
