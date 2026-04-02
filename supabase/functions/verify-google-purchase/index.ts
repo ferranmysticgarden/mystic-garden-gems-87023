@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?: number; noAdsDays?: number; noAdsForever?: boolean; unlimitedLivesMinutes?: number }> = {
-  "starter_gems": { gems: 50 },
+  "starter_gems": { gems: 400 },
   "chest_wooden": {},
   "chest_silver": {},
   "chest_gold": {},
@@ -40,6 +40,9 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "pack_victoria_segura_pro": { powerups: 8, lives: 3 },
   "unlimited_lives_30min": { unlimitedLivesMinutes: 30 },
   "first_day_offer": { powerups: 5, lives: 3 },
+  "custom_slots": {},
+  "custom_frames": {},
+  "custom_full": {},
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
@@ -107,6 +110,12 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   unlimitedlives30min1: 'unlimited_lives_30min',
   firstdayoffer: 'first_day_offer',
   firstdayoffer1: 'first_day_offer',
+  'custom-slots': 'custom_slots',
+  'custom-frames': 'custom_frames',
+  'custom-full': 'custom_full',
+  customslots: 'custom_slots',
+  customframes: 'custom_frames',
+  customfull: 'custom_full',
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
