@@ -118,8 +118,6 @@ export const useGooglePlayBilling = () => {
 
   const queryProductsIndividually = useCallback(async (productIds: string[]): Promise<Record<string, ProductDetails>> => {
     const merged: Record<string, ProductDetails> = {};
-    const failedIds: string[] = [];
-    let lastError = '';
 
     for (const id of productIds) {
       try {
@@ -128,20 +126,8 @@ export const useGooglePlayBilling = () => {
           Object.assign(merged, singleResult);
         }
       } catch (error) {
-        failedIds.push(id);
-        lastError = String(error);
+        console.warn('[BILLING] queryProducts single candidate failed:', id, error);
       }
-    }
-
-    // Single summary event instead of one per product
-    if (failedIds.length > 0) {
-      trackEvent('billing_error', {
-        error: lastError,
-        phase: 'query_single_batch',
-        failed_count: failedIds.length,
-        total_queried: productIds.length,
-        failed_ids: failedIds.slice(0, 5).join(','), // cap to avoid huge payloads
-      });
     }
 
     return merged;
@@ -162,11 +148,7 @@ export const useGooglePlayBilling = () => {
         return { ...fullBatch, ...recoveredProducts };
       }
     } catch (error) {
-      trackEvent('billing_error', {
-        error: String(error),
-        phase: 'query_batch',
-        requested_ids: productIds.length,
-      });
+      console.warn('[BILLING] batch product query failed, falling back to single queries:', error);
     }
 
     return queryProductsIndividually(productIds);
@@ -196,7 +178,7 @@ export const useGooglePlayBilling = () => {
 
       if (loadedCount === 0) {
         trackEvent('billing_error', {
-          phase: 'empty_catalog_after_fallback',
+          phase: 'empty_catalog_after_retries',
           attempt: retryCount + 1,
           queried_ids: productIds.length,
         });
@@ -212,11 +194,15 @@ export const useGooglePlayBilling = () => {
       return productDetails;
     } catch (error) {
       console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
-      trackEvent('billing_error', { error: String(error), attempt: retryCount + 1 });
       if (retryCount < 4) {
         await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
+      trackEvent('billing_error', {
+        error: String(error),
+        attempt: retryCount + 1,
+        phase: 'load_products_final',
+      });
        updateSharedBillingState((state) => {
          state.products = {};
        });

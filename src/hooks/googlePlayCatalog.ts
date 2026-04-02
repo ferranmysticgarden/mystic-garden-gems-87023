@@ -3,7 +3,7 @@ import { PRODUCTS } from '@/data/products';
 // Map internal product IDs to their ACTUAL Google Play Console IDs.
 // The FIRST entry should be the exact ID as it appears in the Console.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
-  starter_gems: ['startergems'],
+  starter_gems: ['starter_gems', 'startergems'],
   victory_multiplier: ['victorymultiplier'],
   chest_gold: ['chestgold'],
   chest_silver: ['chestsilver'],
@@ -57,6 +57,17 @@ const getPrimaryGooglePlayCandidates = (productId: string): string[] => {
   ]);
 };
 
+const getCatalogQueryCandidates = (productId: string): string[] => {
+  const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
+
+  if (explicit.length > 0) {
+    return [explicit[0]];
+  }
+
+  const normalized = normalizeId(productId);
+  return unique([productId, normalized]);
+};
+
 export const getGooglePlayCandidates = (productId: string): string[] => {
   const normalized = normalizeId(productId);
   const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
@@ -73,7 +84,7 @@ const KNOWN_PRODUCT_IDS = PRODUCTS.map((product) => product.id);
 
 // Query only the canonical candidates for the initial catalog load
 export const getGooglePlayQueryProductIds = (): string[] => {
-  return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getPrimaryGooglePlayCandidates(productId)));
+  return unique(KNOWN_PRODUCT_IDS.flatMap((productId) => getCatalogQueryCandidates(productId)));
 };
 
 export const resolveGooglePlayProductId = (
