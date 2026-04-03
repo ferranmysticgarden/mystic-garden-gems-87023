@@ -46,7 +46,7 @@ export const usePayment = () => {
     };
   }, []);
 
-  const createPayment = async (productId: string): Promise<boolean> => {
+  const createPayment = async (productId: string, source?: string): Promise<boolean> => {
     if (activePaymentProduct) {
       trackEvent('payment_bridge_blocked', {
         product: productId,
@@ -57,6 +57,14 @@ export const usePayment = () => {
       toast.info('Ya hay un pago en curso. Espera un momento.');
       return false;
     }
+
+    // ── Single purchase_attempt event (centralized, no duplicates) ──
+    trackEvent('purchase_attempt', {
+      product: productId,
+      source: source || 'unknown',
+      platform: isAndroid ? 'android' : 'web',
+      billing_available: isAndroid ? googlePlayBilling.isAvailable : 'web',
+    });
 
     activePaymentProduct = productId;
     stripeRedirectInProgress = false;

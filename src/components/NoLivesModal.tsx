@@ -1,4 +1,4 @@
-import { Gem, Heart, Infinity, Sparkles } from 'lucide-react';
+import { Gem, Heart, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
@@ -15,8 +15,7 @@ interface NoLivesModalProps {
 export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchased, onQuickLifePurchased, onShowStarterOffer }: NoLivesModalProps) => {
   const { createPayment, getPrice, loading } = usePayment();
 
-  const unlimitedPrice = getPrice('unlimited_lives_30min', '€0.99');
-  const starterGemsPrice = getPrice('starter_gems', '€0.50');
+  const starterPrice = getPrice('starter_gems', '€0.50');
   const canAffordGems = gems >= 5;
 
   const handleUseGemsForLife = () => {
@@ -24,18 +23,13 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
     onUseGems();
   };
 
-  const handleUnlimitedLivesPurchase = async () => {
-    trackEvent('purchase_attempt', { product: 'unlimited_lives_30min', source: 'no_lives_modal' });
-    const success = await createPayment('unlimited_lives_30min');
+  // ── PRIMARY monetisation CTA: buy starter_gems, grant instant life ──
+  const handleBuyStarterGems = async () => {
+    const success = await createPayment('starter_gems', 'no_lives_modal');
     if (success) {
-      onUnlimitedLivesPurchased?.();
+      // Instant benefit: +1 life so the player can keep playing NOW
+      onQuickLifePurchased?.({ lives: 1, gems: 0 });
     }
-  };
-
-  const handleNeedGems = () => {
-    trackEvent('need_gems_from_no_lives', { gems_balance: gems });
-    onClose();
-    onShowStarterOffer?.();
   };
 
   return (
@@ -48,7 +42,7 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
         </div>
 
         <div className="space-y-3">
-          {/* PRIMARY CTA: Use gems for 1 life - cheap and easy */}
+          {/* PRIMARY CTA: Use gems for 1 life - free path */}
           <Button
             onClick={handleUseGemsForLife}
             disabled={gems < 5}
@@ -60,27 +54,17 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
             {gems >= 5 ? `+1 Vida por 5 Gemas (tienes ${gems}💎)` : 'No tienes gemas suficientes'}
           </Button>
 
-          {/* If user can't afford gems, show a way to get them cheap */}
-          {!canAffordGems && (
-            <Button
-              onClick={handleNeedGems}
-              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-base py-5 animate-pulse"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              {`💎 ¡Consigue 50 Gemas por solo ${starterGemsPrice}! 💎`}
-            </Button>
-          )}
-
-          {/* Secondary: Unlimited Lives (higher commitment) */}
+          {/* PAID CTA: starter_gems — best value, instant life + 400 gems */}
           <Button
-            onClick={handleUnlimitedLivesPurchase}
+            onClick={handleBuyStarterGems}
             disabled={loading}
-            className="w-full gradient-gold shadow-gold text-base py-5"
-            id="buy-unlimited-lives"
+            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-base py-5 animate-pulse"
+            id="buy-starter-gems-no-lives"
           >
-            <Infinity className="w-5 h-5 mr-2" />
-            <Heart className="w-4 h-4 mr-2 text-red-500" />
-            {loading ? 'Procesando...' : `Vidas Infinitas 30min - ${unlimitedPrice}`}
+            <Sparkles className="w-5 h-5 mr-2" />
+            {loading
+              ? 'Procesando...'
+              : `❤️ +1 Vida + 400 💎 por solo ${starterPrice}`}
           </Button>
 
           <Button

@@ -28,10 +28,8 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
   }, [isAndroid, isGooglePlayAvailable]);
 
   const handleBuy = async () => {
-    trackEvent('purchase_attempt', { product: 'welcome_pack', billing_available: isAndroid ? isGooglePlayAvailable : 'web' });
-    const success = await createPayment('welcome_pack');
+    const success = await createPayment('welcome_pack', 'gems_banner');
     if (success) {
-      trackEvent('purchase_success', { product: 'welcome_pack' });
       onPurchaseSuccess?.();
       onPurchased?.();
     }

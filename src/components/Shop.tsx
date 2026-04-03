@@ -49,7 +49,7 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
   const { createPayment, getPrice, loading } = usePayment();
 
   const handlePurchase = async (productId: string, productName: string) => {
-    const success = await createPayment(productId);
+    const success = await createPayment(productId, 'shop');
     if (success) {
       onPurchase(productId);
     }
