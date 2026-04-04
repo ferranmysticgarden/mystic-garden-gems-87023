@@ -80,7 +80,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const handleBuy = async () => {
     if (loading) return;
     
-    const success = await createPayment('starter_gems');
+    const success = await createPayment('starter_gems', 'starter_pack');
     if (success) {
       const odId = user?.id || 'guest';
       console.log('[PURCHASE] success confirmed via StarterPack (starter_gems)');
@@ -92,8 +92,6 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   };
 
   const handleDismiss = () => {
-    const odId = user?.id || 'guest';
-    localStorage.setItem(`starter-gems-${odId}`, 'true');
     setShow(false);
     onClose();
   };
@@ -197,7 +195,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               <div className="flex justify-center text-white mb-4">
                 <div className="bg-black/30 rounded-lg p-3 flex items-center gap-3">
                   <span className="text-3xl">💎</span>
-                  <span className="font-bold text-yellow-300 text-lg">+50 Gemas</span>
+                  <span className="font-bold text-yellow-300 text-lg">+400 Gemas</span>
                 </div>
               </div>
               

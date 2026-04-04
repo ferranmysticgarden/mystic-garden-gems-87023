@@ -50,17 +50,19 @@ export const usePayment = () => {
     if (activePaymentProduct) {
       trackEvent('payment_bridge_blocked', {
         product: productId,
+        productId,
         platform: isAndroid ? 'android' : 'web',
         active_product: activePaymentProduct,
+        activeProductId: activePaymentProduct,
         reason: 'payment_in_progress',
       });
       toast.info('Ya hay un pago en curso. Espera un momento.');
       return false;
     }
 
-    // ── Single purchase_attempt event (centralized, no duplicates) ──
     trackEvent('purchase_attempt', {
       product: productId,
+      productId,
       source: source || 'unknown',
       platform: isAndroid ? 'android' : 'web',
       billing_available: isAndroid ? googlePlayBilling.isAvailable : 'web',
@@ -71,21 +73,22 @@ export const usePayment = () => {
     broadcastPaymentLoading();
 
     try {
-      // Android → Google Play Billing
       if (isAndroid) {
         trackEvent('payment_bridge_start', {
           product: productId,
+          productId,
           platform: 'android',
           billing_available: googlePlayBilling.isAvailable,
         });
 
         try {
           const success = await googlePlayBilling.purchase(productId);
-          trackEvent('payment_bridge_result', { product: productId, platform: 'android', success });
+          trackEvent('payment_bridge_result', { product: productId, productId, platform: 'android', success });
           return success;
         } catch (gpError: any) {
           trackEvent('payment_bridge_error', {
             product: productId,
+            productId,
             platform: 'android',
             error: gpError instanceof Error ? gpError.message : String(gpError),
           });
