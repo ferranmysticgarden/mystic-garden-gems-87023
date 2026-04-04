@@ -886,7 +886,7 @@ const Index = () => {
           onClose={() => setShowStarterPack(false)}
           onPurchaseSuccess={() => {
             reloadFromDB?.();
-            toast.success("¡Inicio Mágico activado! +50💎");
+            toast.success("¡Inicio Mágico activado! +400💎");
           }}
         />
       )}

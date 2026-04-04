@@ -80,7 +80,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const handleBuy = async () => {
     if (loading) return;
     
-    const success = await createPayment('starter_gems');
+    const success = await createPayment('starter_gems', 'starter_pack');
     if (success) {
       const odId = user?.id || 'guest';
       console.log('[PURCHASE] success confirmed via StarterPack (starter_gems)');
@@ -92,8 +92,6 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   };
 
   const handleDismiss = () => {
-    const odId = user?.id || 'guest';
-    localStorage.setItem(`starter-gems-${odId}`, 'true');
     setShow(false);
     onClose();
   };
