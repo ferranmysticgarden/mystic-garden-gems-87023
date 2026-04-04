@@ -184,6 +184,7 @@ const Index = () => {
     }
     // Reward text map (display only — rewards come from webhook)
     const REWARD_DISPLAY: Record<string, { name: string; text: string }> = {
+      starter_gems: { name: "Inicio Mágico", text: "+400 gemas añadidas" },
       gems_100: { name: "100 Gemas 💎", text: "+100 gemas añadidas" },
       gems_300: { name: "300 Gemas 💎", text: "+300 gemas añadidas" },
       gems_1200: { name: "1200 Gemas 💎", text: "+1200 gemas añadidas" },

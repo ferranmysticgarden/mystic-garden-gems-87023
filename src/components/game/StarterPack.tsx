@@ -195,7 +195,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               <div className="flex justify-center text-white mb-4">
                 <div className="bg-black/30 rounded-lg p-3 flex items-center gap-3">
                   <span className="text-3xl">💎</span>
-                  <span className="font-bold text-yellow-300 text-lg">+50 Gemas</span>
+                  <span className="font-bold text-yellow-300 text-lg">+400 Gemas</span>
                 </div>
               </div>
               

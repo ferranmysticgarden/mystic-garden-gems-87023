@@ -115,7 +115,7 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
                     <span className="text-4xl">💎</span>
                     <div>
                       <h3 className="text-2xl font-bold text-white">Inicio Mágico</h3>
-                      <p className="text-cyan-200 text-sm">+50 gemas para empezar tu aventura</p>
+                      <p className="text-cyan-200 text-sm">+400 gemas para empezar tu aventura</p>
                     </div>
                     <span className="text-4xl">✨</span>
                   </div>
