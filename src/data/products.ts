@@ -23,7 +23,7 @@ export const PRODUCTS: Product[] = [
     name: '💎 Inicio Mágico',
     price: 0.50,
     currency: 'EUR',
-    gems: 50,
+    gems: 400,
   },
   { 
     id: 'quick_pack', 
