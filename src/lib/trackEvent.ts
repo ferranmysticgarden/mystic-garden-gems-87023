@@ -7,6 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 // Simple device fingerprint for grouping events (NOT PII)
 const getDeviceId = (): string => {
@@ -18,6 +19,21 @@ const getDeviceId = (): string => {
   return id;
 };
 
+let cachedAppInfoPromise: Promise<{ version: string | null; build: string | null } | null> | null = null;
+
+const getAppInfo = async (): Promise<{ version: string | null; build: string | null } | null> => {
+  if (!cachedAppInfoPromise) {
+    cachedAppInfoPromise = App.getInfo()
+      .then((info) => ({
+        version: info.version ?? null,
+        build: info.build ?? null,
+      }))
+      .catch(() => null);
+  }
+
+  return cachedAppInfoPromise;
+};
+
 export const trackEvent = async (
   eventName: string,
   eventData?: Record<string, unknown>
@@ -25,12 +41,18 @@ export const trackEvent = async (
   try {
     const platform = Capacitor.getPlatform(); // 'android' | 'ios' | 'web'
     const deviceId = getDeviceId();
+    const appInfo = await getAppInfo();
+    const enrichedEventData = {
+      ...(eventData || {}),
+      app_version: appInfo?.version ?? null,
+      app_build: appInfo?.build ?? null,
+    };
 
-    console.log(`[TRACK] ${eventName}`, { platform, ...eventData });
+    console.log(`[TRACK] ${eventName}`, { platform, ...enrichedEventData });
 
     await (supabase.from('app_events' as any) as any).insert({
       event_name: eventName,
-      event_data: eventData || {},
+      event_data: enrichedEventData,
       platform,
       device_id: deviceId,
     });
