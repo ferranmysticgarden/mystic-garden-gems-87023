@@ -465,11 +465,11 @@ export const useGooglePlayBilling = () => {
     });
 
     void GooglePlayBilling.addListener('purchaseCancelled', ({ error, responseCode, debugMessage, stage }) => {
-      reportPurchaseCancelled(lastAttemptedProductId, error, 'native_listener');
+      // Only track from native listener — the catch block in purchase() already handles user-initiated cancellations
+      // This avoids duplicate purchase_cancelled events
       trackEvent('purchase_cancelled_native', {
         platform: 'android',
         product: lastAttemptedProductId,
-        error,
         response_code: responseCode,
         debug_message: debugMessage,
         stage,
