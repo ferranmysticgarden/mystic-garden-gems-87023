@@ -66,6 +66,7 @@ const Index = () => {
   const navigate = useNavigate();
   const adminTapsRef = useRef<number[]>([]);
   const { t } = useLanguage();
+  const appUpdate = useAppUpdate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasActiveProduct } = usePurchases(user);
   const { setScreen: setMusicScreen } = useBackgroundMusic("menu");
