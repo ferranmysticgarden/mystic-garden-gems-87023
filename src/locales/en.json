@@ -83,5 +83,10 @@
     "stars30Desc": "Get 30 three-star victories",
     "unlocked": "Achievement unlocked!",
     "reward": "Reward"
+  },
+  "update": {
+    "required_title": "Update Required!",
+    "required_message": "A new version with important improvements is available. Please update from Google Play to continue playing.",
+    "update_now": "Update Now"
   }
 }

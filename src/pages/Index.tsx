@@ -51,6 +51,8 @@ import { WelcomeOffer } from "@/components/game/WelcomeOffer";
 import { PaymentSuccessModal } from "@/components/game/PaymentSuccessModal";
 import { LoginPrompt } from "@/components/game/LoginPrompt";
 import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
+import { ForceUpdateModal } from "@/components/game/ForceUpdateModal";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { signInWithGoogleNative, signInWithGoogleWeb } from "@/lib/googleAuth";
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from "@/lib/analytics";
 import { trackEvent } from "@/lib/trackEvent";
@@ -64,6 +66,7 @@ const Index = () => {
   const navigate = useNavigate();
   const adminTapsRef = useRef<number[]>([]);
   const { t } = useLanguage();
+  const appUpdate = useAppUpdate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { hasActiveProduct } = usePurchases(user);
   const { setScreen: setMusicScreen } = useBackgroundMusic("menu");
@@ -1043,6 +1046,15 @@ const Index = () => {
         rewardText={paymentModal.rewardText}
         onClose={() => setPaymentModal({ show: false, productName: "", rewardText: "" })}
       />
+      {/* Force native update modal - blocks entire app if native version is too old */}
+      {appUpdate.nativeUpdateRequired && (
+        <ForceUpdateModal
+          playStoreUrl={appUpdate.playStoreUrl}
+          updateMessage={appUpdate.updateMessage}
+          currentVersion={appUpdate.currentVersionCode}
+          requiredVersion={appUpdate.requiredVersionCode}
+        />
+      )}
     </div>
     </>
   );

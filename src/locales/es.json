@@ -83,5 +83,10 @@
     "stars30Desc": "Consigue 30 victorias con 3 estrellas",
     "unlocked": "¡Logro desbloqueado!",
     "reward": "Recompensa"
+  },
+  "update": {
+    "required_title": "¡Actualización necesaria!",
+    "required_message": "Hay una nueva versión con mejoras importantes. Actualiza desde Google Play para seguir jugando.",
+    "update_now": "Actualizar ahora"
   }
 }
