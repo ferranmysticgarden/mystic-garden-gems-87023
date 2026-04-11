@@ -235,16 +235,9 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             BillingFlowParams.ProductDetailsParams.newBuilder()
                 .setProductDetails(productDetails);
 
-        ProductDetails.OneTimePurchaseOfferDetails oneTimeOfferDetails = productDetails.getOneTimePurchaseOfferDetails();
-        if (oneTimeOfferDetails != null) {
-            String offerToken = oneTimeOfferDetails.getOfferToken();
-            if (offerToken != null && !offerToken.isEmpty()) {
-                productDetailsParamsBuilder.setOfferToken(offerToken);
-                Log.d(TAG, "Using one-time product offer token for: " + productId);
-            } else {
-                Log.w(TAG, "One-time product missing offer token: " + productId);
-            }
-        }
+        // One-time products (INAPP) do not use offerToken — only subscriptions do.
+        // Simply use the ProductDetails directly without setting an offer token.
+        Log.d(TAG, "Launching billing flow for one-time product: " + productId);
 
         productDetailsParamsList.add(productDetailsParamsBuilder.build());
 
