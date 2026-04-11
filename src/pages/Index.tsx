@@ -51,6 +51,8 @@ import { WelcomeOffer } from "@/components/game/WelcomeOffer";
 import { PaymentSuccessModal } from "@/components/game/PaymentSuccessModal";
 import { LoginPrompt } from "@/components/game/LoginPrompt";
 import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
+import { ForceUpdateModal } from "@/components/game/ForceUpdateModal";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { signInWithGoogleNative, signInWithGoogleWeb } from "@/lib/googleAuth";
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from "@/lib/analytics";
 import { trackEvent } from "@/lib/trackEvent";
