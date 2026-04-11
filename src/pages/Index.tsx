@@ -1046,6 +1046,15 @@ const Index = () => {
         rewardText={paymentModal.rewardText}
         onClose={() => setPaymentModal({ show: false, productName: "", rewardText: "" })}
       />
+      {/* Force native update modal - blocks entire app if native version is too old */}
+      {appUpdate.nativeUpdateRequired && (
+        <ForceUpdateModal
+          playStoreUrl={appUpdate.playStoreUrl}
+          updateMessage={appUpdate.updateMessage}
+          currentVersion={appUpdate.currentVersionCode}
+          requiredVersion={appUpdate.requiredVersionCode}
+        />
+      )}
     </div>
     </>
   );
