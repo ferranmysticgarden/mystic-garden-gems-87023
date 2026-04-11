@@ -31,9 +31,11 @@ export const Tile = memo(({ tile, row, col, isSelected, isAnimating, isTarget, o
           ? '0 0 15px rgba(255, 200, 50, 0.6), inset 0 1px 0 rgba(255,255,255,0.15)'
           : 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)',
         border: '1px solid rgba(147, 51, 234, 0.25)',
+        willChange: 'transform',
+        contain: 'layout style paint',
       }}
     >
-      <span className="drop-shadow-md">{tile}</span>
+      <span>{tile}</span>
     </button>
   );
 });

@@ -13,14 +13,14 @@ interface Particle {
 export const FloatingParticles = () => {
   const particles = useMemo(() => {
     const colors = [
-      'rgba(255, 182, 193, 0.8)', // pink
-      'rgba(255, 215, 0, 0.6)',   // gold
-      'rgba(147, 112, 219, 0.7)', // purple
-      'rgba(135, 206, 250, 0.6)', // light blue
-      'rgba(255, 255, 255, 0.5)', // white
+      'rgba(255, 182, 193, 0.8)',
+      'rgba(255, 215, 0, 0.6)',
+      'rgba(147, 112, 219, 0.7)',
+      'rgba(135, 206, 250, 0.6)',
+      'rgba(255, 255, 255, 0.5)',
     ];
     
-    return Array.from({ length: 12 }, (_, i): Particle => ({
+    return Array.from({ length: 8 }, (_, i): Particle => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
@@ -43,9 +43,9 @@ export const FloatingParticles = () => {
             width: `${particle.size}px`,
             height: `${particle.size}px`,
             backgroundColor: particle.color,
-            boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
             animationDelay: `${particle.delay}s`,
             animationDuration: `${particle.duration}s`,
+            willChange: 'transform',
           }}
         />
       ))}

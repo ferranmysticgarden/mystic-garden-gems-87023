@@ -12,9 +12,7 @@ export const FloatingMushrooms = () => {
   const mushrooms = useMemo(() => {
     const positions = [
       { left: '3%', bottom: '5%' },
-      { left: '12%', bottom: '8%' },
       { left: '85%', bottom: '6%' },
-      { left: '92%', bottom: '10%' },
     ];
     
     return positions.map((pos, i): Mushroom => ({
@@ -37,7 +35,7 @@ export const FloatingMushrooms = () => {
             bottom: mushroom.bottom,
             transform: `scale(${mushroom.scale})`,
             animationDelay: `${mushroom.delay}s`,
-            filter: 'drop-shadow(0 0 15px rgba(255, 100, 180, 0.6))',
+            willChange: 'opacity',
           }}
         >
           <span className="text-4xl">🍄</span>

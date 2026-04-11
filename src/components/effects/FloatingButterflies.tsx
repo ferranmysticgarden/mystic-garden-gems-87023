@@ -16,9 +16,6 @@ export const FloatingButterflies = () => {
       { left: '5%', top: '10%' },
       { left: '90%', top: '15%' },
       { left: '8%', top: '75%' },
-      { left: '88%', top: '70%' },
-      { left: '15%', top: '45%' },
-      { left: '85%', top: '40%' },
     ];
     
     return positions.map((pos, i): Butterfly => ({
@@ -28,7 +25,7 @@ export const FloatingButterflies = () => {
       scale: Math.random() * 0.4 + 0.8,
       delay: Math.random() * 3,
       duration: Math.random() * 5 + 8,
-      emoji: Math.random() > 0.5 ? '🦋' : '🦋',
+      emoji: '🦋',
     }));
   }, []);
 
@@ -44,7 +41,7 @@ export const FloatingButterflies = () => {
             transform: `scale(${butterfly.scale})`,
             animationDelay: `${butterfly.delay}s`,
             animationDuration: `${butterfly.duration}s`,
-            filter: 'drop-shadow(0 0 10px rgba(255, 100, 150, 0.5))',
+            willChange: 'transform',
           }}
         >
           <span className="text-3xl">{butterfly.emoji}</span>
