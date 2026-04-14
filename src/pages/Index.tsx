@@ -150,10 +150,10 @@ const Index = () => {
     if (!isSupported || permission !== 'granted') return;
 
     localStorage.setItem(reEngageKey, 'true');
-    // 2 hours
-    scheduleNotification('come_back', 2 * 60 * 60 * 1000, { days: '0' });
+    // 2 hours — gentle reminder
+    scheduleNotification('level_milestone', 2 * 60 * 60 * 1000, { levels: '1' });
     // 24 hours
-    scheduleNotification('level_milestone', 24 * 60 * 60 * 1000, { levels: '2' });
+    scheduleNotification('come_back', 24 * 60 * 60 * 1000, { days: '1' });
     // 72 hours
     scheduleNotification('come_back', 72 * 60 * 60 * 1000, { days: '3' });
   }, [authLoading, isSupported, permission, scheduleNotification]);
@@ -360,14 +360,15 @@ const Index = () => {
       if (completedCount === 1) {
         setShowFirstWin(true);
       }
-      // Show starter_gems offer after level 1 win (captura inmediata antes del abandono)
+      // Show starter_gems offer after level 1 win — delayed until FirstWinCelebration is likely dismissed
       if (currentLevel.id === 1) {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 1 });
         trackEvent("offer_shown", { product: "starter_gems", level: 1 });
-        setTimeout(() => setShowStarterPack(true), 2500);
+        // 5s delay so FirstWinCelebration shows first, then StarterPack after user closes it
+        setTimeout(() => setShowStarterPack(true), 5000);
         // Request notification permission after first win (best moment)
         if (isSupported && permission === 'default') {
-          setTimeout(() => requestPermission(), 5000);
+          setTimeout(() => requestPermission(), 8000);
         }
       }
       // Free gems gift at level 3 — build spending habit before asking to buy
