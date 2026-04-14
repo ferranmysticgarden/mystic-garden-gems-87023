@@ -339,16 +339,17 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
     newBoard[pos2.row][pos2.col] = temp;
 
     setBoard(newBoard);
-    onMove();
 
-    // Check for matches after swap
+    // Check for matches after swap — only consume move if valid
     setTimeout(() => {
       const matches = findMatches(newBoard);
       if (matches.length === 0) {
         playInvalidSound();
         setBoard(prevBoard);
         setIsSwapping(false);
+        // Move NOT consumed — swap was invalid
       } else {
+        onMove(); // Only consume move on valid swap
         matchCountRef.current += 1;
         backgroundMusic.duck(400);
         playMatchSound(matchCountRef.current);
