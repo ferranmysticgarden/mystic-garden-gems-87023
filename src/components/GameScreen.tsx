@@ -158,7 +158,7 @@ export const GameScreen = ({
         try {
           const attempts = incrementAttempt(level.id);
           const shouldShowRescue = 
-            level.id >= 6 &&
+            level.id >= 4 &&
             movesNeeded <= 3 &&
             !showRescueOffer;
           
