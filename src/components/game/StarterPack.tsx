@@ -32,12 +32,9 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     const hasBought = localStorage.getItem(`starter-gems-${odId}`) === 'true';
     if (!hasBought && seenCount % 3 === 0) {
       localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
-      // Delay para que aparezca después de la celebración
-      const timer = setTimeout(() => {
-        setShow(true);
-        triggerCelebration();
-      }, 2500);
-      return () => clearTimeout(timer);
+      // Show immediately — Index.tsx already handles the delay
+      setShow(true);
+      triggerCelebration();
     } else if (!hasBought) {
       localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
     }
