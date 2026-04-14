@@ -42,23 +42,11 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
         </div>
 
         <div className="space-y-3">
-          {/* PRIMARY CTA: Use gems for 1 life - free path */}
-          <Button
-            onClick={handleUseGemsForLife}
-            disabled={gems < 5}
-            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-lg py-6"
-            id="use-gems-for-life"
-          >
-            <Heart className="w-5 h-5 mr-2 text-red-400" />
-            <Gem className="w-5 h-5 mr-2" />
-            {gems >= 5 ? `+1 Vida por 5 Gemas (tienes ${gems}💎)` : 'No tienes gemas suficientes'}
-          </Button>
-
-          {/* PAID CTA: starter_gems — best value, instant life + 400 gems */}
+          {/* PAID CTA first — highest conversion priority */}
           <Button
             onClick={handleBuyStarterGems}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-base py-5 animate-pulse"
+            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-lg py-6 animate-pulse"
             id="buy-starter-gems-no-lives"
           >
             <Sparkles className="w-5 h-5 mr-2" />
@@ -66,6 +54,20 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
               ? 'Procesando...'
               : `❤️ +1 Vida + 400 💎 por solo ${starterPrice}`}
           </Button>
+
+          {/* Secondary: gems path (only prominent if user can afford it) */}
+          {canAffordGems && (
+            <Button
+              onClick={handleUseGemsForLife}
+              variant="outline"
+              className="w-full border-emerald-600 text-emerald-400 hover:bg-emerald-900/30 text-sm py-4"
+              id="use-gems-for-life"
+            >
+              <Heart className="w-4 h-4 mr-2 text-red-400" />
+              <Gem className="w-4 h-4 mr-2" />
+              {`+1 Vida por 5 Gemas (tienes ${gems}💎)`}
+            </Button>
+          )}
 
           <Button
             onClick={onClose}

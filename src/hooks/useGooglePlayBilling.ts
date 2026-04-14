@@ -58,6 +58,7 @@ const reportPurchaseCancelled = (productId?: string | null, error?: string, sour
   trackEvent('purchase_cancelled', {
     platform: 'android',
     product: resolvedProductId,
+    productId: resolvedProductId,
     ...(error ? { error } : {}),
     ...(source ? { source } : {}),
   });
