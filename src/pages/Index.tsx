@@ -338,11 +338,11 @@ const Index = () => {
       if (completedCount === 1) {
         setShowFirstWin(true);
       }
-      // Show starter_gems offer after level 2 win (primera oferta del embudo)
-      if (currentLevel.id === 2) {
-        emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 2 });
-        trackEvent("offer_shown", { product: "starter_gems", level: 2 });
-        setTimeout(() => setShowStarterPack(true), 2000);
+      // Show starter_gems offer after level 1 win (captura inmediata antes del abandono)
+      if (currentLevel.id === 1) {
+        emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 1 });
+        trackEvent("offer_shown", { product: "starter_gems", level: 1 });
+        setTimeout(() => setShowStarterPack(true), 2500);
       }
       // Free gems gift at level 3 — build spending habit before asking to buy
       if (currentLevel.id === 3) {
