@@ -122,7 +122,7 @@ const Index = () => {
 
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
-  const { scheduleLivesFullNotification, scheduleStreakReminder, sendLivesFullNotification } = usePushNotifications();
+  const { scheduleLivesFullNotification, scheduleStreakReminder, sendLivesFullNotification, scheduleNotification, requestPermission, permission, isSupported } = usePushNotifications();
 
   // State for first session reward
   const [showFirstSessionReward, setShowFirstSessionReward] = useState(false);
@@ -135,6 +135,28 @@ const Index = () => {
       trackEvent('guest_session', { screen: 'menu' });
     }
   }, [authLoading, user]);
+
+  // Re-engagement notifications: 2h, 24h, 72h after first session
+  useEffect(() => {
+    if (authLoading) return;
+    const reEngageKey = 're_engage_scheduled';
+    if (localStorage.getItem(reEngageKey)) return;
+
+    // Request permission silently (will prompt once)
+    if (isSupported && permission === 'default') {
+      // Don't prompt immediately — wait until level 1 completed
+      return;
+    }
+    if (!isSupported || permission !== 'granted') return;
+
+    localStorage.setItem(reEngageKey, 'true');
+    // 2 hours
+    scheduleNotification('come_back', 2 * 60 * 60 * 1000, { days: '0' });
+    // 24 hours
+    scheduleNotification('level_milestone', 24 * 60 * 60 * 1000, { levels: '2' });
+    // 72 hours
+    scheduleNotification('come_back', 72 * 60 * 60 * 1000, { days: '3' });
+  }, [authLoading, isSupported, permission, scheduleNotification]);
 
   // State for welcome offer (post-level-1)
   const [showWelcomeOffer, setShowWelcomeOffer] = useState(false);
@@ -343,6 +365,10 @@ const Index = () => {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 1 });
         trackEvent("offer_shown", { product: "starter_gems", level: 1 });
         setTimeout(() => setShowStarterPack(true), 2500);
+        // Request notification permission after first win (best moment)
+        if (isSupported && permission === 'default') {
+          setTimeout(() => requestPermission(), 5000);
+        }
       }
       // Free gems gift at level 3 — build spending habit before asking to buy
       if (currentLevel.id === 3) {
