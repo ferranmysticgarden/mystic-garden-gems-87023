@@ -365,6 +365,10 @@ const Index = () => {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 1 });
         trackEvent("offer_shown", { product: "starter_gems", level: 1 });
         setTimeout(() => setShowStarterPack(true), 2500);
+        // Request notification permission after first win (best moment)
+        if (isSupported && permission === 'default') {
+          setTimeout(() => requestPermission(), 5000);
+        }
       }
       // Free gems gift at level 3 — build spending habit before asking to buy
       if (currentLevel.id === 3) {
