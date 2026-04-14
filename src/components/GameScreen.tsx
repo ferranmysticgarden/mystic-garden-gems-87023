@@ -435,6 +435,7 @@ export const GameScreen = ({
             onMove={handleMove}
             targetTile={level.objective.type === 'collect' ? level.objective.target : undefined}
             disabled={gameOver}
+            levelId={level.id}
           />
         </div>
 
