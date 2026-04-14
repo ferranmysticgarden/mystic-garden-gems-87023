@@ -148,12 +148,12 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               </div>
 
               {/* Mensaje personalizado - "Felicítalo primero" */}
-              <div className="bg-green-500/20 border border-green-400/50 rounded-xl px-4 py-2 mb-3 mt-4">
-                <p className="text-green-300 text-sm font-semibold">
-                  🎉 ¡Increíble! Nivel {levelJustCompleted} completado
+              <div className="bg-red-500/20 border border-red-400/50 rounded-xl px-4 py-2 mb-3 mt-4">
+                <p className="text-red-300 text-sm font-semibold">
+                  😢 ¡Nivel {levelJustCompleted} fallido!
                 </p>
-                <p className="text-green-200/80 text-xs">
-                  Te has ganado esta oferta exclusiva
+                <p className="text-red-200/80 text-xs">
+                  Con 400 gemas podrás comprar power-ups para ganar
                 </p>
               </div>
 

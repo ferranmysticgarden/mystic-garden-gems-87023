@@ -360,16 +360,9 @@ const Index = () => {
       if (completedCount === 1) {
         setShowFirstWin(true);
       }
-      // Show starter_gems offer after level 1 win — delayed until FirstWinCelebration is likely dismissed
-      if (currentLevel.id === 1) {
-        emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: 1 });
-        trackEvent("offer_shown", { product: "starter_gems", level: 1 });
-        // 5s delay so FirstWinCelebration shows first, then StarterPack after user closes it
-        setTimeout(() => setShowStarterPack(true), 5000);
-        // Request notification permission after first win (best moment)
-        if (isSupported && permission === 'default') {
-          setTimeout(() => requestPermission(), 8000);
-        }
+      // Request notification permission after first win (best moment)
+      if (currentLevel.id === 1 && isSupported && permission === 'default') {
+        setTimeout(() => requestPermission(), 5000);
       }
       // Free gems gift at level 3 — build spending habit before asking to buy
       if (currentLevel.id === 3) {
@@ -416,12 +409,12 @@ const Index = () => {
       }
       return newCount;
     });
-    // Show Welcome Offer ONLY on level 5+ defeat (no distracciones tempranas)
-    if (currentLevel.id >= 5 && !hasSeenWelcomeOffer() && canShowOfferToday()) {
+    // Show StarterPack on defeat at level 4+ — emotional moment, user wants to continue
+    if (currentLevel.id >= 4 && !hasSeenWelcomeOffer()) {
       setTimeout(() => {
-        emitAnalyticsEvent("first_purchase_offer_shown", { product: "welcome_pack", level: currentLevel.id });
-        trackEvent("offer_shown", { product: "welcome_pack", level: currentLevel.id });
-        setShowWelcomeOffer(true);
+        emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
+        trackEvent("offer_shown", { product: "starter_gems", trigger: "defeat", level: currentLevel.id });
+        setShowStarterPack(true);
         markOfferShown();
       }, 1500);
     }

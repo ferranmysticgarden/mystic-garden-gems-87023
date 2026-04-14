@@ -22,8 +22,9 @@ export const LEVELS: Level[] = [
   { id: 2, objective: { type: 'collect', target: '🌸', count: 4 }, moves: 30, stars: { one: 4, two: 6, three: 8 }, reward: { gems: 5 } },
   { id: 3, objective: { type: 'collect', target: '🍃', count: 5 }, moves: 28, stars: { one: 5, two: 7, three: 9 }, reward: { gems: 5 } },
   // Niveles 4-6: Ligeramente difíciles - primera frustración leve
-  { id: 4, objective: { type: 'score', target: 'points', count: 800 }, moves: 24, stars: { one: 800, two: 1100, three: 1400 }, reward: { gems: 10 } },
-  { id: 5, objective: { type: 'collect', target: '🌺', count: 8 }, moves: 20, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
+  // Niveles 4-5: PRIMER MURO — frustración controlada para monetizar
+  { id: 4, objective: { type: 'score', target: 'points', count: 800 }, moves: 16, stars: { one: 800, two: 1100, three: 1400 }, reward: { gems: 10 } },
+  { id: 5, objective: { type: 'collect', target: '🌺', count: 8 }, moves: 14, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
   
   // Nivel 6: Transición - reducido 20% (22→18)
   { id: 6, objective: { type: 'collect', target: '🌼', count: 10 }, moves: 18, stars: { one: 10, two: 12, three: 14 }, reward: {} },
