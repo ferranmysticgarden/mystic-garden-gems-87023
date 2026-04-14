@@ -13,6 +13,7 @@ import { Level10Paywall } from './game/Level10Paywall';
 import { Level6Offer } from './game/Level6Offer';
 import { UltimateRescueOffer } from './game/UltimateRescueOffer';
 import { emitAnalyticsEvent } from '@/lib/analytics';
+import { FirstMoveHint } from './game/FirstMoveHint';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePurchaseGate } from '@/hooks/usePurchaseGate';
@@ -423,6 +424,9 @@ export const GameScreen = ({
             }}
           />
         )}
+
+        {/* First Move Hint (non-blocking, Level 1 only) */}
+        <FirstMoveHint levelId={level.id} />
 
         {/* Board */}
         <div className="flex-1 flex items-center justify-center">

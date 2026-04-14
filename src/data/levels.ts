@@ -18,7 +18,7 @@ export interface Level {
 
 export const LEVELS: Level[] = [
   // Niveles 1-3: MUY FÁCILES - enganchar al jugador, victoria garantizada
-  { id: 1, objective: { type: 'score', target: 'points', count: 400 }, moves: 35, stars: { one: 400, two: 600, three: 800 }, reward: { gems: 10 } },
+  { id: 1, objective: { type: 'score', target: 'points', count: 200 }, moves: 45, stars: { one: 200, two: 400, three: 600 }, reward: { gems: 15 } },
   { id: 2, objective: { type: 'collect', target: '🌸', count: 4 }, moves: 30, stars: { one: 4, two: 6, three: 8 }, reward: { gems: 5 } },
   { id: 3, objective: { type: 'collect', target: '🍃', count: 5 }, moves: 28, stars: { one: 5, two: 7, three: 9 }, reward: { gems: 5 } },
   // Niveles 4-6: Ligeramente difíciles - primera frustración leve
