@@ -17,9 +17,10 @@ interface BoardProps {
   onMove: () => void;
   targetTile?: string;
   disabled?: boolean;
+  levelId?: number;
 }
 
-export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => {
+export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardProps) => {
   const { t } = useLanguage();
   const [board, setBoard] = useState<string[][]>([]);
   const [selected, setSelected] = useState<Position | null>(null);
@@ -125,7 +126,59 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     return newBoard;
   }, [hasValidMoves]);
 
+  // Pre-designed boards for early levels — guaranteed easy matches visible
+  const getEasyBoard = useCallback((lvl: number): string[][] | null => {
+    if (lvl === 1) {
+      // Board with multiple obvious 3-in-a-row ready to match
+      return [
+        ['🌸','🌺','🌼','🍃','🌻','🌷','🌸','🌺'],
+        ['🌼','🌸','🌸','🌸','🌺','🌼','🍃','🌻'],
+        ['🌺','🌼','🌻','🌷','🍃','🌸','🌺','🌼'],
+        ['🍃','🌺','🌺','🌺','🌼','🌻','🌷','🌸'],
+        ['🌻','🌷','🌼','🍃','🌸','🌺','🌼','🍃'],
+        ['🌸','🌼','🌼','🌼','🌻','🌷','🌸','🌺'],
+        ['🌷','🌻','🍃','🌸','🌺','🌼','🍃','🌻'],
+        ['🌼','🍃','🌸','🌺','🌷','🌻','🌸','🌷'],
+      ];
+    }
+    if (lvl === 2) {
+      // Lots of 🌸 clusters for "collect 🌸" objective
+      return [
+        ['🌸','🌸','🌺','🌼','🌸','🌸','🌺','🌼'],
+        ['🌺','🌸','🌸','🌸','🌼','🌺','🌸','🌻'],
+        ['🌼','🌺','🌻','🌸','🌸','🌸','🌼','🌺'],
+        ['🌸','🌼','🌸','🌺','🌻','🌼','🌸','🌸'],
+        ['🌻','🌸','🌸','🌸','🌼','🌺','🌻','🌼'],
+        ['🌸','🌺','🌼','🌻','🌸','🌸','🌸','🌺'],
+        ['🌼','🌸','🌺','🌸','🌺','🌼','🌻','🌸'],
+        ['🌺','🌻','🌸','🌼','🌸','🌻','🌸','🌼'],
+      ];
+    }
+    if (lvl === 3) {
+      // Lots of 🍃 clusters for "collect 🍃" objective
+      return [
+        ['🍃','🍃','🌸','🌺','🍃','🍃','🌼','🌻'],
+        ['🌺','🍃','🍃','🍃','🌼','🌸','🍃','🌺'],
+        ['🌼','🌻','🌸','🍃','🍃','🍃','🌺','🌼'],
+        ['🍃','🌺','🍃','🌻','🌸','🌼','🍃','🍃'],
+        ['🌸','🍃','🍃','🍃','🌺','🌻','🌸','🌼'],
+        ['🍃','🌼','🌻','🌸','🍃','🍃','🍃','🌺'],
+        ['🌻','🍃','🌺','🍃','🌼','🌸','🌻','🍃'],
+        ['🌺','🌸','🍃','🌼','🌻','🍃','🌺','🌸'],
+      ];
+    }
+    return null;
+  }, []);
+
   const initializeBoard = useCallback(() => {
+    // Use pre-designed easy board for levels 1-3
+    const easyBoard = levelId ? getEasyBoard(levelId) : null;
+    if (easyBoard) {
+      setBoard(easyBoard);
+      setSelected(null);
+      return;
+    }
+
     let newBoard: string[][] = [];
     for (let i = 0; i < BOARD_SIZE; i++) {
       const row: string[] = [];
@@ -142,7 +195,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled }: BoardProps) => 
     
     setBoard(newBoard);
     setSelected(null);
-  }, [hasValidMoves, shuffleBoard]);
+  }, [hasValidMoves, shuffleBoard, levelId, getEasyBoard]);
 
   useEffect(() => {
     initializeBoard();
