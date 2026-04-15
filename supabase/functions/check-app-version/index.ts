@@ -26,12 +26,12 @@ serve(async (req: Request) => {
       // ── Native version control ──
       // Bump this when a new AAB with native changes is required.
       // Users with versionCode < this will see a "force update" modal.
-      minNativeVersionCode: 2062,
+      minNativeVersionCode: 2063,
 
       // ── Informational ──
-      latestWebVersion: "2.0.6.2",
-      latestNativeVersionCode: 2062,
-      latestNativeVersionName: "2.0.6.2",
+      latestWebVersion: "2.0.6.3",
+      latestNativeVersionCode: 2063,
+      latestNativeVersionName: "2.0.6.3",
 
       // ── Play Store URL ──
       playStoreUrl: "https://play.google.com/store/apps/details?id=com.mysticgarden.game",
