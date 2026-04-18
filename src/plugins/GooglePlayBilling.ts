@@ -33,11 +33,11 @@ export interface GooglePlayBillingPlugin {
   ): Promise<{ remove: () => void }>;
   addListener(
     eventName: 'purchaseCancelled',
-    listenerFunc: (data: { error?: string; responseCode?: number; debugMessage?: string; stage?: string }) => void
+    listenerFunc: (data: { error?: string; responseCode?: number; debugMessage?: string; stage?: string; productId?: string }) => void
   ): Promise<{ remove: () => void }>;
   addListener(
     eventName: 'purchaseError',
-    listenerFunc: (data: { error: string; responseCode?: number; debugMessage?: string; stage?: string }) => void
+    listenerFunc: (data: { error: string; responseCode?: number; debugMessage?: string; stage?: string; productId?: string }) => void
   ): Promise<{ remove: () => void }>;
   addListener(
     eventName: 'purchasePending',
