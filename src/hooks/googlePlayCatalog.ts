@@ -1,18 +1,13 @@
 import { PRODUCTS } from '@/data/products';
 
-// ── Google Play Console: ONLY these SKUs actually exist ──
-// Everything else is a ghost query that causes "internal error" / "disconnected"
-const GOOGLE_PLAY_LIVE_SKUS: string[] = [
+const GOOGLE_PLAY_CORE_QUERY_SKUS: string[] = [
   'starter_gems',
   'gems_100',
   'pack_racha_infinita',
   'unlimited_lives_30min',
-  'pack_victoria_segura_pro',
-  'first_day_offer',
   'extra_moves',
 ];
 
-// Map internal product IDs to their ACTUAL Google Play Console IDs.
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   starter_gems: ['starter_gems', 'startergems'],
   gems_100: ['gems_100', 'gems100'],
@@ -23,21 +18,42 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   extra_moves: ['extra_moves', 'extramoves'],
 };
 
+const GOOGLE_PLAY_PURCHASE_OVERRIDES: Record<string, string[]> = {
+  quick_pack: ['gems_100'],
+  flash_offer: ['gems_100'],
+  starter_pack: ['pack_racha_infinita'],
+  pack_impulso: ['pack_racha_infinita'],
+  continue_game: ['extra_moves'],
+  buy_moves: ['extra_moves'],
+  finish_level: ['extra_moves'],
+  welcome_pack: ['extra_moves'],
+  victory_multiplier: ['extra_moves'],
+  reward_doubler: ['extra_moves'],
+  lifesaver_pack: ['extra_moves'],
+  streak_protection: ['extra_moves'],
+  extra_spin: ['extra_moves'],
+};
+
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
 
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
 
-export const getGooglePlayCandidates = (productId: string): string[] => {
+const withAliases = (productIds: string[]) => unique(productIds.flatMap((productId) => {
   const explicit = GOOGLE_PLAY_ID_OVERRIDES[productId] ?? [];
-  if (explicit.length > 0) return explicit;
-  // Fallback: try raw + normalized
-  const normalized = normalizeId(productId);
-  return unique([productId, normalized]);
+  return explicit.length > 0 ? explicit : [productId, normalizeId(productId)];
+}));
+
+export const getGooglePlayCandidates = (productId: string): string[] => {
+  const mappedProductIds = GOOGLE_PLAY_PURCHASE_OVERRIDES[productId] ?? [productId];
+  return withAliases(mappedProductIds);
 };
 
-// Query ONLY the SKUs that actually exist in Google Play Console
 export const getGooglePlayQueryProductIds = (): string[] => {
-  return [...GOOGLE_PLAY_LIVE_SKUS];
+  return withAliases(GOOGLE_PLAY_CORE_QUERY_SKUS);
+};
+
+export const getGooglePlayRequestedRewardProductId = (productId: string): string => {
+  return PRODUCTS.some((product) => product.id === productId) ? productId : productId;
 };
 
 export const resolveGooglePlayProductId = (
