@@ -482,10 +482,12 @@ export const useGooglePlayBilling = () => {
       });
     });
 
-    void GooglePlayBilling.addListener('purchaseError', ({ error, responseCode, debugMessage, stage }) => {
+    void GooglePlayBilling.addListener('purchaseError', ({ error, responseCode, debugMessage, stage, productId: nativeProductId }) => {
+      const resolvedProductId = nativeProductId ?? lastAttemptedProductId ?? 'unknown';
       trackEvent('purchase_error', {
         platform: 'android',
-        product: lastAttemptedProductId,
+        product: resolvedProductId,
+        productId: resolvedProductId,
         error,
         response_code: responseCode,
         debug_message: debugMessage,
