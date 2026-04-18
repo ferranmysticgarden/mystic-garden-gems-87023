@@ -342,7 +342,7 @@ serve(async (req) => {
       }
     }
 
-    const { purchaseToken, productId: rawProductId, orderId, packageName: purchasePackageName } = await req.json();
+    const { purchaseToken, productId: rawProductId, requestedProductId, orderId, packageName: purchasePackageName } = await req.json();
 
     if (!purchaseToken || !rawProductId) {
       return new Response(JSON.stringify({ success: false, error: "Missing purchaseToken or productId" }), {
@@ -351,7 +351,7 @@ serve(async (req) => {
       });
     }
 
-    const productId = normalizeGoogleProductId(rawProductId);
+    const productId = normalizeGoogleProductId(typeof requestedProductId === 'string' && requestedProductId.trim().length > 0 ? requestedProductId : rawProductId);
     const purchaseKey = orderId || purchaseToken;
     const purchaseRecordId = `gp_${purchaseKey}`;
     const isGuest = !userId;
@@ -363,11 +363,11 @@ serve(async (req) => {
       defaultPackageName,
     ].filter((pkg): pkg is string => Boolean(pkg))));
 
-    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
+    console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, requestedProduct=${requestedProductId || rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
     await supabaseClient.from('app_events').insert({
       event_name: 'gp_verify_started',
-      event_data: { productId, rawProductId, orderId: orderId || null, purchaseTokenPrefix: purchaseToken.slice(0, 12), packageCandidates, isGuest, userId },
+      event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, purchaseTokenPrefix: purchaseToken.slice(0, 12), packageCandidates, isGuest, userId },
       platform: 'android',
       device_id: purchaseToken.slice(0, 24),
     });
@@ -392,7 +392,7 @@ serve(async (req) => {
       console.error('[ERROR] Purchase verification failed:', verification.error);
       await supabaseClient.from('app_events').insert({
         event_name: 'gp_verify_failed',
-        event_data: { productId, rawProductId, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
+        event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
         platform: 'android',
         device_id: purchaseToken.slice(0, 24),
       });
@@ -418,7 +418,7 @@ serve(async (req) => {
 
     await supabaseClient.from('app_events').insert({
       event_name: 'gp_verify_ok',
-      event_data: { productId, rawProductId, orderId: orderId || null, packageName: resolvedPackageName, purchaseState: verification.purchaseState ?? null, consumptionState: verification.consumptionState ?? null, isGuest, userId },
+        event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, packageName: resolvedPackageName, purchaseState: verification.purchaseState ?? null, consumptionState: verification.consumptionState ?? null, isGuest, userId },
       platform: 'android',
       device_id: purchaseToken.slice(0, 24),
     });

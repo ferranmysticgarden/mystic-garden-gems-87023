@@ -266,6 +266,7 @@ export const useGooglePlayBilling = () => {
           body: {
             purchaseToken: purchase.purchaseToken,
             productId: purchase.productId,
+            requestedProductId: trackedProductId,
             orderId: purchase.orderId,
             packageName: purchase.packageName,
           },
@@ -298,6 +299,8 @@ export const useGooglePlayBilling = () => {
         trackEvent('purchase_verified', {
           platform: 'android',
           product: verifiedProductId,
+          requested_product: trackedProductId,
+          google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
         });
         // Pass server rewards so guest clients can apply them locally
