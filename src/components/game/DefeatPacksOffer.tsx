@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Zap, Shield, Crown, Star } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import { toast } from 'sonner';
 
 interface DefeatPacksOfferProps {
