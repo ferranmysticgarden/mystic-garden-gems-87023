@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, X, Clock } from 'lucide-react';
 
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface FlashOfferProps {
   trigger: 'loss' | 'streak_loss';
