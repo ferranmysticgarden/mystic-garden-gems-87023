@@ -440,6 +440,11 @@ const Index = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       selectLevel(levelId);
       loseLife();
+      trackEvent("level_start", {
+        level: levelId,
+        source: "level_select",
+        guest: !user,
+      });
       setScreen("game");
     } else {
       trackEvent("no_lives_modal_shown", { trigger: "level_select" });
