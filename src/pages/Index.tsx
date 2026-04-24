@@ -423,7 +423,7 @@ const Index = () => {
     if (currentLevel.id >= 4 && !hasSeenWelcomeOffer()) {
       setTimeout(() => {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
-        trackEvent("offer_shown", { product: "starter_gems", trigger: "defeat", level: currentLevel.id });
+        trackEvent("offer_shown", { offer: "starter_gems", productId: "starter_gems", product: "starter_gems", trigger: "defeat", source: "auto_popup", level: currentLevel.id });
         setShowStarterPack(true);
         markOfferShown();
       }, 1500);
