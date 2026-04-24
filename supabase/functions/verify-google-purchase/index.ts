@@ -136,6 +136,40 @@ const normalizeGoogleProductId = (productId: string) => {
   return GOOGLE_PLAY_PRODUCT_ALIASES[normalized] ?? NORMALIZED_CANONICAL_PRODUCT_IDS[normalized] ?? productId;
 };
 
+// SECURITY: whitelist of which logical (requestedProductId) rewards each REAL Google Play SKU
+// (rawProductId) is allowed to grant. Mirrors GOOGLE_PLAY_PURCHASE_OVERRIDES on the client.
+// Without this, a user could buy a cheap SKU and claim rewards of an expensive one (exploit).
+const ALLOWED_REQUESTED_BY_SKU: Record<string, Set<string>> = {
+  starter_gems: new Set(['starter_gems']),
+  gems_100: new Set(['gems_100', 'quick_pack', 'flash_offer']),
+  pack_racha_infinita: new Set(['pack_racha_infinita', 'starter_pack', 'pack_impulso']),
+  unlimited_lives_30min: new Set(['unlimited_lives_30min']),
+  extra_moves: new Set([
+    'extra_moves',
+    'buy_moves',
+    'finish_level',
+    'continue_game',
+    'welcome_pack',
+    'victory_multiplier',
+    'reward_doubler',
+    'lifesaver_pack',
+    'streak_protection',
+    'extra_spin',
+  ]),
+};
+
+/**
+ * Returns true if `requestedCanonical` is an allowed reward for `rawCanonical`.
+ * If `rawCanonical` is not in the whitelist (future SKU), we fail-safe: only allow
+ * the requested === raw case (i.e. ignore requestedProductId for unknown SKUs).
+ */
+const isRequestedProductAllowedForSku = (rawCanonical: string, requestedCanonical: string): boolean => {
+  if (rawCanonical === requestedCanonical) return true;
+  const allowed = ALLOWED_REQUESTED_BY_SKU[rawCanonical];
+  if (!allowed) return false;
+  return allowed.has(requestedCanonical);
+};
+
 async function verifyWithGooglePlay(
   packageName: string,
   productId: string,
@@ -355,6 +389,41 @@ serve(async (req) => {
     const purchaseKey = orderId || purchaseToken;
     const purchaseRecordId = `gp_${purchaseKey}`;
     const isGuest = !userId;
+
+    // SECURITY HOTFIX: validate that the requested logical product is allowed for the
+    // real SKU bought on Google Play. Without this, a user could buy a cheap SKU and
+    // claim rewards of a much more expensive one. Done BEFORE Google Play verification
+    // so we don't burn API quota on tampered requests.
+    const normalizedRawSku = normalizeGoogleProductId(rawProductId);
+    const hasExplicitRequested = typeof requestedProductId === 'string' && requestedProductId.trim().length > 0;
+    if (hasExplicitRequested && !isRequestedProductAllowedForSku(normalizedRawSku, productId)) {
+      console.error(`[SECURITY] Reward mismatch blocked: rawSku=${normalizedRawSku} requested=${productId} (raw=${rawProductId}, requestedRaw=${requestedProductId})`);
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_verify_failed',
+        event_data: {
+          productId,
+          rawProductId,
+          normalizedRawSku,
+          requestedProductId,
+          orderId: orderId || null,
+          reason: 'requested_product_not_allowed',
+          isGuest,
+          userId,
+        },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
+      return new Response(JSON.stringify({
+        success: false,
+        reason: 'requested_product_not_allowed',
+        rawProductId,
+        requestedProductId,
+        error: 'Requested product is not allowed for the purchased SKU',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
 
     const defaultPackageName = "com.mysticgarden.game";
     const packageCandidates = Array.from(new Set([
