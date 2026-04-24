@@ -71,7 +71,16 @@ export const ContinueGameOffer = ({
 
           {/* Secondary option - Exit (small) */}
           <button 
-            onClick={onExit}
+            onClick={() => {
+              trackEvent('offer_dismissed', {
+                offer: 'continue_game',
+                trigger: 'continue_game',
+                source: 'auto_popup',
+                reason: 'no_thanks',
+                progress_percent: Math.round(progressPercent),
+              });
+              onExit();
+            }}
             className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
           >
             Salir
