@@ -2,6 +2,7 @@ import { Heart, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface LifesaverPackProps {
   onBuy: () => void;
@@ -15,6 +16,16 @@ interface LifesaverPackProps {
 export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
+
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'lifesaver_pack',
+      trigger: 'no_lives',
+      source: 'auto_popup',
+      reason,
+    });
+    onDismiss();
+  };
 
   const handleBuy = async () => {
     const success = await createPayment('lifesaver_pack');
