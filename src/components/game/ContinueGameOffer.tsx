@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface ContinueGameOfferProps {
   progressPercent: number;
