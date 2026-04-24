@@ -54,7 +54,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
         </div>
 
         <button 
-          onClick={onClose}
+          onClick={() => handleDismiss('close_x')}
           className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />
