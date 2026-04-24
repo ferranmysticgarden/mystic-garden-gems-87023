@@ -401,6 +401,11 @@ const Index = () => {
     ],
   );
   const handleLose = useCallback(() => {
+    trackEvent("level_failed", {
+      level: currentLevel.id,
+      consecutive_losses: consecutiveLosses + 1,
+      guest: !user,
+    });
     toast.error(t("game.lose"));
     // Increment games played counter for review request
     setGamesPlayed((prev) => prev + 1);
@@ -425,7 +430,7 @@ const Index = () => {
     }
 
     setScreen("menu");
-  }, [t, currentLevel.id]);
+  }, [t, currentLevel.id, consecutiveLosses, user]);
   const handleSelectLevel = (levelId: number) => {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
     if (levelId > maxUnlockedLevel) {
