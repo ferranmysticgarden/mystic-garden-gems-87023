@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface LoseBundleProps {
   onBuy: () => void;
@@ -9,6 +10,16 @@ interface LoseBundleProps {
 
 export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
   const { createPayment, loading, getPrice } = usePayment();
+
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'pack_revancha',
+      trigger: 'defeat_packs',
+      source: 'auto_popup',
+      reason,
+    });
+    onDismiss();
+  };
 
   const handleBuy = async () => {
     const success = await createPayment('pack_revancha');
