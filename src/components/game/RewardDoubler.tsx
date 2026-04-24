@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Gift, Sparkles, Timer } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import confetti from 'canvas-confetti';
 
 interface RewardDoublerProps {
@@ -18,10 +19,21 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
 
   const price = getPrice('reward_doubler', '€0.50');
 
+  const handleDismiss = (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+    trackEvent('offer_dismissed', {
+      offer: 'reward_doubler',
+      trigger: 'post_victory',
+      source: 'auto_popup',
+      reason,
+      base_gems: baseGems,
+    });
+    onClose();
+  };
+
   // Countdown timer with urgency
   useEffect(() => {
     if (countdown <= 0) {
-      onClose();
+      handleDismiss('auto_close');
       return;
     }
 
@@ -139,7 +151,7 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
           </PremiumButton>
 
           <button
-            onClick={onClose}
+            onClick={() => handleDismiss('no_thanks')}
             className="w-full text-yellow-300/50 hover:text-yellow-300/80 text-sm py-2 transition-colors"
           >
             No gracias, solo quiero {baseGems} gemas

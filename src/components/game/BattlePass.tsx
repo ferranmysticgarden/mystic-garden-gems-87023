@@ -4,6 +4,7 @@ import { Crown, Lock, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import { toast } from 'sonner';
 
 const TIERS = [
@@ -92,7 +93,7 @@ export const BattlePass = ({ onClose, hasPremiumAccess, onPurchaseSuccess }: Bat
                 {loading ? 'Procesando...' : `Premium ${getPrice('garden_pass', '€9.99')}`}
               </Button>
             )}
-            <button onClick={onClose} className="text-white/70 hover:text-white">
+            <button onClick={() => { trackEvent('offer_dismissed', { offer: 'garden_pass', trigger: 'battle_pass', source: 'cta_button', reason: 'close_x', is_premium: isPremium }); onClose(); }} className="text-white/70 hover:text-white">
               <X className="w-6 h-6" />
             </button>
           </div>

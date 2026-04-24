@@ -2,6 +2,7 @@ import { Heart, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface LifesaverPackProps {
   onBuy: () => void;
@@ -15,6 +16,16 @@ interface LifesaverPackProps {
 export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
+
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'lifesaver_pack',
+      trigger: 'no_lives',
+      source: 'auto_popup',
+      reason,
+    });
+    onDismiss();
+  };
 
   const handleBuy = async () => {
     const success = await createPayment('lifesaver_pack');
@@ -30,7 +41,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-red-900 via-pink-900 to-purple-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-red-400 shadow-2xl animate-scale-in">
         <button 
-          onClick={onDismiss}
+          onClick={() => handleDismiss('close_x')}
           className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />
@@ -89,7 +100,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
           </PremiumButton>
 
           <button 
-            onClick={onDismiss}
+            onClick={() => handleDismiss('no_thanks')}
             className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
           >
             {language === 'es' ? 'Esperar regeneración' : 'Wait for regeneration'}

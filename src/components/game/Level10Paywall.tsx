@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { PRODUCTS } from '@/data/products';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface Level10PaywallProps {
   onPurchaseSuccess: () => void;
@@ -64,6 +65,14 @@ export const Level10Paywall = ({
   };
 
   const handleClose = () => {
+    trackEvent('offer_dismissed', {
+      offer: 'buy_moves',
+      trigger: 'level10_paywall',
+      source: 'auto_popup',
+      reason: 'close_x',
+      level: 10,
+      moves_short: movesShort,
+    });
     onDismiss();
   };
 

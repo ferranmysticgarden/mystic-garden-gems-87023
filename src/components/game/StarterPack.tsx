@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star, Gift, Clock, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import confetti from 'canvas-confetti';
 
 interface StarterPackProps {
@@ -53,7 +54,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          handleDismiss();
+          handleDismissReason('auto_close');
           return 0;
         }
         return prev - 1;
@@ -88,9 +89,20 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     }
   };
 
-  const handleDismiss = () => {
+  const handleDismissReason = (reason: 'close_x' | 'auto_close') => {
+    trackEvent('offer_dismissed', {
+      offer: 'starter_gems',
+      trigger: 'starter_pack',
+      source: 'auto_popup',
+      reason,
+      level: levelJustCompleted,
+    });
     setShow(false);
     onClose();
+  };
+
+  const handleDismiss = () => {
+    handleDismissReason('close_x');
   };
 
   const formatTime = (seconds: number) => {

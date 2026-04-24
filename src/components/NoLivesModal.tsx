@@ -70,7 +70,16 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
           )}
 
           <Button
-            onClick={onClose}
+            onClick={() => {
+              trackEvent('offer_dismissed', {
+                offer: 'starter_gems',
+                trigger: 'no_lives',
+                source: 'auto_popup',
+                reason: 'no_thanks',
+                gems_balance: gems,
+              });
+              onClose();
+            }}
             variant="ghost"
             className="w-full text-muted-foreground text-sm"
           >

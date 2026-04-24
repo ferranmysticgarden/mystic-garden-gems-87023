@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, X, Clock } from 'lucide-react';
 
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface FlashOfferProps {
   trigger: 'loss' | 'streak_loss';
@@ -17,11 +18,22 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
 
   const price = getPrice('flash_offer', '€0.99');
 
+  const handleDismiss = (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+    trackEvent('offer_dismissed', {
+      offer: 'flash_offer',
+      trigger: 'flash_offer',
+      source: 'auto_popup',
+      reason,
+      flash_trigger: trigger,
+    });
+    onClose();
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          onClose();
+          handleDismiss('auto_close');
           return 0;
         }
         return prev - 1;
@@ -29,7 +41,8 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -56,7 +69,7 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
         <div className="absolute inset-0 rounded-3xl border-4 border-yellow-400/50 animate-pulse" />
         
         <button 
-          onClick={onClose}
+          onClick={() => handleDismiss('close_x')}
           className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />
@@ -110,7 +123,7 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
           </Button>
 
           <Button 
-            onClick={onClose}
+            onClick={() => handleDismiss('no_thanks')}
             variant="ghost"
             className="w-full text-white/50 hover:text-white mt-2 text-sm"
           >

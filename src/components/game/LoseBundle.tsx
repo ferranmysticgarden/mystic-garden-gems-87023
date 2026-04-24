@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface LoseBundleProps {
   onBuy: () => void;
@@ -9,6 +10,16 @@ interface LoseBundleProps {
 
 export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
   const { createPayment, loading, getPrice } = usePayment();
+
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'pack_revancha',
+      trigger: 'defeat_packs',
+      source: 'auto_popup',
+      reason,
+    });
+    onDismiss();
+  };
 
   const handleBuy = async () => {
     const success = await createPayment('pack_revancha');
@@ -24,7 +35,7 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-red-900 via-purple-900 to-indigo-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-orange-400 shadow-2xl animate-scale-in">
         <button 
-          onClick={onDismiss}
+          onClick={() => handleDismiss('close_x')}
           className="absolute top-3 right-3 text-white/70 hover:text-white"
         >
           <X className="w-6 h-6" />
@@ -71,7 +82,7 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
           </Button>
 
           <Button 
-            onClick={onDismiss}
+            onClick={() => handleDismiss('no_thanks')}
             variant="ghost"
             className="w-full text-purple-300 hover:text-white"
           >
