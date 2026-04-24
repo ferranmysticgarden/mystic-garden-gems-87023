@@ -35,7 +35,7 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-red-900 via-purple-900 to-indigo-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-orange-400 shadow-2xl animate-scale-in">
         <button 
-          onClick={onDismiss}
+          onClick={() => handleDismiss('close_x')}
           className="absolute top-3 right-3 text-white/70 hover:text-white"
         >
           <X className="w-6 h-6" />
