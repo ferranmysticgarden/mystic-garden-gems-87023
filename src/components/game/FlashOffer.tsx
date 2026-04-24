@@ -123,7 +123,7 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
           </Button>
 
           <Button 
-            onClick={onClose}
+            onClick={() => handleDismiss('no_thanks')}
             variant="ghost"
             className="w-full text-white/50 hover:text-white mt-2 text-sm"
           >
