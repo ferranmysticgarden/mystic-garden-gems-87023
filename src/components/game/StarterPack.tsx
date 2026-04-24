@@ -54,7 +54,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          handleDismiss();
+          handleDismissReason('auto_close');
           return 0;
         }
         return prev - 1;
