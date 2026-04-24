@@ -27,6 +27,22 @@ export const UltimateRescueOffer = ({
   
   const price = getPrice('continue_game', '€0.50');
 
+  const handleDismiss = useCallback(
+    (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+      trackEvent('offer_dismissed', {
+        offer: 'continue_game',
+        trigger: 'ultimate_rescue',
+        source: 'auto_popup',
+        reason,
+        level: levelNumber,
+        attempts,
+        moves_short: movesShort,
+      });
+      onDismiss();
+    },
+    [levelNumber, attempts, movesShort, onDismiss]
+  );
+
   // Efecto de entrada: vibración + shake
   useEffect(() => {
     if (navigator.vibrate) {
@@ -39,14 +55,14 @@ export const UltimateRescueOffer = ({
   // Countdown de urgencia
   useEffect(() => {
     if (secondsLeft <= 0) {
-      onDismiss();
+      handleDismiss('auto_close');
       return;
     }
     const timer = setInterval(() => {
       setSecondsLeft(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [secondsLeft, onDismiss]);
+  }, [secondsLeft, handleDismiss]);
 
   const handleBuy = async () => {
     if (navigator.vibrate) {
@@ -80,7 +96,7 @@ export const UltimateRescueOffer = ({
         <div className="relative gradient-card rounded-3xl p-6 border-2 border-destructive/50 shadow-card animate-scale-in">
           {/* Botón cerrar - SIEMPRE visible pero muy sutil */}
           <button
-            onClick={onDismiss}
+            onClick={() => handleDismiss('close_x')}
             className="absolute top-3 right-3 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
           >
             <X className="w-4 h-4" />
@@ -134,7 +150,7 @@ export const UltimateRescueOffer = ({
             </Button>
 
             <button
-              onClick={onDismiss}
+              onClick={() => handleDismiss('no_thanks')}
               className="text-muted-foreground/30 hover:text-muted-foreground/50 text-xs mt-4 transition-colors block mx-auto"
             >
               Abandonar y perder todo el progreso
