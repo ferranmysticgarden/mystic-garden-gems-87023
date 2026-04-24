@@ -19,10 +19,21 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
 
   const price = getPrice('reward_doubler', '€0.50');
 
+  const handleDismiss = (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+    trackEvent('offer_dismissed', {
+      offer: 'reward_doubler',
+      trigger: 'post_victory',
+      source: 'auto_popup',
+      reason,
+      base_gems: baseGems,
+    });
+    onClose();
+  };
+
   // Countdown timer with urgency
   useEffect(() => {
     if (countdown <= 0) {
-      onClose();
+      handleDismiss('auto_close');
       return;
     }
 
