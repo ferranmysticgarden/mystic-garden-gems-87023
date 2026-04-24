@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Zap, Shield, Crown, Star } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import { toast } from 'sonner';
 
 interface DefeatPacksOfferProps {
@@ -22,6 +23,16 @@ export const DefeatPacksOffer = ({
 }: DefeatPacksOfferProps) => {
   const [loading, setLoading] = useState<string | null>(null);
   const { createPayment, getPrice } = usePayment();
+
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'defeat_packs',
+      source: 'defeat_packs_offer',
+      reason,
+      progress_percent: Math.round(progressPercent),
+    });
+    onDismiss();
+  };
 
   const handleBuy = async (productId: string) => {
     setLoading(productId);
@@ -54,7 +65,7 @@ export const DefeatPacksOffer = ({
       <div className="relative max-w-md mx-4 w-full">
         {/* Close button */}
         <button 
-          onClick={onDismiss}
+          onClick={() => handleDismiss('close_x')}
           className="absolute -top-2 -right-2 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -165,7 +176,7 @@ export const DefeatPacksOffer = ({
         {/* Dismiss link */}
         <div className="text-center mt-4">
           <button 
-            onClick={onDismiss}
+            onClick={() => handleDismiss('no_thanks')}
             className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
           >
             No, gracias

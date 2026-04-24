@@ -303,6 +303,13 @@ export const useGooglePlayBilling = () => {
           google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
         });
+        // Unified success event for cross-platform funnel analysis
+        trackEvent('purchase_success', {
+          productId: verifiedProductId,
+          platform: 'android',
+          google_product: purchase.productId,
+          guest: Boolean(data?.isGuest),
+        });
         // Pass server rewards so guest clients can apply them locally
         dispatchPurchaseCompleted(verifiedProductId, data?.rewards ?? undefined);
         console.log('[PURCHASE] gate unlocked');
