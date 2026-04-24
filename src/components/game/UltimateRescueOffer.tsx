@@ -96,7 +96,7 @@ export const UltimateRescueOffer = ({
         <div className="relative gradient-card rounded-3xl p-6 border-2 border-destructive/50 shadow-card animate-scale-in">
           {/* Botón cerrar - SIEMPRE visible pero muy sutil */}
           <button
-            onClick={onDismiss}
+            onClick={() => handleDismiss('close_x')}
             className="absolute top-3 right-3 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
           >
             <X className="w-4 h-4" />
