@@ -27,7 +27,8 @@ export const DefeatPacksOffer = ({
   const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
     trackEvent('offer_dismissed', {
       offer: 'defeat_packs',
-      source: 'defeat_packs_offer',
+      trigger: 'defeat_packs',
+      source: 'auto_popup',
       reason,
       progress_percent: Math.round(progressPercent),
     });
