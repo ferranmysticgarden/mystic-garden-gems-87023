@@ -150,7 +150,7 @@ export const UltimateRescueOffer = ({
             </Button>
 
             <button
-              onClick={onDismiss}
+              onClick={() => handleDismiss('no_thanks')}
               className="text-muted-foreground/30 hover:text-muted-foreground/50 text-xs mt-4 transition-colors block mx-auto"
             >
               Abandonar y perder todo el progreso
