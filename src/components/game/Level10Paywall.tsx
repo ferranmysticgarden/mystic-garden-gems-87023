@@ -65,6 +65,14 @@ export const Level10Paywall = ({
   };
 
   const handleClose = () => {
+    trackEvent('offer_dismissed', {
+      offer: 'buy_moves',
+      trigger: 'level10_paywall',
+      source: 'auto_popup',
+      reason: 'close_x',
+      level: 10,
+      moves_short: movesShort,
+    });
     onDismiss();
   };
 
