@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface PostVictoryOfferProps {
   baseGems: number;
@@ -10,6 +11,16 @@ interface PostVictoryOfferProps {
 
 export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostVictoryOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
+
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'victory_multiplier',
+      trigger: 'post_victory',
+      source: 'auto_popup',
+      reason,
+    });
+    onClose();
+  };
 
   const handleBuy = async () => {
     const success = await createPayment('victory_multiplier');
