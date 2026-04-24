@@ -102,7 +102,7 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
           </Button>
 
           <Button 
-            onClick={onClose}
+            onClick={() => handleDismiss('no_thanks')}
             variant="ghost"
             className="w-full text-emerald-300/60 hover:text-emerald-300 mt-2"
           >
