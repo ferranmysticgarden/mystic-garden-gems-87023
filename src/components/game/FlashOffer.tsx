@@ -18,11 +18,22 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
 
   const price = getPrice('flash_offer', '€0.99');
 
+  const handleDismiss = (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+    trackEvent('offer_dismissed', {
+      offer: 'flash_offer',
+      trigger: 'flash_offer',
+      source: 'auto_popup',
+      reason,
+      flash_trigger: trigger,
+    });
+    onClose();
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          onClose();
+          handleDismiss('auto_close');
           return 0;
         }
         return prev - 1;
@@ -30,7 +41,8 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
