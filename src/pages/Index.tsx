@@ -328,6 +328,11 @@ const Index = () => {
   const handlePlayClick = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       loseLife();
+      trackEvent("level_start", {
+        level: currentLevel.id,
+        source: "play_button",
+        guest: !user,
+      });
       setScreen("game");
     } else {
       trackEvent("no_lives_modal_shown", { trigger: "retry" });
