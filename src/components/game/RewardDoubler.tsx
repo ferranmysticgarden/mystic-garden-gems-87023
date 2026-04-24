@@ -151,7 +151,7 @@ export const RewardDoubler = ({ baseGems, onClose, onDouble }: RewardDoublerProp
           </PremiumButton>
 
           <button
-            onClick={onClose}
+            onClick={() => handleDismiss('no_thanks')}
             className="w-full text-yellow-300/50 hover:text-yellow-300/80 text-sm py-2 transition-colors"
           >
             No gracias, solo quiero {baseGems} gemas
