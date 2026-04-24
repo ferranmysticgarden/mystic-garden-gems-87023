@@ -176,7 +176,7 @@ export const DefeatPacksOffer = ({
         {/* Dismiss link */}
         <div className="text-center mt-4">
           <button 
-            onClick={onDismiss}
+            onClick={() => handleDismiss('no_thanks')}
             className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
           >
             No, gracias
