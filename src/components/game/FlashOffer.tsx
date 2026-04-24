@@ -69,7 +69,7 @@ export const FlashOffer = ({ trigger, onClose, onPurchaseSuccess }: FlashOfferPr
         <div className="absolute inset-0 rounded-3xl border-4 border-yellow-400/50 animate-pulse" />
         
         <button 
-          onClick={onClose}
+          onClick={() => handleDismiss('close_x')}
           className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />
