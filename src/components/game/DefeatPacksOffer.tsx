@@ -24,6 +24,16 @@ export const DefeatPacksOffer = ({
   const [loading, setLoading] = useState<string | null>(null);
   const { createPayment, getPrice } = usePayment();
 
+  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    trackEvent('offer_dismissed', {
+      offer: 'defeat_packs',
+      source: 'defeat_packs_offer',
+      reason,
+      progress_percent: Math.round(progressPercent),
+    });
+    onDismiss();
+  };
+
   const handleBuy = async (productId: string) => {
     setLoading(productId);
     try {
