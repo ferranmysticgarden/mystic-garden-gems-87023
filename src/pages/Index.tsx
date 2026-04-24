@@ -384,7 +384,7 @@ const Index = () => {
       if (currentLevel.id >= 6 && reward.gems && reward.gems > 0) {
         setLastWinGems(reward.gems);
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "victory_multiplier", level: currentLevel.id });
-        trackEvent("offer_shown", { product: "victory_multiplier", level: currentLevel.id });
+        trackEvent("offer_shown", { offer: "victory_multiplier", productId: "victory_multiplier", product: "victory_multiplier", trigger: "post_victory", source: "auto_popup", level: currentLevel.id });
         setTimeout(() => setShowPostVictoryOffer(true), 1500);
       }
 
@@ -423,7 +423,7 @@ const Index = () => {
     if (currentLevel.id >= 4 && !hasSeenWelcomeOffer()) {
       setTimeout(() => {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
-        trackEvent("offer_shown", { product: "starter_gems", trigger: "defeat", level: currentLevel.id });
+        trackEvent("offer_shown", { offer: "starter_gems", productId: "starter_gems", product: "starter_gems", trigger: "defeat", source: "auto_popup", level: currentLevel.id });
         setShowStarterPack(true);
         markOfferShown();
       }, 1500);
@@ -881,7 +881,7 @@ const Index = () => {
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
           onShowStarterOffer={() => {
-            trackEvent('offer_shown', { product: 'starter_gems', source: 'no_lives_no_gems' });
+            trackEvent('offer_shown', { offer: 'starter_gems', productId: 'starter_gems', product: 'starter_gems', trigger: 'no_lives', source: 'no_lives_no_gems' });
             setTimeout(() => setShowStarterPack(true), 300);
           }}
         />

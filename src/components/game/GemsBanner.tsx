@@ -21,7 +21,11 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'gems_banner' });
       // Direct to DB — bypasses broken native Firebase plugin
       trackEvent('offer_shown', { 
+        offer: 'welcome_pack',
+        productId: 'welcome_pack',
         product: 'gems_banner',
+        trigger: 'gems_banner',
+        source: 'menu_banner',
         billing_available: isAndroid ? isGooglePlayAvailable : 'web',
       });
     }
