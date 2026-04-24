@@ -103,6 +103,17 @@ export const usePendingPurchase = () => {
           if (savedState) setPendingState(savedState);
           setVerifiedProductId(productId);
           setPaymentSuccess(true);
+          // Emit purchase_success ONLY after Stripe verification, with dedupe by session_id
+          if (!wasSessionTracked(sessionId)) {
+            markSessionTracked(sessionId);
+            trackEvent('purchase_success', {
+              productId,
+              platform: 'web',
+              stripe_session_id: sessionId,
+              userId: user.id,
+              guest: false,
+            });
+          }
           console.log('[PendingPurchase] ✅ Pago verificado con Stripe:', productId);
         } else {
           console.warn('[PendingPurchase] ❌ Pago NO verificado');
