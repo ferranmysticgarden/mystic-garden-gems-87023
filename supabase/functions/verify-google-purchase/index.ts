@@ -390,6 +390,41 @@ serve(async (req) => {
     const purchaseRecordId = `gp_${purchaseKey}`;
     const isGuest = !userId;
 
+    // SECURITY HOTFIX: validate that the requested logical product is allowed for the
+    // real SKU bought on Google Play. Without this, a user could buy a cheap SKU and
+    // claim rewards of a much more expensive one. Done BEFORE Google Play verification
+    // so we don't burn API quota on tampered requests.
+    const normalizedRawSku = normalizeGoogleProductId(rawProductId);
+    const hasExplicitRequested = typeof requestedProductId === 'string' && requestedProductId.trim().length > 0;
+    if (hasExplicitRequested && !isRequestedProductAllowedForSku(normalizedRawSku, productId)) {
+      console.error(`[SECURITY] Reward mismatch blocked: rawSku=${normalizedRawSku} requested=${productId} (raw=${rawProductId}, requestedRaw=${requestedProductId})`);
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_verify_failed',
+        event_data: {
+          productId,
+          rawProductId,
+          normalizedRawSku,
+          requestedProductId,
+          orderId: orderId || null,
+          reason: 'requested_product_not_allowed',
+          isGuest,
+          userId,
+        },
+        platform: 'android',
+        device_id: purchaseToken.slice(0, 24),
+      });
+      return new Response(JSON.stringify({
+        success: false,
+        reason: 'requested_product_not_allowed',
+        rawProductId,
+        requestedProductId,
+        error: 'Requested product is not allowed for the purchased SKU',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
     const defaultPackageName = "com.mysticgarden.game";
     const packageCandidates = Array.from(new Set([
       typeof purchasePackageName === "string" ? purchasePackageName.trim() : "",
