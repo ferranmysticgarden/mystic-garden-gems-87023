@@ -82,7 +82,7 @@ export const LoseBundle = ({ onBuy, onDismiss }: LoseBundleProps) => {
           </Button>
 
           <Button 
-            onClick={onDismiss}
+            onClick={() => handleDismiss('no_thanks')}
             variant="ghost"
             className="w-full text-purple-300 hover:text-white"
           >
