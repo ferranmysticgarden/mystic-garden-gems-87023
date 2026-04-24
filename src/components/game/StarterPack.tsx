@@ -89,9 +89,20 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     }
   };
 
-  const handleDismiss = () => {
+  const handleDismissReason = (reason: 'close_x' | 'auto_close') => {
+    trackEvent('offer_dismissed', {
+      offer: 'starter_gems',
+      trigger: 'starter_pack',
+      source: 'auto_popup',
+      reason,
+      level: levelJustCompleted,
+    });
     setShow(false);
     onClose();
+  };
+
+  const handleDismiss = () => {
+    handleDismissReason('close_x');
   };
 
   const formatTime = (seconds: number) => {
