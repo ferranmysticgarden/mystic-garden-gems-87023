@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface UltimateRescueOfferProps {
   levelNumber: number;
