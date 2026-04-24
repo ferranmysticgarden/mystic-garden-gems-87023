@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Gift, Sparkles, Timer } from 'lucide-react';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import confetti from 'canvas-confetti';
 
 interface RewardDoublerProps {
