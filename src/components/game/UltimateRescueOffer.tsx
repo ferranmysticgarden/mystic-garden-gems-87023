@@ -27,6 +27,22 @@ export const UltimateRescueOffer = ({
   
   const price = getPrice('continue_game', '€0.50');
 
+  const handleDismiss = useCallback(
+    (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+      trackEvent('offer_dismissed', {
+        offer: 'continue_game',
+        trigger: 'ultimate_rescue',
+        source: 'auto_popup',
+        reason,
+        level: levelNumber,
+        attempts,
+        moves_short: movesShort,
+      });
+      onDismiss();
+    },
+    [levelNumber, attempts, movesShort, onDismiss]
+  );
+
   // Efecto de entrada: vibración + shake
   useEffect(() => {
     if (navigator.vibrate) {
@@ -39,14 +55,14 @@ export const UltimateRescueOffer = ({
   // Countdown de urgencia
   useEffect(() => {
     if (secondsLeft <= 0) {
-      onDismiss();
+      handleDismiss('auto_close');
       return;
     }
     const timer = setInterval(() => {
       setSecondsLeft(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [secondsLeft, onDismiss]);
+  }, [secondsLeft, handleDismiss]);
 
   const handleBuy = async () => {
     if (navigator.vibrate) {
