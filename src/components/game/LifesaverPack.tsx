@@ -100,7 +100,7 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
           </PremiumButton>
 
           <button 
-            onClick={onDismiss}
+            onClick={() => handleDismiss('no_thanks')}
             className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
           >
             {language === 'es' ? 'Esperar regeneración' : 'Wait for regeneration'}
