@@ -1,6 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { trackEvent } from '@/lib/trackEvent';
+
+const TRACKED_SESSIONS_KEY = 'tracked_success_session_ids';
+
+const wasSessionTracked = (sessionId: string): boolean => {
+  try {
+    const raw = localStorage.getItem(TRACKED_SESSIONS_KEY);
+    if (!raw) return false;
+    const arr: string[] = JSON.parse(raw);
+    return Array.isArray(arr) && arr.includes(sessionId);
+  } catch {
+    return false;
+  }
+};
+
+const markSessionTracked = (sessionId: string) => {
+  try {
+    const raw = localStorage.getItem(TRACKED_SESSIONS_KEY);
+    const arr: string[] = raw ? JSON.parse(raw) : [];
+    const next = Array.isArray(arr) ? arr : [];
+    if (!next.includes(sessionId)) next.push(sessionId);
+    // Keep last 50 to avoid unbounded growth
+    const trimmed = next.slice(-50);
+    localStorage.setItem(TRACKED_SESSIONS_KEY, JSON.stringify(trimmed));
+  } catch {
+    // ignore
+  }
+};
 
 /**
  * Interface para el estado guardado del juego antes de pagar
