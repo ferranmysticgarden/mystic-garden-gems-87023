@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X, Star, Gift, Clock, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 import confetti from 'canvas-confetti';
 
 interface StarterPackProps {
