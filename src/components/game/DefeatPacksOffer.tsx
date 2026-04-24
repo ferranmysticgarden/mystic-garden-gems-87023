@@ -65,7 +65,7 @@ export const DefeatPacksOffer = ({
       <div className="relative max-w-md mx-4 w-full">
         {/* Close button */}
         <button 
-          onClick={onDismiss}
+          onClick={() => handleDismiss('close_x')}
           className="absolute -top-2 -right-2 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 transition-colors"
         >
           <X className="w-5 h-5" />
