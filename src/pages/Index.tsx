@@ -881,7 +881,7 @@ const Index = () => {
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
           onShowStarterOffer={() => {
-            trackEvent('offer_shown', { product: 'starter_gems', source: 'no_lives_no_gems' });
+            trackEvent('offer_shown', { offer: 'starter_gems', productId: 'starter_gems', product: 'starter_gems', trigger: 'no_lives', source: 'no_lives_no_gems' });
             setTimeout(() => setShowStarterPack(true), 300);
           }}
         />
