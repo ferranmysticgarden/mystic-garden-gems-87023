@@ -5,11 +5,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
 import { trackEvent } from '@/lib/trackEvent';
+import { emitAnalyticsEvent } from '@/lib/analytics';
+import { PRODUCTS } from '@/data/products';
 import {
   getGooglePlayCandidates,
   getGooglePlayQueryProductIds,
   resolveGooglePlayProductId,
 } from './googlePlayCatalog';
+
+// Local lookup: canonical product_id → { price, name } from src/data/products.ts.
+// Built once at module load. Contains catalog metadata only — NO user data, NO PII.
+const PRODUCT_CATALOG_LOOKUP: Record<string, { price: number; name: string }> =
+  Object.fromEntries(
+    PRODUCTS.map((p) => [p.id, { price: p.price, name: p.name }])
+  );
 
 type BillingStatus = {
   ready: boolean;
@@ -310,6 +319,32 @@ export const useGooglePlayBilling = () => {
           google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
         });
+        // ─── Firebase Analytics: GA4 standard 'purchase' event for Google Ads ───
+        // Fires ONLY here, after server-side Google Play verification succeeded
+        // (verify-google-purchase Edge Function returned success=true and the
+        // purchase has been consumed). Never fires on cancel, error, or
+        // degraded-mode (purchase_verified_degraded) paths in the catch block.
+        // Wrapped in try/catch so a Firebase failure NEVER blocks reward delivery.
+        try {
+          const meta = PRODUCT_CATALOG_LOOKUP[verifiedProductId];
+          const productPrice = meta?.price ?? 0;
+          const productName = meta?.name ?? verifiedProductId;
+          const transactionId =
+            purchase.orderId ?? `gp_${purchase.purchaseToken.slice(0, 24)}`;
+          emitAnalyticsEvent('purchase', {
+            value: productPrice,
+            currency: 'EUR',
+            transaction_id: transactionId,
+            items: [{
+              item_id: verifiedProductId,
+              item_name: productName,
+              price: productPrice,
+              quantity: 1,
+            }],
+          });
+        } catch (e) {
+          console.warn('[ANALYTICS] GA4 purchase emission failed (non-blocking)', e);
+        }
         // Pass server rewards so guest clients can apply them locally
         dispatchPurchaseCompleted(verifiedProductId, data?.rewards ?? undefined);
         console.log('[PURCHASE] gate unlocked');
