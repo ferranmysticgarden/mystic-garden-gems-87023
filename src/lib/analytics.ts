@@ -76,7 +76,7 @@ export const emitAnalyticsEvent = (eventName: AnalyticsEventName, data?: EventDa
       if (analyticsInstance) {
         try {
           const { logEvent } = await import("firebase/analytics");
-          logEvent(analyticsInstance, eventName, data || {});
+          logEvent(analyticsInstance, eventName as string, data || {});
           console.log(`[ANALYTICS WEB] ✅ ${eventName} sent OK`);
         } catch (e) {
           console.warn(`[ANALYTICS WEB] ⚠️ ${eventName} failed`, e);
