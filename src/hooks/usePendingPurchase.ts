@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { trackEvent } from '@/lib/trackEvent';
+import { emitAnalyticsEvent } from '@/lib/analytics';
+import { PRODUCTS } from '@/data/products';
+
+// Local lookup: canonical product_id → { price, name } from src/data/products.ts.
+// Built once at module load. Contains catalog metadata only — NO user data, NO PII.
+const PRODUCT_CATALOG_LOOKUP: Record<string, { price: number; name: string }> =
+  Object.fromEntries(
+    PRODUCTS.map((p) => [p.id, { price: p.price, name: p.name }])
+  );
 
 const TRACKED_SESSIONS_KEY = 'tracked_success_session_ids';
 
@@ -113,6 +122,40 @@ export const usePendingPurchase = () => {
               userId: user.id,
               guest: false,
             });
+            // ─── Cross-platform parity: emit purchase_verified for Web (Stripe) ───
+            // Until now this Supabase event only existed in the Android flow
+            // (useGooglePlayBilling.ts). Adding it here so the dashboard funnel
+            // shows verified count for both Android and Web from the same field.
+            trackEvent('purchase_verified', {
+              platform: 'web',
+              product: productId,
+              stripe_session_id: sessionId,
+              guest: false,
+            });
+            // ─── Firebase Analytics: GA4 standard 'purchase' event for Google Ads ───
+            // Fires ONLY here, after server-side Stripe verification succeeded
+            // (verify-stripe-purchase Edge Function returned verified=true).
+            // Deduped by sessionId via wasSessionTracked() guard above, so a user
+            // refreshing the success URL will NOT double-count the conversion.
+            // Wrapped in try/catch so a Firebase failure NEVER breaks the success UI.
+            try {
+              const meta = PRODUCT_CATALOG_LOOKUP[productId];
+              const productPrice = meta?.price ?? 0;
+              const productName = meta?.name ?? productId;
+              emitAnalyticsEvent('purchase', {
+                value: productPrice,
+                currency: 'EUR',
+                transaction_id: sessionId,
+                items: [{
+                  item_id: productId,
+                  item_name: productName,
+                  price: productPrice,
+                  quantity: 1,
+                }],
+              });
+            } catch (e) {
+              console.warn('[ANALYTICS] GA4 purchase emission failed (non-blocking)', e);
+            }
           }
           console.log('[PendingPurchase] ✅ Pago verificado con Stripe:', productId);
         } else {
