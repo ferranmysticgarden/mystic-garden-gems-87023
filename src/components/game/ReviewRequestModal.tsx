@@ -8,24 +8,10 @@ interface ReviewRequestModalProps {
   gamesPlayed: number;
 }
 
-export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => {
+export const ReviewRequestModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const { user } = useAuth();
-  const [show, setShow] = useState(false);
 
   const odId = user?.id || 'guest';
-
-  useEffect(() => {
-    const reviewAskedKey = `review-asked-${odId}`;
-    const alreadyAsked = localStorage.getItem(reviewAskedKey);
-    
-    if (gamesPlayed >= 3 && !alreadyAsked) {
-      const timer = setTimeout(() => {
-        setShow(true);
-        localStorage.setItem(reviewAskedKey, 'true');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [gamesPlayed, odId]);
 
   const handleReview = () => {
     if (Capacitor.isNativePlatform()) {
@@ -33,15 +19,15 @@ export const ReviewRequestModal = ({ gamesPlayed }: ReviewRequestModalProps) => 
     } else {
       window.open('https://play.google.com/store/apps/details?id=com.mysticgarden.game', '_blank');
     }
-    setShow(false);
+    onClose();
   };
 
   const handleLater = () => {
     localStorage.removeItem(`review-asked-${odId}`);
-    setShow(false);
+    onClose();
   };
 
-  if (!show) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300">

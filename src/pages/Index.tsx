@@ -114,7 +114,6 @@ const Index = () => {
   const [showPostVictoryOffer, setShowPostVictoryOffer] = useState(false);
   const [showDailyMissions, setShowDailyMissions] = useState(false);
   const [showLootChest, setShowLootChest] = useState(false);
-  const [springEventDismissed, setSpringEventDismissed] = useState(false);
   const [showStarterPack, setShowStarterPack] = useState(false);
   const [lastCompletedLevel, setLastCompletedLevel] = useState(0);
   const [lastWinGems, setLastWinGems] = useState(0);
@@ -124,9 +123,80 @@ const Index = () => {
   const { streakData, claimDailyReward } = useDailyStreak();
   const { scheduleLivesFullNotification, scheduleStreakReminder, sendLivesFullNotification, scheduleNotification, requestPermission, permission, isSupported } = usePushNotifications();
 
-  // State for first session reward
   const [showFirstSessionReward, setShowFirstSessionReward] = useState(false);
   const [suppressAutoPopups, setSuppressAutoPopups] = useState(false);
+  const [showLuckySpin, setShowLuckySpin] = useState(false);
+  const [showSpringEvent, setShowSpringEvent] = useState(false);
+  const [showComeBackBanner, setShowComeBackBanner] = useState(false);
+  const [comebackDays, setComebackDays] = useState(0);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
+  // Gating: Sesión 1 = 0 niveles completados. Bloquea engagement popups.
+  const isFirstSession = gameState.completedLevels.length === 0;
+  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession;
+  const odId = user?.id || 'guest';
+
+  // Orquestador LuckySpin (24h check)
+  useEffect(() => {
+    if (autoPopupsBlocked || gameState.completedLevels.length < 5) return;
+    const lastSpin = localStorage.getItem(`last-spin-${odId}`);
+    const promptKey = `last-spin-prompt-${odId}`;
+    const today = new Date().toISOString().split("T")[0];
+    if (localStorage.getItem(promptKey) === today) return;
+    if (!lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24) {
+      setShowLuckySpin(true);
+      localStorage.setItem(promptKey, today);
+    }
+  }, [autoPopupsBlocked, gameState.completedLevels.length, odId]);
+
+  // Orquestador SpringEvent (Gating nivel 8)
+  useEffect(() => {
+    if (autoPopupsBlocked || gameState.completedLevels.length < 8) return;
+    const seenToday = localStorage.getItem('spring-event-seen') === new Date().toDateString();
+    if (!seenToday) {
+      const timer = setTimeout(() => setShowSpringEvent(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoPopupsBlocked, gameState.completedLevels.length]);
+
+  // Orquestador ComeBackBanner
+  useEffect(() => {
+    if (autoPopupsBlocked) return;
+    const lastSessionKey = `last-session-${odId}`;
+    const claimedKey = `comeback-claimed-${odId}`;
+    const lastSession = localStorage.getItem(lastSessionKey);
+    const alreadyClaimed = localStorage.getItem(claimedKey);
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem(lastSessionKey, today);
+    if (lastSession && !alreadyClaimed) {
+      const lastDate = new Date(lastSession);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / 86400000);
+      if (diffDays >= 2) {
+        setComebackDays(diffDays);
+        setShowComeBackBanner(true);
+      }
+    }
+  }, [autoPopupsBlocked, odId]);
+
+  // Orquestador ReviewRequest (Threshold: Lvl 10 + 5 partidas)
+  useEffect(() => {
+    if (autoPopupsBlocked || gameState.completedLevels.length < 10 || gamesPlayed < 5) return;
+    const reviewAskedKey = `review-asked-${odId}`;
+    if (!localStorage.getItem(reviewAskedKey)) {
+      const timer = setTimeout(() => {
+        setShowReviewModal(true);
+        localStorage.setItem(reviewAskedKey, 'true');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoPopupsBlocked, gameState.completedLevels.length, gamesPlayed, odId]);
+
+  const handleClaimComeBackReward = (gems: number, lives: number) => {
+    addGems(gems);
+    addLives(lives);
+    setShowComeBackBanner(false);
+  };
 
   // Track guest session on mount (anonymous users)
   useEffect(() => {
@@ -584,8 +654,8 @@ const Index = () => {
         return;
       }
       await signInWithGoogleWeb("/", "select_account");
-    } catch (error: any) {
-      toast.error(error.message || "Error al iniciar sesión con Google");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error al iniciar sesión con Google");
     }
   };
   const handleAdminAccessTap = useCallback(
@@ -658,7 +728,6 @@ const Index = () => {
   }
   // ¿Es usuario nuevo? (menos de 5 niveles completados)
   const isNewUser = gameState.completedLevels.length < 5;
-  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward;
   return (
     <>
     <PurchaseLoadingOverlay />
@@ -929,26 +998,30 @@ const Index = () => {
           }}
         />
       )}
-      {/* Lucky Spin - SOLO después de nivel 5 */}
-      {!autoPopupsBlocked && gameState.completedLevels.length >= 5 && <LuckySpin />}
+      {/* Lucky Spin orquestado */}
+      <LuckySpin 
+        isOpen={showLuckySpin} 
+        onClose={() => setShowLuckySpin(false)} 
+      />
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
       {/* Achievement Modal */}
       {newlyUnlocked && <AchievementModal achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />}
       {/* Push Notification Prompt - SOLO después de nivel 2 */}
       {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
-      {/* Come Back Banner - SOLO después de nivel 2 */}
-      {!autoPopupsBlocked && !isNewUser && (
-        <ComeBackBanner
-          onClaimReward={(gems, lives) => {
-            addGems(gems);
-            addLives(lives);
-            toast.success(`¡Bienvenido de vuelta! +${gems}💎 +${lives}❤️`);
-          }}
-        />
-      )}
-      {/* Review Request Modal - SOLO después de nivel 2 */}
-      {!autoPopupsBlocked && !isNewUser && <ReviewRequestModal gamesPlayed={gamesPlayed} />}
+      {/* Come Back Banner orquestado */}
+      <ComeBackBanner 
+        isOpen={showComeBackBanner}
+        daysAway={comebackDays}
+        onClose={() => setShowComeBackBanner(false)}
+        onClaimReward={handleClaimComeBackReward}
+      />
+
+      {/* Review Request orquestado (Lvl 10 + 5 partidas) */}
+      <ReviewRequestModal 
+        isOpen={showReviewModal} 
+        onClose={() => setShowReviewModal(false)} 
+      />
       {/* Exit Confirmation Modal */}
       {showExitModal && (
         <ExitConfirmModal
@@ -1022,7 +1095,7 @@ const Index = () => {
           onClose={() => setShowFirstSessionReward(false)}
         />
       )}
-      {/* Share Prompt - SOLO después de nivel 3 */}
+      {/* Share Prompt */}
       {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} />}
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
@@ -1049,7 +1122,7 @@ const Index = () => {
           }}
         />
       )}
-      {/* Daily Missions Modal */}
+      {/* Daily Missions */}
       {showDailyMissions && (
         <DailyMissions
           onClose={() => setShowDailyMissions(false)}
@@ -1059,7 +1132,8 @@ const Index = () => {
           }}
         />
       )}
-      {/* Loot Chest Modal */}
+
+      {/* Loot Chest */}
       {showLootChest && (
         <LootChest
           onClose={() => setShowLootChest(false)}
@@ -1070,10 +1144,15 @@ const Index = () => {
           }}
         />
       )}
-      {/* Spring Event - SOLO después de nivel 8, respetar dismiss */}
-      {gameState.completedLevels.length >= 8 && !springEventDismissed && (
-        <SpringEvent onClose={() => setSpringEventDismissed(true)} />
-      )}
+
+      {/* Spring Event orquestado */}
+      <SpringEvent 
+        isOpen={showSpringEvent} 
+        onClose={() => {
+          setShowSpringEvent(false);
+          localStorage.setItem('spring-event-seen', new Date().toDateString());
+        }} 
+      />
       {/* Payment Success Modal */}
       <PaymentSuccessModal
         show={paymentModal.show}

@@ -8,36 +8,16 @@ interface ComeBackBannerProps {
   onClaimReward: (gems: number, lives: number) => void;
 }
 
-export const ComeBackBanner = ({ onClaimReward }: ComeBackBannerProps) => {
+export const ComeBackBanner = ({ isOpen, daysAway: initialDaysAway, onClaimReward, onClose }: { isOpen: boolean; daysAway: number; onClaimReward: (g: number, l: number) => void; onClose: () => void }) => {
   const { user } = useAuth();
-  const [show, setShow] = useState(false);
-  const [daysAway, setDaysAway] = useState(0);
+  const [daysAway, setDaysAway] = useState(initialDaysAway);
   const [claiming, setClaiming] = useState(false);
 
   const odId = user?.id || 'guest';
 
   useEffect(() => {
-    const lastSessionKey = `last-session-${odId}`;
-    const claimedKey = `comeback-claimed-${odId}`;
-    const lastSession = localStorage.getItem(lastSessionKey);
-    const alreadyClaimed = localStorage.getItem(claimedKey);
-    const today = new Date().toISOString().split('T')[0];
-
-    // Update last session
-    localStorage.setItem(lastSessionKey, today);
-
-    // Check if coming back after 2+ days
-    if (lastSession && !alreadyClaimed) {
-      const lastDate = new Date(lastSession);
-      const todayDate = new Date(today);
-      const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffDays >= 2) {
-        setDaysAway(diffDays);
-        setShow(true);
-      }
-    }
-  }, [odId]);
+    setDaysAway(initialDaysAway);
+  }, [initialDaysAway]);
 
   const calculateReward = () => {
     const baseGems = 20;
@@ -62,16 +42,16 @@ export const ComeBackBanner = ({ onClaimReward }: ComeBackBannerProps) => {
     
     setTimeout(() => {
       onClaimReward(reward.gems, reward.lives);
-      setShow(false);
+      onClose();
     }, 500);
   };
 
   const handleDismiss = () => {
     localStorage.setItem(`comeback-claimed-${odId}`, new Date().toISOString().split('T')[0]);
-    setShow(false);
+    onClose();
   };
 
-  if (!show) return null;
+  if (!isOpen) return null;
 
   const reward = calculateReward();
 

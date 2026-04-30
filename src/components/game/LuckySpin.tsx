@@ -20,8 +20,7 @@ const REWARDS = [
 
 const SEGMENT_ANGLE = 360 / REWARDS.length;
 
-export const LuckySpin = () => {
-  const [show, setShow] = useState(false);
+export const LuckySpin = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [canSpin, setCanSpin] = useState(false);
@@ -30,6 +29,18 @@ export const LuckySpin = () => {
   const { user } = useAuth();
 
   const odId = user?.id || 'guest';
+
+  // Initialize free spin availability when modal opens
+  useEffect(() => {
+    if (isOpen && !extraSpinAvailable) {
+      const lastSpin = localStorage.getItem(`last-spin-${odId}`);
+      const isAvailable = !lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24;
+      if (isAvailable) {
+        setCanSpin(true);
+        setReward(null);
+      }
+    }
+  }, [isOpen, odId, extraSpinAvailable]);
 
   // Listen for verified extra_spin purchases (works for both Android and Web)
   useEffect(() => {
@@ -40,7 +51,6 @@ export const LuckySpin = () => {
       console.log('[LUCKY_SPIN] Extra spin purchase completed');
       setExtraSpinAvailable(true);
       setCanSpin(true);
-      setShow(true);
       setReward(null);
     };
     
@@ -57,22 +67,22 @@ export const LuckySpin = () => {
 
   // Set music to lower volume when Lucky Spin is open
   useEffect(() => {
-    if (show) {
+    if (isOpen) {
       backgroundMusic.setScreen('luckyspin');
       return () => {
         backgroundMusic.setScreen('menu');
       };
     }
-  }, [show]);
+  }, [isOpen]);
 
   // Lower music even more while spinning
   useEffect(() => {
     if (spinning) {
       backgroundMusic.setScreen('luckyspin_spinning');
-    } else if (show) {
+    } else if (isOpen) {
       backgroundMusic.setScreen('luckyspin');
     }
-  }, [spinning, show]);
+  }, [spinning, isOpen]);
   
   const lastTickRef = useRef(0);
   const animationRef = useRef<number | null>(null);
@@ -126,36 +136,6 @@ export const LuckySpin = () => {
     }
   }, [playTickSound, playVictorySound]);
 
-  useEffect(() => {
-    const checkAvailability = () => {
-      const lastSpin = localStorage.getItem(`last-spin-${odId}`);
-      const promptKey = `last-spin-prompt-${odId}`;
-      const today = new Date().toISOString().split('T')[0];
-      const promptedToday = localStorage.getItem(promptKey) === today;
-
-      if (promptedToday) return;
-
-      if (!lastSpin) {
-        setCanSpin(true);
-        setShow(true);
-        localStorage.setItem(promptKey, today);
-        return;
-      }
-
-      const lastSpinDate = new Date(lastSpin);
-      const now = new Date();
-      const diffHours = (now.getTime() - lastSpinDate.getTime()) / (1000 * 60 * 60);
-
-      if (diffHours >= 24) {
-        setCanSpin(true);
-        setShow(true);
-        localStorage.setItem(promptKey, today);
-      }
-    };
-
-    checkAvailability();
-  }, [odId]);
-
   const handleSpin = async () => {
     if (!canSpin || spinning) return;
 
@@ -190,11 +170,11 @@ export const LuckySpin = () => {
     }, spinDurationRef.current + 100);
   };
 
-  const handleClose = () => {
+  const handleLocalClose = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-    setShow(false);
+    onClose();
   };
 
   // Cleanup on unmount
@@ -206,13 +186,13 @@ export const LuckySpin = () => {
     };
   }, []);
 
-  if (!show) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative bg-gradient-to-b from-purple-900 to-indigo-900 rounded-3xl p-6 max-w-sm mx-4 border-4 border-yellow-400 shadow-2xl">
         <button 
-          onClick={handleClose}
+          onClick={handleLocalClose}
           className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
         >
           <X className="w-6 h-6" />

@@ -1,81 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { X, Sparkles } from 'lucide-react';
+import React from "react";
+import { X, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface SpringEventProps {
-  onClose: () => void;
-}
-
-export const SpringEvent = ({ onClose }: SpringEventProps) => {
-  const [timeLeft, setTimeLeft] = useState('');
-  const [show, setShow] = useState(false);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    // Event runs for 48 hours starting from a fixed point
-    // For demo, we'll use a rolling 48h window
-    const eventStart = new Date();
-    eventStart.setHours(0, 0, 0, 0);
-    const eventEnd = new Date(eventStart.getTime() + 48 * 60 * 60 * 1000);
-
-    const getTodayKey = () => new Date().toDateString();
-    const hasDismissedToday = () => {
-      try {
-        return localStorage.getItem('spring-event-seen') === getTodayKey();
-      } catch {
-        // If storage isn't available for some reason, default to showing.
-        return false;
-      }
-    };
-
-    const checkEvent = () => {
-      const now = Date.now();
-      const remaining = eventEnd.getTime() - now;
-
-      if (remaining <= 0) {
-        setIsActive(false);
-        setShow(false);
-        return;
-      }
-
-      setIsActive(true);
-
-      // If user already dismissed it today, never re-open it automatically.
-      if (hasDismissedToday()) {
-        setShow(false);
-      }
-
-      const hours = Math.floor(remaining / (60 * 60 * 1000));
-      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-      setTimeLeft(`${hours}h ${mins}m`);
-    };
-
-    checkEvent();
-    const interval = setInterval(checkEvent, 60000);
-    
-    // Auto-show popup after a short delay (only if not dismissed today)
-    const showTimer = setTimeout(() => {
-      const remaining = eventEnd.getTime() - Date.now();
-      if (remaining > 0 && !hasDismissedToday()) {
-        setShow(true);
-      }
-    }, 1200);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(showTimer);
-    };
-  }, []);
-
-  if (!isActive || !show) return null;
+export const SpringEvent = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
 
   const handleDismiss = () => {
-    try {
-      localStorage.setItem('spring-event-seen', new Date().toDateString());
-    } catch {
-      // ignore
-    }
-    setShow(false);
     onClose();
   };
 
@@ -121,7 +51,7 @@ export const SpringEvent = ({ onClose }: SpringEventProps) => {
           
           <div className="bg-pink-500/20 rounded-full px-4 py-1 inline-block mb-4">
             <p className="text-pink-200 text-sm font-semibold">
-              ⏰ Termina en: {timeLeft}
+              ⏰ ¡Evento por tiempo limitado!
             </p>
           </div>
 
