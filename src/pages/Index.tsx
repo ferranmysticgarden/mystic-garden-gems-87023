@@ -131,9 +131,57 @@ const Index = () => {
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
+  // ===== Anti-avalanche popup queue (sessionStorage, never unset within session) =====
+  const ENGAGEMENT_FLAG_KEY = 'engagement_popup_shown_session';
+  const LOGIN_TIMESTAMP_KEY = 'login_timestamp_session';
+  const LOGIN_COOLDOWN_MS = 60_000;
+
+  const isEngagementShown = () => {
+    try { return sessionStorage.getItem(ENGAGEMENT_FLAG_KEY) === 'true'; } catch { return false; }
+  };
+  const tryClaimEngagementSlot = () => {
+    if (isEngagementShown()) return false;
+    try { sessionStorage.setItem(ENGAGEMENT_FLAG_KEY, 'true'); } catch {}
+    return true;
+  };
+
+  const [loginCooldownActive, setLoginCooldownActive] = useState(() => {
+    try {
+      const ts = sessionStorage.getItem(LOGIN_TIMESTAMP_KEY);
+      return ts ? Date.now() - parseInt(ts) < LOGIN_COOLDOWN_MS : false;
+    } catch { return false; }
+  });
+
+  // Listen for SIGNED_IN to start cooldown window
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        try { sessionStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString()); } catch {}
+        setLoginCooldownActive(true);
+        setTimeout(() => setLoginCooldownActive(false), LOGIN_COOLDOWN_MS);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Restore remaining cooldown on mount
+  useEffect(() => {
+    if (!loginCooldownActive) return;
+    try {
+      const ts = sessionStorage.getItem(LOGIN_TIMESTAMP_KEY);
+      if (!ts) return;
+      const remaining = LOGIN_COOLDOWN_MS - (Date.now() - parseInt(ts));
+      if (remaining > 0) {
+        const t = setTimeout(() => setLoginCooldownActive(false), remaining);
+        return () => clearTimeout(t);
+      }
+      setLoginCooldownActive(false);
+    } catch {}
+  }, []);
+
   // Gating: Sesión 1 = 0 niveles completados. Bloquea engagement popups.
   const isFirstSession = gameState.completedLevels.length === 0;
-  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession;
+  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession || loginCooldownActive;
   const odId = user?.id || 'guest';
 
   // Orquestador LuckySpin (24h check)
