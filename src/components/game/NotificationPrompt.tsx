@@ -34,6 +34,7 @@ export const NotificationPrompt = ({ onClose, levelsCompleted = 0, blocked = fal
 
     // Short delay after level completion for natural feel
     const timer = setTimeout(() => {
+      if (blocked || (onAttemptShow && !onAttemptShow())) return;
       setShow(true);
     }, 1500);
 
