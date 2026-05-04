@@ -7,13 +7,15 @@ import { useAuth } from '@/hooks/useAuth';
 interface NotificationPromptProps {
   onClose: () => void;
   levelsCompleted?: number;
+  blocked?: boolean;
+  onAttemptShow?: () => boolean;
 }
 
 /**
  * Optimized notification prompt - appears after level 2-3 victory
  * (emotional high = higher acceptance rate, typically 60-70% vs 30% on cold start)
  */
-export const NotificationPrompt = ({ onClose, levelsCompleted = 0 }: NotificationPromptProps) => {
+export const NotificationPrompt = ({ onClose, levelsCompleted = 0, blocked = false, onAttemptShow }: NotificationPromptProps) => {
   const { isSupported, permission, requestPermission } = usePushNotifications();
   const { user } = useAuth();
   const [show, setShow] = useState(false);
