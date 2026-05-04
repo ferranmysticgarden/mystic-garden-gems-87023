@@ -7,9 +7,11 @@ import { Capacitor } from '@capacitor/core';
 interface SharePromptProps {
   gamesPlayed: number;
   daysPlayed: number;
+  blocked?: boolean;
+  onAttemptShow?: () => boolean;
 }
 
-export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
+export const SharePrompt = ({ gamesPlayed, daysPlayed, blocked = false, onAttemptShow }: SharePromptProps) => {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
 
@@ -21,12 +23,13 @@ export const SharePrompt = ({ gamesPlayed, daysPlayed }: SharePromptProps) => {
 
     if ((gamesPlayed >= 5 || daysPlayed >= 1) && !alreadyShown) {
       const timer = setTimeout(() => {
+        if (blocked || (onAttemptShow && !onAttemptShow())) return;
         setShow(true);
         localStorage.setItem(sharePromptKey, 'true');
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [gamesPlayed, daysPlayed, odId]);
+  }, [gamesPlayed, daysPlayed, odId, blocked, onAttemptShow]);
 
   const handleShare = async () => {
     const shareData = {
