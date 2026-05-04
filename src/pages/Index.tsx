@@ -184,7 +184,7 @@ const Index = () => {
   const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession || loginCooldownActive;
   const odId = user?.id || 'guest';
 
-  // Orquestador LuckySpin (24h check)
+  // Orquestador LuckySpin (24h check) — P3 staggered 1800ms
   useEffect(() => {
     if (autoPopupsBlocked || gameState.completedLevels.length < 5) return;
     const lastSpin = localStorage.getItem(`last-spin-${odId}`);
@@ -192,22 +192,29 @@ const Index = () => {
     const today = new Date().toISOString().split("T")[0];
     if (localStorage.getItem(promptKey) === today) return;
     if (!lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24) {
-      setShowLuckySpin(true);
-      localStorage.setItem(promptKey, today);
+      const timer = setTimeout(() => {
+        if (tryClaimEngagementSlot()) {
+          setShowLuckySpin(true);
+          localStorage.setItem(promptKey, today);
+        }
+      }, 1800);
+      return () => clearTimeout(timer);
     }
   }, [autoPopupsBlocked, gameState.completedLevels.length, odId]);
 
-  // Orquestador SpringEvent (Gating nivel 8)
+  // Orquestador SpringEvent (Gating nivel 8) — P4 2000ms
   useEffect(() => {
     if (autoPopupsBlocked || gameState.completedLevels.length < 8) return;
     const seenToday = localStorage.getItem('spring-event-seen') === new Date().toDateString();
     if (!seenToday) {
-      const timer = setTimeout(() => setShowSpringEvent(true), 2000);
+      const timer = setTimeout(() => {
+        if (tryClaimEngagementSlot()) setShowSpringEvent(true);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [autoPopupsBlocked, gameState.completedLevels.length]);
 
-  // Orquestador ComeBackBanner
+  // Orquestador ComeBackBanner — P1 (immediate)
   useEffect(() => {
     if (autoPopupsBlocked) return;
     const lastSessionKey = `last-session-${odId}`;
@@ -221,20 +228,24 @@ const Index = () => {
       const todayDate = new Date(today);
       const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / 86400000);
       if (diffDays >= 2) {
-        setComebackDays(diffDays);
-        setShowComeBackBanner(true);
+        if (tryClaimEngagementSlot()) {
+          setComebackDays(diffDays);
+          setShowComeBackBanner(true);
+        }
       }
     }
   }, [autoPopupsBlocked, odId]);
 
-  // Orquestador ReviewRequest (Threshold: Lvl 10 + 5 partidas)
+  // Orquestador ReviewRequest (Threshold: Lvl 10 + 5 partidas) — P5 3000ms
   useEffect(() => {
     if (autoPopupsBlocked || gameState.completedLevels.length < 10 || gamesPlayed < 5) return;
     const reviewAskedKey = `review-asked-${odId}`;
     if (!localStorage.getItem(reviewAskedKey)) {
       const timer = setTimeout(() => {
-        setShowReviewModal(true);
-        localStorage.setItem(reviewAskedKey, 'true');
+        if (tryClaimEngagementSlot()) {
+          setShowReviewModal(true);
+          localStorage.setItem(reviewAskedKey, 'true');
+        }
       }, 3000);
       return () => clearTimeout(timer);
     }
