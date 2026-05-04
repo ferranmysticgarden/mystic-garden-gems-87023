@@ -1070,7 +1070,7 @@ const Index = () => {
       {/* Achievement Modal */}
       {newlyUnlocked && <AchievementModal achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />}
       {/* Push Notification Prompt - SOLO después de nivel 2 */}
-      {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
+      {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} blocked={isEngagementShown()} onAttemptShow={tryClaimEngagementSlot} />}
       {/* Come Back Banner orquestado */}
       <ComeBackBanner 
         isOpen={showComeBackBanner}
