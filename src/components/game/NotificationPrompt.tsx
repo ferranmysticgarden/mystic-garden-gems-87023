@@ -66,7 +66,10 @@ export const NotificationPrompt = ({ onClose, levelsCompleted = 0, blocked = fal
     if (askedTimestamp && askedTimestamp !== 'true') {
       const daysSince = (Date.now() - parseInt(askedTimestamp)) / (1000 * 60 * 60 * 24);
       if (daysSince > 3 && levelsCompleted >= 2) {
-        setTimeout(() => setShow(true), 2000);
+        setTimeout(() => {
+          if (blocked || (onAttemptShow && !onAttemptShow())) return;
+          setShow(true);
+        }, 2000);
       }
     }
   }, [user?.id, isSupported, permission, levelsCompleted]);
