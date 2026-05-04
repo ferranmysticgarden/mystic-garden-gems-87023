@@ -393,18 +393,21 @@ const Index = () => {
     window.addEventListener("lucky_spin_reward", handleLuckySpinReward);
     return () => window.removeEventListener("lucky_spin_reward", handleLuckySpinReward);
   }, [addGems]);
-  // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
+  // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5) — P2 1200ms
   useEffect(() => {
+    if (autoPopupsBlocked) return;
     if (!streakData.canClaimToday || !user || gameState.completedLevels.length < 5) return;
     const today = new Date().toISOString().split("T")[0];
     const autoShownKey = `streak-auto-shown-${user.id}-${today}`;
     if (localStorage.getItem(autoShownKey)) return;
     const timer = setTimeout(() => {
-      setShowStreakCalendar(true);
-      localStorage.setItem(autoShownKey, "true");
+      if (tryClaimEngagementSlot()) {
+        setShowStreakCalendar(true);
+        localStorage.setItem(autoShownKey, "true");
+      }
     }, 1200);
     return () => clearTimeout(timer);
-  }, [streakData.canClaimToday, user, gameState.completedLevels.length, showFirstSessionReward, suppressAutoPopups]);
+  }, [autoPopupsBlocked, streakData.canClaimToday, user, gameState.completedLevels.length]);
 
   useEffect(() => {
     if (showFirstSessionReward || suppressAutoPopups) return;
