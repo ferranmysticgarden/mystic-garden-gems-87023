@@ -131,12 +131,60 @@ const Index = () => {
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
+  // ===== Anti-avalanche popup queue (sessionStorage, never unset within session) =====
+  const ENGAGEMENT_FLAG_KEY = 'engagement_popup_shown_session';
+  const LOGIN_TIMESTAMP_KEY = 'login_timestamp_session';
+  const LOGIN_COOLDOWN_MS = 60_000;
+
+  const isEngagementShown = () => {
+    try { return sessionStorage.getItem(ENGAGEMENT_FLAG_KEY) === 'true'; } catch { return false; }
+  };
+  const tryClaimEngagementSlot = () => {
+    if (isEngagementShown()) return false;
+    try { sessionStorage.setItem(ENGAGEMENT_FLAG_KEY, 'true'); } catch {}
+    return true;
+  };
+
+  const [loginCooldownActive, setLoginCooldownActive] = useState(() => {
+    try {
+      const ts = sessionStorage.getItem(LOGIN_TIMESTAMP_KEY);
+      return ts ? Date.now() - parseInt(ts) < LOGIN_COOLDOWN_MS : false;
+    } catch { return false; }
+  });
+
+  // Listen for SIGNED_IN to start cooldown window
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        try { sessionStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString()); } catch {}
+        setLoginCooldownActive(true);
+        setTimeout(() => setLoginCooldownActive(false), LOGIN_COOLDOWN_MS);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Restore remaining cooldown on mount
+  useEffect(() => {
+    if (!loginCooldownActive) return;
+    try {
+      const ts = sessionStorage.getItem(LOGIN_TIMESTAMP_KEY);
+      if (!ts) return;
+      const remaining = LOGIN_COOLDOWN_MS - (Date.now() - parseInt(ts));
+      if (remaining > 0) {
+        const t = setTimeout(() => setLoginCooldownActive(false), remaining);
+        return () => clearTimeout(t);
+      }
+      setLoginCooldownActive(false);
+    } catch {}
+  }, []);
+
   // Gating: Sesión 1 = 0 niveles completados. Bloquea engagement popups.
   const isFirstSession = gameState.completedLevels.length === 0;
-  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession;
+  const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession || loginCooldownActive;
   const odId = user?.id || 'guest';
 
-  // Orquestador LuckySpin (24h check)
+  // Orquestador LuckySpin (24h check) — P3 staggered 1800ms
   useEffect(() => {
     if (autoPopupsBlocked || gameState.completedLevels.length < 5) return;
     const lastSpin = localStorage.getItem(`last-spin-${odId}`);
@@ -144,22 +192,29 @@ const Index = () => {
     const today = new Date().toISOString().split("T")[0];
     if (localStorage.getItem(promptKey) === today) return;
     if (!lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24) {
-      setShowLuckySpin(true);
-      localStorage.setItem(promptKey, today);
+      const timer = setTimeout(() => {
+        if (tryClaimEngagementSlot()) {
+          setShowLuckySpin(true);
+          localStorage.setItem(promptKey, today);
+        }
+      }, 1800);
+      return () => clearTimeout(timer);
     }
   }, [autoPopupsBlocked, gameState.completedLevels.length, odId]);
 
-  // Orquestador SpringEvent (Gating nivel 8)
+  // Orquestador SpringEvent (Gating nivel 8) — P4 2000ms
   useEffect(() => {
     if (autoPopupsBlocked || gameState.completedLevels.length < 8) return;
     const seenToday = localStorage.getItem('spring-event-seen') === new Date().toDateString();
     if (!seenToday) {
-      const timer = setTimeout(() => setShowSpringEvent(true), 2000);
+      const timer = setTimeout(() => {
+        if (tryClaimEngagementSlot()) setShowSpringEvent(true);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [autoPopupsBlocked, gameState.completedLevels.length]);
 
-  // Orquestador ComeBackBanner
+  // Orquestador ComeBackBanner — P1 (immediate)
   useEffect(() => {
     if (autoPopupsBlocked) return;
     const lastSessionKey = `last-session-${odId}`;
@@ -173,20 +228,24 @@ const Index = () => {
       const todayDate = new Date(today);
       const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / 86400000);
       if (diffDays >= 2) {
-        setComebackDays(diffDays);
-        setShowComeBackBanner(true);
+        if (tryClaimEngagementSlot()) {
+          setComebackDays(diffDays);
+          setShowComeBackBanner(true);
+        }
       }
     }
   }, [autoPopupsBlocked, odId]);
 
-  // Orquestador ReviewRequest (Threshold: Lvl 10 + 5 partidas)
+  // Orquestador ReviewRequest (Threshold: Lvl 10 + 5 partidas) — P5 3000ms
   useEffect(() => {
     if (autoPopupsBlocked || gameState.completedLevels.length < 10 || gamesPlayed < 5) return;
     const reviewAskedKey = `review-asked-${odId}`;
     if (!localStorage.getItem(reviewAskedKey)) {
       const timer = setTimeout(() => {
-        setShowReviewModal(true);
-        localStorage.setItem(reviewAskedKey, 'true');
+        if (tryClaimEngagementSlot()) {
+          setShowReviewModal(true);
+          localStorage.setItem(reviewAskedKey, 'true');
+        }
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -334,18 +393,21 @@ const Index = () => {
     window.addEventListener("lucky_spin_reward", handleLuckySpinReward);
     return () => window.removeEventListener("lucky_spin_reward", handleLuckySpinReward);
   }, [addGems]);
-  // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5)
+  // Auto-show streak calendar con control anti-bucle (una vez al día, después de nivel 5) — P2 1200ms
   useEffect(() => {
+    if (autoPopupsBlocked) return;
     if (!streakData.canClaimToday || !user || gameState.completedLevels.length < 5) return;
     const today = new Date().toISOString().split("T")[0];
     const autoShownKey = `streak-auto-shown-${user.id}-${today}`;
     if (localStorage.getItem(autoShownKey)) return;
     const timer = setTimeout(() => {
-      setShowStreakCalendar(true);
-      localStorage.setItem(autoShownKey, "true");
+      if (tryClaimEngagementSlot()) {
+        setShowStreakCalendar(true);
+        localStorage.setItem(autoShownKey, "true");
+      }
     }, 1200);
     return () => clearTimeout(timer);
-  }, [streakData.canClaimToday, user, gameState.completedLevels.length, showFirstSessionReward, suppressAutoPopups]);
+  }, [autoPopupsBlocked, streakData.canClaimToday, user, gameState.completedLevels.length]);
 
   useEffect(() => {
     if (showFirstSessionReward || suppressAutoPopups) return;
@@ -1008,7 +1070,7 @@ const Index = () => {
       {/* Achievement Modal */}
       {newlyUnlocked && <AchievementModal achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />}
       {/* Push Notification Prompt - SOLO después de nivel 2 */}
-      {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} />}
+      {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} blocked={isEngagementShown()} onAttemptShow={tryClaimEngagementSlot} />}
       {/* Come Back Banner orquestado */}
       <ComeBackBanner 
         isOpen={showComeBackBanner}
@@ -1096,7 +1158,7 @@ const Index = () => {
         />
       )}
       {/* Share Prompt */}
-      {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} />}
+      {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} blocked={isEngagementShown()} onAttemptShow={tryClaimEngagementSlot} />}
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
         <FlashOffer

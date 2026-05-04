@@ -7,13 +7,15 @@ import { useAuth } from '@/hooks/useAuth';
 interface NotificationPromptProps {
   onClose: () => void;
   levelsCompleted?: number;
+  blocked?: boolean;
+  onAttemptShow?: () => boolean;
 }
 
 /**
  * Optimized notification prompt - appears after level 2-3 victory
  * (emotional high = higher acceptance rate, typically 60-70% vs 30% on cold start)
  */
-export const NotificationPrompt = ({ onClose, levelsCompleted = 0 }: NotificationPromptProps) => {
+export const NotificationPrompt = ({ onClose, levelsCompleted = 0, blocked = false, onAttemptShow }: NotificationPromptProps) => {
   const { isSupported, permission, requestPermission } = usePushNotifications();
   const { user } = useAuth();
   const [show, setShow] = useState(false);
@@ -32,6 +34,7 @@ export const NotificationPrompt = ({ onClose, levelsCompleted = 0 }: Notificatio
 
     // Short delay after level completion for natural feel
     const timer = setTimeout(() => {
+      if (blocked || (onAttemptShow && !onAttemptShow())) return;
       setShow(true);
     }, 1500);
 
@@ -63,7 +66,10 @@ export const NotificationPrompt = ({ onClose, levelsCompleted = 0 }: Notificatio
     if (askedTimestamp && askedTimestamp !== 'true') {
       const daysSince = (Date.now() - parseInt(askedTimestamp)) / (1000 * 60 * 60 * 24);
       if (daysSince > 3 && levelsCompleted >= 2) {
-        setTimeout(() => setShow(true), 2000);
+        setTimeout(() => {
+          if (blocked || (onAttemptShow && !onAttemptShow())) return;
+          setShow(true);
+        }, 2000);
       }
     }
   }, [user?.id, isSupported, permission, levelsCompleted]);
