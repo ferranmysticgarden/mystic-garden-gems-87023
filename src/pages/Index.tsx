@@ -1158,7 +1158,7 @@ const Index = () => {
         />
       )}
       {/* Share Prompt */}
-      {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} />}
+      {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} blocked={isEngagementShown()} onAttemptShow={tryClaimEngagementSlot} />}
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
         <FlashOffer
