@@ -181,8 +181,8 @@ export const useGooglePlayBilling = () => {
       const productDetails = await queryProductsWithFallback(productIds);
       const loadedCount = Object.keys(productDetails).length;
 
-      if (loadedCount === 0 && retryCount < 4) {
-        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+      if (loadedCount === 0 && retryCount < 2) {
+        await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
 
@@ -204,8 +204,8 @@ export const useGooglePlayBilling = () => {
       return productDetails;
     } catch (error) {
       console.error('Error loading products (attempt ' + (retryCount + 1) + '):', error);
-      if (retryCount < 4) {
-        await new Promise(r => setTimeout(r, 1500 * (retryCount + 1)));
+      if (retryCount < 2) {
+        await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
         return loadProducts(retryCount + 1);
       }
       trackEvent('billing_error', {
