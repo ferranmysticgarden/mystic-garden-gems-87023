@@ -1,7 +1,7 @@
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
 
-export const NATIVE_OAUTH_CALLBACK_URL = 'https://mystic-garden-gems-87023.lovable.app/callback';
+export const NATIVE_OAUTH_CALLBACK_URL = 'com.mysticgarden.game://oauth-callback';
 
 const isAllowedOAuthHost = (hostname: string) => {
   const allowedHosts = new Set<string>(['accounts.google.com']);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { useBackButton } from "@/hooks/useBackButton";
@@ -21,37 +21,39 @@ import { LevelSelect } from "@/components/LevelSelect";
 import { Shop } from "@/components/Shop";
 import { NoLivesModal } from "@/components/NoLivesModal";
 import { FirstDayOffer } from "@/components/game/FirstDayOffer";
-import { StarterPack } from "@/components/game/StarterPack";
 import { LuckySpin } from "@/components/game/LuckySpin";
 import { Tutorial } from "@/components/game/Tutorial";
 import { ProgressionBar } from "@/components/game/ProgressionBar";
-import { BattlePass } from "@/components/game/BattlePass";
 import { RewardedAds } from "@/components/game/RewardedAds";
-import { AchievementModal } from "@/components/game/AchievementModal";
 import { DailyStreakCalendar } from "@/components/game/DailyStreakCalendar";
 import { NotificationPrompt } from "@/components/game/NotificationPrompt";
 import { ComeBackBanner } from "@/components/game/ComeBackBanner";
 import { StreakReminderBanner } from "@/components/game/StreakReminderBanner";
 import { ReviewRequestModal } from "@/components/game/ReviewRequestModal";
-import { ExitConfirmModal } from "@/components/game/ExitConfirmModal";
 import { Day2UnlockBanner } from "@/components/game/Day2UnlockBanner";
 import { FirstWinCelebration } from "@/components/game/FirstWinCelebration";
 import { FirstSessionReward } from "@/components/game/FirstSessionReward";
 import { SharePrompt } from "@/components/game/SharePrompt";
 import { DayCounter } from "@/components/game/DayCounter";
-import { FlashOffer } from "@/components/game/FlashOffer";
-import { PostVictoryOffer } from "@/components/game/PostVictoryOffer";
-import { DailyMissions } from "@/components/game/DailyMissions";
-import { LootChest } from "@/components/game/LootChest";
 import { SpringEvent } from "@/components/game/SpringEvent";
 import { PlayerRank } from "@/components/game/PlayerRank";
 import { AudioControls } from "@/components/game/AudioControls";
 import { VisualGarden } from "@/components/game/VisualGarden";
-import { WelcomeOffer } from "@/components/game/WelcomeOffer";
-import { PaymentSuccessModal } from "@/components/game/PaymentSuccessModal";
 import { LoginPrompt } from "@/components/game/LoginPrompt";
 import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
 import { ForceUpdateModal } from "@/components/game/ForceUpdateModal";
+
+// Lazy-loaded non-critical modals
+const PostVictoryOffer = lazy(() => import("@/components/game/PostVictoryOffer").then(m => ({ default: m.PostVictoryOffer })));
+const BattlePass = lazy(() => import("@/components/game/BattlePass").then(m => ({ default: m.BattlePass })));
+const DailyMissions = lazy(() => import("@/components/game/DailyMissions").then(m => ({ default: m.DailyMissions })));
+const LootChest = lazy(() => import("@/components/game/LootChest").then(m => ({ default: m.LootChest })));
+const FlashOffer = lazy(() => import("@/components/game/FlashOffer").then(m => ({ default: m.FlashOffer })));
+const AchievementModal = lazy(() => import("@/components/game/AchievementModal").then(m => ({ default: m.AchievementModal })));
+const ExitConfirmModal = lazy(() => import("@/components/game/ExitConfirmModal").then(m => ({ default: m.ExitConfirmModal })));
+const StarterPack = lazy(() => import("@/components/game/StarterPack").then(m => ({ default: m.StarterPack })));
+const WelcomeOffer = lazy(() => import("@/components/game/WelcomeOffer").then(m => ({ default: m.WelcomeOffer })));
+const PaymentSuccessModal = lazy(() => import("@/components/game/PaymentSuccessModal").then(m => ({ default: m.PaymentSuccessModal })));
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { signInWithGoogleNative, signInWithGoogleWeb } from "@/lib/googleAuth";
 import { hasSeenWelcomeOffer, canShowOfferToday, markOfferShown, emitAnalyticsEvent } from "@/lib/analytics";
@@ -1019,14 +1021,16 @@ const Index = () => {
       )}
       {/* Battle Pass Modal */}
       {showBattlePass && (
-        <BattlePass
-          onClose={() => setShowBattlePass(false)}
-          hasPremiumAccess={hasActiveProduct("garden_pass")}
-          onPurchaseSuccess={() => {
-            reloadFromDB?.();
-            toast.success("¡Battle Pass Premium activado!");
-          }}
-        />
+        <Suspense fallback={null}>
+          <BattlePass
+            onClose={() => setShowBattlePass(false)}
+            hasPremiumAccess={hasActiveProduct("garden_pass")}
+            onPurchaseSuccess={() => {
+              reloadFromDB?.();
+              toast.success("¡Battle Pass Premium activado!");
+            }}
+          />
+        </Suspense>
       )}
       {/* Daily Streak Calendar Modal */}
       {!autoPopupsBlocked && showStreakCalendar && (
@@ -1051,14 +1055,16 @@ const Index = () => {
       )}
       {/* Starter Pack - después de nivel 4 win */}
       {showStarterPack && (
-        <StarterPack
-          levelJustCompleted={lastCompletedLevel}
-          onClose={() => setShowStarterPack(false)}
-          onPurchaseSuccess={() => {
-            reloadFromDB?.();
-            toast.success("¡Inicio Mágico activado! +400💎");
-          }}
-        />
+        <Suspense fallback={null}>
+          <StarterPack
+            levelJustCompleted={lastCompletedLevel}
+            onClose={() => setShowStarterPack(false)}
+            onPurchaseSuccess={() => {
+              reloadFromDB?.();
+              toast.success("¡Inicio Mágico activado! +400💎");
+            }}
+          />
+        </Suspense>
       )}
       {/* Lucky Spin orquestado */}
       <LuckySpin 
@@ -1068,7 +1074,11 @@ const Index = () => {
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
       {/* Achievement Modal */}
-      {newlyUnlocked && <AchievementModal achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />}
+      {newlyUnlocked && (
+        <Suspense fallback={null}>
+          <AchievementModal achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />
+        </Suspense>
+      )}
       {/* Push Notification Prompt - SOLO después de nivel 2 */}
       {!autoPopupsBlocked && !isNewUser && <NotificationPrompt onClose={() => {}} levelsCompleted={gameState.completedLevels.length} blocked={isEngagementShown()} onAttemptShow={tryClaimEngagementSlot} />}
       {/* Come Back Banner orquestado */}
@@ -1086,14 +1096,16 @@ const Index = () => {
       />
       {/* Exit Confirmation Modal */}
       {showExitModal && (
-        <ExitConfirmModal
-          onStay={() => setShowExitModal(false)}
-          onExit={() => {
-            setShowExitModal(false);
-            if (user) signOut();
-          }}
-          streak={streakData.currentStreak}
-        />
+        <Suspense fallback={null}>
+          <ExitConfirmModal
+            onStay={() => setShowExitModal(false)}
+            onExit={() => {
+              setShowExitModal(false);
+              if (user) signOut();
+            }}
+            streak={streakData.currentStreak}
+          />
+        </Suspense>
       )}
       {/* Login Prompt - for guest users needing auth */}
       {showLoginPrompt && (
@@ -1135,14 +1147,16 @@ const Index = () => {
       )}
       {/* Welcome Offer - €0.49 SOLO después de nivel 3 derrota */}
       {showWelcomeOffer && !isNewUser && (
-        <WelcomeOffer
-          onPurchase={() => {
-            reloadFromDB?.();
-            toast.success("¡Pack Bienvenida activado!");
-            setShowWelcomeOffer(false);
-          }}
-          onDismiss={() => setShowWelcomeOffer(false)}
-        />
+        <Suspense fallback={null}>
+          <WelcomeOffer
+            onPurchase={() => {
+              reloadFromDB?.();
+              toast.success("¡Pack Bienvenida activado!");
+              setShowWelcomeOffer(false);
+            }}
+            onDismiss={() => setShowWelcomeOffer(false)}
+          />
+        </Suspense>
       )}
       {/* First Session Reward - SOLO después de nivel 5 */}
       {!isNewUser && showFirstSessionReward && lastCompletedLevel === 5 && (
@@ -1161,50 +1175,58 @@ const Index = () => {
       {!autoPopupsBlocked && !isNewUser && <SharePrompt gamesPlayed={gamesPlayed} daysPlayed={streakData.currentStreak} blocked={isEngagementShown()} onAttemptShow={tryClaimEngagementSlot} />}
       {/* Flash Offer - after 2 consecutive losses */}
       {showFlashOffer && (
-        <FlashOffer
-          trigger="loss"
-          onClose={() => {
-            setShowFlashOffer(false);
-            setConsecutiveLosses(0);
-          }}
-          onPurchaseSuccess={() => {
-            reloadFromDB?.();
-            toast.success("¡Pack Relámpago activado!");
-          }}
-        />
+        <Suspense fallback={null}>
+          <FlashOffer
+            trigger="loss"
+            onClose={() => {
+              setShowFlashOffer(false);
+              setConsecutiveLosses(0);
+            }}
+            onPurchaseSuccess={() => {
+              reloadFromDB?.();
+              toast.success("¡Pack Relámpago activado!");
+            }}
+          />
+        </Suspense>
       )}
       {/* Post Victory Offer - SOLO después de nivel 2 */}
       {showPostVictoryOffer && lastWinGems > 0 && !isNewUser && (
-        <PostVictoryOffer
-          baseGems={lastWinGems}
-          onClose={() => setShowPostVictoryOffer(false)}
-          onPurchaseSuccess={() => {
-            reloadFromDB?.();
-            toast.success("¡Bonus de victoria activado!");
-          }}
-        />
+        <Suspense fallback={null}>
+          <PostVictoryOffer
+            baseGems={lastWinGems}
+            onClose={() => setShowPostVictoryOffer(false)}
+            onPurchaseSuccess={() => {
+              reloadFromDB?.();
+              toast.success("¡Bonus de victoria activado!");
+            }}
+          />
+        </Suspense>
       )}
       {/* Daily Missions */}
       {showDailyMissions && (
-        <DailyMissions
-          onClose={() => setShowDailyMissions(false)}
-          onRewardClaimed={(gems) => {
-            addGems(gems);
-            toast.success(`¡Misión completada! +${gems}💎`);
-          }}
-        />
+        <Suspense fallback={null}>
+          <DailyMissions
+            onClose={() => setShowDailyMissions(false)}
+            onRewardClaimed={(gems) => {
+              addGems(gems);
+              toast.success(`¡Misión completada! +${gems}💎`);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Loot Chest */}
       {showLootChest && (
-        <LootChest
-          onClose={() => setShowLootChest(false)}
-          onRewardClaimed={(gems, lives) => {
-            addGems(gems);
-            addLives(lives);
-            toast.success(`¡Cofre abierto! +${gems}💎 +${lives}❤️`);
-          }}
-        />
+        <Suspense fallback={null}>
+          <LootChest
+            onClose={() => setShowLootChest(false)}
+            onRewardClaimed={(gems, lives) => {
+              addGems(gems);
+              addLives(lives);
+              toast.success(`¡Cofre abierto! +${gems}💎 +${lives}❤️`);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Spring Event orquestado */}
@@ -1216,12 +1238,14 @@ const Index = () => {
         }} 
       />
       {/* Payment Success Modal */}
-      <PaymentSuccessModal
-        show={paymentModal.show}
-        productName={paymentModal.productName}
-        rewardText={paymentModal.rewardText}
-        onClose={() => setPaymentModal({ show: false, productName: "", rewardText: "" })}
-      />
+      <Suspense fallback={null}>
+        <PaymentSuccessModal
+          show={paymentModal.show}
+          productName={paymentModal.productName}
+          rewardText={paymentModal.rewardText}
+          onClose={() => setPaymentModal({ show: false, productName: "", rewardText: "" })}
+        />
+      </Suspense>
       {/* Force native update modal - blocks entire app if native version is too old */}
       {appUpdate.nativeUpdateRequired && (
         <ForceUpdateModal

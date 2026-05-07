@@ -51,9 +51,88 @@ try {
     }
 
     [System.IO.File]::WriteAllText($manifestPath, $manifest, (New-Object System.Text.UTF8Encoding($false)))
-    Write-Host 'AndroidManifest.xml actualizado.'
+    Write-Host 'AndroidManifest.xml actualizado con permisos.'
   } else {
     throw ('No existe AndroidManifest.xml en: ' + $manifestPath)
+  }
+
+  # ============================================
+  # STEP 1.1: Inject Orientation and ConfigChanges into MainActivity
+  # ============================================
+  Write-Host 'Releyendo manifest para configuracion de MainActivity...'
+  $manifest = [System.IO.File]::ReadAllText($manifestPath)
+  $orientationAttr = 'android:screenOrientation="portrait"'
+  $configChangesAttr = 'android:configChanges="orientation|screenSize|keyboardHidden|keyboard"'
+  $manifestChanged = $false
+  
+  # Target MainActivity specifically
+  if ($manifest -match 'android:name="com.mysticgarden.game.MainActivity"') {
+    Write-Host 'Configurando orientacion y configChanges en MainActivity...'
+    
+    # Inject screenOrientation if missing
+    if ($manifest -notmatch 'android:screenOrientation=') {
+      $manifest = $manifest -replace '(android:name="com.mysticgarden.game.MainActivity"[^>]*?)(\s*/?>)', ('$1 ' + $orientationAttr + '$2')
+      Write-Host 'OK: screenOrientation inyectado.'
+      $manifestChanged = $true
+    }
+
+    # Inject configChanges if missing
+    if ($manifest -notmatch 'android:configChanges=') {
+      $manifest = $manifest -replace '(android:name="com.mysticgarden.game.MainActivity"[^>]*?)(\s*/?>)', ('$1 ' + $configChangesAttr + '$2')
+      Write-Host 'OK: configChanges inyectado.'
+      $manifestChanged = $true
+    }
+    
+    if ($manifestChanged) {
+      [System.IO.File]::WriteAllText($manifestPath, $manifest, (New-Object System.Text.UTF8Encoding($false)))
+      Write-Host 'AndroidManifest.xml actualizado con configuracion de orientacion.'
+    } else {
+      Write-Host 'OK: La orientacion ya estaba configurada correctamente.'
+    }
+  }
+
+  # ============================================
+  # STEP 1.2: Inject/Update OAuth Deep Link Intent Filter
+  # ============================================
+  Write-Host 'Configurando Deep Link OAuth en AndroidManifest.xml...'
+  $manifest = [System.IO.File]::ReadAllText($manifestPath)
+  $deeplinkHost = "oauth-callback"
+  $deeplinkScheme = "com.mysticgarden.game"
+  $manifestChanged = $false
+
+  # Check if the correct intent-filter exists
+  if ($manifest -notmatch "android:host=`"$deeplinkHost`"") {
+    Write-Host "Deep link host '$deeplinkHost' no encontrado. Intentando inyectar o actualizar..."
+    
+    # If a generic 'callback' host exists, update it
+    if ($manifest -match "android:host=`"callback`"") {
+      Write-Host "Actualizando host 'callback' a '$deeplinkHost'..."
+      $manifest = $manifest -replace "android:host=`"callback`"", "android:host=`"$deeplinkHost`""
+      $manifestChanged = $true
+    } else {
+      # Inject complete intent-filter into MainActivity
+      Write-Host "Inyectando nuevo intent-filter para Deep Link..."
+      $deeplinkIntentFilter = @"
+      
+      <!-- Deep link callback: $deeplinkScheme://$deeplinkHost -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="$deeplinkScheme" android:host="$deeplinkHost" />
+      </intent-filter>
+"@
+      # Insert after the MainActivity name tag
+      $manifest = $manifest -replace '(android:name="com.mysticgarden.game.MainActivity"[^>]*?>)', ('$1' + $deeplinkIntentFilter)
+      $manifestChanged = $true
+    }
+  }
+
+  if ($manifestChanged) {
+    [System.IO.File]::WriteAllText($manifestPath, $manifest, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host 'AndroidManifest.xml actualizado con Deep Link OAuth.'
+  } else {
+    Write-Host 'OK: Deep Link OAuth ya estaba configurado correctamente.'
   }
 
   # ============================================
