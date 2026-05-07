@@ -114,12 +114,12 @@ try {
       Write-Host "Inyectando nuevo intent-filter para Deep Link..."
       $deeplinkIntentFilter = @"
       
-      <!-- Deep link callback: $deeplinkScheme://$deeplinkHost -->
+      <!-- Deep link callback: ${deeplinkScheme}://${deeplinkHost} -->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
-        <data android:scheme="$deeplinkScheme" android:host="$deeplinkHost" />
+        <data android:scheme="${deeplinkScheme}" android:host="${deeplinkHost}" />
       </intent-filter>
 "@
       # Insert after the MainActivity name tag
