@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { X, Shield, Cloud, Gift } from 'lucide-react';
 import { AuthPage } from '@/components/AuthPage';
 import { signInWithGoogleNative, signInWithGoogleWeb } from '@/lib/googleAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 interface LoginPromptProps {
@@ -19,6 +20,14 @@ interface LoginPromptProps {
  */
 export const LoginPrompt = ({ reason, onClose, onSuccess }: LoginPromptProps) => {
   const [showAuth, setShowAuth] = useState(false);
+  const { user } = useAuth();
+
+  // Cerrar automáticamete si se detecta sesión (ej: tras volver de OAuth nativo)
+  useEffect(() => {
+    if (user) {
+      onSuccess();
+    }
+  }, [user, onSuccess]);
 
   const reasons = {
     purchase: {

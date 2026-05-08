@@ -267,6 +267,13 @@ const Index = () => {
     }
   }, [authLoading, user]);
 
+  // Limpiar prompt de login si se detecta usuario (ej: tras login exitoso)
+  useEffect(() => {
+    if (user) {
+      setShowLoginPrompt(null);
+    }
+  }, [user]);
+
   // Re-engagement notifications: 2h, 24h, 72h after first session
   useEffect(() => {
     if (authLoading) return;

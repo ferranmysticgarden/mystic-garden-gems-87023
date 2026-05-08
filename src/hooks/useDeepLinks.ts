@@ -70,6 +70,13 @@ export const useDeepLinks = () => {
     let handle: { remove: () => Promise<void> | void } | null = null;
     const sub = App.addListener('appUrlOpen', handleDeepLink);
 
+    // Capturar Cold Start (Deep Link que arranca la app)
+    App.getLaunchUrl().then((launchUrl) => {
+      if (launchUrl) {
+        handleDeepLink(launchUrl);
+      }
+    });
+
     // Capacitor puede devolver handle directo o promesa según plataforma/typing
     Promise.resolve(sub)
       .then((h) => {
