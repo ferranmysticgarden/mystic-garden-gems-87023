@@ -788,6 +788,9 @@ const Index = () => {
       />
     );
   }
+  if (screen === "customize") {
+    return <CustomizeScreen onBack={() => setScreen("menu")} />;
+  }
   if (screen === "levels") {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
     return (
