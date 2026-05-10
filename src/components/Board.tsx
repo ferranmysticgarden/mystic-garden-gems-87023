@@ -3,8 +3,8 @@ import { Tile } from './Tile';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useLanguage } from '@/hooks/useLanguage';
+import { TILE_TYPES } from '@/constants/tileTypes';
 
-const TILE_TYPES = ['🌸', '🌺', '🌼', '🍃', '🌻', '🌷'];
 const BOARD_SIZE = 8;
 
 interface Position {
