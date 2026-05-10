@@ -6,6 +6,8 @@ import { ArrowLeft, Plus, X, ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
 import { processImageForTile, ImageProcessingError } from "@/utils/imageProcessing";
+import { tileSkinStore } from "@/utils/tileSkinStore";
+import { TILE_TYPES } from "@/constants/tileTypes";
 
 interface CustomizeScreenProps {
   onBack: () => void;
