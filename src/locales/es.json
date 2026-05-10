@@ -63,7 +63,11 @@
     "subtitle": "Elige una foto para cada tipo de ficha del juego.",
     "hint": "Toca un slot para añadir o cambiar la foto.",
     "permissionDenied": "Necesitamos acceso a tus fotos para personalizar las fichas",
-    "changeOrKeep": "¿Quieres cambiar esta foto?"
+    "changeOrKeep": "¿Quieres cambiar esta foto?",
+    "errorLoad": "No se pudo procesar la imagen",
+    "errorTooLarge": "Imagen demasiado grande, elige otra",
+    "errorFormat": "Formato no soportado",
+    "errorGeneric": "Ocurrió un error con la imagen"
   },
   "achievements": {
     "title": "Logros",
