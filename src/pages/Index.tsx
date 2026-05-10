@@ -989,6 +989,16 @@ const Index = () => {
                   <span className="text-amber-400 font-semibold text-sm">Cofres</span>
                 </Button>
               </div>
+              <div className="mt-3">
+                <Button
+                  onClick={() => setScreen("customize")}
+                  variant="outline"
+                  className="w-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-pink-500/50 hover:border-pink-400"
+                >
+                  <Palette className="w-5 h-5 mr-2 text-pink-400" />
+                  <span className="text-pink-400 font-semibold text-sm">{t("menu.customize")}</span>
+                </Button>
+              </div>
               {/* Player Rank Display */}
               <div className="mt-4">
                 <PlayerRank levelsCompleted={gameState.completedLevels.length} />
