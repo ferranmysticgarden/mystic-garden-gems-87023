@@ -114,6 +114,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
       next[idx] = null;
       return next;
     });
+    tileSkinStore.setSkin(TILE_TYPES[idx], null);
   };
 
   return (
