@@ -85,11 +85,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
       const dt = Math.round(performance.now() - t0);
       // Útil en debug: ver tiempo en consola
       console.log(`[customize] processed slot ${idx} in ${dt}ms`);
-      setPhotos((prev) => {
-        const next = [...prev];
-        next[idx] = processed;
-        return next;
-      });
+      // Una sola fuente de verdad: el store. UI reactiva via useTileSkin.
       tileSkinStore.setSkin(TILE_TYPES[idx], processed);
     } catch (err) {
       if (err instanceof ImageProcessingError) {
@@ -107,11 +103,6 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const handleRemove = (e: React.MouseEvent, idx: number) => {
     e.stopPropagation();
     if (processingIdx === idx) return;
-    setPhotos((prev) => {
-      const next = [...prev];
-      next[idx] = null;
-      return next;
-    });
     tileSkinStore.setSkin(TILE_TYPES[idx], null);
   };
 
