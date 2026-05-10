@@ -136,6 +136,62 @@ try {
   }
 
   # ============================================
+  # STEP 1.3: Inject Gallery/Photo permissions (for tile customization)
+  # ============================================
+  Write-Host 'Configurando permisos de galeria de fotos en AndroidManifest.xml...'
+  $manifest = [System.IO.File]::ReadAllText($manifestPath)
+  $manifestChanged = $false
+
+  $readMediaImages = 'com.android.permission.placeholder'  # not used; placeholder
+  # Real permission strings (Android namespace)
+  $permReadMediaImages = 'android.permission.READ_MEDIA_IMAGES'
+  $permReadExternal = 'android.permission.READ_EXTERNAL_STORAGE'
+
+  # READ_MEDIA_IMAGES (Android 13+)
+  if ($manifest -notmatch [regex]::Escape($permReadMediaImages)) {
+    Write-Host 'Inyectando permiso READ_MEDIA_IMAGES...'
+    if ($manifest -match '<uses-permission android:name="com.android.vending.BILLING"\s*/?>') {
+      $manifest = $manifest -replace `
+        '(<uses-permission android:name="com\.android\.vending\.BILLING"\s*/?>)', `
+        ('$1' + "`r`n" + '  <uses-permission android:name="' + $permReadMediaImages + '" />')
+    } else {
+      $manifest = $manifest -replace `
+        '(<manifest[^>]*>)', `
+        ('$1' + "`r`n" + '  <uses-permission android:name="' + $permReadMediaImages + '" />')
+    }
+    $manifestChanged = $true
+    Write-Host 'OK: READ_MEDIA_IMAGES inyectado.'
+  } else {
+    Write-Host 'OK: READ_MEDIA_IMAGES ya existe.'
+  }
+
+  # READ_EXTERNAL_STORAGE (Android 12 y anteriores) con maxSdkVersion=32
+  if ($manifest -notmatch [regex]::Escape($permReadExternal)) {
+    Write-Host 'Inyectando permiso READ_EXTERNAL_STORAGE (maxSdkVersion=32)...'
+    $readExternalLine = '<uses-permission android:name="' + $permReadExternal + '" android:maxSdkVersion="32" />'
+    if ($manifest -match [regex]::Escape($permReadMediaImages)) {
+      $manifest = $manifest -replace `
+        ('(<uses-permission android:name="' + [regex]::Escape($permReadMediaImages) + '"\s*/?>)'), `
+        ('$1' + "`r`n  " + $readExternalLine)
+    } else {
+      $manifest = $manifest -replace `
+        '(<manifest[^>]*>)', `
+        ('$1' + "`r`n  " + $readExternalLine)
+    }
+    $manifestChanged = $true
+    Write-Host 'OK: READ_EXTERNAL_STORAGE inyectado.'
+  } else {
+    Write-Host 'OK: READ_EXTERNAL_STORAGE ya existe.'
+  }
+
+  if ($manifestChanged) {
+    [System.IO.File]::WriteAllText($manifestPath, $manifest, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host 'AndroidManifest.xml actualizado con permisos de galeria.'
+  } else {
+    Write-Host 'OK: Permisos de galeria ya estaban configurados.'
+  }
+
+  # ============================================
   # STEP 2: Inject billing library into build.gradle
   # ============================================
   $billingDep = "implementation 'com.android.billingclient:billing:7.1.1'"
