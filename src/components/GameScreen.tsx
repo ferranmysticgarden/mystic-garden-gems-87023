@@ -13,6 +13,8 @@ import { Level10Paywall } from './game/Level10Paywall';
 import { Level6Offer } from './game/Level6Offer';
 import { UltimateRescueOffer } from './game/UltimateRescueOffer';
 import { emitAnalyticsEvent } from '@/lib/analytics';
+import { TILE_DEFAULT_EMOJIS, type TileType } from '@/constants/tileTypes';
+import { useTileSkin } from '@/hooks/useTileSkin';
 import { FirstMoveHint } from './game/FirstMoveHint';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
