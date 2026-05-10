@@ -62,8 +62,9 @@ import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/data/levels";
 import { PRODUCTS } from "@/data/products";
 import { toast } from "sonner";
-import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target } from "lucide-react";
-type Screen = "menu" | "game" | "levels" | "shop";
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
+import { CustomizeScreen } from "@/components/CustomizeScreen";
+type Screen = "menu" | "game" | "levels" | "shop" | "customize";
 const Index = () => {
   const navigate = useNavigate();
   const adminTapsRef = useRef<number[]>([]);
