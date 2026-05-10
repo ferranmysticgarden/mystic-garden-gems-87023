@@ -8,6 +8,8 @@ import { MysticBackground } from "@/components/effects";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
 import { useEdgeToEdge } from "@/hooks/useEdgeToEdge";
+import { useEffect } from "react";
+import { tileSkinStore } from "@/utils/tileSkinStore";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import OAuthCallback from "./pages/OAuthCallback";
@@ -29,6 +31,12 @@ const ConditionalBackground = () => {
 const App = () => {
   useDeepLinks();
   useEdgeToEdge();
+
+  // FASE E: hidratar fotos personalizadas (Filesystem nativo / IndexedDB web).
+  // Best-effort: si falla, las fichas usan los emojis por defecto.
+  useEffect(() => {
+    tileSkinStore.hydrate();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

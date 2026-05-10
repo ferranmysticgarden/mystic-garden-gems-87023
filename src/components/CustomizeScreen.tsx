@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
 import { processImageForTile, ImageProcessingError } from "@/utils/imageProcessing";
 import { tileSkinStore } from "@/utils/tileSkinStore";
+import { useTileSkin } from "@/hooks/useTileSkin";
 import { TILE_TYPES } from "@/constants/tileTypes";
 
 interface CustomizeScreenProps {
@@ -28,12 +29,9 @@ const SLOT_BORDERS = [
 
 export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const { t } = useLanguage();
-  // Hidratamos el estado local desde el store (snapshot actual).
-  // FASE E reemplazará esto con persistencia (Filesystem + IndexedDB).
-  const [photos, setPhotos] = useState<(string | null)[]>(() => {
-    const snap = tileSkinStore.getSnapshot();
-    return TILE_TYPES.map((id) => snap[id]);
-  });
+  // Lectura reactiva del store (se actualiza tras hidratación FASE E).
+  const skinMap = useTileSkin();
+  const photos = TILE_TYPES.map((id) => skinMap[id]);
   const [processingIdx, setProcessingIdx] = useState<number | null>(null);
 
   const pickPhotoNative = async (): Promise<string | null> => {
@@ -87,11 +85,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
       const dt = Math.round(performance.now() - t0);
       // Útil en debug: ver tiempo en consola
       console.log(`[customize] processed slot ${idx} in ${dt}ms`);
-      setPhotos((prev) => {
-        const next = [...prev];
-        next[idx] = processed;
-        return next;
-      });
+      // Una sola fuente de verdad: el store. UI reactiva via useTileSkin.
       tileSkinStore.setSkin(TILE_TYPES[idx], processed);
     } catch (err) {
       if (err instanceof ImageProcessingError) {
@@ -109,11 +103,6 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const handleRemove = (e: React.MouseEvent, idx: number) => {
     e.stopPropagation();
     if (processingIdx === idx) return;
-    setPhotos((prev) => {
-      const next = [...prev];
-      next[idx] = null;
-      return next;
-    });
     tileSkinStore.setSkin(TILE_TYPES[idx], null);
   };
 
