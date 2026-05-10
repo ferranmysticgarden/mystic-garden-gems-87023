@@ -101,7 +101,7 @@ const Index = () => {
   const setScreen = useCallback(
     (newScreen: Screen) => {
       setScreenState(newScreen);
-      setMusicScreen(newScreen);
+      setMusicScreen(newScreen === "customize" ? "menu" : newScreen);
     },
     [setMusicScreen],
   );
