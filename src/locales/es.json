@@ -55,7 +55,15 @@
   "menu": {
     "levels": "Niveles",
     "shop": "Tienda",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "customize": "Personalizar"
+  },
+  "customize": {
+    "title": "Personaliza tus fichas",
+    "subtitle": "Elige una foto para cada tipo de ficha del juego.",
+    "hint": "Toca un slot para añadir o cambiar la foto.",
+    "permissionDenied": "Necesitamos acceso a tus fotos para personalizar las fichas",
+    "changeOrKeep": "¿Quieres cambiar esta foto?"
   },
   "achievements": {
     "title": "Logros",
