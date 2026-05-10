@@ -55,7 +55,15 @@
   "menu": {
     "levels": "Levels",
     "shop": "Shop",
-    "settings": "Settings"
+    "settings": "Settings",
+    "customize": "Customize"
+  },
+  "customize": {
+    "title": "Customize your tiles",
+    "subtitle": "Pick a photo for each tile type in the game.",
+    "hint": "Tap a slot to add or change the photo.",
+    "permissionDenied": "We need access to your photos to customize the tiles",
+    "changeOrKeep": "Do you want to change this photo?"
   },
   "achievements": {
     "title": "Achievements",

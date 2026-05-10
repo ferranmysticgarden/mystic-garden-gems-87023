@@ -62,8 +62,9 @@ import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/data/levels";
 import { PRODUCTS } from "@/data/products";
 import { toast } from "sonner";
-import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target } from "lucide-react";
-type Screen = "menu" | "game" | "levels" | "shop";
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
+import { CustomizeScreen } from "@/components/CustomizeScreen";
+type Screen = "menu" | "game" | "levels" | "shop" | "customize";
 const Index = () => {
   const navigate = useNavigate();
   const adminTapsRef = useRef<number[]>([]);
@@ -100,7 +101,7 @@ const Index = () => {
   const setScreen = useCallback(
     (newScreen: Screen) => {
       setScreenState(newScreen);
-      setMusicScreen(newScreen);
+      setMusicScreen(newScreen === "customize" ? "menu" : newScreen);
     },
     [setMusicScreen],
   );
@@ -787,6 +788,9 @@ const Index = () => {
       />
     );
   }
+  if (screen === "customize") {
+    return <CustomizeScreen onBack={() => setScreen("menu")} />;
+  }
   if (screen === "levels") {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
     return (
@@ -983,6 +987,16 @@ const Index = () => {
                 >
                   <Gift className="w-5 h-5 mr-2 text-amber-400" />
                   <span className="text-amber-400 font-semibold text-sm">Cofres</span>
+                </Button>
+              </div>
+              <div className="mt-3">
+                <Button
+                  onClick={() => setScreen("customize")}
+                  variant="outline"
+                  className="w-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-pink-500/50 hover:border-pink-400"
+                >
+                  <Palette className="w-5 h-5 mr-2 text-pink-400" />
+                  <span className="text-pink-400 font-semibold text-sm">{t("menu.customize")}</span>
                 </Button>
               </div>
               {/* Player Rank Display */}
