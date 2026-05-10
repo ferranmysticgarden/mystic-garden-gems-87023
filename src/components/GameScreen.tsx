@@ -396,7 +396,15 @@ export const GameScreen = ({
                 <>
                   <span className="text-sm text-muted-foreground">{t('game.collect')}</span>
                   <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-1">
-                    <span className="text-4xl animate-pulse">{level.objective.target}</span>
+                    {(() => {
+                      const id = level.objective.target as TileType;
+                      const photo = tileSkins[id];
+                      return photo ? (
+                        <img src={photo} alt="" className="w-10 h-10 object-cover rounded-full animate-pulse" />
+                      ) : (
+                        <span className="text-4xl animate-pulse">{TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>
+                      );
+                    })()}
                     <span className="text-2xl font-bold text-gold">×{level.objective.count}</span>
                   </div>
                   <div className="text-lg font-semibold text-primary">
