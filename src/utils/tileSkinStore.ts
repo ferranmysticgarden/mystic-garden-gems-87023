@@ -13,7 +13,7 @@
  */
 
 import { TILE_TYPES, type TileType } from "@/constants/tileTypes";
-import { tileSkinStorage } from "@/utils/tileSkinStore-storage-bridge";
+import { tileSkinStorage } from "@/utils/tileSkinStorage";
 
 export type TileSkinMap = Record<TileType, string | null>;
 
