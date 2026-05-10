@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
 import { processImageForTile, ImageProcessingError } from "@/utils/imageProcessing";
 import { tileSkinStore } from "@/utils/tileSkinStore";
+import { useTileSkin } from "@/hooks/useTileSkin";
 import { TILE_TYPES } from "@/constants/tileTypes";
 
 interface CustomizeScreenProps {
@@ -28,12 +29,9 @@ const SLOT_BORDERS = [
 
 export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const { t } = useLanguage();
-  // Hidratamos el estado local desde el store (snapshot actual).
-  // FASE E reemplazará esto con persistencia (Filesystem + IndexedDB).
-  const [photos, setPhotos] = useState<(string | null)[]>(() => {
-    const snap = tileSkinStore.getSnapshot();
-    return TILE_TYPES.map((id) => snap[id]);
-  });
+  // Lectura reactiva del store (se actualiza tras hidratación FASE E).
+  const skinMap = useTileSkin();
+  const photos = TILE_TYPES.map((id) => skinMap[id]);
   const [processingIdx, setProcessingIdx] = useState<number | null>(null);
 
   const pickPhotoNative = async (): Promise<string | null> => {
