@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, X, ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+import { processImageForTile, ImageProcessingError } from "@/utils/imageProcessing";
 
 interface CustomizeScreenProps {
   onBack: () => void;
@@ -27,6 +28,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const { t } = useLanguage();
   // Estado temporal (FASE E añadirá persistencia)
   const [photos, setPhotos] = useState<(string | null)[]>([null, null, null, null, null, null]);
+  const [processingIdx, setProcessingIdx] = useState<number | null>(null);
 
   const pickPhotoNative = async (): Promise<string | null> => {
     try {
@@ -62,25 +64,44 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
     });
 
   const handleSlotClick = async (idx: number) => {
+    if (processingIdx !== null) return;
     if (photos[idx]) {
-      // Slot ocupado: simplemente quitamos al pulsar la X (handleRemove)
-      // Si pulsa el slot, ofrecemos cambiar
       const change = window.confirm(t("customize.changeOrKeep"));
       if (!change) return;
     }
-    const dataUrl = Capacitor.isNativePlatform()
+    const rawDataUrl = Capacitor.isNativePlatform()
       ? await pickPhotoNative()
       : await pickPhotoWeb();
-    if (!dataUrl) return;
-    setPhotos((prev) => {
-      const next = [...prev];
-      next[idx] = dataUrl;
-      return next;
-    });
+    if (!rawDataUrl) return;
+
+    setProcessingIdx(idx);
+    try {
+      const t0 = performance.now();
+      const processed = await processImageForTile(rawDataUrl);
+      const dt = Math.round(performance.now() - t0);
+      // Útil en debug: ver tiempo en consola
+      console.log(`[customize] processed slot ${idx} in ${dt}ms`);
+      setPhotos((prev) => {
+        const next = [...prev];
+        next[idx] = processed;
+        return next;
+      });
+    } catch (err) {
+      if (err instanceof ImageProcessingError) {
+        if (err.code === "TOO_LARGE") toast.error(t("customize.errorTooLarge"));
+        else if (err.code === "LOAD_FAILED") toast.error(t("customize.errorLoad"));
+        else toast.error(t("customize.errorFormat"));
+      } else {
+        toast.error(t("customize.errorGeneric"));
+      }
+    } finally {
+      setProcessingIdx(null);
+    }
   };
 
   const handleRemove = (e: React.MouseEvent, idx: number) => {
     e.stopPropagation();
+    if (processingIdx === idx) return;
     setPhotos((prev) => {
       const next = [...prev];
       next[idx] = null;
@@ -109,11 +130,13 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {TILE_EMOJIS.map((emoji, idx) => {
             const photo = photos[idx];
+            const isProcessing = processingIdx === idx;
             return (
               <button
                 key={idx}
                 onClick={() => handleSlotClick(idx)}
-                className={`relative aspect-square rounded-2xl border-[6px] ${SLOT_BORDERS[idx]} bg-card overflow-hidden flex items-center justify-center transition-transform active:scale-95`}
+                disabled={processingIdx !== null && !isProcessing}
+                className={`relative aspect-square rounded-2xl border-[6px] ${SLOT_BORDERS[idx]} bg-card overflow-hidden flex items-center justify-center transition-transform active:scale-95 disabled:opacity-60`}
                 aria-label={`Slot ${idx + 1}`}
               >
                 {photo ? (
@@ -138,6 +161,11 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
                     <span className="absolute bottom-2 right-2 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center shadow-md">
                       <Plus className="w-5 h-5" />
                     </span>
+                  </div>
+                )}
+                {isProcessing && (
+                  <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
                 )}
               </button>
