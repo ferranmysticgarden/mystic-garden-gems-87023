@@ -55,7 +55,15 @@
   "menu": {
     "levels": "Níveis",
     "shop": "Loja",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "customize": "Personalizar"
+  },
+  "customize": {
+    "title": "Personalize suas peças",
+    "subtitle": "Escolha uma foto para cada tipo de peça do jogo.",
+    "hint": "Toque em um slot para adicionar ou trocar a foto.",
+    "permissionDenied": "Precisamos de acesso às suas fotos para personalizar as peças",
+    "changeOrKeep": "Quer trocar esta foto?"
   },
   "achievements": {
     "title": "Conquistas",
