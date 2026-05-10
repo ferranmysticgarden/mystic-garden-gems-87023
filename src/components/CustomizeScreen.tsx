@@ -28,8 +28,12 @@ const SLOT_BORDERS = [
 
 export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const { t } = useLanguage();
-  // Estado temporal (FASE E añadirá persistencia)
-  const [photos, setPhotos] = useState<(string | null)[]>([null, null, null, null, null, null]);
+  // Hidratamos el estado local desde el store (snapshot actual).
+  // FASE E reemplazará esto con persistencia (Filesystem + IndexedDB).
+  const [photos, setPhotos] = useState<(string | null)[]>(() => {
+    const snap = tileSkinStore.getSnapshot();
+    return TILE_TYPES.map((id) => snap[id]);
+  });
   const [processingIdx, setProcessingIdx] = useState<number | null>(null);
 
   const pickPhotoNative = async (): Promise<string | null> => {
