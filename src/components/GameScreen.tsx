@@ -13,6 +13,8 @@ import { Level10Paywall } from './game/Level10Paywall';
 import { Level6Offer } from './game/Level6Offer';
 import { UltimateRescueOffer } from './game/UltimateRescueOffer';
 import { emitAnalyticsEvent } from '@/lib/analytics';
+import { TILE_DEFAULT_EMOJIS, type TileType } from '@/constants/tileTypes';
+import { useTileSkin } from '@/hooks/useTileSkin';
 import { FirstMoveHint } from './game/FirstMoveHint';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
@@ -43,6 +45,7 @@ export const GameScreen = ({
   initialCollected,
 }: GameScreenProps) => {
   const { t } = useLanguage();
+  const tileSkins = useTileSkin();
   const [moves, setMoves] = useState(initialMoves ?? level.moves);
   const [score, setScore] = useState(initialScore ?? 0);
   const [collected, setCollected] = useState<Record<string, number>>(initialCollected ?? {});
@@ -393,7 +396,15 @@ export const GameScreen = ({
                 <>
                   <span className="text-sm text-muted-foreground">{t('game.collect')}</span>
                   <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-1">
-                    <span className="text-4xl animate-pulse">{level.objective.target}</span>
+                    {(() => {
+                      const id = level.objective.target as TileType;
+                      const photo = tileSkins[id];
+                      return photo ? (
+                        <img src={photo} alt="" className="w-10 h-10 object-cover rounded-full animate-pulse" />
+                      ) : (
+                        <span className="text-4xl animate-pulse">{TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>
+                      );
+                    })()}
                     <span className="text-2xl font-bold text-gold">×{level.objective.count}</span>
                   </div>
                   <div className="text-lg font-semibold text-primary">

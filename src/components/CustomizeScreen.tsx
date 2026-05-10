@@ -6,6 +6,8 @@ import { ArrowLeft, Plus, X, ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
 import { processImageForTile, ImageProcessingError } from "@/utils/imageProcessing";
+import { tileSkinStore } from "@/utils/tileSkinStore";
+import { TILE_TYPES } from "@/constants/tileTypes";
 
 interface CustomizeScreenProps {
   onBack: () => void;
@@ -26,8 +28,12 @@ const SLOT_BORDERS = [
 
 export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const { t } = useLanguage();
-  // Estado temporal (FASE E añadirá persistencia)
-  const [photos, setPhotos] = useState<(string | null)[]>([null, null, null, null, null, null]);
+  // Hidratamos el estado local desde el store (snapshot actual).
+  // FASE E reemplazará esto con persistencia (Filesystem + IndexedDB).
+  const [photos, setPhotos] = useState<(string | null)[]>(() => {
+    const snap = tileSkinStore.getSnapshot();
+    return TILE_TYPES.map((id) => snap[id]);
+  });
   const [processingIdx, setProcessingIdx] = useState<number | null>(null);
 
   const pickPhotoNative = async (): Promise<string | null> => {
@@ -86,6 +92,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
         next[idx] = processed;
         return next;
       });
+      tileSkinStore.setSkin(TILE_TYPES[idx], processed);
     } catch (err) {
       if (err instanceof ImageProcessingError) {
         if (err.code === "TOO_LARGE") toast.error(t("customize.errorTooLarge"));
@@ -107,6 +114,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
       next[idx] = null;
       return next;
     });
+    tileSkinStore.setSkin(TILE_TYPES[idx], null);
   };
 
   return (
