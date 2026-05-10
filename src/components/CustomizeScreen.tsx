@@ -92,6 +92,7 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
         next[idx] = processed;
         return next;
       });
+      tileSkinStore.setSkin(TILE_TYPES[idx], processed);
     } catch (err) {
       if (err instanceof ImageProcessingError) {
         if (err.code === "TOO_LARGE") toast.error(t("customize.errorTooLarge"));
