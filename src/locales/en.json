@@ -63,7 +63,11 @@
     "subtitle": "Pick a photo for each tile type in the game.",
     "hint": "Tap a slot to add or change the photo.",
     "permissionDenied": "We need access to your photos to customize the tiles",
-    "changeOrKeep": "Do you want to change this photo?"
+    "changeOrKeep": "Do you want to change this photo?",
+    "errorLoad": "Could not process the image",
+    "errorTooLarge": "Image too large, pick another",
+    "errorFormat": "Unsupported format",
+    "errorGeneric": "Something went wrong with the image"
   },
   "achievements": {
     "title": "Achievements",
