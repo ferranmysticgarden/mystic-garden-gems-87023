@@ -80,6 +80,30 @@ export const GameScreen = ({
     };
   }, []);
 
+  // 🛟 Red de seguridad: si llega un purchase_success de 'continue_game'
+  // (rescate) aplicamos +5 movimientos y reseteamos gameOver, AUNQUE el
+  // modal UltimateRescueOffer ya se haya desmontado por cualquier motivo.
+  // Idempotente gracias al dedup window de dispatchPurchaseCompleted.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = ((event as CustomEvent).detail ?? {}) as { productId?: string };
+      if (detail.productId !== 'continue_game') return;
+      setMoves(prev => prev + 5);
+      setGameOver(false);
+      setWon(false);
+      setShowRescueOffer(false);
+      // Cerrar también funnels post-derrota si se hubieran abierto en paralelo
+      setShowDefeatPacksOffer(false);
+      setShowBuyMovesOffer(false);
+      setShowCloseDefeatOffer(false);
+      setShowFlashOffer(false);
+      hasPlayedEndSound.current = false;
+      backgroundMusic.setScreen('game');
+    };
+    window.addEventListener('first_purchase_completed', handler);
+    return () => window.removeEventListener('first_purchase_completed', handler);
+  }, []);
+
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
       return score >= level.objective.count;
