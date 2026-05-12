@@ -15,8 +15,6 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
 
-  return null; // DESACTIVADO - oferta muy temprana
-
   const price = getPrice('mega_pack_inicial', '€0.99');
   const odId = user?.id || 'guest';
 
