@@ -29,6 +29,12 @@ export const UltimateRescueOffer = ({
 
   const handleDismiss = useCallback(
     (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+      // 🔒 BLOQUEO: no permitir cerrar el modal mientras hay un pago en curso.
+      // Sin esto, el countdown de 15s o un toque accidental cierra el modal
+      // antes de que llegue purchase_success y el reward (+5 movimientos) se pierde.
+      if (loading) {
+        return;
+      }
       trackEvent('offer_dismissed', {
         offer: 'continue_game',
         trigger: 'ultimate_rescue',
