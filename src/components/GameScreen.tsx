@@ -355,6 +355,12 @@ export const GameScreen = ({
   const handleRescueBuy = () => {
     setShowRescueOffer(false);
     setMoves(prev => prev + 5);
+    // Defensa: si por cualquier motivo gameOver quedó en true, lo reseteamos
+    // para que el jugador pueda continuar jugando con los +5 movimientos.
+    setGameOver(false);
+    setWon(false);
+    hasPlayedEndSound.current = false;
+    backgroundMusic.setScreen('game');
   };
 
   const handleRescueDismiss = () => {
