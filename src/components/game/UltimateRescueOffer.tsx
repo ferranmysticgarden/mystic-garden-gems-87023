@@ -29,6 +29,12 @@ export const UltimateRescueOffer = ({
 
   const handleDismiss = useCallback(
     (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
+      // 🔒 BLOQUEO: no permitir cerrar el modal mientras hay un pago en curso.
+      // Sin esto, el countdown de 15s o un toque accidental cierra el modal
+      // antes de que llegue purchase_success y el reward (+5 movimientos) se pierde.
+      if (loading) {
+        return;
+      }
       trackEvent('offer_dismissed', {
         offer: 'continue_game',
         trigger: 'ultimate_rescue',
@@ -40,7 +46,7 @@ export const UltimateRescueOffer = ({
       });
       onDismiss();
     },
-    [levelNumber, attempts, movesShort, onDismiss]
+    [levelNumber, attempts, movesShort, onDismiss, loading]
   );
 
   // Efecto de entrada: vibración + shake
@@ -52,8 +58,11 @@ export const UltimateRescueOffer = ({
     return () => clearTimeout(shakeTimer);
   }, []);
 
-  // Countdown de urgencia
+  // Countdown de urgencia — PAUSADO durante el pago. Sin esta pausa, el
+  // contador llegaba a 0 mientras Google Play procesaba y auto-cerraba
+  // el modal antes de aplicar los +5 movimientos.
   useEffect(() => {
+    if (loading) return;
     if (secondsLeft <= 0) {
       handleDismiss('auto_close');
       return;
@@ -62,7 +71,7 @@ export const UltimateRescueOffer = ({
       setSecondsLeft(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [secondsLeft, handleDismiss]);
+  }, [secondsLeft, handleDismiss, loading]);
 
   const handleBuy = async () => {
     if (navigator.vibrate) {

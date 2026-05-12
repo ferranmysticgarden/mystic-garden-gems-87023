@@ -25,6 +25,9 @@ export const DefeatPacksOffer = ({
   const { createPayment, getPrice } = usePayment();
 
   const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
+    // 🔒 BLOQUEO: no permitir cerrar el modal mientras hay un pago en curso
+    // (evita perder el reward si el usuario toca X mientras Google Play procesa).
+    if (loading) return;
     trackEvent('offer_dismissed', {
       offer: 'defeat_packs',
       trigger: 'defeat_packs',
