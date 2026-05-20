@@ -102,6 +102,28 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
     }
   };
 
+  const handleForgotPassword = async () => {
+    try {
+      emailSchema.parse(email);
+    } catch {
+      toast.error('Escribe tu email arriba y vuelve a pulsar "¿Olvidaste tu contraseña?"');
+      return;
+    }
+    setLoading(true);
+    try {
+      const redirectTo = Capacitor.isNativePlatform()
+        ? NATIVE_OAUTH_CALLBACK_URL
+        : `${window.location.origin}/admin?secret=1`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) throw error;
+      toast.success('Te hemos enviado un email para restablecer la contraseña.');
+    } catch (e: any) {
+      toast.error(e.message || 'No se pudo enviar el email de recuperación');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
 
@@ -199,6 +221,17 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
           >
             {loading ? 'Cargando...' : isAdminMode ? 'Entrar al menú admin' : (isSignUp ? '📝 Crear cuenta' : '🔐 Entrar')}
           </Button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+              disabled={loading}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </form>
 
         {!isAdminMode && (
