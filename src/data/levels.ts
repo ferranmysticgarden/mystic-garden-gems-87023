@@ -23,23 +23,23 @@ export const LEVELS: Level[] = [
   { id: 3, objective: { type: 'collect', target: 't4', count: 5 }, moves: 28, stars: { one: 5, two: 7, three: 9 }, reward: { gems: 5 } },
   // Niveles 4-6: Ligeramente difíciles - primera frustración leve
   // Niveles 4-5: PRIMER MURO — frustración controlada para monetizar
-  { id: 4, objective: { type: 'score', target: 'points', count: 800 }, moves: 16, stars: { one: 800, two: 1100, three: 1400 }, reward: { gems: 10 } },
-  { id: 5, objective: { type: 'collect', target: 't2', count: 8 }, moves: 14, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
+  { id: 4, objective: { type: 'score', target: 'points', count: 600 }, moves: 22, stars: { one: 600, two: 900, three: 1200 }, reward: { gems: 10 } },
+  { id: 5, objective: { type: 'collect', target: 't2', count: 8 }, moves: 20, stars: { one: 8, two: 10, three: 12 }, reward: { gems: 5 } },
   
   // Nivel 6: Transición - reducido 20% (22→18)
-  { id: 6, objective: { type: 'collect', target: 't3', count: 10 }, moves: 18, stars: { one: 10, two: 12, three: 14 }, reward: {} },
+  { id: 6, objective: { type: 'collect', target: 't3', count: 10 }, moves: 22, stars: { one: 10, two: 12, three: 14 }, reward: {} },
   
   // Niveles 7-8: PRIMER BLOQUEO REAL - reducidos 20%
-  { id: 7, objective: { type: 'score', target: 'points', count: 1100 }, moves: 16, stars: { one: 1100, two: 1400, three: 1700 }, reward: {} },
-  { id: 8, objective: { type: 'collect', target: 't1', count: 12 }, moves: 15, stars: { one: 12, two: 14, three: 16 }, reward: {} },
+  { id: 7, objective: { type: 'score', target: 'points', count: 1000 }, moves: 22, stars: { one: 1000, two: 1300, three: 1600 }, reward: {} },
+  { id: 8, objective: { type: 'collect', target: 't1', count: 12 }, moves: 20, stars: { one: 12, two: 14, three: 16 }, reward: {} },
   // Niveles 9-10: Reducidos 30%
-  { id: 9, objective: { type: 'collect', target: 't4', count: 14 }, moves: 14, stars: { one: 14, two: 16, three: 19 }, reward: {} },
+  { id: 9, objective: { type: 'collect', target: 't4', count: 14 }, moves: 20, stars: { one: 14, two: 16, three: 19 }, reward: {} },
    // NIVEL 10: MURO DE CONVERSIÓN - reducido 30% (17→12)
-   { id: 10, objective: { type: 'score', target: 'points', count: 1400 }, moves: 12, stars: { one: 1400, two: 1700, three: 2000 }, reward: { gems: 10 } },
+   { id: 10, objective: { type: 'score', target: 'points', count: 1300 }, moves: 18, stars: { one: 1300, two: 1600, three: 1900 }, reward: { gems: 10 } },
   
   // Niveles 11-12: Continúa el challenge
-  { id: 11, objective: { type: 'collect', target: 't2', count: 20 }, moves: 19, stars: { one: 20, two: 24, three: 28 }, reward: {} },
-  { id: 12, objective: { type: 'collect', target: 't3', count: 22 }, moves: 20, stars: { one: 22, two: 27, three: 32 }, reward: {} },
+  { id: 11, objective: { type: 'collect', target: 't2', count: 18 }, moves: 22, stars: { one: 18, two: 22, three: 26 }, reward: {} },
+  { id: 12, objective: { type: 'collect', target: 't3', count: 20 }, moves: 22, stars: { one: 20, two: 25, three: 30 }, reward: {} },
   { id: 13, objective: { type: 'score', target: 'points', count: 3000 }, moves: 25, stars: { one: 3000, two: 3500, three: 4000 }, reward: {} },
   { id: 14, objective: { type: 'collect', target: 't1', count: 25 }, moves: 20, stars: { one: 25, two: 30, three: 35 }, reward: {} },
   
