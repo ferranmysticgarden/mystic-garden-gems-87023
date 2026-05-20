@@ -35,7 +35,7 @@ export const LEVELS: Level[] = [
   // Niveles 9-10: Reducidos 30%
   { id: 9, objective: { type: 'collect', target: 't4', count: 14 }, moves: 20, stars: { one: 14, two: 16, three: 19 }, reward: {} },
    // NIVEL 10: MURO DE CONVERSIÓN - reducido 30% (17→12)
-   { id: 10, objective: { type: 'score', target: 'points', count: 1300 }, moves: 18, stars: { one: 1300, two: 1600, three: 1900 }, reward: { gems: 10 } },
+   { id: 10, objective: { type: 'score', target: 'points', count: 1100 }, moves: 22, stars: { one: 1100, two: 1400, three: 1700 }, reward: { gems: 10 } },
   
   // Niveles 11-12: Continúa el challenge
   { id: 11, objective: { type: 'collect', target: 't2', count: 18 }, moves: 22, stars: { one: 18, two: 22, three: 26 }, reward: {} },
