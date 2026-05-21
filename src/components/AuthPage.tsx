@@ -268,11 +268,8 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
             </Button>
           </form>
         ) : (
-              : isSignUp
-                ? 'Crea tu cuenta'
-                : 'Inicia sesión para continuar'}
-          </p>
-        </div>
+          <>
+
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
