@@ -285,7 +285,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
       
       setBoard(newBoard);
       onMatch(matchedTiles, matches.length);
-    }, 150);
+    }, 90);
 
     return newBoard;
   }, [onMatch]);
@@ -321,9 +321,9 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
           setAnimatingTiles(new Set());
           setIsShuffling(false);
           setTimeout(() => setShowShuffleMessage(false), 500);
-        }, 350);
+        }, 250);
       }
-    }, 200);
+    }, 110);
 
     return () => clearTimeout(timeoutId);
   }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping, isShuffling, hasValidMoves, shuffleBoard, disabled, playShuffleSound]);
@@ -356,7 +356,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
         removeMatches(newBoard, matches);
         setIsSwapping(false);
       }
-    }, 150);
+    }, 80);
   }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
@@ -406,7 +406,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
       )}
       
       <div 
-        className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-300 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
+        className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-200 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
         style={{
           background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
           boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
