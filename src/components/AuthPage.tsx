@@ -217,8 +217,57 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
             {isAdminMode ? 'Menú admin' : 'Mystic Garden Pro'}
           </h1>
           <p className="text-muted-foreground">
-            {isAdminMode
+            {isRecovery
+              ? 'Define tu nueva contraseña'
+              : isAdminMode
               ? 'Panel privado para administración del juego'
+              : isSignUp
+                ? 'Crea tu cuenta'
+                : 'Inicia sesión para continuar'}
+          </p>
+        </div>
+
+        {isRecovery ? (
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-left text-sm font-medium text-foreground/90">
+                Nueva contraseña
+              </label>
+              <Input
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={loading}
+                required
+                minLength={6}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-left text-sm font-medium text-foreground/90">
+                Repetir contraseña
+              </label>
+              <Input
+                type="password"
+                placeholder="Repite la nueva contraseña"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
+                required
+                minLength={6}
+                className="w-full"
+              />
+            </div>
+            <Button
+              type="submit"
+              className={`w-full text-lg py-6 ${isAdminMode ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'gradient-gold shadow-gold'}`}
+              disabled={loading}
+            >
+              {loading ? 'Guardando...' : 'Guardar nueva contraseña'}
+            </Button>
+          </form>
+        ) : (
               : isSignUp
                 ? 'Crea tu cuenta'
                 : 'Inicia sesión para continuar'}
