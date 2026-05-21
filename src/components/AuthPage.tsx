@@ -26,20 +26,63 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
   const [isSignUp, setIsSignUp] = useState(mode === 'default' ? false : false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isRecovery, setIsRecovery] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const isAdminMode = mode === 'admin';
 
   useEffect(() => {
+    // Detectar si llegamos desde un link de recuperación
+    if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+      setIsRecovery(true);
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovery(true);
+        return;
+      }
+      if (event === 'SIGNED_IN' && session?.user && !isRecovery) {
         onAuthSuccess();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [onAuthSuccess]);
+  }, [onAuthSuccess, isRecovery]);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      passwordSchema.parse(newPassword);
+    } catch (err: any) {
+      toast.error(err?.errors?.[0]?.message || 'Contraseña inválida');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Contraseña actualizada. Ya puedes entrar.');
+      setIsRecovery(false);
+      setNewPassword('');
+      setConfirmPassword('');
+      if (typeof window !== 'undefined') {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      onAuthSuccess();
+    } catch (e: any) {
+      toast.error(e.message || 'No se pudo actualizar la contraseña');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
