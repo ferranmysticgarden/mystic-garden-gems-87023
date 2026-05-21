@@ -382,6 +382,8 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
             Solo usuarios autorizados pueden entrar en este panel.
           </div>
         )}
+        </>
+        )}
       </div>
     </div>
   );
