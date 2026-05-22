@@ -13,6 +13,7 @@ interface AuthPageProps {
   onBack?: () => void;
   backLabel?: string;
   mode?: 'default' | 'admin';
+  forceRecovery?: boolean;
 }
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" });
@@ -21,12 +22,12 @@ const passwordSchema = z.string().min(6, { message: "La contraseña debe tener a
 // Para login/confirmación en móvil nativo usamos una URL https permitida por el backend
 // que luego “salta” de vuelta a la app con deep link.
 
-export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = 'default' }: AuthPageProps) => {
+export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = 'default', forceRecovery = false }: AuthPageProps) => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(mode === 'default' ? false : false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isRecovery, setIsRecovery] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(forceRecovery);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -37,7 +38,12 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
       if (typeof window === 'undefined') return false;
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       const queryParams = new URLSearchParams(window.location.search);
-      return hashParams.get('type') === 'recovery' || queryParams.get('type') === 'recovery';
+      return (
+        forceRecovery ||
+        window.location.pathname === '/reset-password' ||
+        hashParams.get('type') === 'recovery' ||
+        queryParams.get('type') === 'recovery'
+      );
     };
 
     // Detectar si llegamos desde un link de recuperación y bloquear el auto-acceso al dashboard.
@@ -58,7 +64,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
     });
 
     return () => subscription.unsubscribe();
-  }, [onAuthSuccess, isRecovery]);
+  }, [onAuthSuccess, isRecovery, forceRecovery]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();

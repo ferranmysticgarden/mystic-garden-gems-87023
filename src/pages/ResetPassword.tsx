@@ -10,6 +10,7 @@ const ResetPassword = () => {
       onBack={() => navigate('/admin?secret=1')}
       backLabel="Volver al menú admin"
       mode="admin"
+      forceRecovery
     />
   );
 };
