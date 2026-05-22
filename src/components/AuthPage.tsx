@@ -33,8 +33,15 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
   const isAdminMode = mode === 'admin';
 
   useEffect(() => {
-    // Detectar si llegamos desde un link de recuperación
-    if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+    const isRecoveryUrl = () => {
+      if (typeof window === 'undefined') return false;
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const queryParams = new URLSearchParams(window.location.search);
+      return hashParams.get('type') === 'recovery' || queryParams.get('type') === 'recovery';
+    };
+
+    // Detectar si llegamos desde un link de recuperación y bloquear el auto-acceso al dashboard.
+    if (isRecoveryUrl()) {
       setIsRecovery(true);
     }
 
@@ -45,7 +52,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
         setIsRecovery(true);
         return;
       }
-      if (event === 'SIGNED_IN' && session?.user && !isRecovery) {
+      if (event === 'SIGNED_IN' && session?.user && !isRecovery && !isRecoveryUrl()) {
         onAuthSuccess();
       }
     });
@@ -156,7 +163,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
     try {
       const redirectTo = Capacitor.isNativePlatform()
         ? NATIVE_OAUTH_CALLBACK_URL
-        : `${window.location.origin}/admin?secret=1`;
+        : `${window.location.origin}/reset-password`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) throw error;
       toast.success('Te hemos enviado un email para restablecer la contraseña.');

@@ -2,18 +2,23 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { AuthPage } from '@/components/AuthPage';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const Admin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [validating, setValidating] = useState(false);
   const isSecretAccess = searchParams.get('secret') === '1';
+  const isPasswordRecovery =
+    location.hash.includes('type=recovery') ||
+    searchParams.get('type') === 'recovery' ||
+    (typeof window !== 'undefined' && window.location.hash.includes('type=recovery'));
 
   useEffect(() => {
     const validateAdmin = async () => {
@@ -56,6 +61,10 @@ const Admin = () => {
       validateAdmin();
     }
   }, [user, loading]);
+
+  if (isPasswordRecovery) {
+    return <AuthPage onAuthSuccess={() => setIsAdmin(null)} onBack={() => navigate('/')} backLabel="Volver al menú principal" mode="admin" />;
+  }
 
   if (loading || validating || isAdmin === null) {
     return (
