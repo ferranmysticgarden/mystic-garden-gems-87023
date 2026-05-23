@@ -11,6 +11,8 @@ interface UltimateRescueOfferProps {
   starsEarned?: number;
   onBuy: () => void;
   onDismiss: () => void;
+  gems: number;
+  onBuyWithGems: () => void;
 }
 
 export const UltimateRescueOffer = ({ 
@@ -19,10 +21,13 @@ export const UltimateRescueOffer = ({
   movesShort,
   starsEarned = 0,
   onBuy, 
-  onDismiss 
+  onDismiss,
+  gems,
+  onBuyWithGems
 }: UltimateRescueOfferProps) => {
   const [secondsLeft, setSecondsLeft] = useState(15);
   const [isShaking, setIsShaking] = useState(true);
+  const [isSpendingGems, setIsSpendingGems] = useState(false);
   const { createPayment, loading, getPrice } = usePayment();
   
   const price = getPrice('continue_game', '€0.50');
@@ -32,7 +37,7 @@ export const UltimateRescueOffer = ({
       // 🔒 BLOQUEO: no permitir cerrar el modal mientras hay un pago en curso.
       // Sin esto, el countdown de 15s o un toque accidental cierra el modal
       // antes de que llegue purchase_success y el reward (+5 movimientos) se pierde.
-      if (loading) {
+      if (loading || isSpendingGems) {
         return;
       }
       trackEvent('offer_dismissed', {
@@ -46,7 +51,7 @@ export const UltimateRescueOffer = ({
       });
       onDismiss();
     },
-    [levelNumber, attempts, movesShort, onDismiss, loading]
+    [levelNumber, attempts, movesShort, onDismiss, loading, isSpendingGems]
   );
 
   // Efecto de entrada: vibración + shake
@@ -62,7 +67,7 @@ export const UltimateRescueOffer = ({
   // contador llegaba a 0 mientras Google Play procesaba y auto-cerraba
   // el modal antes de aplicar los +5 movimientos.
   useEffect(() => {
-    if (loading) return;
+    if (loading || isSpendingGems) return;
     if (secondsLeft <= 0) {
       handleDismiss('auto_close');
       return;
@@ -71,7 +76,7 @@ export const UltimateRescueOffer = ({
       setSecondsLeft(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [secondsLeft, handleDismiss, loading]);
+  }, [secondsLeft, handleDismiss, loading, isSpendingGems]);
 
   const handleBuy = async () => {
     if (navigator.vibrate) {
@@ -81,6 +86,15 @@ export const UltimateRescueOffer = ({
     if (success) {
       onBuy();
     }
+  };
+
+  const handleGemBuy = () => {
+    if (gems < 150 || isSpendingGems || loading) return;
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+    setIsSpendingGems(true);
+    onBuyWithGems();
   };
 
   const getMessage = () => {
@@ -146,17 +160,30 @@ export const UltimateRescueOffer = ({
             {/* Oferta */}
             <div className="bg-black/20 rounded-xl p-3 mb-4 border border-accent/30">
               <p className="text-foreground font-medium">+5 movimientos para continuar</p>
-              <p className="text-3xl font-bold text-accent mt-1">{price}</p>
-              <p className="text-muted-foreground text-xs mt-1">Menos que un café ☕</p>
+              <div className="flex justify-center items-baseline gap-2 mt-1">
+                <span className="text-3xl font-bold text-accent">{price}</span>
+                <span className="text-muted-foreground text-sm">o</span>
+                <span className="text-2xl font-bold text-yellow-400">150 💎</span>
+              </div>
             </div>
 
-            <Button
-              onClick={handleBuy}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-accent to-game-orange hover:from-accent/90 hover:to-game-orange/90 text-accent-foreground font-bold py-5 rounded-xl text-lg shadow-gold transition-all hover:scale-105"
-            >
-              {loading ? '⏳ Procesando...' : '🎯 ¡CONTINUAR Y GANAR!'}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={handleGemBuy}
+                disabled={loading || isSpendingGems || gems < 150}
+                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50 disabled:grayscale"
+              >
+                {isSpendingGems ? '⏳ Procesando...' : gems >= 150 ? '💎 USAR 150 GEMAS' : `Necesitas 150 💎 (tienes ${gems})`}
+              </Button>
+
+              <Button
+                onClick={handleBuy}
+                disabled={loading || isSpendingGems}
+                className="w-full bg-gradient-to-r from-accent to-game-orange hover:from-accent/90 hover:to-game-orange/90 text-accent-foreground font-bold py-5 rounded-xl text-lg shadow-gold transition-all hover:scale-105"
+              >
+                {loading ? '⏳ Procesando...' : '🎯 ¡CONTINUAR Y GANAR!'}
+              </Button>
+            </div>
 
             <button
               onClick={() => handleDismiss('no_thanks')}

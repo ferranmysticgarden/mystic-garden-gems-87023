@@ -785,6 +785,8 @@ const Index = () => {
         onBack={() => setScreen("menu")}
         onShowExitModal={() => setShowExitModal(true)}
         {...restoredProps}
+        gems={gameState.gems}
+        onSpendGems={spendGems}
       />
     );
   }

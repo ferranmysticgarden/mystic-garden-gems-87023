@@ -32,6 +32,8 @@ interface GameScreenProps {
   initialMoves?: number;
   initialScore?: number;
   initialCollected?: Record<string, number>;
+  gems?: number;
+  onSpendGems?: (amount: number) => void;
 }
 
 export const GameScreen = ({ 
@@ -43,6 +45,8 @@ export const GameScreen = ({
   initialMoves,
   initialScore,
   initialCollected,
+  gems = 0,
+  onSpendGems,
 }: GameScreenProps) => {
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
@@ -363,6 +367,13 @@ export const GameScreen = ({
     backgroundMusic.setScreen('game');
   };
 
+  const handleRescueWithGems = () => {
+    if (gems >= 150 && onSpendGems) {
+      onSpendGems(150);
+      handleRescueBuy();
+    }
+  };
+
   const handleRescueDismiss = () => {
     setShowRescueOffer(false);
     // Mostrar pantalla de derrota normal
@@ -557,6 +568,8 @@ export const GameScreen = ({
             starsEarned={0}
             onBuy={handleRescueBuy}
             onDismiss={handleRescueDismiss}
+            gems={gems}
+            onBuyWithGems={handleRescueWithGems}
           />
         )}
 
