@@ -28,6 +28,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRecovery, setIsRecovery] = useState(forceRecovery);
+  const [recoveryReady, setRecoveryReady] = useState(!forceRecovery);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -46,9 +47,45 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
       );
     };
 
+    const prepareRecoverySession = async () => {
+      if (typeof window === 'undefined' || !isRecoveryUrl()) {
+        setRecoveryReady(true);
+        return;
+      }
+
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const queryParams = new URLSearchParams(window.location.search);
+      const code = queryParams.get('code') || hashParams.get('code');
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+
+      try {
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          window.history.replaceState(null, '', window.location.pathname);
+        } else if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } catch (error: any) {
+        toast.error(error?.message || 'No se pudo preparar el enlace de recuperación');
+      } finally {
+        setRecoveryReady(true);
+      }
+    };
+
     // Detectar si llegamos desde un link de recuperación y bloquear el auto-acceso al dashboard.
     if (isRecoveryUrl()) {
       setIsRecovery(true);
+      setRecoveryReady(false);
+      void prepareRecoverySession();
+    } else {
+      setRecoveryReady(true);
     }
 
     const {
@@ -68,6 +105,10 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!recoveryReady) {
+      toast.error('Espera unos segundos, estamos preparando el enlace de recuperación.');
+      return;
+    }
     try {
       passwordSchema.parse(newPassword);
     } catch (err: any) {
@@ -242,6 +283,11 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
 
         {isRecovery ? (
           <form onSubmit={handleUpdatePassword} className="space-y-4">
+            {!recoveryReady && (
+              <div className="rounded-xl border border-border/60 bg-background/30 px-4 py-3 text-center text-sm text-muted-foreground">
+                Preparando enlace de recuperación...
+              </div>
+            )}
             <div>
               <label className="mb-2 block text-left text-sm font-medium text-foreground/90">
                 Nueva contraseña
@@ -251,7 +297,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
                 placeholder="Mínimo 6 caracteres"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                disabled={loading}
+                disabled={loading || !recoveryReady}
                 required
                 minLength={6}
                 className="w-full"
@@ -266,7 +312,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
                 placeholder="Repite la nueva contraseña"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={loading}
+                disabled={loading || !recoveryReady}
                 required
                 minLength={6}
                 className="w-full"
@@ -275,7 +321,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
             <Button
               type="submit"
               className={`w-full text-lg py-6 ${isAdminMode ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'gradient-gold shadow-gold'}`}
-              disabled={loading}
+              disabled={loading || !recoveryReady}
             >
               {loading ? 'Guardando...' : 'Guardar nueva contraseña'}
             </Button>
