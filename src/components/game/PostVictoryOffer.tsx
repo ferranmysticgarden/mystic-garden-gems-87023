@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Sparkles, X, Star } from 'lucide-react';
-import { usePayment } from '@/hooks/usePayment';
+import { Sparkles, Star } from 'lucide-react';
 import { trackEvent } from '@/lib/trackEvent';
 
 interface PostVictoryOfferProps {
@@ -10,28 +9,13 @@ interface PostVictoryOfferProps {
 }
 
 export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostVictoryOfferProps) => {
-  const { createPayment, loading, getPrice } = usePayment();
-
-  const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
-    trackEvent('offer_dismissed', {
-      offer: 'victory_multiplier',
-      trigger: 'post_victory',
-      source: 'auto_popup',
-      reason,
+  const handleClaim = () => {
+    trackEvent('victory_reward_claimed', {
+      gems: baseGems,
+      trigger: 'post_victory'
     });
     onClose();
   };
-
-  const handleBuy = async () => {
-    const success = await createPayment('victory_multiplier');
-    if (success) {
-      console.log('[PURCHASE] success confirmed via PostVictoryOffer');
-      onPurchaseSuccess();
-      onClose();
-    }
-  };
-
-  const price = getPrice('victory_multiplier', '€0.50');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
@@ -53,13 +37,6 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
           ))}
         </div>
 
-        <button 
-          onClick={() => handleDismiss('close_x')}
-          className="absolute top-3 right-3 text-white/70 hover:text-white z-10"
-        >
-          <X className="w-6 h-6" />
-        </button>
-
         <div className="text-center relative z-10">
           <div className="flex items-center justify-center gap-1 mb-3">
             <Star className="w-6 h-6 text-yellow-400 animate-pulse" />
@@ -71,42 +48,25 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
             🎉 ¡LO HAS CONSEGUIDO!
           </h2>
           
-          <p className="text-emerald-200 text-sm mb-4">
-            ¡Victoria épica! Activa un bonus directo para seguir avanzando
+          <p className="text-emerald-200 text-sm mb-6">
+            ¡Victoria épica! Has completado el desafío con éxito.
           </p>
 
-          <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-2xl p-5 mb-4 border border-yellow-400/30">
-            <div className="text-center mb-4">
-              <p className="text-gray-300 text-sm">Has ganado</p>
-              <p className="text-2xl font-bold text-white">{baseGems} 💎</p>
-            </div>
-
-            <div className="bg-green-500/20 rounded-lg p-3 mb-3">
-              <p className="text-green-300 font-semibold text-base">
-                Bonus de compra: +2 vidas ❤️❤️
+          <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-2xl p-6 mb-6 border border-yellow-400/30">
+            <div className="text-center">
+              <p className="text-gray-300 text-sm mb-1">Tu recompensa</p>
+              <p className="text-4xl font-bold text-white flex items-center justify-center gap-2">
+                {baseGems} <span className="text-2xl">💎</span>
               </p>
-            </div>
-            
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-3xl font-bold text-yellow-400">{price}</span>
             </div>
           </div>
 
           <Button 
-            onClick={handleBuy}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-bold py-5 rounded-xl text-lg shadow-lg shadow-green-500/30"
+            onClick={handleClaim}
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-extrabold py-6 rounded-xl text-xl shadow-lg shadow-yellow-500/30 animate-bounce-subtle"
           >
-            <Sparkles className="w-5 h-5 mr-2" />
-            {loading ? '⏳ Procesando...' : '¡ACTIVAR BONUS! 🚀'}
-          </Button>
-
-          <Button 
-            onClick={() => handleDismiss('no_thanks')}
-            variant="ghost"
-            className="w-full text-emerald-300/60 hover:text-emerald-300 mt-2"
-          >
-            No, continuar sin bonus
+            <Sparkles className="w-6 h-6 mr-2" />
+            ¡RECLAMAR Y CONTINUAR!
           </Button>
         </div>
       </div>

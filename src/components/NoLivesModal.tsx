@@ -16,7 +16,7 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
   const { createPayment, getPrice, loading } = usePayment();
 
   const starterPrice = getPrice('starter_gems', '€0.50');
-  const canAffordGems = gems >= 5;
+  const canAffordGems = gems >= 35;
 
   const handleUseGemsForLife = () => {
     trackEvent('gems_for_life', { gems_balance: gems, source: 'no_lives_modal' });
@@ -65,7 +65,7 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
             >
               <Heart className="w-4 h-4 mr-2 text-red-400" />
               <Gem className="w-4 h-4 mr-2" />
-              {`+1 Vida por 5 Gemas (tienes ${gems}💎)`}
+              {`+1 Vida por 35 Gemas (tienes ${gems}💎)`}
             </Button>
           )}
 

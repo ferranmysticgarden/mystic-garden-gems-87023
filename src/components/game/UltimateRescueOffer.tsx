@@ -97,6 +97,15 @@ export const UltimateRescueOffer = ({
     onBuyWithGems();
   };
 
+  const handleBuyGemsPack = async () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+    await createPayment('starter_gems', 'ultimate_rescue');
+    // Al completarse, Index.tsx actualizará las props de gems y el modal
+    // mostrará automáticamente la opción de "USAR 150 GEMAS".
+  };
+
   const getMessage = () => {
     if (attempts >= 5) return `Llevas ${attempts} intentos en este nivel...`;
     if (attempts >= 3) return `${attempts} intentos y tan cerca...`;
@@ -168,21 +177,33 @@ export const UltimateRescueOffer = ({
             </div>
 
             <div className="space-y-3">
-              <Button
-                onClick={handleGemBuy}
-                disabled={loading || isSpendingGems || gems < 150}
-                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50 disabled:grayscale"
-              >
-                {isSpendingGems ? '⏳ Procesando...' : gems >= 150 ? '💎 USAR 150 GEMAS' : `Necesitas 150 💎 (tienes ${gems})`}
-              </Button>
+              {gems >= 150 ? (
+                <>
+                  <Button
+                    onClick={handleGemBuy}
+                    disabled={loading || isSpendingGems}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50"
+                  >
+                    {isSpendingGems ? '⏳ Procesando...' : '💎 USAR 150 GEMAS'}
+                  </Button>
 
-              <Button
-                onClick={handleBuy}
-                disabled={loading || isSpendingGems}
-                className="w-full bg-gradient-to-r from-accent to-game-orange hover:from-accent/90 hover:to-game-orange/90 text-accent-foreground font-bold py-5 rounded-xl text-lg shadow-gold transition-all hover:scale-105"
-              >
-                {loading ? '⏳ Procesando...' : '🎯 ¡CONTINUAR Y GANAR!'}
-              </Button>
+                  <Button
+                    onClick={handleBuy}
+                    disabled={loading || isSpendingGems}
+                    className="w-full bg-gradient-to-r from-accent to-game-orange hover:from-accent/90 hover:to-game-orange/90 text-accent-foreground font-bold py-5 rounded-xl text-lg shadow-gold transition-all hover:scale-105"
+                  >
+                    {loading ? '⏳ Procesando...' : '🎯 ¡CONTINUAR Y GANAR!'}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={handleBuyGemsPack}
+                  disabled={loading || isSpendingGems}
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105"
+                >
+                  {loading ? '⏳ Procesando...' : '💎 400 GEMAS — 0,50€ (continúa + 250 extra)'}
+                </Button>
+              )}
             </div>
 
             <button
