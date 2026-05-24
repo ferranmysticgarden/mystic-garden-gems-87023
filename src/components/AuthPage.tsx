@@ -29,6 +29,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
   const [password, setPassword] = useState('');
   const [isRecovery, setIsRecovery] = useState(forceRecovery);
   const [recoveryReady, setRecoveryReady] = useState(!forceRecovery);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -48,6 +49,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
     };
 
     const prepareRecoverySession = async () => {
+      setRecoveryError(null);
       if (typeof window === 'undefined' || !isRecoveryUrl()) {
         setRecoveryReady(true);
         return;
@@ -72,8 +74,16 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
           if (error) throw error;
           window.history.replaceState(null, '', window.location.pathname);
         }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('El enlace de recuperación no es válido o ha caducado. Pide otro email de recuperación.');
+        }
       } catch (error: any) {
-        toast.error(error?.message || 'No se pudo preparar el enlace de recuperación');
+        const message = error?.message || 'No se pudo preparar el enlace de recuperación';
+        setRecoveryError(message);
+        toast.error(message);
+        return;
       } finally {
         setRecoveryReady(true);
       }
@@ -105,8 +115,8 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recoveryReady) {
-      toast.error('Espera unos segundos, estamos preparando el enlace de recuperación.');
+    if (!recoveryReady || recoveryError) {
+      toast.error(recoveryError || 'Espera unos segundos, estamos preparando el enlace de recuperación.');
       return;
     }
     try {
