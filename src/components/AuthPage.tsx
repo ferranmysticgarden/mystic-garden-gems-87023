@@ -298,6 +298,11 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
                 Preparando enlace de recuperación...
               </div>
             )}
+            {recoveryError && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive">
+                {recoveryError}
+              </div>
+            )}
             <div>
               <label className="mb-2 block text-left text-sm font-medium text-foreground/90">
                 Nueva contraseña
@@ -307,7 +312,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
                 placeholder="Mínimo 6 caracteres"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                disabled={loading || !recoveryReady}
+                disabled={loading || !recoveryReady || !!recoveryError}
                 required
                 minLength={6}
                 className="w-full"
@@ -322,7 +327,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
                 placeholder="Repite la nueva contraseña"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={loading || !recoveryReady}
+                disabled={loading || !recoveryReady || !!recoveryError}
                 required
                 minLength={6}
                 className="w-full"
@@ -331,7 +336,7 @@ export const AuthPage = ({ onAuthSuccess, onBack, backLabel = 'Volver', mode = '
             <Button
               type="submit"
               className={`w-full text-lg py-6 ${isAdminMode ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'gradient-gold shadow-gold'}`}
-              disabled={loading || !recoveryReady}
+              disabled={loading || !recoveryReady || !!recoveryError}
             >
               {loading ? 'Guardando...' : 'Guardar nueva contraseña'}
             </Button>
