@@ -1219,6 +1219,7 @@ const Index = () => {
         <Suspense fallback={null}>
           <PostVictoryOffer
             baseGems={lastWinGems}
+            levelId={currentLevel.id}
             onClose={() => setShowPostVictoryOffer(false)}
             onPurchaseSuccess={() => {
               reloadFromDB?.();

@@ -4,11 +4,22 @@ import { trackEvent } from '@/lib/trackEvent';
 
 interface PostVictoryOfferProps {
   baseGems: number;
+  levelId?: number;
   onClose: () => void;
   onPurchaseSuccess: () => void;
 }
 
-export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostVictoryOfferProps) => {
+export const PostVictoryOffer = ({ baseGems, levelId, onClose, onPurchaseSuccess }: PostVictoryOfferProps) => {
+  const getSubtitle = (level: number) => {
+    if (level === 10)
+      return "¡Has superado el nivel principiante! Bienvenido al nivel INTERMEDIO 💪";
+    if (level === 25)
+      return "¡Dominas el nivel intermedio! Bienvenido al nivel AVANZADO 🔥";
+    if (level === 50)
+      return "¡Eres un MAESTRO del jardín místico! 👑";
+    return "¡Victoria épica! Has completado el desafío con éxito.";
+  };
+
   const handleClaim = () => {
     trackEvent('victory_reward_claimed', {
       gems: baseGems,
@@ -48,8 +59,8 @@ export const PostVictoryOffer = ({ baseGems, onClose, onPurchaseSuccess }: PostV
             🎉 ¡LO HAS CONSEGUIDO!
           </h2>
           
-          <p className="text-emerald-200 text-sm mb-6">
-            ¡Victoria épica! Has completado el desafío con éxito.
+          <p className="text-emerald-200 text-sm mb-6 px-2">
+            {getSubtitle(levelId ?? 0)}
           </p>
 
           <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-2xl p-6 mb-6 border border-yellow-400/30">
