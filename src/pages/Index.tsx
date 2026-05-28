@@ -927,26 +927,39 @@ const Index = () => {
               Continuar con Google
             </Button>
           )}
+
+          {/* Botones de navegación principal - SIEMPRE VISIBLES */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <Button
+              onClick={() => setScreen("levels")}
+              variant="outline"
+              className="hover:scale-105 active:scale-95 transition-transform duration-100"
+            >
+              <Grid3x3 className="w-5 h-5 mr-2" />
+              {t("menu.levels")}
+            </Button>
+
+            <Button
+              onClick={() => setScreen("customize")}
+              variant="outline"
+              className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-pink-500/50 hover:border-pink-400"
+            >
+              <Palette className="w-5 h-5 mr-2 text-pink-400" />
+              <span className="text-pink-400 font-semibold text-sm">{t("menu.customize")}</span>
+            </Button>
+          </div>
+
           {/* Botones secundarios - SOLO después de nivel 2 */}
           {!isNewUser && (
             <>
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <Button
-                  onClick={() => setScreen("levels")}
-                  variant="outline"
-                  className="hover:scale-105 active:scale-95 transition-transform duration-100"
-                >
-                  <Grid3x3 className="w-5 h-5 mr-2" />
-                  {t("menu.levels")}
-                </Button>
-
+              <div className="mt-3">
                 <Button
                   onClick={() => {
                     trackEvent('shop_opened', { source: 'secondary_button' });
                     setScreen("shop");
                   }}
                   variant="outline"
-                  className="hover:scale-105 active:scale-95 transition-transform duration-100"
+                  className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
                 >
                   <ShoppingBag className="w-5 h-5 mr-2" />
                   {t("menu.shop")}
@@ -991,16 +1004,6 @@ const Index = () => {
                 >
                   <Gift className="w-5 h-5 mr-2 text-amber-400" />
                   <span className="text-amber-400 font-semibold text-sm">Cofres</span>
-                </Button>
-              </div>
-              <div className="mt-3">
-                <Button
-                  onClick={() => setScreen("customize")}
-                  variant="outline"
-                  className="w-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-pink-500/50 hover:border-pink-400"
-                >
-                  <Palette className="w-5 h-5 mr-2 text-pink-400" />
-                  <span className="text-pink-400 font-semibold text-sm">{t("menu.customize")}</span>
                 </Button>
               </div>
               {/* Player Rank Display */}
