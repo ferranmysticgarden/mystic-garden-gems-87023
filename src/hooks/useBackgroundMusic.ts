@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { App } from '@capacitor/app';
 
 type Screen = 'menu' | 'levels' | 'shop' | 'game' | 'luckyspin' | 'luckyspin_spinning' | 'chest' | 'pause' | 'victory' | 'defeat';
 
@@ -327,6 +328,19 @@ export function useBackgroundMusic(screen?: Screen) {
       }
     };
 
+    // App lifecycle control (Background/Foreground)
+    const handleAppStateChange = App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        // Only resume if NOT muted
+        if (!backgroundMusic.getIsMuted()) {
+          backgroundMusic.play();
+        }
+      } else {
+        // Pause immediately on background
+        backgroundMusic.pause();
+      }
+    });
+
     // Try to start immediately
     backgroundMusic.initialize();
     backgroundMusic.play();
@@ -340,6 +354,7 @@ export function useBackgroundMusic(screen?: Screen) {
       document.removeEventListener('click', startMusic);
       document.removeEventListener('touchstart', startMusic);
       document.removeEventListener('keydown', startMusic);
+      handleAppStateChange.then(h => h.remove());
     };
   }, []);
 
