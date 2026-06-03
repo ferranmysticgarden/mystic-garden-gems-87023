@@ -90,6 +90,9 @@ const Index = () => {
     addHammer,
     addUndo,
     addShuffle,
+    useHammer,
+    useUndo,
+    useShuffle,
     reloadFromDB,
   } = useGameState();
 
