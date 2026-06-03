@@ -13,7 +13,10 @@
     "retry": "Retry",
     "watchAd": "Watch Ad",
     "play": "Play",
-    "magic_shuffle": "Magic is reshuffling the garden..."
+    "magic_shuffle": "Magic is reshuffling the garden...",
+    "hammer": "Hammer",
+    "shuffle": "Shuffle",
+    "undo": "Undo"
   },
   "resources": {
     "lives": "Lives",

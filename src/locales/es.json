@@ -13,7 +13,10 @@
     "retry": "Reintentar",
     "watchAd": "Ver anuncio",
     "play": "Jugar",
-    "magic_shuffle": "La magia reorganiza el jardín..."
+    "magic_shuffle": "La magia reorganiza el jardín...",
+    "hammer": "Martillo",
+    "shuffle": "Mezclar",
+    "undo": "Deshacer"
   },
   "resources": {
     "lives": "Vidas",

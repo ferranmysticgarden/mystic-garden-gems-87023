@@ -11,8 +11,8 @@ interface Mushroom {
 export const FloatingMushrooms = () => {
   const mushrooms = useMemo(() => {
     const positions = [
-      { left: '3%', bottom: '5%' },
-      { left: '85%', bottom: '6%' },
+      { left: '3%', bottom: '22%' },
+      { left: '85%', bottom: '22%' },
     ];
     
     return positions.map((pos, i): Mushroom => ({
