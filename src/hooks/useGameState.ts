@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { trackEvent } from '@/lib/trackEvent';
 import { useAuth } from './useAuth';
 
 export interface GameState {

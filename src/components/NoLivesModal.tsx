@@ -1,7 +1,9 @@
-import { Gem, Heart, Sparkles } from 'lucide-react';
+import { useEffect } from 'react';
+import { Gem, Heart, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
+import { hasPurchasedStarterGems } from '@/utils/purchaseUtils';
 
 interface NoLivesModalProps {
   gems: number;
@@ -16,16 +18,32 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
   const { createPayment, getPrice, loading } = usePayment();
 
   const starterPrice = getPrice('starter_gems', '€0.50');
+  const gems100Price = getPrice('gems_100', '€0.99');
   const canAffordGems = gems >= 35;
+  const alreadyBoughtStarter = hasPurchasedStarterGems();
+
+  useEffect(() => {
+    if (alreadyBoughtStarter) {
+      trackEvent('starter_gems_blocked', { source: 'no_lives_modal' });
+    }
+  }, [alreadyBoughtStarter]);
 
   const handleUseGemsForLife = () => {
     trackEvent('gems_for_life', { gems_balance: gems, source: 'no_lives_modal' });
     onUseGems();
   };
 
-  // ── PRIMARY monetisation CTA: buy starter_gems, grant instant life ──
-  const handleBuyStarterGems = async () => {
-    const success = await createPayment('starter_gems', 'no_lives_modal');
+  // ── PRIMARY monetisation CTA: buy gems, grant instant life ──
+  const handleBuyLife = async () => {
+    const productId = alreadyBoughtStarter ? 'gems_100' : 'starter_gems';
+    
+    trackEvent('purchase_life_attempt', { 
+      productId, 
+      already_bought_starter: alreadyBoughtStarter,
+      source: 'no_lives_modal' 
+    });
+
+    const success = await createPayment(productId, 'no_lives_modal');
     if (success) {
       // Instant benefit: +1 life so the player can keep playing NOW
       onQuickLifePurchased?.({ lives: 1, gems: 0 });
@@ -44,15 +62,26 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
         <div className="space-y-3">
           {/* PAID CTA first — highest conversion priority */}
           <Button
-            onClick={handleBuyStarterGems}
+            onClick={handleBuyLife}
             disabled={loading}
             className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-lg py-6 animate-pulse"
-            id="buy-starter-gems-no-lives"
+            id="buy-life-no-lives"
           >
-            <Sparkles className="w-5 h-5 mr-2" />
-            {loading
-              ? 'Procesando...'
-              : `❤️ +1 Vida + 400 💎 por solo ${starterPrice}`}
+            {loading ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-5 h-5 mr-2" />
+            )}
+            {loading ? (
+              'Procesando...'
+            ) : alreadyBoughtStarter ? (
+              <span className="flex flex-col items-center">
+                <span>❤️ +1 Vida + 100 💎</span>
+                <span className="text-xs opacity-90">por solo {gems100Price}</span>
+              </span>
+            ) : (
+              `❤️ +1 Vida + 400 💎 por solo ${starterPrice}`
+            )}
           </Button>
 
           {/* Secondary: gems path (only prominent if user can afford it) */}

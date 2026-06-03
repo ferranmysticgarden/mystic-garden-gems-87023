@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
+import { hasPurchasedStarterGems } from '@/utils/purchaseUtils';
 
 interface UltimateRescueOfferProps {
   levelNumber: number;
@@ -31,6 +32,13 @@ export const UltimateRescueOffer = ({
   const { createPayment, loading, getPrice } = usePayment();
   
   const price = getPrice('continue_game', '€0.50');
+  const alreadyBoughtStarter = hasPurchasedStarterGems();
+
+  useEffect(() => {
+    if (alreadyBoughtStarter) {
+      trackEvent('starter_gems_blocked', { source: 'ultimate_rescue' });
+    }
+  }, [alreadyBoughtStarter]);
 
   const handleDismiss = useCallback(
     (reason: 'close_x' | 'no_thanks' | 'auto_close') => {
@@ -196,13 +204,23 @@ export const UltimateRescueOffer = ({
                   </Button>
                 </>
               ) : (
-                <Button
-                  onClick={handleBuyGemsPack}
-                  disabled={loading || isSpendingGems}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105"
-                >
-                  {loading ? '⏳ Procesando...' : '💎 400 GEMAS — 0,50€ (continúa + 250 extra)'}
-                </Button>
+                alreadyBoughtStarter ? (
+                  <Button
+                    onClick={handleBuy}
+                    disabled={loading || isSpendingGems}
+                    className="w-full bg-gradient-to-r from-accent to-game-orange hover:from-accent/90 hover:to-game-orange/90 text-accent-foreground font-bold py-5 rounded-xl text-lg shadow-gold transition-all hover:scale-105"
+                  >
+                    {loading ? '⏳ Procesando...' : `🎯 ¡CONTINUAR POR SOLO ${price}!`}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleBuyGemsPack}
+                    disabled={loading || isSpendingGems}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105"
+                  >
+                    {loading ? '⏳ Procesando...' : '💎 400 GEMAS — 0,50€ (continúa + 250 extra)'}
+                  </Button>
+                )
               )}
             </div>
 

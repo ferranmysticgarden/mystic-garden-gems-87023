@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { App } from '@capacitor/app';
+import { trackEvent } from '@/lib/trackEvent';
 
 type Screen = 'menu' | 'levels' | 'shop' | 'game' | 'luckyspin' | 'luckyspin_spinning' | 'chest' | 'pause' | 'victory' | 'defeat';
 
@@ -331,11 +332,14 @@ export function useBackgroundMusic(screen?: Screen) {
     // App lifecycle control (Background/Foreground)
     const handleAppStateChange = App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
+        trackEvent('app_foreground');
         // Only resume if NOT muted
         if (!backgroundMusic.getIsMuted()) {
           backgroundMusic.play();
         }
       } else {
+        trackEvent('app_background');
+        trackEvent('session_end'); // Trigger on background/close
         // Pause immediately on background
         backgroundMusic.pause();
       }

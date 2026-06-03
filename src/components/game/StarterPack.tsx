@@ -4,6 +4,7 @@ import { Sparkles, X, Star, Gift, Clock, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
+import { hasPurchasedStarterGems, markStarterGemsAsPurchased } from '@/utils/purchaseUtils';
 import confetti from 'canvas-confetti';
 
 interface StarterPackProps {
@@ -21,25 +22,43 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
   const price = getPrice('starter_gems', '€0.50');
 
+  const alreadyBoughtStarter = hasPurchasedStarterGems();
+
+  useEffect(() => {
+    if (alreadyBoughtStarter) {
+      trackEvent('starter_gems_blocked', { source: 'starter_pack_modal' });
+    }
+  }, [alreadyBoughtStarter]);
+
+  // Migración: si la clave vieja indica que compró, marcar en el nuevo sistema
+  useEffect(() => {
+    const odId = user?.id || 'guest';
+    const oldKey = localStorage.getItem(`starter-gems-${odId}`);
+    if (oldKey === 'true' && !hasPurchasedStarterGems()) {
+      console.log("[StarterPack] Migrando compra antigua al nuevo sistema");
+      markStarterGemsAsPurchased();
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     // Trigger después de nivel 1+ (primera oferta del embudo - captura antes del abandono)
     if (levelJustCompleted < 1) return;
+    if (alreadyBoughtStarter) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
 
     // Reaparece cada 3 sesiones en vez de mostrarse solo 1 vez
     const seenCount = parseInt(localStorage.getItem(`starter-gems-count-${odId}`) || '0', 10);
-    const hasBought = localStorage.getItem(`starter-gems-${odId}`) === 'true';
-    if (!hasBought && seenCount % 3 === 0) {
+    if (seenCount % 3 === 0) {
       localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
       // Show immediately — Index.tsx already handles the delay
       setShow(true);
       triggerCelebration();
-    } else if (!hasBought) {
+    } else {
       localStorage.setItem(`starter-gems-count-${odId}`, String(seenCount + 1));
     }
-  }, [levelJustCompleted, user?.id]);
+  }, [levelJustCompleted, user?.id, alreadyBoughtStarter]);
 
   useEffect(() => {
     if (show && animationPhase === 'entering') {
@@ -80,9 +99,8 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     
     const success = await createPayment('starter_gems', 'starter_pack');
     if (success) {
-      const odId = user?.id || 'guest';
       console.log('[PURCHASE] success confirmed via StarterPack (starter_gems)');
-      localStorage.setItem(`starter-gems-${odId}`, 'true');
+      markStarterGemsAsPurchased();
       onPurchaseSuccess?.();
       setShow(false);
       onClose();

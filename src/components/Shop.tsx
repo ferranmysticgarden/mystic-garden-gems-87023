@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { X, Loader2, Star, Sparkles, Crown, Lock } from 'lucide-react';
 import { PRODUCTS } from '@/data/products';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
+import { hasPurchasedStarterGems } from '@/utils/purchaseUtils';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface ShopProps {
   onClose: () => void;
@@ -55,8 +58,16 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
     }
   };
 
+  const alreadyBoughtStarter = hasPurchasedStarterGems();
+
+  useEffect(() => {
+    if (alreadyBoughtStarter) {
+      trackEvent('starter_gems_blocked', { source: 'shop' });
+    }
+  }, [alreadyBoughtStarter]);
+
   const shopProducts = isNewUser 
-    ? PRODUCTS.filter(p => NEW_USER_PRODUCTS.includes(p.id))
+    ? PRODUCTS.filter(p => NEW_USER_PRODUCTS.includes(p.id) && !(p.id === 'starter_gems' && alreadyBoughtStarter))
     : PRODUCTS.filter(p => SHOP_PRODUCTS.includes(p.id));
   const premiumPacks = isNewUser ? [] : PRODUCTS.filter(p => PREMIUM_PACKS.includes(p.id));
 
@@ -95,7 +106,7 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
         )}
 
         {/* STARTER GEMS WELCOME BANNER */}
-        {(() => {
+        {!alreadyBoughtStarter && (() => {
           const starterGems = PRODUCTS.find(p => p.id === 'starter_gems');
           if (!starterGems) return null;
           return (

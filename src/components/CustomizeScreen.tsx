@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { processImageForTile, ImageProcessingError } from "@/utils/imageProcessi
 import { tileSkinStore } from "@/utils/tileSkinStore";
 import { useTileSkin } from "@/hooks/useTileSkin";
 import { TILE_TYPES } from "@/constants/tileTypes";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface CustomizeScreenProps {
   onBack: () => void;
@@ -29,6 +30,11 @@ const SLOT_BORDERS = [
 
 export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    trackEvent("customize_screen_opened");
+  }, []);
+
   // Lectura reactiva del store (se actualiza tras hidratación FASE E).
   const skinMap = useTileSkin();
   const photos = TILE_TYPES.map((id) => skinMap[id]);

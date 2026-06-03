@@ -61,6 +61,7 @@ import { trackEvent } from "@/lib/trackEvent";
 import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/data/levels";
 import { PRODUCTS } from "@/data/products";
+import { markStarterGemsAsPurchased } from "@/utils/purchaseUtils";
 import { toast } from "sonner";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
@@ -100,6 +101,7 @@ const Index = () => {
   // Sync music volume with screen changes
   const setScreen = useCallback(
     (newScreen: Screen) => {
+      trackEvent('screen_view', { screen: newScreen });
       setScreenState(newScreen);
       setMusicScreen(newScreen === "customize" ? "menu" : newScreen);
     },
@@ -181,6 +183,24 @@ const Index = () => {
       setLoginCooldownActive(false);
     } catch {}
   }, []);
+
+  // Sync starter_gems purchase state from Supabase
+  useEffect(() => {
+    if (!user) return;
+    const syncStarterGems = async () => {
+      const { data } = await supabase
+        .from('user_purchases')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', 'starter_gems')
+        .limit(1);
+      if (data && data.length > 0) {
+        console.log("[Index] Sync: starter_gems found in server, marking locally");
+        markStarterGemsAsPurchased();
+      }
+    };
+    syncStarterGems();
+  }, [user]);
 
   // Gating: Sesión 1 = 0 niveles completados. Bloquea engagement popups.
   const isFirstSession = gameState.completedLevels.length === 0;
@@ -382,6 +402,13 @@ const Index = () => {
       chest_gold: { name: "Cofre de Oro", text: "¡Cofre dorado abierto!" },
     };
     const display = REWARD_DISPLAY[productId] || { name: "Compra", text: "¡Recompensa aplicada con éxito!" };
+    
+    // Capa 1: Marcar compra de pack inicial si aplica
+    if (productId === 'starter_gems') {
+      console.log("[Index] Marcando starter_gems como comprado tras éxito Stripe");
+      markStarterGemsAsPurchased();
+    }
+
     dispatchPurchaseCompleted(productId);
     // Show success modal
     setPaymentModal({ show: true, productName: display.name, rewardText: display.text });
@@ -672,6 +699,11 @@ const Index = () => {
       // Guest Android: apply server rewards locally
       const { productId, rewards } = detail;
 
+      if (productId === 'starter_gems') {
+        console.log("[Index] Marcando starter_gems como comprado tras éxito Google Play (Guest)");
+        markStarterGemsAsPurchased();
+      }
+
       if (!rewards) {
         if (productId && applyLocalProductEffects(productId)) {
           console.log("[PURCHASE] Guest Android — applying fallback catalog rewards:", productId);
@@ -789,6 +821,12 @@ const Index = () => {
         {...restoredProps}
         gems={gameState.gems}
         onSpendGems={spendGems}
+        hammers={gameState.hammers}
+        shuffles={gameState.shuffles}
+        undos={gameState.undos}
+        onUseHammer={useHammer}
+        onUseShuffle={useShuffle}
+        onUseUndo={useUndo}
       />
     );
   }

@@ -18,11 +18,26 @@ interface BoardProps {
   targetTile?: string;
   disabled?: boolean;
   levelId?: number;
+  isHammerActive?: boolean;
+  onHammerUse?: (row: number, col: number) => void;
+  triggerShuffle?: number;
+  triggerUndo?: number;
 }
 
-export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardProps) => {
+export const Board = ({ 
+  onMatch, 
+  onMove, 
+  targetTile, 
+  disabled, 
+  levelId,
+  isHammerActive,
+  onHammerUse,
+  triggerShuffle,
+  triggerUndo
+}: BoardProps) => {
   const { t } = useLanguage();
   const [board, setBoard] = useState<string[][]>([]);
+  const [boardHistory, setBoardHistory] = useState<string[][][]>([]);
   const [selected, setSelected] = useState<Position | null>(null);
   const [animatingTiles, setAnimatingTiles] = useState<Set<string>>(new Set());
   const [isSwapping, setIsSwapping] = useState(false);
@@ -195,6 +210,7 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
     
     setBoard(newBoard);
     setSelected(null);
+    setBoardHistory([]); // Limpiar historial al empezar nivel
   }, [hasValidMoves, shuffleBoard, levelId, getEasyBoard]);
 
   useEffect(() => {
@@ -328,10 +344,31 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
     return () => clearTimeout(timeoutId);
   }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping, isShuffling, hasValidMoves, shuffleBoard, disabled, playShuffleSound]);
 
+  // Ejecutar Shuffle manual
+  useEffect(() => {
+    if (triggerShuffle && triggerShuffle > 0) {
+      playShuffleSound();
+      const shuffled = shuffleBoard(board);
+      setBoard(shuffled);
+    }
+  }, [triggerShuffle]);
+
+  // Ejecutar Undo manual
+  useEffect(() => {
+    if (triggerUndo && triggerUndo > 0 && boardHistory.length > 0) {
+      const lastBoard = boardHistory[boardHistory.length - 1];
+      setBoard(lastBoard);
+      setBoardHistory(prev => prev.slice(0, -1));
+    }
+  }, [triggerUndo]);
+
   const swapTiles = useCallback((pos1: Position, pos2: Position) => {
     setIsSwapping(true);
 
     const prevBoard = board.map(row => [...row]);
+    // Guardar estado actual antes del swap (máximo 5)
+    setBoardHistory(prev => [...prev.slice(-4), prevBoard]);
+
     const newBoard = board.map(row => [...row]);
 
     const temp = newBoard[pos1.row][pos1.col];
@@ -362,6 +399,13 @@ export const Board = ({ onMatch, onMove, targetTile, disabled, levelId }: BoardP
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;
     if (isSwapping || animatingTiles.size > 0) return;
+
+    // MODO MARTILLO: Si está activo, elimina la ficha y sale
+    if (isHammerActive) {
+      removeMatches(board, [{ row, col }]);
+      onHammerUse?.(row, col);
+      return;
+    }
 
     if (!selected) {
       playSelectSound();

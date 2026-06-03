@@ -8,6 +8,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { Device } from '@capacitor/device';
 
 // Simple device fingerprint for grouping events (NOT PII)
 const getDeviceId = (): string => {
@@ -20,6 +21,7 @@ const getDeviceId = (): string => {
 };
 
 let cachedAppInfoPromise: Promise<{ version: string | null; build: string | null } | null> | null = null;
+let cachedDeviceInfoPromise: Promise<{ country: string | null; locale: string | null } | null> | null = null;
 
 const getAppInfo = async (): Promise<{ version: string | null; build: string | null } | null> => {
   if (!cachedAppInfoPromise) {
@@ -34,6 +36,23 @@ const getAppInfo = async (): Promise<{ version: string | null; build: string | n
   return cachedAppInfoPromise;
 };
 
+const getDeviceInfo = async (): Promise<{ country: string | null; locale: string | null } | null> => {
+  if (!cachedDeviceInfoPromise) {
+    cachedDeviceInfoPromise = Device.getLanguageTag()
+      .then((res) => {
+        const langTag = res.value; // e.g. "es-ES"
+        const country = langTag.split('-')[1] || langTag;
+        return {
+          country,
+          locale: langTag,
+        };
+      })
+      .catch(() => null);
+  }
+
+  return cachedDeviceInfoPromise;
+};
+
 export const trackEvent = async (
   eventName: string,
   eventData?: Record<string, unknown>
@@ -42,10 +61,14 @@ export const trackEvent = async (
     const platform = Capacitor.getPlatform(); // 'android' | 'ios' | 'web'
     const deviceId = getDeviceId();
     const appInfo = await getAppInfo();
+    const deviceInfo = await getDeviceInfo();
+    
     const enrichedEventData = {
       ...(eventData || {}),
       app_version: appInfo?.version ?? null,
       app_build: appInfo?.build ?? null,
+      country: deviceInfo?.country ?? null,
+      locale: deviceInfo?.locale ?? null,
     };
 
     console.log(`[TRACK] ${eventName}`, { platform, ...enrichedEventData });

@@ -22,6 +22,9 @@ import { usePurchaseGate } from '@/hooks/usePurchaseGate';
 import { useAttemptTracker } from '@/hooks/useAttemptTracker';
 import confetti from 'canvas-confetti';
 import { usePendingPurchase } from '@/hooks/usePendingPurchase';
+import { trackEvent } from "@/lib/trackEvent";
+import { Hammer, RefreshCw, RotateCcw, Gem } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface GameScreenProps {
   level: Level;
@@ -34,6 +37,12 @@ interface GameScreenProps {
   initialCollected?: Record<string, number>;
   gems?: number;
   onSpendGems?: (amount: number) => void;
+  hammers?: number;
+  shuffles?: number;
+  undos?: number;
+  onUseHammer?: () => void;
+  onUseShuffle?: () => void;
+  onUseUndo?: () => void;
 }
 
 export const GameScreen = ({ 
@@ -47,6 +56,12 @@ export const GameScreen = ({
   initialCollected,
   gems = 0,
   onSpendGems,
+  hammers = 0,
+  shuffles = 0,
+  undos = 0,
+  onUseHammer,
+  onUseShuffle,
+  onUseUndo,
 }: GameScreenProps) => {
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
@@ -67,6 +82,9 @@ export const GameScreen = ({
   const [combo, setCombo] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const [showNearWinMessage, setShowNearWinMessage] = useState(false);
+  const [isHammerActive, setIsHammerActive] = useState(false);
+  const [shuffleTrigger, setShuffleTrigger] = useState(0);
+  const [undoTrigger, setUndoTrigger] = useState(0);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
@@ -76,6 +94,26 @@ export const GameScreen = ({
   const { getAttempts, incrementAttempt, resetAttempts } = useAttemptTracker();
   
   const { playVictorySound, playLoseSound } = useMysticSounds();
+
+  const startTime = useRef(Date.now());
+
+  // Resetear estado al cambiar de nivel
+  useEffect(() => {
+    setShuffleTrigger(0);
+    setUndoTrigger(0);
+    setIsHammerActive(false);
+  }, [level.id]);
+
+  const handleQuit = useCallback(() => {
+    const timePlayed = Math.floor((Date.now() - startTime.current) / 1000);
+    const movesUsed = Math.max(0, (initialMoves ?? level.moves) - moves);
+    trackEvent('level_quit', {
+      level: level.id,
+      moves_used: movesUsed,
+      time_played_seconds: timePlayed
+    });
+    onBack();
+  }, [level.id, level.moves, initialMoves, moves, onBack]);
 
   useEffect(() => {
     backgroundMusic.setScreen('game');
@@ -91,22 +129,38 @@ export const GameScreen = ({
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = ((event as CustomEvent).detail ?? {}) as { productId?: string };
-      if (detail.productId !== 'continue_game') return;
-      setMoves(prev => prev + 5);
-      setGameOver(false);
-      setWon(false);
-      setShowRescueOffer(false);
-      // Cerrar también funnels post-derrota si se hubieran abierto en paralelo
-      setShowDefeatPacksOffer(false);
-      setShowBuyMovesOffer(false);
-      setShowCloseDefeatOffer(false);
-      setShowFlashOffer(false);
-      hasPlayedEndSound.current = false;
-      backgroundMusic.setScreen('game');
+      
+      const applyRescue = () => {
+        setMoves(prev => prev + 5);
+        setGameOver(false);
+        setWon(false);
+        setShowRescueOffer(false);
+        // Cerrar también funnels post-derrota si se hubieran abierto en paralelo
+        setShowDefeatPacksOffer(false);
+        setShowBuyMovesOffer(false);
+        setShowCloseDefeatOffer(false);
+        setShowFlashOffer(false);
+        hasPlayedEndSound.current = false;
+        backgroundMusic.setScreen('game');
+      };
+
+      if (detail.productId === 'continue_game') {
+        applyRescue();
+      } else if (detail.productId === 'starter_gems' && showRescueOffer) {
+        // El modal de rescate está abierto cuando llega la compra de gemas
+        // → inferimos que el usuario compró para rescatar y aplicamos auto-rescate
+        onSpendGems?.(150);
+        applyRescue();
+        trackEvent('rescue_auto_applied', { 
+          source: 'ultimate_rescue_inferred', 
+          productId: 'starter_gems', 
+          gems_spent: 150 
+        });
+      }
     };
     window.addEventListener('first_purchase_completed', handler);
     return () => window.removeEventListener('first_purchase_completed', handler);
-  }, []);
+  }, [showRescueOffer, onSpendGems]);
 
   const checkWinCondition = useCallback(() => {
     if (level.objective.type === 'score') {
@@ -374,6 +428,66 @@ export const GameScreen = ({
     }
   };
 
+  const handleHammerClick = () => {
+    if (isHammerActive) {
+      setIsHammerActive(false);
+      return;
+    }
+    if (hammers > 0 || gems >= 40) {
+      setIsHammerActive(true);
+    } else {
+      toast.error(t('game.not_enough_gems') || "Necesitas 40 gemas para el Martillo");
+    }
+  };
+
+  const handleShuffleClick = () => {
+    const isPaid = shuffles === 0;
+    if (!isPaid || gems >= 60) {
+      if (isPaid) {
+        onSpendGems?.(60);
+      } else {
+        onUseShuffle?.();
+      }
+
+      // Tracking ÚNICO y DETALLADO
+      trackEvent('powerup_used', { 
+        type: 'shuffle', 
+        level: level.id, 
+        payment: isPaid ? 'gems' : 'stock',
+        cost: isPaid ? 60 : 0,
+        gems_remaining: gems - (isPaid ? 60 : 0)
+      });
+
+      setShuffleTrigger(prev => prev + 1);
+    } else {
+      toast.error(t('game.not_enough_gems') || "Necesitas 60 gemas para Mezclar");
+    }
+  };
+
+  const handleUndoClick = () => {
+    const isPaid = undos === 0;
+    if (!isPaid || gems >= 25) {
+      if (isPaid) {
+        onSpendGems?.(25);
+      } else {
+        onUseUndo?.();
+      }
+
+      // Tracking ÚNICO y DETALLADO
+      trackEvent('powerup_used', { 
+        type: 'undo', 
+        level: level.id, 
+        payment: isPaid ? 'gems' : 'stock',
+        cost: isPaid ? 25 : 0,
+        gems_remaining: gems - (isPaid ? 25 : 0)
+      });
+
+      setUndoTrigger(prev => prev + 1);
+    } else {
+      toast.error(t('game.not_enough_gems') || "Necesitas 25 gemas para Deshacer");
+    }
+  };
+
   const handleRescueDismiss = () => {
     setShowRescueOffer(false);
     // Mostrar pantalla de derrota normal
@@ -400,14 +514,14 @@ export const GameScreen = ({
         {/* Header */}
         <div className="gradient-card shadow-card rounded-2xl p-4 mb-4">
           <div className="flex items-center justify-between mb-4">
-            <Button onClick={onBack} variant="outline" size="sm">
+            <Button onClick={handleQuit} variant="outline" size="sm">
               ← {t('menu.levels')}
             </Button>
             <h2 className="text-xl font-bold text-gold">
               {t('game.level')} {level.id}
             </h2>
             <button 
-              onClick={onBack} 
+              onClick={handleQuit} 
               className="w-10 h-10 rounded-xl flex items-center justify-center bg-destructive/20 border-2 border-destructive/50 hover:bg-destructive/30 active:scale-90 transition-transform duration-100"
               aria-label="Salir del nivel"
             >
@@ -488,7 +602,80 @@ export const GameScreen = ({
             targetTile={level.objective.type === 'collect' ? level.objective.target : undefined}
             disabled={gameOver}
             levelId={level.id}
+            isHammerActive={isHammerActive}
+            onHammerUse={(row, col) => {
+              const isPaid = hammers === 0;
+              if (isPaid) {
+                onSpendGems?.(40);
+              } else {
+                onUseHammer?.();
+              }
+
+              // Tracking ÚNICO y DETALLADO
+              trackEvent('powerup_used', { 
+                type: 'hammer', 
+                level: level.id, 
+                payment: isPaid ? 'gems' : 'stock',
+                cost: isPaid ? 40 : 0,
+                gems_remaining: gems - (isPaid ? 40 : 0)
+              });
+
+              setIsHammerActive(false);
+            }}
+            triggerShuffle={shuffleTrigger}
+            triggerUndo={undoTrigger}
           />
+        </div>
+
+        {/* Power-ups UI */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <button
+            onClick={handleHammerClick}
+            disabled={gameOver}
+            className={`relative p-3 rounded-2xl flex flex-col items-center gap-1 transition-all active:scale-95 ${isHammerActive ? 'bg-accent/40 border-2 border-accent shadow-gold' : 'bg-muted/30 border border-white/10'}`}
+          >
+            <Hammer className={`w-6 h-6 ${isHammerActive ? 'text-accent animate-bounce' : 'text-foreground/70'}`} />
+            <span className="text-[10px] font-bold uppercase">{t('game.hammer') || 'Martillo'}</span>
+            <div className="absolute -top-2 -right-1 bg-background border border-accent/50 rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow-sm">
+              {hammers > 0 ? (
+                <span className="text-[10px] font-bold text-accent">x{hammers}</span>
+              ) : (
+                <span className="text-[10px] font-bold text-yellow-400 flex items-center">40<Gem className="w-2 h-2 ml-0.5" /></span>
+              )}
+            </div>
+          </button>
+
+          <button
+            onClick={handleShuffleClick}
+            disabled={gameOver}
+            className="relative p-3 rounded-2xl bg-muted/30 border border-white/10 flex flex-col items-center gap-1 transition-all active:scale-95 hover:bg-muted/40"
+          >
+            <RefreshCw className="w-6 h-6 text-foreground/70" />
+            <span className="text-[10px] font-bold uppercase">{t('game.shuffle') || 'Mezclar'}</span>
+            <div className="absolute -top-2 -right-1 bg-background border border-accent/50 rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow-sm">
+              {shuffles > 0 ? (
+                <span className="text-[10px] font-bold text-accent">x{shuffles}</span>
+              ) : (
+                <span className="text-[10px] font-bold text-yellow-400 flex items-center">60<Gem className="w-2 h-2 ml-0.5" /></span>
+              )}
+            </div>
+          </button>
+
+          <button
+            onClick={handleUndoClick}
+            disabled={gameOver}
+            className="relative p-3 rounded-2xl bg-muted/30 border border-white/10 flex flex-col items-center gap-1 transition-all active:scale-95 hover:bg-muted/40"
+          >
+            <RotateCcw className="w-6 h-6 text-foreground/70" />
+            <span className="text-[10px] font-bold uppercase">{t('game.undo') || 'Deshacer'}</span>
+            <div className="absolute -top-2 -right-1 bg-background border border-accent/50 rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow-sm">
+              {undos > 0 ? (
+                <span className="text-[10px] font-bold text-accent">x{undos}</span>
+              ) : (
+                <span className="text-[10px] font-bold text-yellow-400 flex items-center">25<Gem className="w-2 h-2 ml-0.5" /></span>
+              )}
+            </div>
+          </button>
         </div>
 
         {/* Near Win Emotional Message */}
