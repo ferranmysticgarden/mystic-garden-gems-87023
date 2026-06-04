@@ -40,7 +40,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
     private static final String TAG = "BillingPlugin";
     private BillingClient billingClient;
     private Map<String, ProductDetails> productDetailsMap = new HashMap<>();
-    private PluginCall pendingPurchaseCall;
+    private static String pendingPurchaseCallbackId = null;
     private int connectionRetryCount = 0;
     private static final int MAX_RETRY = 3;
 
