@@ -194,7 +194,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         });
     }
 
-    @PluginMethod
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     public void purchase(PluginCall call) {
         String productId = call.getString("productId");
 
@@ -224,11 +224,16 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         Log.d(TAG, "Launching purchase flow for: " + productId);
 
         // Reject any previous pending call to prevent memory leak
-        if (pendingPurchaseCall != null) {
-            Log.w(TAG, "⚠️ Replacing pending purchase call — rejecting previous");
-            pendingPurchaseCall.reject("Replaced by new purchase request");
+        if (pendingPurchaseCallbackId != null) {
+            PluginCall previousCall = bridge.getSavedCall(pendingPurchaseCallbackId);
+            if (previousCall != null) {
+                Log.w(TAG, "⚠️ Replacing pending purchase call — rejecting previous");
+                previousCall.reject("Replaced by new purchase request");
+            }
+            pendingPurchaseCallbackId = null;
         }
-        pendingPurchaseCall = call;
+        bridge.saveCall(call);
+        pendingPurchaseCallbackId = call.getCallbackId();
 
         List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
         BillingFlowParams.ProductDetailsParams.Builder productDetailsParamsBuilder =
@@ -248,7 +253,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         BillingResult result = billingClient.launchBillingFlow(activity, billingFlowParams);
         
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-            pendingPurchaseCall = null;
+            bridge.releaseCall(call);
+            pendingPurchaseCallbackId = null;
             String formattedError = formatBillingError("Failed to launch billing flow", result);
             Log.e(TAG, "❌ " + formattedError);
             call.reject(formattedError);
