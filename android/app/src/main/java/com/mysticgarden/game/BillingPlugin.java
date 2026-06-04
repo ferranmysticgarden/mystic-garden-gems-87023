@@ -298,19 +298,25 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
     @Override
     public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List<Purchase> purchases) {
+        PluginCall savedCall = null;
+        if (pendingPurchaseCallbackId != null) {
+            savedCall = bridge.getSavedCall(pendingPurchaseCallbackId);
+            pendingPurchaseCallbackId = null;
+        }
+
         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
             Log.d(TAG, "✅ Purchase update received: " + purchases.size() + " purchase(s)");
-            for (Purchase purchase : purchases) {
-                handlePurchase(purchase);
+            for (int i = 0; i < purchases.size(); i++) {
+                // Solo pasamos savedCall a la primera compra para evitar resolverla 2 veces
+                handlePurchase(purchases.get(i), (i == 0) ? savedCall : null);
             }
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d(TAG, "Purchase cancelled by user");
             JSObject payload = createBillingResultPayload(billingResult);
             payload.put("stage", "onPurchasesUpdated");
             payload.put("error", "Purchase cancelled by user");
-            if (pendingPurchaseCall != null) {
-                pendingPurchaseCall.reject("Purchase cancelled by user");
-                pendingPurchaseCall = null;
+            if (savedCall != null) {
+                savedCall.reject("Purchase cancelled by user");
             }
             notifyListeners("purchaseCancelled", payload);
         } else {
@@ -319,20 +325,18 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             payload.put("stage", "onPurchasesUpdated");
             payload.put("error", formattedError);
             Log.e(TAG, "❌ " + formattedError);
-            if (pendingPurchaseCall != null) {
-                pendingPurchaseCall.reject(formattedError);
-                pendingPurchaseCall = null;
+            if (savedCall != null) {
+                savedCall.reject(formattedError);
             }
             notifyListeners("purchaseError", payload);
         }
     }
 
-    private void handlePurchase(Purchase purchase) {
+    private void handlePurchase(Purchase purchase, PluginCall savedCall) {
         if (purchase.getProducts() == null || purchase.getProducts().isEmpty()) {
             Log.e(TAG, "❌ Purchase has no products in payload");
-            if (pendingPurchaseCall != null) {
-                pendingPurchaseCall.reject("Purchase payload has no products");
-                pendingPurchaseCall = null;
+            if (savedCall != null) {
+                savedCall.reject("Purchase payload has no products");
             }
             return;
         }
@@ -349,9 +353,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
             pendingData.put("state", "pending");
             notifyListeners("purchasePending", pendingData);
             
-            if (pendingPurchaseCall != null) {
-                pendingPurchaseCall.reject("Purchase is pending payment confirmation");
-                pendingPurchaseCall = null;
+            if (savedCall != null) {
+                savedCall.reject("Purchase is pending payment confirmation");
             }
             return;
         }
@@ -359,9 +362,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         // Only process PURCHASED state
         if (purchaseState != Purchase.PurchaseState.PURCHASED) {
             Log.w(TAG, "⚠️ Unknown purchase state: " + purchaseState + " for " + productId);
-            if (pendingPurchaseCall != null) {
-                pendingPurchaseCall.reject("Unexpected purchase state: " + purchaseState);
-                pendingPurchaseCall = null;
+            if (savedCall != null) {
+                savedCall.reject("Unexpected purchase state: " + purchaseState);
             }
             return;
         }
@@ -374,9 +376,8 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
         purchaseData.put("productId", productId);
         purchaseData.put("purchaseTime", purchase.getPurchaseTime());
 
-        if (pendingPurchaseCall != null) {
-            pendingPurchaseCall.resolve(purchaseData);
-            pendingPurchaseCall = null;
+        if (savedCall != null) {
+            savedCall.resolve(purchaseData);
         }
         
         notifyListeners("purchaseCompleted", purchaseData);
