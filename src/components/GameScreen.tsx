@@ -219,11 +219,7 @@ export const GameScreen = ({
         console.error('Error reseteando intentos:', error);
       }
       
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      // Confetti & sounds handled inside LevelCompleteCelebration component
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
