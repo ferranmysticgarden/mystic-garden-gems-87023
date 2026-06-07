@@ -18,6 +18,20 @@
     "shuffle": "Embaralhar",
     "undo": "Desfazer"
   },
+  "celebration": {
+    "title": "INCRÍVEL!",
+    "subtitle": "Você completou o nível {level}!",
+    "earned": "Você ganhou!",
+    "gems": "GEMAS",
+    "next": "🌸 Próximo Nível!"
+  },
+  "tutorial": {
+    "welcome": "Bem-vindo ao Jardim!",
+    "step1": "Toque em uma peça e depois em uma adjacente para trocá-las. Forme grupos de 3 ou mais.",
+    "great": "Perfeito! 🎉",
+    "step2": "Continue assim. Colete as peças do objetivo antes de acabar os movimentos.",
+    "tap": "Toque no tabuleiro para jogar"
+  },
   "resources": {
     "lives": "Vidas",
     "gems": "Gemas",

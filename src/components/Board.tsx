@@ -22,6 +22,8 @@ interface BoardProps {
   onHammerUse?: (row: number, col: number) => void;
   triggerShuffle?: number;
   triggerUndo?: number;
+  highlightedTiles?: Position[];
+  onFirstValidMatch?: () => void;
 }
 
 export const Board = ({ 
@@ -33,7 +35,9 @@ export const Board = ({
   isHammerActive,
   onHammerUse,
   triggerShuffle,
-  triggerUndo
+  triggerUndo,
+  highlightedTiles,
+  onFirstValidMatch,
 }: BoardProps) => {
   const { t } = useLanguage();
   const [board, setBoard] = useState<string[][]>([]);
@@ -44,6 +48,7 @@ export const Board = ({
   const [isShuffling, setIsShuffling] = useState(false);
   const [showShuffleMessage, setShowShuffleMessage] = useState(false);
   const matchCountRef = useRef(0);
+  const hasFiredFirstMatchRef = useRef(false);
   
   // Use mystical fairy sounds
   const { playSelectSound, playMatchSound, playInvalidSound, playShuffleSound } = useMysticSounds();
@@ -392,9 +397,13 @@ export const Board = ({
         playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
+        if (!hasFiredFirstMatchRef.current) {
+          hasFiredFirstMatchRef.current = true;
+          try { onFirstValidMatch?.(); } catch {}
+        }
       }
     }, 80);
-  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound]);
+  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound, onFirstValidMatch]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;
@@ -467,6 +476,7 @@ export const Board = ({
               isSelected={selected?.row === rowIndex && selected?.col === colIndex}
               isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
               isTarget={targetTile === tile}
+              isHighlighted={highlightedTiles?.some(p => p.row === rowIndex && p.col === colIndex)}
               onTileClick={handleTileClick}
             />
           ))
