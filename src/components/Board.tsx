@@ -22,6 +22,8 @@ interface BoardProps {
   onHammerUse?: (row: number, col: number) => void;
   triggerShuffle?: number;
   triggerUndo?: number;
+  highlightedTiles?: Position[];
+  onFirstValidMatch?: () => void;
 }
 
 export const Board = ({ 
@@ -33,7 +35,9 @@ export const Board = ({
   isHammerActive,
   onHammerUse,
   triggerShuffle,
-  triggerUndo
+  triggerUndo,
+  highlightedTiles,
+  onFirstValidMatch,
 }: BoardProps) => {
   const { t } = useLanguage();
   const [board, setBoard] = useState<string[][]>([]);
