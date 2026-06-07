@@ -48,6 +48,7 @@ export const Board = ({
   const [isShuffling, setIsShuffling] = useState(false);
   const [showShuffleMessage, setShowShuffleMessage] = useState(false);
   const matchCountRef = useRef(0);
+  const hasFiredFirstMatchRef = useRef(false);
   
   // Use mystical fairy sounds
   const { playSelectSound, playMatchSound, playInvalidSound, playShuffleSound } = useMysticSounds();
