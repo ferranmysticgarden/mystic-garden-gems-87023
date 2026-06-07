@@ -12,6 +12,8 @@ import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { Level10Paywall } from './game/Level10Paywall';
 import { Level6Offer } from './game/Level6Offer';
 import { UltimateRescueOffer } from './game/UltimateRescueOffer';
+import { LevelCompleteCelebration } from './effects/LevelCompleteCelebration';
+import { Level1Tutorial } from './game/Level1Tutorial';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { TILE_DEFAULT_EMOJIS, type TileType } from '@/constants/tileTypes';
 import { useTileSkin } from '@/hooks/useTileSkin';
@@ -85,6 +87,7 @@ export const GameScreen = ({
   const [isHammerActive, setIsHammerActive] = useState(false);
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
   const [undoTrigger, setUndoTrigger] = useState(0);
+  const [firstMatchMade, setFirstMatchMade] = useState(false);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
@@ -624,6 +627,7 @@ export const GameScreen = ({
             }}
             triggerShuffle={shuffleTrigger}
             triggerUndo={undoTrigger}
+            onFirstValidMatch={() => setFirstMatchMade(true)}
           />
         </div>
 
