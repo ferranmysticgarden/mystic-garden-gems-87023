@@ -764,20 +764,31 @@ export const GameScreen = ({
           />
         )}
 
-        {/* Game Over Overlay */}
-        {gameOver && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && !showRescueOffer && (
+        {/* Level 1 guided tutorial */}
+        <Level1Tutorial
+          levelId={level.id}
+          firstMatchMade={firstMatchMade}
+        />
+
+        {/* Premium Win Celebration */}
+        {gameOver && won && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && !showRescueOffer && (
+          <LevelCompleteCelebration
+            levelId={level.id}
+            gemsEarned={level.reward?.gems ?? 0}
+            score={score}
+            onContinue={() => onWin(1, level.reward)}
+          />
+        )}
+
+        {/* Defeat Overlay */}
+        {gameOver && !won && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && !showRescueOffer && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="gradient-card shadow-card rounded-2xl p-8 text-center max-w-sm mx-4">
-              <h2 className={`text-4xl font-bold mb-4 ${won ? 'text-gold' : 'text-destructive'}`}>
-                {won ? t('game.win') : t('game.lose')}
+              <h2 className="text-4xl font-bold mb-4 text-destructive">
+                {t('game.lose')}
               </h2>
-              {won && (
-                <div className="text-2xl mb-4">
-                  🎉 {t('game.score')}: {score} 🎉
-                </div>
-              )}
               <Button
-                onClick={() => won ? onWin(1, level.reward) : onLose()}
+                onClick={() => onLose()}
                 className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
               >
                 {t('game.continue')}
