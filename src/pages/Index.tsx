@@ -533,9 +533,10 @@ const Index = () => {
         await checkGemsAchievements(gameState.gems + reward.gems);
       }
 
-      // Show first win celebration for level 1
+      // First-win celebration now handled by LevelCompleteCelebration inside GameScreen.
+      // (Old FirstWinCelebration popup deprecated to avoid double-celebration.)
       if (completedCount === 1) {
-        setShowFirstWin(true);
+        // setShowFirstWin(true); // disabled — replaced by premium LevelCompleteCelebration
       }
       // Request notification permission after first win (best moment)
       if (currentLevel.id === 1 && isSupported && permission === 'default') {
