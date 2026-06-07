@@ -397,9 +397,13 @@ export const Board = ({
         playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
+        if (!hasFiredFirstMatchRef.current) {
+          hasFiredFirstMatchRef.current = true;
+          try { onFirstValidMatch?.(); } catch {}
+        }
       }
     }, 80);
-  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound]);
+  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound, onFirstValidMatch]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;
