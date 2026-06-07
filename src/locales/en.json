@@ -18,6 +18,20 @@
     "shuffle": "Shuffle",
     "undo": "Undo"
   },
+  "celebration": {
+    "title": "AMAZING!",
+    "subtitle": "You completed level {level}!",
+    "earned": "You earned!",
+    "gems": "GEMS",
+    "next": "🌸 Next Level!"
+  },
+  "tutorial": {
+    "welcome": "Welcome to the Garden!",
+    "step1": "Tap a tile, then an adjacent one to swap them. Match 3 or more identical tiles.",
+    "great": "Perfect! 🎉",
+    "step2": "Keep going. Collect the objective tiles before running out of moves.",
+    "tap": "Tap the board to play"
+  },
   "resources": {
     "lives": "Lives",
     "gems": "Gems",

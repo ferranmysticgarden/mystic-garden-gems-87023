@@ -18,6 +18,20 @@
     "shuffle": "Mezclar",
     "undo": "Deshacer"
   },
+  "celebration": {
+    "title": "¡INCREÍBLE!",
+    "subtitle": "¡Has completado el nivel {level}!",
+    "earned": "¡Has ganado!",
+    "gems": "GEMAS",
+    "next": "🌸 ¡Siguiente Nivel!"
+  },
+  "tutorial": {
+    "welcome": "¡Bienvenido al Jardín!",
+    "step1": "Toca una ficha y luego una adyacente para intercambiarlas. Forma grupos de 3 o más iguales.",
+    "great": "¡Perfecto! 🎉",
+    "step2": "Sigue así. Recolecta las fichas del objetivo antes de quedarte sin movimientos.",
+    "tap": "Toca el tablero para jugar"
+  },
   "resources": {
     "lives": "Vidas",
     "gems": "Gemas",
