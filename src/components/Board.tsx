@@ -476,6 +476,7 @@ export const Board = ({
               isSelected={selected?.row === rowIndex && selected?.col === colIndex}
               isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
               isTarget={targetTile === tile}
+              isHighlighted={highlightedTiles?.some(p => p.row === rowIndex && p.col === colIndex)}
               onTileClick={handleTileClick}
             />
           ))
