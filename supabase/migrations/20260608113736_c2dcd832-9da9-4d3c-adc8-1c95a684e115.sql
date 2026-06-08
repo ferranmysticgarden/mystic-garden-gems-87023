@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated users can insert their own orders" ON public.product_orders;
