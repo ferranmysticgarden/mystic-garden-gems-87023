@@ -631,9 +631,16 @@ const Index = () => {
       const product = PRODUCTS.find((p) => p.id === productId);
       if (!product) return false;
 
-      if (product.amount) addGems(product.amount);
-      if (product.instantGems) addGems(product.instantGems);
-      if (product.gems) addGems(product.gems);
+      // Gem grants: only apply locally for guests (no DB). For authenticated
+      // users the server (Stripe verify edge function) already credited gems
+      // in DB and reloadFromDB() will refresh state — skipping avoids both
+      // double-grant and the >500 gem-delta guard trigger on game_progress.
+      const isGuest = !user;
+      if (isGuest) {
+        if (product.amount) addGems(product.amount);
+        if (product.instantGems) addGems(product.instantGems);
+        if (product.gems) addGems(product.gems);
+      }
 
       if (product.lives && product.lives !== "unlimited") {
         addLives(product.lives);
@@ -659,8 +666,9 @@ const Index = () => {
 
       return true;
     },
-    [activateUnlimitedLives, addGems, addHammer, addLives, addShuffle, addUndo],
+    [user, activateUnlimitedLives, addGems, addHammer, addLives, addShuffle, addUndo],
   );
+
 
   const handlePurchase = async (productId: string) => {
     const isAndroidPlatform = Capacitor.getPlatform() === "android";
