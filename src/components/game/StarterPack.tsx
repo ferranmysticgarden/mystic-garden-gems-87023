@@ -1,11 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sparkles, X, Star, Gift, Clock, Zap } from 'lucide-react';
+import { Sparkles, X, Star, Gift, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
 import { hasPurchasedStarterGems, markStarterGemsAsPurchased } from '@/utils/purchaseUtils';
+import { OfferCountdownTimer } from '@/components/offers/OfferCountdownTimer';
+import { DiscountPrice } from '@/components/offers/DiscountPrice';
+import { PhotoTilesPreview } from '@/components/offers/PhotoTilesPreview';
+import { markOfferDismissed, isOfferOnCooldown } from '@/utils/offerCooldown';
 import confetti from 'canvas-confetti';
+
+const OFFER_ID = 'starter_pack';
+const TIMER_SECONDS = 300;
 
 interface StarterPackProps {
   levelJustCompleted: number;
