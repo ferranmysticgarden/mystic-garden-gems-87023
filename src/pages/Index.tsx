@@ -580,6 +580,21 @@ const Index = () => {
         setTimeout(() => setShowPostVictoryOffer(true), 1500);
       }
 
+      // T5 — Deposit gems in piggy bank on each win (5 gems per victory)
+      piggyBank.deposit(5).catch(() => {/* non-blocking */});
+      // T7 — Add season pass progress (50 points per win)
+      seasonPass.addProgress(50).catch(() => {/* non-blocking */});
+      // T9 — Register win streak. At 3+ wins, show offer.
+      const newStreak = winStreak.registerWin();
+      if (newStreak === 3) {
+        // Cooldown: show win-streak offer at most once per 24h
+        const lastShown = parseInt(localStorage.getItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN) ?? "0", 10);
+        if (Date.now() - lastShown > 24 * 60 * 60 * 1000) {
+          localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
+          setTimeout(() => setShowWinStreakOffer(true), 1800);
+        }
+      }
+
       setScreen("menu");
     },
     [
@@ -590,6 +605,9 @@ const Index = () => {
       gameState.gems,
       checkLevelAchievements,
       checkGemsAchievements,
+      piggyBank,
+      seasonPass,
+      winStreak,
     ],
   );
   const handleLose = useCallback(() => {
