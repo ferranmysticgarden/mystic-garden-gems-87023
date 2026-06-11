@@ -53,6 +53,15 @@ const PRODUCT_PRICES: Record<string, string> = {
   // Cofres (web)
   "chest_silver": "price_1TAmplB6GI8NmIPnlk5g494D",
   "chest_gold": "price_1TAlj7B6GI8NmIPnletS1ST2",
+  // ============ NUEVOS PRODUCTOS 2026-06 ============
+  // IMPORTANTE: estos price IDs son placeholders. El usuario debe crear los productos
+  // reales en Stripe Dashboard (cuenta FCG, sufijo B6GI8NmIPn) y reemplazar.
+  // Mientras tanto el fallback inline (price_data) abajo asegura que el checkout funciona.
+  "piggy_bank_unlock": "price_TBD_piggy_bank_unlock_B6GI8NmIPn",
+  "season_pass_premium": "price_TBD_season_pass_premium_B6GI8NmIPn",
+  "streak_bonus_5days": "price_TBD_streak_bonus_5days_B6GI8NmIPn",
+  "streak_bonus_7days": "price_TBD_streak_bonus_7days_B6GI8NmIPn",
+  "streak_3wins_bonus": "price_TBD_streak_3wins_bonus_B6GI8NmIPn",
 };
 
 serve(async (req) => {
@@ -140,6 +149,12 @@ serve(async (req) => {
       pack_experiencia: { amount: 299, name: "Pack Experiencia" },
       pack_victoria_segura_pro: { amount: 399, name: "Pack Victoria Segura Pro" },
       first_purchase: { amount: 50, name: "First Purchase Pack" },
+      // ============ NUEVOS PRODUCTOS 2026-06 ============
+      piggy_bank_unlock: { amount: 299, name: "🐷 Desbloquear Hucha" },
+      season_pass_premium: { amount: 499, name: "🏆 Pase de Temporada Premium" },
+      streak_bonus_5days: { amount: 399, name: "🔥 Bono Racha 5 Días" },
+      streak_bonus_7days: { amount: 599, name: "🔥 Bono Racha 7 Días" },
+      streak_3wins_bonus: { amount: 199, name: "⚡ Bono 3 Victorias Seguidas" },
     };
     const fallback = FALLBACK_PRICE_DATA[productId];
 

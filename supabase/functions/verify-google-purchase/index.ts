@@ -43,6 +43,12 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "custom_slots": {},
   "custom_frames": {},
   "custom_full": {},
+  // ============ NUEVOS PRODUCTOS 2026-06 (catálogo additive, lógica intacta) ============
+  "piggy_bank_unlock": {},
+  "season_pass_premium": {},
+  "streak_bonus_5days": { gems: 200, lives: 5 },
+  "streak_bonus_7days": { gems: 400, lives: 10, powerups: 3 },
+  "streak_3wins_bonus": { gems: 100, lives: 3, powerups: 2 },
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
@@ -116,6 +122,12 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   customslots: 'custom_slots',
   customframes: 'custom_frames',
   customfull: 'custom_full',
+  // Nuevos 2026-06
+  piggybankunlock: 'piggy_bank_unlock',
+  seasonpasspremium: 'season_pass_premium',
+  streakbonus5days: 'streak_bonus_5days',
+  streakbonus7days: 'streak_bonus_7days',
+  streak3winsbonus: 'streak_3wins_bonus',
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
