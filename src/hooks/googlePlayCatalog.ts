@@ -6,6 +6,12 @@ const GOOGLE_PLAY_CORE_QUERY_SKUS: string[] = [
   'pack_racha_infinita',
   'unlimited_lives_30min',
   'extra_moves',
+  // Nuevos 2026-06
+  'piggy_bank_unlock',
+  'season_pass_premium',
+  'streak_bonus_5days',
+  'streak_bonus_7days',
+  'streak_3wins_bonus',
 ];
 
 const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
@@ -16,6 +22,11 @@ const GOOGLE_PLAY_ID_OVERRIDES: Record<string, string[]> = {
   pack_victoria_segura_pro: ['pack_victoria_segura_pro', 'packvictoriasegurapro'],
   first_day_offer: ['first_day_offer', 'firstdayoffer'],
   extra_moves: ['extra_moves', 'extramoves'],
+  piggy_bank_unlock: ['piggy_bank_unlock', 'piggybankunlock'],
+  season_pass_premium: ['season_pass_premium', 'seasonpasspremium'],
+  streak_bonus_5days: ['streak_bonus_5days', 'streakbonus5days'],
+  streak_bonus_7days: ['streak_bonus_7days', 'streakbonus7days'],
+  streak_3wins_bonus: ['streak_3wins_bonus', 'streak3winsbonus'],
 };
 
 const GOOGLE_PLAY_PURCHASE_OVERRIDES: Record<string, string[]> = {

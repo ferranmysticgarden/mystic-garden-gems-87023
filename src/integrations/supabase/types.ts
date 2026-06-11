@@ -133,6 +133,42 @@ export type Database = {
           },
         ]
       }
+      piggy_bank: {
+        Row: {
+          created_at: string
+          current_amount: number
+          guest_session_id: string | null
+          id: string
+          is_unlocked: boolean
+          last_deposit_at: string | null
+          unlocked_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_amount?: number
+          guest_session_id?: string | null
+          id?: string
+          is_unlocked?: boolean
+          last_deposit_at?: string | null
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          guest_session_id?: string | null
+          id?: string
+          is_unlocked?: boolean
+          last_deposit_at?: string | null
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       processed_webhook_events: {
         Row: {
           id: string
@@ -241,6 +277,45 @@ export type Database = {
           email?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      season_passes: {
+        Row: {
+          claimed_tiers: number[]
+          created_at: string
+          guest_session_id: string | null
+          id: string
+          is_premium: boolean
+          premium_purchased_at: string | null
+          progress_points: number
+          season_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          claimed_tiers?: number[]
+          created_at?: string
+          guest_session_id?: string | null
+          id?: string
+          is_premium?: boolean
+          premium_purchased_at?: string | null
+          progress_points?: number
+          season_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          claimed_tiers?: number[]
+          created_at?: string
+          guest_session_id?: string | null
+          id?: string
+          is_premium?: boolean
+          premium_purchased_at?: string | null
+          progress_points?: number
+          season_id?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

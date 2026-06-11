@@ -17,6 +17,13 @@ import VideoTool from "./pages/VideoTool";
 import ProductLanding from "./pages/ProductLanding";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import { SeasonPassScreen } from "@/components/SeasonPassScreen";
+import { useNavigate } from "react-router-dom";
+
+const BattlePassRoute = () => {
+  const navigate = useNavigate();
+  return <SeasonPassScreen onBack={() => navigate("/")} />;
+};
 
 const queryClient = new QueryClient();
 
@@ -54,6 +61,7 @@ const App = () => {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/video-tool" element={<VideoTool />} />
               <Route path="/product" element={<ProductLanding />} />
+              <Route path="/battle-pass" element={<BattlePassRoute />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -43,6 +43,14 @@ import { LoginPrompt } from "@/components/game/LoginPrompt";
 import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
 import { ForceUpdateModal } from "@/components/game/ForceUpdateModal";
 import { ReviewPrompt } from "@/components/ReviewPrompt";
+import { PiggyBank } from "@/components/PiggyBank";
+import { PiggyBankModal } from "@/components/PiggyBankModal";
+import { StreakBonusOffer } from "@/components/offers/StreakBonusOffer";
+import { WinStreakOffer } from "@/components/offers/WinStreakOffer";
+import { usePiggyBank } from "@/hooks/usePiggyBank";
+import { useSeasonPass } from "@/hooks/useSeasonPass";
+import { useWinStreak } from "@/hooks/useWinStreak";
+import { LS_KEYS } from "@/constants/localStorageKeys";
 
 // Lazy-loaded non-critical modals
 const PostVictoryOffer = lazy(() => import("@/components/game/PostVictoryOffer").then(m => ({ default: m.PostVictoryOffer })));
@@ -139,6 +147,14 @@ const Index = () => {
   const [showComeBackBanner, setShowComeBackBanner] = useState(false);
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
+
+  // ===== T5/T7/T9: Piggy Bank, Season Pass, Win Streak =====
+  const piggyBank = usePiggyBank(user?.id ?? null);
+  const seasonPass = useSeasonPass(user?.id ?? null);
+  const winStreak = useWinStreak();
+  const [showPiggyModal, setShowPiggyModal] = useState(false);
+  const [showWinStreakOffer, setShowWinStreakOffer] = useState(false);
+  const [showStreakBonusOffer, setShowStreakBonusOffer] = useState<5 | 7 | null>(null);
 
   // ===== Anti-avalanche popup queue (sessionStorage, never unset within session) =====
   const ENGAGEMENT_FLAG_KEY = 'engagement_popup_shown_session';
@@ -471,6 +487,22 @@ const Index = () => {
       scheduleStreakReminder(streakData.currentStreak);
     }
   }, [streakData.currentStreak, streakData.canClaimToday, scheduleStreakReminder]);
+
+  // T6 — Show streak bonus offer at day 5 and day 7 (once per milestone, 24h cooldown)
+  useEffect(() => {
+    if (autoPopupsBlocked) return;
+    if (gameState.completedLevels.length < 5) return;
+    const streak = streakData.currentStreak;
+    if (streak !== 5 && streak !== 7) return;
+    const key = streak === 5 ? LS_KEYS.STREAK_BONUS_5_LAST_SHOWN : LS_KEYS.STREAK_BONUS_7_LAST_SHOWN;
+    const last = parseInt(localStorage.getItem(key) ?? "0", 10);
+    if (Date.now() - last < 24 * 60 * 60 * 1000) return;
+    if (!tryClaimEngagementSlot()) return;
+    localStorage.setItem(key, String(Date.now()));
+    trackEvent("streak_bonus_offer_shown", { streakDays: streak });
+    setTimeout(() => setShowStreakBonusOffer(streak as 5 | 7), 1500);
+  }, [streakData.currentStreak, autoPopupsBlocked, gameState.completedLevels.length]);
+
   // Set up notification when lives become full
   useEffect(() => {
     setOnLivesFull(() => {
@@ -564,6 +596,21 @@ const Index = () => {
         setTimeout(() => setShowPostVictoryOffer(true), 1500);
       }
 
+      // T5 — Deposit gems in piggy bank on each win (5 gems per victory)
+      piggyBank.deposit(5).catch(() => {/* non-blocking */});
+      // T7 — Add season pass progress (50 points per win)
+      seasonPass.addProgress(50).catch(() => {/* non-blocking */});
+      // T9 — Register win streak. At 3+ wins, show offer.
+      const newStreak = winStreak.registerWin();
+      if (newStreak === 3) {
+        // Cooldown: show win-streak offer at most once per 24h
+        const lastShown = parseInt(localStorage.getItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN) ?? "0", 10);
+        if (Date.now() - lastShown > 24 * 60 * 60 * 1000) {
+          localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
+          setTimeout(() => setShowWinStreakOffer(true), 1800);
+        }
+      }
+
       setScreen("menu");
     },
     [
@@ -574,9 +621,14 @@ const Index = () => {
       gameState.gems,
       checkLevelAchievements,
       checkGemsAchievements,
+      piggyBank,
+      seasonPass,
+      winStreak,
     ],
   );
   const handleLose = useCallback(() => {
+    // T9 — Break win streak
+    winStreak.registerLoss();
     trackEvent("level_failed", {
       level: currentLevel.id,
       consecutive_losses: consecutiveLosses + 1,
@@ -905,6 +957,19 @@ const Index = () => {
             setScreen("shop");
           }}
         />
+        {/* T5 — Piggy bank button (only after level 1) */}
+        {!isNewUser && (
+          <div className="flex justify-end -mt-3 mb-3">
+            <PiggyBank
+              amount={piggyBank.amount}
+              cap={piggyBank.cap}
+              onClick={() => {
+                trackEvent('piggy_bank_opened', { amount: piggyBank.amount, isFull: piggyBank.isFull });
+                setShowPiggyModal(true);
+              }}
+            />
+          </div>
+        )}
         {/* Streak Reminder Banner - SOLO después de nivel 2 */}
         {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
         {/* Day Counter - SOLO después de nivel 2 */}
@@ -1337,8 +1402,45 @@ const Index = () => {
           requiredVersion={appUpdate.requiredVersionCode}
         />
       )}
+
+      {/* T5 — Piggy bank modal */}
+      <PiggyBankModal
+        open={showPiggyModal}
+        amount={piggyBank.amount}
+        cap={piggyBank.cap}
+        onClose={() => setShowPiggyModal(false)}
+        onPurchaseSuccess={async () => {
+          try {
+            const res = await piggyBank.unlock();
+            if (res?.gemsGranted) {
+              addGems(res.gemsGranted);
+              toast.success(`🐷 ¡Hucha desbloqueada! +${res.gemsGranted} 💎`);
+            }
+          } catch (e) {
+            toast.error("Error al desbloquear hucha");
+          }
+          setShowPiggyModal(false);
+        }}
+      />
+
+      {/* T9 — Win streak offer */}
+      {showWinStreakOffer && (
+        <WinStreakOffer
+          streakCount={winStreak.count}
+          onClose={() => setShowWinStreakOffer(false)}
+        />
+      )}
+
+      {/* T6 — Daily streak bonus offer (5 / 7 day milestone) */}
+      {showStreakBonusOffer && (
+        <StreakBonusOffer
+          streakDays={showStreakBonusOffer}
+          onClose={() => setShowStreakBonusOffer(null)}
+        />
+      )}
     </div>
     </>
+
   );
 };
 export default Index;

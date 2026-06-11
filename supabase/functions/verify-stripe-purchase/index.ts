@@ -15,7 +15,8 @@ const PRODUCT_REWARDS: Record<string, {
   noAdsForever?: boolean;
   unlimitedLivesMinutes?: number;
 }> = {
-  starter_gems: { gems: 50 },
+  // FIX 2026-06: starter_gems debe entregar 400 gemas (era 50, bug de fulfillment)
+  starter_gems: { gems: 400 },
   gems_100: { gems: 100 },
   gems_300: { gems: 300 },
   gems_1200: { gems: 1200 },
@@ -47,6 +48,14 @@ const PRODUCT_REWARDS: Record<string, {
   unlimited_lives_30min: { unlimitedLivesMinutes: 30 },
   first_purchase: { gems: 500, lives: 20, noAdsDays: 1 },
   extra_moves: { powerups: 5 },
+  // ============ NUEVOS PRODUCTOS 2026-06 (catálogo additive, lógica intacta) ============
+  // piggy_bank_unlock y season_pass_premium: reward 0 aquí. El reward real lo entrega
+  // unlock-piggy-bank / unlock-season-pass tras validar el user_purchases insertado abajo.
+  piggy_bank_unlock: {},
+  season_pass_premium: {},
+  streak_bonus_5days: { gems: 200, lives: 5 },
+  streak_bonus_7days: { gems: 400, lives: 10, powerups: 3 },
+  streak_3wins_bonus: { gems: 100, lives: 3, powerups: 2 },
 };
 
 const getGrantWindowStartIso = (sessionCreatedSeconds: number) =>
