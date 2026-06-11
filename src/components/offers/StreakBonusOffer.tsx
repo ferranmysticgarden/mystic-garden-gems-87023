@@ -14,9 +14,11 @@ interface StreakBonusOfferProps {
 }
 
 export const StreakBonusOffer = ({ streakDays, onClose }: StreakBonusOfferProps) => {
-  const { startCheckout, processing } = usePayment();
+  const { createPayment, loading } = usePayment();
+  const processing = loading;
   const [error, setError] = useState<string | null>(null);
   const productId = streakDays === 5 ? "streak_bonus_5days" : "streak_bonus_7days";
+  const priceLabel = streakDays === 5 ? "3,99 €" : "5,99 €";
   const rewards =
     streakDays === 5
       ? { gems: 200, lives: 5 }
@@ -26,8 +28,8 @@ export const StreakBonusOffer = ({ streakDays, onClose }: StreakBonusOfferProps)
     setError(null);
     try {
       trackEvent("streak_bonus_purchase_start", { streakDays });
-      await startCheckout(productId);
-      onClose();
+      const ok = await createPayment(productId, "streak_bonus_offer");
+      if (ok) onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
     }
@@ -55,9 +57,9 @@ export const StreakBonusOffer = ({ streakDays, onClose }: StreakBonusOfferProps)
             {rewards.powerups && <li>⚡ {rewards.powerups} Power-ups</li>}
           </ul>
 
-          <OfferCountdownTimer durationSeconds={300} onExpire={onClose} />
+          <OfferCountdownTimer durationSeconds={300} offerType={productId} onExpire={onClose} />
           <div className="my-3">
-            <DiscountPrice productId={productId} />
+            <DiscountPrice productId={productId} currentPrice={priceLabel} />
           </div>
 
           <Button

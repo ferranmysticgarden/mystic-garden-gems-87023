@@ -14,15 +14,16 @@ interface WinStreakOfferProps {
 }
 
 export const WinStreakOffer = ({ streakCount, onClose }: WinStreakOfferProps) => {
-  const { startCheckout, processing } = usePayment();
+  const { createPayment, loading } = usePayment();
+  const processing = loading;
   const [error, setError] = useState<string | null>(null);
 
   const handleBuy = async () => {
     setError(null);
     try {
       trackEvent("win_streak_purchase_start", { streakCount });
-      await startCheckout("streak_3wins_bonus");
-      onClose();
+      const ok = await createPayment("streak_3wins_bonus", "win_streak_offer");
+      if (ok) onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
     }
@@ -48,9 +49,9 @@ export const WinStreakOffer = ({ streakCount, onClose }: WinStreakOfferProps) =>
             <li>⚡ 2 Power-ups</li>
           </ul>
 
-          <OfferCountdownTimer durationSeconds={300} onExpire={onClose} />
+          <OfferCountdownTimer durationSeconds={300} offerType="streak_3wins_bonus" onExpire={onClose} />
           <div className="my-3">
-            <DiscountPrice productId="streak_3wins_bonus" />
+            <DiscountPrice productId="streak_3wins_bonus" currentPrice="1,99 €" />
           </div>
 
           <Button

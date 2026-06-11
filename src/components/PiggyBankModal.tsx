@@ -21,7 +21,8 @@ export const PiggyBankModal = ({
   onClose,
   onPurchaseSuccess,
 }: PiggyBankModalProps) => {
-  const { startCheckout, processing } = usePayment();
+  const { createPayment, loading } = usePayment();
+  const processing = loading;
   const [error, setError] = useState<string | null>(null);
 
   if (!open) return null;
@@ -33,8 +34,8 @@ export const PiggyBankModal = ({
     setError(null);
     try {
       trackEvent("piggy_bank_purchase_start", { amount });
-      await startCheckout("piggy_bank_unlock");
-      onPurchaseSuccess();
+      const ok = await createPayment("piggy_bank_unlock", "piggy_bank_modal");
+      if (ok) onPurchaseSuccess();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error desconocido";
       setError(msg);
@@ -79,9 +80,9 @@ export const PiggyBankModal = ({
 
           {isFull ? (
             <>
-              <OfferCountdownTimer durationSeconds={300} onExpire={onClose} />
+              <OfferCountdownTimer durationSeconds={300} offerType="piggy_bank_unlock" onExpire={onClose} />
               <div className="my-3">
-                <DiscountPrice productId="piggy_bank_unlock" />
+                <DiscountPrice productId="piggy_bank_unlock" currentPrice="2,99 €" />
               </div>
               <Button
                 onClick={handleBuy}

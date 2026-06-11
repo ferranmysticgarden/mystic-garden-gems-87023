@@ -30,7 +30,8 @@ export const SeasonPassScreen = ({ onBack }: SeasonPassScreenProps) => {
     claimTier,
     unlockPremium,
   } = useSeasonPass(user?.id ?? null);
-  const { startCheckout, processing } = usePayment();
+  const { createPayment, loading } = usePayment();
+  const processing = loading;
   const [claimingTier, setClaimingTier] = useState<number | null>(null);
 
   const handleClaim = async (tierId: number) => {
@@ -48,10 +49,11 @@ export const SeasonPassScreen = ({ onBack }: SeasonPassScreenProps) => {
   const handleUnlockPremium = async () => {
     try {
       trackEvent("season_pass_premium_purchase_start", {});
-      await startCheckout("season_pass_premium");
-      // After checkout returns success, flip is_premium server-side
-      await unlockPremium();
-      toast.success("¡Pase Premium activado!");
+      const ok = await createPayment("season_pass_premium", "season_pass_screen");
+      if (ok) {
+        await unlockPremium();
+        toast.success("¡Pase Premium activado!");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
     }
