@@ -184,53 +184,37 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
               </div>
               
               <h2 className="text-2xl font-bold text-yellow-400 mb-1 drop-shadow-lg">
-                ¡OFERTA EXCLUSIVA!
+                🔥 OFERTA EXCLUSIVA - Solo HOY 🔥
               </h2>
-              
-              {/* Timer URGENTE - 30 minutos */}
-              <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 mb-3 transition-all ${
-                isUrgent 
-                  ? 'bg-red-600/80 animate-pulse border-2 border-red-400' 
-                  : 'bg-black/50 border border-yellow-400/30'
-              }`}>
-                <Clock className={`w-4 h-4 ${isUrgent ? 'text-white animate-bounce' : 'text-yellow-300'}`} />
-                <span className={`font-mono font-bold text-lg ${isUrgent ? 'text-white' : 'text-yellow-300'}`}>
-                  {formatTime(timeLeft)}
-                </span>
-                {isUrgent && <span className="text-white text-xs">¡RÁPIDO!</span>}
+
+              {/* 5-min shared countdown — owns its own ticking + auto-close */}
+              <div className="flex justify-center mb-3">
+                <OfferCountdownTimer
+                  offerType={OFFER_ID}
+                  durationSeconds={TIMER_SECONDS}
+                  onExpire={() => handleDismissReason('auto_close')}
+                />
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-4 mb-4 border-2 border-yellow-400/50">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Gift className="w-7 h-7 text-yellow-400 animate-bounce" />
-              <h3 className="text-xl font-bold text-white">
-                  INICIO MÁGICO
-                </h3>
+                <h3 className="text-xl font-bold text-white">INICIO MÁGICO</h3>
               </div>
-              
+
               <div className="flex justify-center text-white mb-4">
                 <div className="bg-black/30 rounded-lg p-3 flex items-center gap-3">
                   <span className="text-3xl">💎</span>
                   <span className="font-bold text-yellow-300 text-lg">+400 Gemas</span>
                 </div>
               </div>
-              
-              {/* Precio con valor percibido aumentado */}
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <div className="text-center">
-                  <p className="text-gray-400 text-xs">Valor real</p>
-                  <span className="text-gray-400 line-through text-xl">€2.99</span>
-                </div>
-                <div className="text-center">
-                  <p className="text-yellow-300 text-xs font-bold">HOY</p>
-                  <span className="text-4xl font-bold text-yellow-400 drop-shadow-lg animate-pulse">{price}</span>
-                </div>
-              </div>
-              
-              <div className="inline-block bg-gradient-to-r from-green-600 to-green-500 rounded-full px-5 py-1.5 shadow-lg">
-                <p className="text-white font-bold text-sm">🔥 90% DESCUENTO 🔥</p>
-              </div>
+
+              {/* Mini-tablero recordando la feature de fotos justo antes del CTA */}
+              <PhotoTilesPreview className="mb-3" />
+
+              {/* Discount framing centralizado */}
+              <DiscountPrice productId="starter_gems" currentPrice={price} />
             </div>
 
             <Button 
