@@ -1,9 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Gem, Heart, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
 import { hasPurchasedStarterGems } from '@/utils/purchaseUtils';
+import { OfferCountdownTimer } from '@/components/offers/OfferCountdownTimer';
+import { DiscountPrice } from '@/components/offers/DiscountPrice';
+import { PhotoTilesPreview } from '@/components/offers/PhotoTilesPreview';
+import { markOfferDismissed } from '@/utils/offerCooldown';
+
+const OFFER_ID = 'no_lives_starter';
+const TIMER_SECONDS = 300;
 
 interface NoLivesModalProps {
   gems: number;
