@@ -487,6 +487,21 @@ const Index = () => {
       scheduleStreakReminder(streakData.currentStreak);
     }
   }, [streakData.currentStreak, streakData.canClaimToday, scheduleStreakReminder]);
+
+  // T6 — Show streak bonus offer at day 5 and day 7 (once per milestone, 24h cooldown)
+  useEffect(() => {
+    if (autoPopupsBlocked || isNewUser) return;
+    const streak = streakData.currentStreak;
+    if (streak !== 5 && streak !== 7) return;
+    const key = streak === 5 ? LS_KEYS.STREAK_BONUS_5_LAST_SHOWN : LS_KEYS.STREAK_BONUS_7_LAST_SHOWN;
+    const last = parseInt(localStorage.getItem(key) ?? "0", 10);
+    if (Date.now() - last < 24 * 60 * 60 * 1000) return;
+    if (!tryClaimEngagementSlot()) return;
+    localStorage.setItem(key, String(Date.now()));
+    trackEvent("streak_bonus_offer_shown", { streakDays: streak });
+    setTimeout(() => setShowStreakBonusOffer(streak as 5 | 7), 1500);
+  }, [streakData.currentStreak, autoPopupsBlocked, isNewUser]);
+
   // Set up notification when lives become full
   useEffect(() => {
     setOnLivesFull(() => {
