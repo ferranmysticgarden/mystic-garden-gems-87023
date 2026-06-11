@@ -1,9 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
 import { hasPurchasedStarterGems } from '@/utils/purchaseUtils';
+import { DiscountPrice } from '@/components/offers/DiscountPrice';
+import { PhotoTilesPreview } from '@/components/offers/PhotoTilesPreview';
+import { markOfferDismissed } from '@/utils/offerCooldown';
+
+const OFFER_ID = 'ultimate_rescue';
 
 interface UltimateRescueOfferProps {
   levelNumber: number;
