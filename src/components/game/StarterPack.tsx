@@ -22,8 +22,8 @@ interface StarterPackProps {
 
 export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: StarterPackProps) => {
   const [show, setShow] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible'>('entering');
+  const timeRemainingRef = useRef(TIMER_SECONDS);
   const { user } = useAuth();
   const { createPayment, loading, getPrice } = usePayment();
 
