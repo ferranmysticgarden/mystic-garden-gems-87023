@@ -43,6 +43,14 @@ import { LoginPrompt } from "@/components/game/LoginPrompt";
 import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
 import { ForceUpdateModal } from "@/components/game/ForceUpdateModal";
 import { ReviewPrompt } from "@/components/ReviewPrompt";
+import { PiggyBank } from "@/components/PiggyBank";
+import { PiggyBankModal } from "@/components/PiggyBankModal";
+import { StreakBonusOffer } from "@/components/offers/StreakBonusOffer";
+import { WinStreakOffer } from "@/components/offers/WinStreakOffer";
+import { usePiggyBank } from "@/hooks/usePiggyBank";
+import { useSeasonPass } from "@/hooks/useSeasonPass";
+import { useWinStreak } from "@/hooks/useWinStreak";
+import { LS_KEYS } from "@/constants/localStorageKeys";
 
 // Lazy-loaded non-critical modals
 const PostVictoryOffer = lazy(() => import("@/components/game/PostVictoryOffer").then(m => ({ default: m.PostVictoryOffer })));
