@@ -51,6 +51,8 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     // Trigger después de nivel 1+ (primera oferta del embudo - captura antes del abandono)
     if (levelJustCompleted < 1) return;
     if (alreadyBoughtStarter) return;
+    // 24h cooldown after a dismiss — avoid re-spamming the same device.
+    if (isOfferOnCooldown(OFFER_ID)) return;
 
     // Use a stable ID: user.id for logged-in, 'guest' for guests
     const odId = user?.id || 'guest';
