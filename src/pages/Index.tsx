@@ -490,7 +490,8 @@ const Index = () => {
 
   // T6 — Show streak bonus offer at day 5 and day 7 (once per milestone, 24h cooldown)
   useEffect(() => {
-    if (autoPopupsBlocked || isNewUser) return;
+    if (autoPopupsBlocked) return;
+    if (gameState.completedLevels.length < 5) return;
     const streak = streakData.currentStreak;
     if (streak !== 5 && streak !== 7) return;
     const key = streak === 5 ? LS_KEYS.STREAK_BONUS_5_LAST_SHOWN : LS_KEYS.STREAK_BONUS_7_LAST_SHOWN;
@@ -500,7 +501,7 @@ const Index = () => {
     localStorage.setItem(key, String(Date.now()));
     trackEvent("streak_bonus_offer_shown", { streakDays: streak });
     setTimeout(() => setShowStreakBonusOffer(streak as 5 | 7), 1500);
-  }, [streakData.currentStreak, autoPopupsBlocked, isNewUser]);
+  }, [streakData.currentStreak, autoPopupsBlocked, gameState.completedLevels.length]);
 
   // Set up notification when lives become full
   useEffect(() => {
