@@ -1373,8 +1373,45 @@ const Index = () => {
           requiredVersion={appUpdate.requiredVersionCode}
         />
       )}
+
+      {/* T5 — Piggy bank modal */}
+      <PiggyBankModal
+        open={showPiggyModal}
+        amount={piggyBank.amount}
+        cap={piggyBank.cap}
+        onClose={() => setShowPiggyModal(false)}
+        onPurchaseSuccess={async () => {
+          try {
+            const res = await piggyBank.unlock();
+            if (res?.gemsGranted) {
+              addGems(res.gemsGranted);
+              toast.success(`🐷 ¡Hucha desbloqueada! +${res.gemsGranted} 💎`);
+            }
+          } catch (e) {
+            toast.error("Error al desbloquear hucha");
+          }
+          setShowPiggyModal(false);
+        }}
+      />
+
+      {/* T9 — Win streak offer */}
+      {showWinStreakOffer && (
+        <WinStreakOffer
+          streakCount={winStreak.count}
+          onClose={() => setShowWinStreakOffer(false)}
+        />
+      )}
+
+      {/* T6 — Daily streak bonus offer (5 / 7 day milestone) */}
+      {showStreakBonusOffer && (
+        <StreakBonusOffer
+          streakDays={showStreakBonusOffer}
+          onClose={() => setShowStreakBonusOffer(null)}
+        />
+      )}
     </div>
     </>
+
   );
 };
 export default Index;
