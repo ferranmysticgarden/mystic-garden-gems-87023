@@ -611,6 +611,8 @@ const Index = () => {
     ],
   );
   const handleLose = useCallback(() => {
+    // T9 — Break win streak
+    winStreak.registerLoss();
     trackEvent("level_failed", {
       level: currentLevel.id,
       consecutive_losses: consecutiveLosses + 1,
