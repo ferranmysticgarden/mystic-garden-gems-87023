@@ -148,6 +148,14 @@ const Index = () => {
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
+  // ===== T5/T7/T9: Piggy Bank, Season Pass, Win Streak =====
+  const piggyBank = usePiggyBank(user?.id ?? null);
+  const seasonPass = useSeasonPass(user?.id ?? null);
+  const winStreak = useWinStreak();
+  const [showPiggyModal, setShowPiggyModal] = useState(false);
+  const [showWinStreakOffer, setShowWinStreakOffer] = useState(false);
+  const [showStreakBonusOffer, setShowStreakBonusOffer] = useState<5 | 7 | null>(null);
+
   // ===== Anti-avalanche popup queue (sessionStorage, never unset within session) =====
   const ENGAGEMENT_FLAG_KEY = 'engagement_popup_shown_session';
   const LOGIN_TIMESTAMP_KEY = 'login_timestamp_session';
