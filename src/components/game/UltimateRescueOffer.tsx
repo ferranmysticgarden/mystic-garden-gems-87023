@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
@@ -93,7 +93,6 @@ export const UltimateRescueOffer = ({
     return () => clearInterval(timer);
   }, [secondsLeft, handleDismiss, loading, isSpendingGems]);
 
-  const secondsLeftAtStartRef = useRef(15);
   const handleBuy = async () => {
     if (navigator.vibrate) {
       navigator.vibrate(50);
