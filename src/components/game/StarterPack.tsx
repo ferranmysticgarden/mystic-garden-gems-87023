@@ -74,21 +74,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
     }
   }, [show, animationPhase]);
 
-  useEffect(() => {
-    if (!show) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          handleDismissReason('auto_close');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [show]);
+  // Timer is now owned by <OfferCountdownTimer/>; nothing to do here.
 
   const triggerCelebration = () => {
     // Confetti dorado cayendo del cielo
@@ -103,10 +89,14 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
   const handleBuy = async () => {
     if (loading) return;
-    
+
     const success = await createPayment('starter_gems', 'starter_pack');
     if (success) {
       console.log('[PURCHASE] success confirmed via StarterPack (starter_gems)');
+      trackEvent('offer_purchased_in_time', {
+        offer_type: OFFER_ID,
+        time_remaining: timeRemainingRef.current,
+      });
       markStarterGemsAsPurchased();
       onPurchaseSuccess?.();
       setShow(false);
@@ -122,6 +112,8 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
       reason,
       level: levelJustCompleted,
     });
+    // 24h cooldown so we don't re-spam the same offer to the same device.
+    markOfferDismissed(OFFER_ID);
     setShow(false);
     onClose();
   };
@@ -129,15 +121,6 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const handleDismiss = () => {
     handleDismissReason('close_x');
   };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Determinar si el timer está crítico (menos de 5 minutos)
-  const isUrgent = timeLeft < 300;
 
   if (!show) return null;
 
