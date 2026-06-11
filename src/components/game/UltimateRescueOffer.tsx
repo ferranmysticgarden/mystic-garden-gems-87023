@@ -162,6 +162,9 @@ export const UltimateRescueOffer = ({
               {getMessage()}
             </h2>
 
+            <div className="text-xs font-bold text-yellow-400 mb-1">
+              🔥 OFERTA EXCLUSIVA - Solo HOY 🔥
+            </div>
             <div className="text-sm font-semibold text-accent mb-3">
               ⚡ ¡SOLO POR ESTA PARTIDA! ⚡
             </div>
@@ -178,7 +181,10 @@ export const UltimateRescueOffer = ({
               </div>
             </div>
 
-            {/* Countdown */}
+            {/* Countdown nativo de 15s (urgencia mid-game) — NO se sustituye
+                por el OfferCountdownTimer de 5 min porque esta oferta vive
+                "solo durante esta partida"; el contador rápido es el motor
+                de conversión. */}
             <div className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-3 ${getCountdownClasses()}`}>
               <span className="font-mono font-bold text-sm">
                 {secondsLeft <= 5 ? '🔥 ' : '⏰ '}
@@ -187,13 +193,15 @@ export const UltimateRescueOffer = ({
               </span>
             </div>
 
+            {/* Mini-tablero de fotos justo antes del CTA */}
+            <PhotoTilesPreview className="mb-3" />
+
             {/* Oferta */}
             <div className="bg-black/20 rounded-xl p-3 mb-4 border border-accent/30">
-              <p className="text-foreground font-medium">+5 movimientos para continuar</p>
-              <div className="flex justify-center items-baseline gap-2 mt-1">
-                <span className="text-3xl font-bold text-accent">{price}</span>
-                <span className="text-muted-foreground text-sm">o</span>
-                <span className="text-2xl font-bold text-yellow-400">150 💎</span>
+              <p className="text-foreground font-medium mb-2">+5 movimientos para continuar</p>
+              <DiscountPrice productId="continue_game" currentPrice={price} />
+              <div className="text-muted-foreground text-xs mt-2">
+                o <span className="text-yellow-400 font-bold">150 💎</span>
               </div>
             </div>
 
