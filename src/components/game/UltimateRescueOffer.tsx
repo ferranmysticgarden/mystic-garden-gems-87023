@@ -62,6 +62,8 @@ export const UltimateRescueOffer = ({
         attempts,
         moves_short: movesShort,
       });
+      // 24h cooldown to stop re-showing the same rescue to the same device.
+      markOfferDismissed(OFFER_ID);
       onDismiss();
     },
     [levelNumber, attempts, movesShort, onDismiss, loading, isSpendingGems]
@@ -91,12 +93,18 @@ export const UltimateRescueOffer = ({
     return () => clearInterval(timer);
   }, [secondsLeft, handleDismiss, loading, isSpendingGems]);
 
+  const secondsLeftAtStartRef = useRef(15);
   const handleBuy = async () => {
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
+    const remainingAtClick = secondsLeft;
     const success = await createPayment('continue_game');
     if (success) {
+      trackEvent('offer_purchased_in_time', {
+        offer_type: OFFER_ID,
+        time_remaining: remainingAtClick,
+      });
       onBuy();
     }
   };
