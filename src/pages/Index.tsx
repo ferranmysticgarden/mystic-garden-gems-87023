@@ -941,6 +941,19 @@ const Index = () => {
             setScreen("shop");
           }}
         />
+        {/* T5 — Piggy bank button (only after level 1) */}
+        {!isNewUser && (
+          <div className="flex justify-end -mt-3 mb-3">
+            <PiggyBank
+              amount={piggyBank.amount}
+              cap={piggyBank.cap}
+              onClick={() => {
+                trackEvent('piggy_bank_opened', { amount: piggyBank.amount, isFull: piggyBank.isFull });
+                setShowPiggyModal(true);
+              }}
+            />
+          </div>
+        )}
         {/* Streak Reminder Banner - SOLO después de nivel 2 */}
         {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
         {/* Day Counter - SOLO después de nivel 2 */}
