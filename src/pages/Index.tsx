@@ -42,6 +42,7 @@ import { VisualGarden } from "@/components/game/VisualGarden";
 import { LoginPrompt } from "@/components/game/LoginPrompt";
 import { PurchaseLoadingOverlay } from "@/components/game/PurchaseLoadingOverlay";
 import { ForceUpdateModal } from "@/components/game/ForceUpdateModal";
+import { ReviewPrompt } from "@/components/ReviewPrompt";
 
 // Lazy-loaded non-critical modals
 const PostVictoryOffer = lazy(() => import("@/components/game/PostVictoryOffer").then(m => ({ default: m.PostVictoryOffer })));
@@ -1121,6 +1122,8 @@ const Index = () => {
           }}
         />
       )}
+      {/* Review prompt — shown ONCE after completing level 10 */}
+      <ReviewPrompt level={lastCompletedLevel} />
       {/* First Day Offer - after level 1 completion */}
       {gameState.completedLevels.length >= 1 && (
         <FirstDayOffer
