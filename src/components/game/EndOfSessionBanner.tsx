@@ -52,7 +52,7 @@ export const EndOfSessionBanner = ({
   }, []);
 
   return (
-    <div className="fixed bottom-4 inset-x-4 z-40 flex justify-center animate-slide-in pointer-events-auto">
+    <div className="fixed bottom-4 inset-x-4 z-40 flex justify-center animate-fade-in pointer-events-auto">
       <div className="max-w-md w-full bg-card/95 backdrop-blur border border-accent/40 rounded-2xl px-4 py-3 shadow-card flex items-center gap-3">
         <p className="flex-1 text-sm text-foreground">{message}</p>
         <button
