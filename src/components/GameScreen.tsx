@@ -142,9 +142,8 @@ export const GameScreen = ({
       time_played_seconds: timePlayed
     });
     // CAMBIO 1 — quit a media partida consume vida (Royal Match style).
-    // Ganar / nivel completado no consume vida. La vida se gestiona en Index vía onQuit/onLose.
+    // El tracking 'life_consumed' se emite en Index.handleQuitMidGame para evitar duplicados.
     if (!won && !gameOver) {
-      trackEvent('life_consumed', { reason: 'quit', level: level.id });
       (onQuit ?? onBack)();
     } else {
       onBack();
