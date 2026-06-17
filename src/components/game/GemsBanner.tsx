@@ -9,20 +9,26 @@ interface GemsBannerProps {
   onPurchaseSuccess?: () => void;
 }
 
+// PRODUCT SWITCH (2026-06): banner ahora vende `gems_300` (€2.99).
+// `welcome_pack` tenía 0 conversiones; `gems_300` es el único producto con
+// 100% de conversión histórica (2/2). Cambio sólo de producto, no de UI.
+const BANNER_PRODUCT_ID = 'gems_300';
+const BANNER_PRICE_FALLBACK = '€2,99';
+
 export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) => {
   const { createPayment, loading, getPrice, isGooglePlayAvailable, isAndroid } = usePayment();
-  const price = getPrice('welcome_pack', '€0.50');
+  const price = getPrice(BANNER_PRODUCT_ID, BANNER_PRICE_FALLBACK);
   const hasTracked = useRef(false);
 
   // Track offer impression once — to BOTH Firebase and Supabase
   useEffect(() => {
-    if (!hasTracked.current && localStorage.getItem('first_purchase_completed') !== 'true') {
+    if (!hasTracked.current) {
       hasTracked.current = true;
       emitAnalyticsEvent('first_purchase_offer_shown', { product: 'gems_banner' });
       // Direct to DB — bypasses broken native Firebase plugin
-      trackEvent('offer_shown', { 
-        offer: 'welcome_pack',
-        productId: 'welcome_pack',
+      trackEvent('offer_shown', {
+        offer: BANNER_PRODUCT_ID,
+        productId: BANNER_PRODUCT_ID,
         product: 'gems_banner',
         trigger: 'gems_banner',
         source: 'menu_banner',
@@ -32,15 +38,12 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
   }, [isAndroid, isGooglePlayAvailable]);
 
   const handleBuy = async () => {
-    const success = await createPayment('welcome_pack', 'gems_banner');
+    const success = await createPayment(BANNER_PRODUCT_ID, 'gems_banner');
     if (success) {
       onPurchaseSuccess?.();
       onPurchased?.();
     }
   };
-
-  // Don't show if already purchased
-  if (localStorage.getItem('first_purchase_completed') === 'true') return null;
 
   return (
     <button
@@ -54,10 +57,10 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
         </div>
         <div className="text-left">
           <p className="text-white font-bold text-xs leading-tight">
-            💎 +5 Movimientos +3 Boosters
+            💎 300 Gemas · Pack más vendido
           </p>
           <p className="text-yellow-100/70 text-[10px]">
-            Pack Bienvenida · Oferta especial
+            Oferta destacada · entrega inmediata
           </p>
         </div>
       </div>

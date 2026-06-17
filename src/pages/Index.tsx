@@ -71,6 +71,8 @@ import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/data/levels";
 import { PRODUCTS } from "@/data/products";
 import { markStarterGemsAsPurchased } from "@/utils/purchaseUtils";
+import { canShowStarterGems, markStarterGemsShown, markStarterGemsDismissed } from "@/utils/starterGemsGate";
+import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
 import { toast } from "sonner";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
@@ -648,10 +650,12 @@ const Index = () => {
       return newCount;
     });
     // Show StarterPack on defeat at level 4+ — emotional moment, user wants to continue
-    if (currentLevel.id >= 4 && !hasSeenWelcomeOffer()) {
+    // Gate: max 2 shows total + 48h cooldown after dismissal (88 attempts / 0 sales in 14d).
+    if (currentLevel.id >= 4 && !hasSeenWelcomeOffer() && canShowStarterGems()) {
       setTimeout(() => {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
         trackEvent("offer_shown", { offer: "starter_gems", productId: "starter_gems", product: "starter_gems", trigger: "defeat", source: "auto_popup", level: currentLevel.id });
+        markStarterGemsShown();
         setShowStarterPack(true);
         markOfferShown();
       }, 1500);
@@ -1044,24 +1048,18 @@ const Index = () => {
             </Button>
           )}
 
+          {/* HERO: Personalizar (movido fuera del grid; era un botón outline gris) */}
+          <PersonalizeHeroButton onClick={() => setScreen("customize")} />
+
           {/* Botones de navegación principal - SIEMPRE VISIBLES */}
-          <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="mt-1">
             <Button
               onClick={() => setScreen("levels")}
               variant="outline"
-              className="hover:scale-105 active:scale-95 transition-transform duration-100"
+              className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
             >
               <Grid3x3 className="w-5 h-5 mr-2" />
               {t("menu.levels")}
-            </Button>
-
-            <Button
-              onClick={() => setScreen("customize")}
-              variant="outline"
-              className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-pink-500/50 hover:border-pink-400"
-            >
-              <Palette className="w-5 h-5 mr-2 text-pink-400" />
-              <span className="text-pink-400 font-semibold text-sm">{t("menu.customize")}</span>
             </Button>
           </div>
 
@@ -1158,7 +1156,9 @@ const Index = () => {
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
           onShowStarterOffer={() => {
+            if (!canShowStarterGems()) return;
             trackEvent('offer_shown', { offer: 'starter_gems', productId: 'starter_gems', product: 'starter_gems', trigger: 'no_lives', source: 'no_lives_no_gems' });
+            markStarterGemsShown();
             setTimeout(() => setShowStarterPack(true), 300);
           }}
         />
@@ -1204,7 +1204,7 @@ const Index = () => {
         <Suspense fallback={null}>
           <StarterPack
             levelJustCompleted={lastCompletedLevel}
-            onClose={() => setShowStarterPack(false)}
+            onClose={() => { markStarterGemsDismissed(); setShowStarterPack(false); }}
             onPurchaseSuccess={() => {
               reloadFromDB?.();
               toast.success("¡Inicio Mágico activado! +400💎");
