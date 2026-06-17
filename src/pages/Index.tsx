@@ -1479,6 +1479,26 @@ const Index = () => {
           onClose={() => setShowStreakBonusOffer(null)}
         />
       )}
+
+      {/* CAMBIO 2 — Customize intro modal (post-level-1, una sola vez) */}
+      {showCustomizeIntro && (
+        <CustomizeIntroModal
+          onAccept={() => { setShowCustomizeIntro(false); setScreen("customize"); }}
+          onDismiss={() => setShowCustomizeIntro(false)}
+        />
+      )}
+
+      {/* CAMBIO 10 — End-of-session banner (Zeigarnik) */}
+      {showEndOfSessionBanner && !autoPopupsBlocked && (
+        <EndOfSessionBanner
+          piggyAmount={piggyBank.amount}
+          piggyCap={piggyBank.cap}
+          lives={gameState.lives}
+          timeUntilNextLifeSec={getTimeUntilNextLife()}
+          currentStreak={streakData.currentStreak}
+          onDismiss={() => setShowEndOfSessionBanner(false)}
+        />
+      )}
     </div>
     </>
 
