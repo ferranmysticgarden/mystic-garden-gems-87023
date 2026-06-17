@@ -117,5 +117,11 @@
     "required_title": "Update Required!",
     "required_message": "A new version with important improvements is available. Please update from Google Play to continue playing.",
     "update_now": "Update Now"
+  },
+  "customize_intro": {
+    "title": "Did you know you can put YOUR photos on the board?",
+    "body": "Replace flowers with photos of your family, pets, or anything you love. It is free!",
+    "accept": "Yes, show me!",
+    "later": "Later"
   }
 }
