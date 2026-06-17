@@ -24,7 +24,7 @@ export const GemsBanner = ({ onPurchased, onPurchaseSuccess }: GemsBannerProps) 
   useEffect(() => {
     if (!hasTracked.current) {
       hasTracked.current = true;
-      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'gems_banner', productId: BANNER_PRODUCT_ID });
+      emitAnalyticsEvent('first_purchase_offer_shown', { product: 'gems_banner' });
       // Direct to DB — bypasses broken native Firebase plugin
       trackEvent('offer_shown', {
         offer: BANNER_PRODUCT_ID,
