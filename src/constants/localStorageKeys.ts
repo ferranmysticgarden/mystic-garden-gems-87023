@@ -29,6 +29,13 @@ export const LS_KEYS = {
   // T11 Photo feature banner
   PHOTO_FEATURE_BANNER_DISMISSED: "photo_feature_banner_dismissed_v1",
 
+  // V2026-10 batch
+  CUSTOMIZE_INTRO_SHOWN: "customize_intro_shown_v1",
+  WIN_STREAK_POWERUP_PENDING: "win_streak_powerup_pending_v1",
+  WIN_STREAK_POWERUP_COUNT: "win_streak_powerup_count_v1",
+  LAST_ENTERED_LEVEL_SESSION: "last_entered_level_session_v1",
+  END_OF_SESSION_BANNER_DISMISSED: "end_of_session_banner_dismissed_session",
+
   // Existing (do not re-create)
   GUEST_SESSION_ID: "guest_session_id",
 } as const;

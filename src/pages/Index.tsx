@@ -73,6 +73,9 @@ import { PRODUCTS } from "@/data/products";
 import { markStarterGemsAsPurchased } from "@/utils/purchaseUtils";
 import { canShowStarterGems, markStarterGemsShown, markStarterGemsDismissed } from "@/utils/starterGemsGate";
 import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
+import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
+import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
+import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
 import { toast } from "sonner";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
@@ -137,6 +140,13 @@ const Index = () => {
   const [lastCompletedLevel, setLastCompletedLevel] = useState(0);
   const [lastWinGems, setLastWinGems] = useState(0);
   const [consecutiveLosses, setConsecutiveLosses] = useState(0);
+  const [consecutiveLossesByLevel, setConsecutiveLossesByLevel] = useState<Record<number, number>>({});
+
+  // CAMBIO 2 — modal de personalización tras nivel 1
+  const [showCustomizeIntro, setShowCustomizeIntro] = useState(false);
+
+  // CAMBIO 10 — banner end-of-session (al volver al menú desde partida)
+  const [showEndOfSessionBanner, setShowEndOfSessionBanner] = useState(false);
 
   // Daily Streak & Push Notifications
   const { streakData, claimDailyReward } = useDailyStreak();
@@ -534,7 +544,7 @@ const Index = () => {
   const currentLevel = LEVELS.find((l) => l.id === gameState.currentLevel) || LEVELS[0];
   const handlePlayClick = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
-      loseLife();
+      // CAMBIO 1 — NO se consume vida al entrar; sólo al perder/abandonar
       trackEvent("level_start", {
         level: currentLevel.id,
         source: "play_button",
@@ -548,36 +558,35 @@ const Index = () => {
   };
   const handleWin = useCallback(
     async (stars: number, reward: { gems?: number }) => {
-      completeLevel(currentLevel.id, reward);
-      trackEvent('level_completed', { level: currentLevel.id });
+      // CAMBIO 3 — bonus: añade gemas pero NO avanza currentLevel
+      const isBonus = !!currentLevel.bonus;
+      completeLevel(currentLevel.id, reward, !isBonus);
+      trackEvent('level_completed', { level: currentLevel.id, bonus: isBonus });
       toast.success(`${t("game.win")}${reward.gems ? ` +${reward.gems} 💎` : ""}`);
 
       // Reset consecutive losses on win
       setConsecutiveLosses(0);
+      setConsecutiveLossesByLevel((prev) => ({ ...prev, [currentLevel.id]: 0 }));
 
-      // Track last completed level for starter pack
       setLastCompletedLevel(currentLevel.id);
-
-      // Increment games played counter for review request
       setGamesPlayed((prev) => prev + 1);
 
-      // Check achievements
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
       if (reward.gems) {
         await checkGemsAchievements(gameState.gems + reward.gems);
       }
 
-      // First-win celebration now handled by LevelCompleteCelebration inside GameScreen.
-      // (Old FirstWinCelebration popup deprecated to avoid double-celebration.)
-      if (completedCount === 1) {
-        // setShowFirstWin(true); // disabled — replaced by premium LevelCompleteCelebration
+      // CAMBIO 2 — tras ganar nivel 1 por primera vez, intro de personalizar
+      if (currentLevel.id === 1 && !localStorage.getItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN)) {
+        try { localStorage.setItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN, 'true'); } catch {}
+        trackEvent('customize_intro_shown', {});
+        setTimeout(() => setShowCustomizeIntro(true), 1200);
       }
-      // Request notification permission after first win (best moment)
+
       if (currentLevel.id === 1 && isSupported && permission === 'default') {
         setTimeout(() => requestPermission(), 5000);
       }
-      // Free gems gift at level 3 — build spending habit before asking to buy
       if (currentLevel.id === 3) {
         const giftKey = `level3_gift_${user?.id || 'guest'}`;
         if (!localStorage.getItem(giftKey)) {
@@ -588,24 +597,23 @@ const Index = () => {
         }
       }
 
-      // Show post-victory celebration ONLY after level 6+ win
-      if (currentLevel.id >= 6 && reward.gems && reward.gems > 0) {
+      if (currentLevel.id >= 6 && reward.gems && reward.gems > 0 && !isBonus) {
         setLastWinGems(reward.gems);
-        trackEvent("victory_celebration_shown", { 
-          level: currentLevel.id, 
-          gems_reward: reward.gems 
-        });
+        trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
         setTimeout(() => setShowPostVictoryOffer(true), 1500);
       }
 
-      // T5 — Deposit gems in piggy bank on each win (5 gems per victory)
-      piggyBank.deposit(5).catch(() => {/* non-blocking */});
-      // T7 — Add season pass progress (50 points per win)
-      seasonPass.addProgress(50).catch(() => {/* non-blocking */});
-      // T9 — Register win streak. At 3+ wins, show offer.
-      const newStreak = winStreak.registerWin();
-      if (newStreak === 3) {
-        // Cooldown: show win-streak offer at most once per 24h
+      // T5 piggy
+      if (!isBonus) piggyBank.deposit(5).catch(() => {});
+      if (!isBonus) seasonPass.addProgress(50).catch(() => {});
+      const newStreak = isBonus ? winStreak.count : winStreak.registerWin();
+
+      // CAMBIO 7 — tras 3 victorias seguidas, marcar power-up para el siguiente nivel
+      if (!isBonus && newStreak >= 3) {
+        markWinStreakPowerupPending();
+      }
+
+      if (newStreak === 3 && !isBonus) {
         const lastShown = parseInt(localStorage.getItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN) ?? "0", 10);
         if (Date.now() - lastShown > 24 * 60 * 60 * 1000) {
           localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
@@ -613,11 +621,14 @@ const Index = () => {
         }
       }
 
+      // CAMBIO 10 — banner Zeigarnik al volver al menú
+      setShowEndOfSessionBanner(true);
       setScreen("menu");
     },
     [
       completeLevel,
       currentLevel.id,
+      currentLevel.bonus,
       t,
       gameState.completedLevels.length,
       gameState.gems,
@@ -628,29 +639,37 @@ const Index = () => {
       winStreak,
     ],
   );
-  const handleLose = useCallback(() => {
-    // T9 — Break win streak
+  const handleLose = useCallback((payload?: { progress_pct: number; progress_abs: number; target: number; moves_left: number }) => {
+    // CAMBIO 1 — perder consume vida
+    loseLife();
+    trackEvent('life_consumed', { reason: 'lose', level: currentLevel.id });
     winStreak.registerLoss();
+    // CAMBIO 5A — payload con near-miss data
     trackEvent("level_failed", {
       level: currentLevel.id,
       consecutive_losses: consecutiveLosses + 1,
       guest: !user,
+      progress_pct: payload?.progress_pct ?? null,
+      progress_abs: payload?.progress_abs ?? null,
+      target: payload?.target ?? null,
+      moves_left: payload?.moves_left ?? null,
     });
     toast.error(t("game.lose"));
-    // Increment games played counter for review request
     setGamesPlayed((prev) => prev + 1);
 
-    // Track consecutive losses for flash offer
+    // Tracked per-level for adaptive difficulty
+    setConsecutiveLossesByLevel((prev) => ({
+      ...prev,
+      [currentLevel.id]: (prev[currentLevel.id] ?? 0) + 1,
+    }));
+
     setConsecutiveLosses((prev) => {
       const newCount = prev + 1;
-      // Show flash offer after 3 consecutive losses (frustration pack), ONLY level 5+
       if (newCount >= 3 && currentLevel.id >= 5) {
         setTimeout(() => setShowFlashOffer(true), 1000);
       }
       return newCount;
     });
-    // Show StarterPack on defeat at level 4+ — emotional moment, user wants to continue
-    // Gate: max 2 shows total + 48h cooldown after dismissal (88 attempts / 0 sales in 14d).
     if (currentLevel.id >= 4 && !hasSeenWelcomeOffer() && canShowStarterGems()) {
       setTimeout(() => {
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
@@ -661,21 +680,37 @@ const Index = () => {
       }, 1500);
     }
 
+    setShowEndOfSessionBanner(true);
     setScreen("menu");
-  }, [t, currentLevel.id, consecutiveLosses, user]);
+  }, [t, currentLevel.id, consecutiveLosses, user, loseLife, winStreak]);
+
+  // CAMBIO 1 — quit a media partida también consume vida
+  const handleQuitMidGame = useCallback(() => {
+    loseLife();
+    trackEvent('life_consumed', { reason: 'quit', level: currentLevel.id });
+    setShowEndOfSessionBanner(true);
+    setScreen("menu");
+  }, [loseLife, currentLevel.id]);
   const handleSelectLevel = (levelId: number) => {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
-    if (levelId > maxUnlockedLevel) {
+    const lvl = LEVELS.find((l) => l.id === levelId);
+    const isBonus = !!lvl?.bonus;
+    const baseId = isBonus ? levelId - 100 : levelId;
+    const unlocked = isBonus
+      ? gameState.completedLevels.includes(baseId)
+      : levelId <= maxUnlockedLevel;
+    if (!unlocked) {
       toast.error("Nivel bloqueado. Completa niveles anteriores.");
       return;
     }
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       selectLevel(levelId);
-      loseLife();
+      // CAMBIO 1 — NO se consume vida al entrar
       trackEvent("level_start", {
         level: levelId,
         source: "level_select",
         guest: !user,
+        bonus: isBonus,
       });
       setScreen("game");
     } else {

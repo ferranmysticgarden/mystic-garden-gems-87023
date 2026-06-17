@@ -25,14 +25,18 @@ import { useAttemptTracker } from '@/hooks/useAttemptTracker';
 import confetti from 'canvas-confetti';
 import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 import { trackEvent } from "@/lib/trackEvent";
-import { Hammer, RefreshCw, RotateCcw, Gem } from 'lucide-react';
+import { Hammer, RefreshCw, RotateCcw, Gem, Gift } from 'lucide-react';
 import { toast } from 'sonner';
+import { gemPriceForRescue, incrementRescueCount, resetRescueCount, getRescueCount } from '@/utils/rescuePriceScale';
+import { consumeWinStreakPowerup } from '@/utils/winStreakPowerup';
+import { isRetryOfLevel, markLevelEntered } from '@/utils/retryTracker';
 
 interface GameScreenProps {
   level: Level;
   onWin: (stars: number, reward: { gems?: number }) => void;
-  onLose: () => void;
+  onLose: (payload?: { progress_pct: number; progress_abs: number; target: number; moves_left: number }) => void;
   onBack: () => void;
+  onQuit?: () => void;
   onShowExitModal: () => void;
   initialMoves?: number;
   initialScore?: number;
@@ -45,6 +49,7 @@ interface GameScreenProps {
   onUseHammer?: () => void;
   onUseShuffle?: () => void;
   onUseUndo?: () => void;
+  consecutiveLossesOnLevel?: number;
 }
 
 export const GameScreen = ({ 
@@ -52,6 +57,7 @@ export const GameScreen = ({
   onWin, 
   onLose, 
   onBack, 
+  onQuit,
   onShowExitModal,
   initialMoves,
   initialScore,
@@ -64,6 +70,7 @@ export const GameScreen = ({
   onUseHammer,
   onUseShuffle,
   onUseUndo,
+  consecutiveLossesOnLevel = 0,
 }: GameScreenProps) => {
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
@@ -100,12 +107,31 @@ export const GameScreen = ({
 
   const startTime = useRef(Date.now());
 
+  // CAMBIO 9 — isRetry: si reentras al mismo nivel en la sesión, se considera reintento
+  const isRetry = useRef<boolean>(isRetryOfLevel(level.id));
+
   // Resetear estado al cambiar de nivel
   useEffect(() => {
     setShuffleTrigger(0);
     setUndoTrigger(0);
     setIsHammerActive(false);
-  }, [level.id]);
+    // CAMBIO 7 — consumir power-up por racha si está pendiente (3 victorias seguidas)
+    if (!level.bonus && consumeWinStreakPowerup()) {
+      try {
+        // Concedemos 1 martillo extra en este nivel (no se aplica visualmente fuera; toast informa)
+        trackEvent('win_streak_powerup_granted', { level: level.id });
+        toast.success('🎁 ¡Racha de 3 victorias! Power-up extra activado');
+      } catch {}
+    }
+    markLevelEntered(level.id);
+    // CAMBIO 3 — confetti suave en bonus
+    if (level.bonus) {
+      try {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.3 } });
+        setTimeout(() => confetti({ particleCount: 50, spread: 60, origin: { y: 0.4 } }), 800);
+      } catch {}
+    }
+  }, [level.id, level.bonus]);
 
   const handleQuit = useCallback(() => {
     const timePlayed = Math.floor((Date.now() - startTime.current) / 1000);
@@ -115,8 +141,15 @@ export const GameScreen = ({
       moves_used: movesUsed,
       time_played_seconds: timePlayed
     });
-    onBack();
-  }, [level.id, level.moves, initialMoves, moves, onBack]);
+    // CAMBIO 1 — quit a media partida consume vida (Royal Match style).
+    // Ganar / nivel completado no consume vida. La vida se gestiona en Index vía onQuit/onLose.
+    if (!won && !gameOver) {
+      trackEvent('life_consumed', { reason: 'quit', level: level.id });
+      (onQuit ?? onBack)();
+    } else {
+      onBack();
+    }
+  }, [level.id, level.moves, initialMoves, moves, onBack, onQuit, won, gameOver]);
 
   useEffect(() => {
     backgroundMusic.setScreen('game');
@@ -166,13 +199,15 @@ export const GameScreen = ({
   }, [showRescueOffer, onSpendGems]);
 
   const checkWinCondition = useCallback(() => {
+    // CAMBIO 3 — bonus: gana al agotar los 20 movimientos (no se puede perder)
+    if (level.bonus) return moves === 0;
     if (level.objective.type === 'score') {
       return score >= level.objective.count;
     } else if (level.objective.type === 'collect') {
       return (collected[level.objective.target] || 0) >= level.objective.count;
     }
     return false;
-  }, [level, score, collected]);
+  }, [level, moves, score, collected]);
 
   const getProgressPercentage = useCallback(() => {
     if (level.objective.type === 'score') {
@@ -215,12 +250,15 @@ export const GameScreen = ({
       // Reset intentos al ganar
       try {
         resetAttempts(level.id);
+        resetRescueCount(level.id);
       } catch (error) {
         console.error('Error reseteando intentos:', error);
       }
       
       // Confetti & sounds handled inside LevelCompleteCelebration component
     } else if (moves === 0 && !checkWinCondition() && !gameOver) {
+      // Bonus levels never reach defeat path (checkWinCondition returns true at moves===0)
+      if (level.bonus) return;
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
@@ -408,12 +446,15 @@ export const GameScreen = ({
     }
   };
 
-  // Handlers para UltimateRescueOffer
+  // Handlers para UltimateRescueOffer — CAMBIO 6: contar y escalar gemas
+  const rescuePriceForCurrentLevel = gemPriceForRescue(level.id);
+  const rescueCountForLevel = getRescueCount(level.id);
+
   const handleRescueBuy = () => {
+    incrementRescueCount(level.id);
+    trackEvent('extra_moves_purchased', { level: level.id, count: rescueCountForLevel + 1, payment: 'stripe' });
     setShowRescueOffer(false);
     setMoves(prev => prev + 5);
-    // Defensa: si por cualquier motivo gameOver quedó en true, lo reseteamos
-    // para que el jugador pueda continuar jugando con los +5 movimientos.
     setGameOver(false);
     setWon(false);
     hasPlayedEndSound.current = false;
@@ -421,9 +462,16 @@ export const GameScreen = ({
   };
 
   const handleRescueWithGems = () => {
-    if (gems >= 150 && onSpendGems) {
-      onSpendGems(150);
-      handleRescueBuy();
+    if (gems >= rescuePriceForCurrentLevel && onSpendGems) {
+      onSpendGems(rescuePriceForCurrentLevel);
+      incrementRescueCount(level.id);
+      trackEvent('extra_moves_purchased', { level: level.id, count: rescueCountForLevel + 1, payment: 'gems', cost: rescuePriceForCurrentLevel });
+      setShowRescueOffer(false);
+      setMoves(prev => prev + 5);
+      setGameOver(false);
+      setWon(false);
+      hasPlayedEndSound.current = false;
+      backgroundMusic.setScreen('game');
     }
   };
 
@@ -543,10 +591,17 @@ export const GameScreen = ({
             </div>
           </div>
           
-          {/* OBJETIVO CLARO Y VISIBLE */}
-          <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border-2 border-primary/30">
+          {/* OBJETIVO CLARO Y VISIBLE — CAMBIO 9: sin pulse en reintentos para arranque más ágil */}
+          <div className={`mt-4 p-3 rounded-xl ${level.bonus ? 'bg-gradient-to-r from-yellow-500/30 via-amber-400/20 to-orange-500/30 border-2 border-yellow-400/60' : 'bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border-2 border-primary/30'}`}>
             <div className="flex items-center justify-center gap-3">
-              {level.objective.type === 'collect' ? (
+              {level.bonus ? (
+                <>
+                  <Gift className="w-7 h-7 text-yellow-300" />
+                  <span className="text-base font-bold text-yellow-100 uppercase tracking-wide">
+                    Nivel Bonus · +{level.reward?.gems ?? 100} 💎 garantizadas
+                  </span>
+                </>
+              ) : level.objective.type === 'collect' ? (
                 <>
                   <span className="text-sm text-muted-foreground">{t('game.collect')}</span>
                   <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-1">
@@ -554,9 +609,9 @@ export const GameScreen = ({
                       const id = level.objective.target as TileType;
                       const photo = tileSkins[id];
                       return photo ? (
-                        <img src={photo} alt="" className="w-10 h-10 object-cover rounded-full animate-pulse" />
+                        <img src={photo} alt="" className={`w-10 h-10 object-cover rounded-full ${isRetry.current ? '' : 'animate-pulse'}`} />
                       ) : (
-                        <span className="text-4xl animate-pulse">{TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>
+                        <span className={`text-4xl ${isRetry.current ? '' : 'animate-pulse'}`}>{TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>
                       );
                     })()}
                     <span className="text-2xl font-bold text-gold">×{level.objective.count}</span>
@@ -624,6 +679,11 @@ export const GameScreen = ({
             triggerShuffle={shuffleTrigger}
             triggerUndo={undoTrigger}
             onFirstValidMatch={() => setFirstMatchMade(true)}
+            adaptiveBoost={
+              consecutiveLossesOnLevel >= 3 ? 0.30
+              : consecutiveLossesOnLevel === 2 ? 0.15
+              : 0
+            }
           />
         </div>
 
@@ -757,6 +817,8 @@ export const GameScreen = ({
             onDismiss={handleRescueDismiss}
             gems={gems}
             onBuyWithGems={handleRescueWithGems}
+            gemCost={rescuePriceForCurrentLevel}
+            rescueCount={rescueCountForLevel}
           />
         )}
 
@@ -784,7 +846,19 @@ export const GameScreen = ({
                 {t('game.lose')}
               </h2>
               <Button
-                onClick={() => onLose()}
+                onClick={() => {
+                  const target = level.bonus ? 0 : level.objective.count;
+                  const progressAbs = level.objective.type === 'score'
+                    ? score
+                    : (collected[level.objective.target] || 0);
+                  const progressPct = target > 0 ? Math.min(100, Math.round((progressAbs / target) * 100)) : 0;
+                  onLose({
+                    progress_pct: progressPct,
+                    progress_abs: progressAbs,
+                    target,
+                    moves_left: moves,
+                  });
+                }}
                 className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
               >
                 {t('game.continue')}

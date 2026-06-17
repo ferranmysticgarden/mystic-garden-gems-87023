@@ -19,6 +19,9 @@ interface UltimateRescueOfferProps {
   onDismiss: () => void;
   gems: number;
   onBuyWithGems: () => void;
+  /** CAMBIO 6 — coste creciente en gemas */
+  gemCost?: number;
+  rescueCount?: number;
 }
 
 export const UltimateRescueOffer = ({ 
@@ -29,7 +32,9 @@ export const UltimateRescueOffer = ({
   onBuy, 
   onDismiss,
   gems,
-  onBuyWithGems
+  onBuyWithGems,
+  gemCost = 150,
+  rescueCount = 0,
 }: UltimateRescueOfferProps) => {
   const [secondsLeft, setSecondsLeft] = useState(15);
   const [isShaking, setIsShaking] = useState(true);
@@ -109,7 +114,7 @@ export const UltimateRescueOffer = ({
   };
 
   const handleGemBuy = () => {
-    if (gems < 150 || isSpendingGems || loading) return;
+    if (gems < gemCost || isSpendingGems || loading) return;
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
@@ -197,22 +202,27 @@ export const UltimateRescueOffer = ({
 
             {/* Oferta */}
             <div className="bg-black/20 rounded-xl p-3 mb-4 border border-accent/30">
-              <p className="text-foreground font-medium mb-2">+5 movimientos para continuar</p>
+              <p className="text-foreground font-medium mb-2">
+                {rescueCount > 0
+                  ? `¿Otro +5 movimientos? (intento ${rescueCount + 1})`
+                  : '+5 movimientos para continuar'}
+              </p>
               <DiscountPrice productId="continue_game" currentPrice={price} />
               <div className="text-muted-foreground text-xs mt-2">
-                o <span className="text-yellow-400 font-bold">150 💎</span>
+                o <span className="text-yellow-400 font-bold">{gemCost} 💎</span>
+                {rescueCount > 0 && <span className="text-destructive ml-1">(+{Math.round((gemCost/150 - 1)*100)}%)</span>}
               </div>
             </div>
 
             <div className="space-y-3">
-              {gems >= 150 ? (
+              {gems >= gemCost ? (
                 <>
                   <Button
                     onClick={handleGemBuy}
                     disabled={loading || isSpendingGems}
                     className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold py-5 rounded-xl text-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50"
                   >
-                    {isSpendingGems ? '⏳ Procesando...' : '💎 USAR 150 GEMAS'}
+                    {isSpendingGems ? '⏳ Procesando...' : `💎 USAR ${gemCost} GEMAS`}
                   </Button>
 
                   <Button
