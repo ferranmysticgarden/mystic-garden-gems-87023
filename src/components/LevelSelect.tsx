@@ -1,15 +1,16 @@
-import { Lock, Star } from 'lucide-react';
+import { Lock, Star, Gift } from 'lucide-react';
 import { LEVELS } from '@/data/levels';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from './ui/button';
 
 interface LevelSelectProps {
   unlockedLevels: number;
+  completedLevels?: number[];
   onSelectLevel: (levelId: number) => void;
   onBack: () => void;
 }
 
-export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSelectProps) => {
+export const LevelSelect = ({ unlockedLevels, completedLevels = [], onSelectLevel, onBack }: LevelSelectProps) => {
   const { t } = useLanguage();
 
   return (
@@ -25,7 +26,45 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
         
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {LEVELS.map((level) => {
-            const isUnlocked = level.id <= unlockedLevels;
+            const isBonus = !!level.bonus;
+            const baseLvl = isBonus ? level.id - 100 : 0;
+            const isUnlocked = isBonus
+              ? completedLevels.includes(baseLvl)
+              : level.id <= unlockedLevels;
+            const isBonusCompleted = isBonus && completedLevels.includes(level.id);
+
+            if (isBonus) {
+              return (
+                <button
+                  key={level.id}
+                  onClick={() => isUnlocked && !isBonusCompleted && onSelectLevel(level.id)}
+                  disabled={!isUnlocked || isBonusCompleted}
+                  className={`
+                    rounded-xl p-3
+                    flex flex-col items-center justify-center gap-1
+                    min-h-[100px] relative overflow-hidden
+                    border-2 border-yellow-400/60
+                    bg-gradient-to-br from-yellow-500/30 via-amber-400/20 to-orange-500/30
+                    shadow-[0_0_20px_rgba(250,200,50,0.35)]
+                    ${isUnlocked && !isBonusCompleted
+                      ? 'hover:scale-105 active:scale-95 transition-transform duration-150 cursor-pointer animate-pulse'
+                      : isBonusCompleted ? 'opacity-60' : 'opacity-50 cursor-not-allowed'
+                    }
+                  `}
+                >
+                  <Gift className="w-6 h-6 text-yellow-300" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-200">
+                    BONUS
+                  </span>
+                  <span className="text-xs font-bold text-yellow-100">
+                    +{level.reward.gems ?? 100} 💎
+                  </span>
+                  {isBonusCompleted && (
+                    <span className="absolute top-1 right-1 text-xs">✓</span>
+                  )}
+                </button>
+              );
+            }
             
             return (
               <button
@@ -46,7 +85,6 @@ export const LevelSelect = ({ unlockedLevels, onSelectLevel, onBack }: LevelSele
                   <>
                     <span className="text-xl font-bold text-gold">{level.id}</span>
                     
-                    {/* OBJETIVO DEL NIVEL - MUY CLARO */}
                     <div className="bg-background/50 rounded-lg px-2 py-1 flex items-center gap-1">
                       {level.objective.type === 'collect' ? (
                         <>

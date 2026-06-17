@@ -275,17 +275,18 @@ export const useGameState = () => {
     });
   }, []);
 
-  const completeLevel = useCallback((levelId: number, reward: { gems?: number }) => {
-    console.log('[GAME] ✅ completeLevel called! levelId:', levelId, 'reward:', reward);
+  const completeLevel = useCallback((levelId: number, reward: { gems?: number }, advanceLevel: boolean = true) => {
+    console.log('[GAME] ✅ completeLevel called! levelId:', levelId, 'reward:', reward, 'advance:', advanceLevel);
     setGameState((prev) => {
       const newCompletedLevels = prev.completedLevels.includes(levelId)
         ? prev.completedLevels
         : [...prev.completedLevels, levelId];
-      
-      console.log('[GAME] State update: currentLevel', prev.currentLevel, '→', levelId + 1, 'completed:', newCompletedLevels);
+
+      const newCurrent = advanceLevel ? levelId + 1 : prev.currentLevel;
+      console.log('[GAME] State update: currentLevel', prev.currentLevel, '→', newCurrent, 'completed:', newCompletedLevels);
       return {
         ...prev,
-        currentLevel: levelId + 1,
+        currentLevel: newCurrent,
         completedLevels: newCompletedLevels,
         gems: prev.gems + (reward.gems || 0),
       };

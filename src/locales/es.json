@@ -117,5 +117,11 @@
     "required_title": "¡Actualización necesaria!",
     "required_message": "Hay una nueva versión con mejoras importantes. Actualiza desde Google Play para seguir jugando.",
     "update_now": "Actualizar ahora"
+  },
+  "customize_intro": {
+    "title": "¿Sabías que puedes poner TUS fotos en el tablero?",
+    "body": "Sustituye las flores por fotos de tu familia, mascotas o lo que quieras. ¡Es gratis!",
+    "accept": "¡Sí, mostrar cómo!",
+    "later": "Más tarde"
   }
 }

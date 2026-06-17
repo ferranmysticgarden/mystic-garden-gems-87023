@@ -24,6 +24,8 @@ interface BoardProps {
   triggerUndo?: number;
   highlightedTiles?: Position[];
   onFirstValidMatch?: () => void;
+  /** CAMBIO 4 — boost probabilístico (0-0.4) para crear más coincidencias tras 2+ derrotas */
+  adaptiveBoost?: number;
 }
 
 export const Board = ({ 
@@ -38,6 +40,7 @@ export const Board = ({
   triggerUndo,
   highlightedTiles,
   onFirstValidMatch,
+  adaptiveBoost = 0,
 }: BoardProps) => {
   const { t } = useLanguage();
   const [board, setBoard] = useState<string[][]>([]);
@@ -298,9 +301,16 @@ export const Board = ({
           }
         }
         
-        // Fill empty spaces
+        // Fill empty spaces — CAMBIO 4: with adaptiveBoost prob, copy tile below
         for (let row = emptyRow; row >= 0; row--) {
-          newBoard[row][col] = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+          const below = (row + 1 < BOARD_SIZE) ? newBoard[row + 1][col] : '';
+          if (adaptiveBoost > 0 && below && Math.random() < adaptiveBoost) {
+            newBoard[row][col] = below;
+          } else if (adaptiveBoost > 0 && targetTile && Math.random() < adaptiveBoost * 0.5) {
+            newBoard[row][col] = targetTile;
+          } else {
+            newBoard[row][col] = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+          }
         }
       }
       
