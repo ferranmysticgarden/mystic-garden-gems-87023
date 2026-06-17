@@ -916,12 +916,17 @@ const Index = () => {
           setRestoredGameState(null);
           handleWin(stars, reward);
         }}
-        onLose={() => {
+        onLose={(payload) => {
           setRestoredGameState(null);
-          handleLose();
+          handleLose(payload);
         }}
         onBack={() => setScreen("menu")}
+        onQuit={() => {
+          setRestoredGameState(null);
+          handleQuitMidGame();
+        }}
         onShowExitModal={() => setShowExitModal(true)}
+        consecutiveLossesOnLevel={consecutiveLossesByLevel[currentLevel.id] ?? 0}
         {...restoredProps}
         gems={gameState.gems}
         onSpendGems={spendGems}
@@ -942,6 +947,7 @@ const Index = () => {
     return (
       <LevelSelect
         unlockedLevels={maxUnlockedLevel}
+        completedLevels={gameState.completedLevels}
         onSelectLevel={handleSelectLevel}
         onBack={() => setScreen("menu")}
       />
