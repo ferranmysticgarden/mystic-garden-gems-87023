@@ -1481,11 +1481,18 @@ const Index = () => {
         />
       )}
 
-      {/* CAMBIO 2 — Customize intro modal (post-level-1, una sola vez) */}
-      {showCustomizeIntro && (
+      {/* CAMBIO 2 — Customize intro modal (post-level-1, una sola vez, anti-avalancha) */}
+      {showCustomizeIntro && !autoPopupsBlocked && (
         <CustomizeIntroModal
-          onAccept={() => { setShowCustomizeIntro(false); setScreen("customize"); }}
-          onDismiss={() => setShowCustomizeIntro(false)}
+          onAccept={() => {
+            try { localStorage.setItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN, 'true'); } catch {}
+            setShowCustomizeIntro(false);
+            setScreen("customize");
+          }}
+          onDismiss={() => {
+            try { localStorage.setItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN, 'true'); } catch {}
+            setShowCustomizeIntro(false);
+          }}
         />
       )}
 
