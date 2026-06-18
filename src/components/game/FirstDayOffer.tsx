@@ -19,14 +19,14 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
   const odId = user?.id || 'guest';
 
   useEffect(() => {
-    // Mostrar después de nivel 1 O si es nuevo (guest o auth)
+    // Mostrar después de nivel 3 O si es cuenta nueva (<2h)
     const checkEligibility = async () => {
       const hasSeenOffer = localStorage.getItem(`first-day-offer-${odId}`);
       if (hasSeenOffer) return;
 
-      // Si acaba de completar nivel 1, mostrar inmediatamente
-      if (levelJustCompleted === 1) {
-        setTimeout(() => setShow(true), 1500);
+      // Trigger principal: justo tras completar nivel 3
+      if (levelJustCompleted === 3) {
+        setShow(true);
         return;
       }
 

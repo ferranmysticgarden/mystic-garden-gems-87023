@@ -578,10 +578,11 @@ const Index = () => {
       }
 
       // CAMBIO 2 — tras ganar nivel 1 por primera vez, intro de personalizar
+      // La flag se marca al cerrar el modal (onAccept/onDismiss), no aquí,
+      // para evitar que se "queme" si el modal queda pisado por otra UI.
       if (currentLevel.id === 1 && !localStorage.getItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN)) {
-        try { localStorage.setItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN, 'true'); } catch {}
         trackEvent('customize_intro_shown', {});
-        setTimeout(() => setShowCustomizeIntro(true), 1200);
+        setShowCustomizeIntro(true);
       }
 
       if (currentLevel.id === 1 && isSupported && permission === 'default') {
@@ -1230,8 +1231,8 @@ const Index = () => {
       )}
       {/* Review prompt — shown ONCE after completing level 10 */}
       <ReviewPrompt level={lastCompletedLevel} />
-      {/* First Day Offer - after level 1 completion */}
-      {gameState.completedLevels.length >= 1 && (
+      {/* First Day Offer - after level 3 completion (anti-avalanche guarded) */}
+      {!autoPopupsBlocked && gameState.completedLevels.length >= 1 && (
         <FirstDayOffer
           levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
@@ -1480,11 +1481,18 @@ const Index = () => {
         />
       )}
 
-      {/* CAMBIO 2 — Customize intro modal (post-level-1, una sola vez) */}
-      {showCustomizeIntro && (
+      {/* CAMBIO 2 — Customize intro modal (post-level-1, una sola vez, anti-avalancha) */}
+      {showCustomizeIntro && !autoPopupsBlocked && (
         <CustomizeIntroModal
-          onAccept={() => { setShowCustomizeIntro(false); setScreen("customize"); }}
-          onDismiss={() => setShowCustomizeIntro(false)}
+          onAccept={() => {
+            try { localStorage.setItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN, 'true'); } catch {}
+            setShowCustomizeIntro(false);
+            setScreen("customize");
+          }}
+          onDismiss={() => {
+            try { localStorage.setItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN, 'true'); } catch {}
+            setShowCustomizeIntro(false);
+          }}
         />
       )}
 
