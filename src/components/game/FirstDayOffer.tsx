@@ -19,7 +19,7 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
   const odId = user?.id || 'guest';
 
   useEffect(() => {
-    // Mostrar después de nivel 3 O si es cuenta nueva (<2h)
+    // Mostrar solo justo tras completar nivel 3.
     const checkEligibility = async () => {
       const hasSeenOffer = localStorage.getItem(`first-day-offer-${odId}`);
       if (hasSeenOffer) return;
@@ -28,30 +28,6 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
       if (levelJustCompleted === 3) {
         setShow(true);
         return;
-      }
-
-      // For guests: show after level 1 only (no profile check needed)
-      if (!user?.id) return;
-
-      // Fallback for authenticated: mostrar si cuenta es muy nueva (< 2 horas)
-      try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('created_at')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!profile?.created_at) return;
-
-        const accountAge = Date.now() - new Date(profile.created_at).getTime();
-        const twoHours = 2 * 60 * 60 * 1000;
-
-        if (accountAge < twoHours) {
-          setShow(true);
-        }
-      } catch (e) {
-        console.error('[FirstDayOffer] Error checking eligibility:', e);
       }
     };
 
