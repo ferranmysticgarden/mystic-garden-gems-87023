@@ -1231,8 +1231,8 @@ const Index = () => {
       )}
       {/* Review prompt — shown ONCE after completing level 10 */}
       <ReviewPrompt level={lastCompletedLevel} />
-      {/* First Day Offer - after level 1 completion */}
-      {gameState.completedLevels.length >= 1 && (
+      {/* First Day Offer - after level 3 completion (anti-avalanche guarded) */}
+      {!autoPopupsBlocked && gameState.completedLevels.length >= 1 && (
         <FirstDayOffer
           levelJustCompleted={lastCompletedLevel}
           onPurchaseSuccess={() => {
