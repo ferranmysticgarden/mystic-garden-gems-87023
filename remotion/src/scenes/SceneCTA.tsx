@@ -1,21 +1,15 @@
 import React from "react";
-import { AbsoluteFill, Img, staticFile, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, staticFile, Img, random } from "remotion";
 import { BigText } from "../components/BigText";
 import { C } from "../theme";
 
 const GoldRays: React.FC = () => {
   const frame = useCurrentFrame();
-  const rot = frame * 0.4;
   return (
-    <div
+    <AbsoluteFill
       style={{
-        position: "absolute",
-        width: 2400,
-        height: 2400,
-        left: "50%",
-        top: "50%",
-        transform: `translate(-50%, -50%) rotate(${rot}deg)`,
-        background: `conic-gradient(from 0deg, transparent 0deg, rgba(255,210,74,0.25) 12deg, transparent 24deg, transparent 36deg, rgba(255,210,74,0.25) 48deg, transparent 60deg, transparent 72deg, rgba(255,210,74,0.25) 84deg, transparent 96deg, transparent 108deg, rgba(255,210,74,0.25) 120deg, transparent 132deg, transparent 144deg, rgba(255,210,74,0.25) 156deg, transparent 168deg, transparent 180deg, rgba(255,210,74,0.25) 192deg, transparent 204deg, transparent 216deg, rgba(255,210,74,0.25) 228deg, transparent 240deg, transparent 252deg, rgba(255,210,74,0.25) 264deg, transparent 276deg, transparent 288deg, rgba(255,210,74,0.25) 300deg, transparent 312deg, transparent 324deg, rgba(255,210,74,0.25) 336deg, transparent 348deg)`,
+        background: `conic-gradient(from ${frame * 2}deg at 50% 55%, rgba(255,210,74,0.6) 0deg, transparent 20deg, rgba(255,61,154,0.5) 40deg, transparent 60deg, rgba(255,210,74,0.6) 80deg, transparent 100deg, rgba(168,255,96,0.4) 120deg, transparent 140deg)`,
+        mixBlendMode: "screen",
       }}
     />
   );
@@ -23,17 +17,18 @@ const GoldRays: React.FC = () => {
 
 const Confetti: React.FC = () => {
   const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
+  const colors = [C.gold, C.pink, C.lime, C.cyan, C.white, C.magenta];
   return (
     <>
-      {Array.from({ length: 60 }).map((_, i) => {
-        const seed = i * 53;
-        const x = (seed * 17) % 1920;
-        const startY = -50 - (seed % 400);
-        const speed = 4 + ((seed % 5));
-        const y = startY + frame * speed;
-        const colors = [C.gold, C.pink, C.lime, C.white, C.goldDeep];
-        const color = colors[i % colors.length];
-        const rot = frame * (6 + (i % 6));
+      {new Array(120).fill(0).map((_, i) => {
+        const seed = random(`c-${i}`);
+        const startDelay = seed * 30;
+        const t = frame - startDelay;
+        if (t < 0) return null;
+        const x = seed * width;
+        const y = ((t * (5 + seed * 8)) % (height + 200)) - 100;
+        const rot = t * (4 + seed * 8);
         return (
           <div
             key={i}
@@ -42,10 +37,10 @@ const Confetti: React.FC = () => {
               left: x,
               top: y,
               width: 16,
-              height: 22,
-              background: color,
+              height: 26,
+              background: colors[i % colors.length],
               transform: `rotate(${rot}deg)`,
-              boxShadow: `0 0 8px ${color}`,
+              boxShadow: `0 0 10px ${colors[i % colors.length]}`,
             }}
           />
         );
@@ -57,32 +52,34 @@ const Confetti: React.FC = () => {
 export const SceneCTA: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const fairyS = spring({ frame, fps, config: { damping: 8, stiffness: 100 } });
-  const fairyScale = interpolate(fairyS, [0, 1], [0.3, 1]);
-  const bob = Math.sin(frame / 14) * 14;
+
+  const fairyIn = spring({ frame, fps, config: { damping: 8, stiffness: 100 } });
+  const bob = Math.sin(frame / 10) * 20;
+  const fairyScale = interpolate(fairyIn, [0, 1], [0.3, 1]);
+  const fairyRot = Math.sin(frame / 14) * 4;
 
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
       <GoldRays />
+      <Confetti />
+
       <div
         style={{
           position: "absolute",
-          top: "50%",
           left: "50%",
-          transform: `translate(-50%, -50%) translateY(${bob}px) scale(${fairyScale})`,
-          filter: `drop-shadow(0 20px 40px rgba(0,0,0,0.6))`,
+          top: "55%",
+          transform: `translate(-50%, calc(-50% + ${bob}px)) scale(${fairyScale}) rotate(${fairyRot}deg)`,
+          filter: `drop-shadow(0 20px 60px rgba(255,210,74,0.8))`,
         }}
       >
-        <Img src={staticFile("fairy.png")} style={{ width: 600, height: "auto" }} />
+        <Img src={staticFile("fairy_trophy.png")} style={{ width: 600, height: "auto" }} />
       </div>
-      <Confetti />
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 80 }}>
-        {frame >= 30 && (
-          <BigText delay={30} size={160} color={C.gold}>
-            Descarga<br />gratis ya
-          </BigText>
-        )}
-      </AbsoluteFill>
+
+      <div style={{ position: "absolute", top: 60, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+        <BigText delay={20} size={180} color={C.gold} stroke={C.magenta} pulse>
+          ¡Descárgalo ya!
+        </BigText>
+      </div>
     </AbsoluteFill>
   );
 };

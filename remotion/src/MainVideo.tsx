@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Series, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+import { AbsoluteFill, Series, useCurrentFrame, useVideoConfig, interpolate, random } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Outfit";
 import { C } from "./theme";
 import { SceneHook } from "./scenes/SceneHook";
@@ -9,41 +9,68 @@ import { SceneMemories } from "./scenes/SceneMemories";
 import { SceneCTA } from "./scenes/SceneCTA";
 import { SceneLogo } from "./scenes/SceneLogo";
 
-loadFont("normal", { weights: ["400", "700", "800", "900"], subsets: ["latin"] });
+const { fontFamily } = loadFont("normal", { weights: ["400", "700", "900"], subsets: ["latin"] });
 
-const Background: React.FC = () => {
+// Mystic animated background — purple→magenta with shifting golden glow
+const MysticBG: React.FC = () => {
   const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  const t = frame / durationInFrames;
-  const hue = interpolate(t, [0, 1], [0, 30]);
+  const { width, height } = useVideoConfig();
+  const cx = 50 + Math.sin(frame / 60) * 18;
+  const cy = 50 + Math.cos(frame / 70) * 14;
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(ellipse at ${30 + Math.sin(frame / 60) * 20}% ${40 + Math.cos(frame / 80) * 20}%, ${C.purpleLight} 0%, ${C.purple} 35%, ${C.purpleDeep} 100%)`,
-        filter: `hue-rotate(${hue}deg)`,
+        background: `radial-gradient(circle at ${cx}% ${cy}%, ${C.purpleLight} 0%, ${C.purple} 30%, ${C.purpleDeep} 70%, #050010 100%)`,
       }}
     >
-      {/* Floating sparkles */}
-      {Array.from({ length: 30 }).map((_, i) => {
-        const seed = i * 37.7;
-        const x = (seed * 13) % 100;
-        const y = ((seed * 7) + frame * 0.3) % 110;
-        const size = 3 + ((i * 11) % 6);
-        const op = 0.3 + 0.5 * Math.abs(Math.sin((frame + i * 9) / 20));
+      {/* secondary magenta glow */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle at ${100 - cx}% ${100 - cy}%, rgba(192,38,211,0.35), transparent 50%)`,
+          mixBlendMode: "screen",
+        }}
+      />
+      {/* gold rays sweeping */}
+      <AbsoluteFill
+        style={{
+          background: `conic-gradient(from ${(frame * 0.8) % 360}deg at 50% 50%, transparent 0deg, rgba(255,210,74,0.12) 30deg, transparent 60deg, transparent 180deg, rgba(255,61,154,0.10) 210deg, transparent 240deg, transparent 360deg)`,
+          mixBlendMode: "screen",
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
+// Magical floating sparkles — gold, pink, cyan
+const Sparkles: React.FC<{ count?: number }> = ({ count = 90 }) => {
+  const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
+  const items = new Array(count).fill(0).map((_, i) => i);
+  const colors = [C.gold, C.pink, C.cyan, C.white, C.lime];
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      {items.map((i) => {
+        const seed = random(`sp-${i}`);
+        const seed2 = random(`sp2-${i}`);
+        const x = seed * width;
+        const baseY = seed2 * height;
+        const y = (baseY + frame * (1 + seed * 2)) % height;
+        const size = 4 + seed * 12;
+        const op = 0.4 + Math.sin((frame + i * 7) / 12) * 0.4;
+        const color = colors[i % colors.length];
         return (
           <div
             key={i}
             style={{
               position: "absolute",
-              left: `${x}%`,
-              top: `${y}%`,
+              left: x - size / 2,
+              top: y - size / 2,
               width: size,
               height: size,
               borderRadius: "50%",
-              background: i % 3 === 0 ? C.gold : i % 3 === 1 ? C.pink : C.white,
-              opacity: op,
-              boxShadow: `0 0 ${size * 3}px currentColor`,
-              color: i % 3 === 0 ? C.gold : i % 3 === 1 ? C.pink : C.white,
+              background: color,
+              opacity: Math.max(0, op),
+              boxShadow: `0 0 ${size * 2}px ${color}`,
             }}
           />
         );
@@ -54,15 +81,16 @@ const Background: React.FC = () => {
 
 export const MainVideo: React.FC = () => {
   return (
-    <AbsoluteFill style={{ fontFamily: "Outfit, sans-serif", overflow: "hidden" }}>
-      <Background />
+    <AbsoluteFill style={{ fontFamily, background: C.purpleDeep }}>
+      <MysticBG />
+      <Sparkles count={80} />
       <Series>
         <Series.Sequence durationInFrames={90}><SceneHook /></Series.Sequence>
         <Series.Sequence durationInFrames={120}><SceneReveal /></Series.Sequence>
         <Series.Sequence durationInFrames={240}><ScenePlay /></Series.Sequence>
         <Series.Sequence durationInFrames={210}><SceneMemories /></Series.Sequence>
-        <Series.Sequence durationInFrames={180}><SceneCTA /></Series.Sequence>
-        <Series.Sequence durationInFrames={60}><SceneLogo /></Series.Sequence>
+        <Series.Sequence durationInFrames={150}><SceneCTA /></Series.Sequence>
+        <Series.Sequence durationInFrames={90}><SceneLogo /></Series.Sequence>
       </Series>
     </AbsoluteFill>
   );
