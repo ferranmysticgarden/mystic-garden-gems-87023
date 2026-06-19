@@ -34,13 +34,12 @@ export const SceneMemories: React.FC = () => {
   const frame = useCurrentFrame();
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-      <PhotoCard src="photos/family.jpg" label="Familia ❤" delay={0} x={-450} y={-80} rot={-9} />
-      <PhotoCard src="photos/dog.jpg" label="Mi peque 🐶" delay={20} x={0} y={-30} rot={4} />
-      <PhotoCard src="photos/beach.jpg" label="Verano 🌴" delay={40} x={450} y={20} rot={8} />
-      <PhotoCard src="photos/cake.jpg" label="Cumple 🎂" delay={60} x={-200} y={250} rot={-5} />
-      <PhotoCard src="photos/sunset.jpg" label="Atardecer 🌅" delay={80} x={260} y={290} rot={6} />
+      <PhotoCard src="photos/family.jpg" label="Familia" delay={0} x={-560} y={120} rot={-9} />
+      <PhotoCard src="photos/dog.jpg" label="Mi peque" delay={20} x={-180} y={180} rot={4} />
+      <PhotoCard src="photos/beach.jpg" label="Verano" delay={40} x={220} y={150} rot={-3} />
+      <PhotoCard src="photos/cake.jpg" label="Cumple" delay={60} x={580} y={210} rot={8} />
 
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 40 }}>
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 50 }}>
         {frame >= 110 && (
           <BigText delay={110} size={130} color={C.gold}>
             Tus recuerdos.<br />Tu juego.
