@@ -30,15 +30,15 @@ export const BigText: React.FC<{
         fontSize: size,
         fontWeight: 900,
         color,
-        letterSpacing: -2,
+        letterSpacing: -1,
         lineHeight: 0.95,
         textAlign: "center",
         textTransform: "uppercase",
-        WebkitTextStroke: `4px ${stroke}`,
-        textShadow: `0 8px 0 ${stroke}, 0 12px 30px rgba(0,0,0,0.5)`,
+        textShadow: `0 4px 0 ${stroke}, 0 8px 0 ${stroke}, 0 12px 24px rgba(0,0,0,0.6)`,
         transform: `scale(${scale})`,
         opacity,
         padding: "0 60px",
+        fontFamily: "Outfit, Arial Black, sans-serif",
       }}
     >
       {children}
