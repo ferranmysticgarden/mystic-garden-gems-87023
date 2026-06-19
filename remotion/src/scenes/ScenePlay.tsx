@@ -65,8 +65,8 @@ export const ScenePlay: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: `translate(-50%, -50%) scale(${zoom}) rotate(${tilt}deg)` }}>
-        <Board cells={board} size={120} pops={pops} />
+      <div style={{ position: "absolute", top: "48%", left: "50%", transform: `translate(-50%, -50%) scale(${zoom * 0.85}) rotate(${tilt}deg)` }}>
+        <Board cells={board} size={110} pops={pops} />
       </div>
 
       {/* Combo labels */}
