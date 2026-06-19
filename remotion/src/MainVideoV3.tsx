@@ -161,7 +161,8 @@ const ClipScene: React.FC<{ src: string; direction?: "in" | "out" | "panL" | "pa
 };
 
 // Final logo lockup
-const LogoLockup: React.FC = () => {
+const LogoLockup: React.FC<{ vertical?: boolean }> = ({ vertical = false }) => {
+  const k = vertical ? 0.62 : 1;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame: frame - 20, fps, config: { damping: 9, stiffness: 140 } });
