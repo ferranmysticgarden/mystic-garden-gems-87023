@@ -49,8 +49,8 @@ export const ScenePlay: React.FC = () => {
   // Match 2: column 3, cells 0-2 (pop at frame 110)
   // Match 3: row 3, cells 1-3 (pop at frame 180)
   const pops: Record<string, number> = {
-    "1-1": 30, "1-2": 30, "1-3": 30,
-    "0-3": 110, "1-3": 110, "2-3": 110,
+    "1-0": 30, "1-1": 30, "1-2": 30,
+    "0-4": 110, "1-4": 110, "2-4": 110,
     "3-1": 180, "3-2": 180, "3-3": 180,
   };
 
