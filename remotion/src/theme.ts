@@ -21,4 +21,13 @@ export const PHOTOS = [
   "photos/beach.jpg",
 ];
 
-export const FLOWERS = ["🌸", "🌺", "🌻", "🌷", "🌹", "🌼", "💐"];
+// Flower SVG colors (used instead of emoji for reliability)
+export const FLOWER_COLORS = [
+  { petal: "#FF5FA8", center: "#FFD24A" },
+  { petal: "#A8FF60", center: "#E2A100" },
+  { petal: "#FFD24A", center: "#FF5FA8" },
+  { petal: "#6B2FB3", center: "#FFD24A" },
+  { petal: "#FF8FB3", center: "#A8FF60" },
+  { petal: "#5FD0FF", center: "#FFD24A" },
+];
+export const FLOWERS = ["F0", "F1", "F2", "F3", "F4", "F5"];
