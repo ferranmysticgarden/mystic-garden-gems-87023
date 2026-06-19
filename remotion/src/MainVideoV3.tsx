@@ -186,7 +186,7 @@ const LogoLockup: React.FC<{ vertical?: boolean }> = ({ vertical = false }) => {
         <div
           style={{
             fontFamily: display.fontFamily,
-            fontSize: 180,
+            fontSize: 180 * k,
             lineHeight: 0.95,
             color: "white",
             letterSpacing: "0.02em",
@@ -199,7 +199,7 @@ const LogoLockup: React.FC<{ vertical?: boolean }> = ({ vertical = false }) => {
           style={{
             fontFamily: body.fontFamily,
             fontWeight: 900,
-            fontSize: 56,
+            fontSize: 56 * k,
             color: "#FFD93D",
             marginTop: 14,
             letterSpacing: "0.15em",
@@ -215,7 +215,7 @@ const LogoLockup: React.FC<{ vertical?: boolean }> = ({ vertical = false }) => {
           transform: `scale(${ctaPulse})`,
           fontFamily: body.fontFamily,
           fontWeight: 900,
-          fontSize: 80,
+          fontSize: 80 * k,
           color: "white",
           background: "linear-gradient(90deg,#E91E63,#FF9800)",
           padding: "24px 60px",
