@@ -30,7 +30,7 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/mystic_promo_horizontal_30s_es.mp4",
+  outputLocation: "/mnt/documents/mystic_promo_horizontal_30s_es_v2.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 2,
