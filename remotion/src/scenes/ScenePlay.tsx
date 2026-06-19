@@ -93,7 +93,7 @@ export const ScenePlay: React.FC = () => {
               fontSize: 110,
               fontWeight: 900,
               color: C.gold,
-              WebkitTextStroke: `5px ${C.purpleDeep}`,
+              fontFamily: "Outfit, Arial Black, sans-serif",
               textShadow: `0 6px 0 ${C.purpleDeep}, 0 16px 30px rgba(0,0,0,0.6)`,
               opacity: op,
               letterSpacing: -2,
