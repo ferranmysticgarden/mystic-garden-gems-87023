@@ -82,7 +82,7 @@ export const Tile: React.FC<{ cell: Cell; size: number; popAt?: number; removed?
       }}
     >
       {cell.kind === "flower" ? (
-        cell.value
+        <FlowerSVG idx={FLOWERS.indexOf(cell.value)} size={size} />
       ) : (
         <img
           src={staticFile(cell.value)}
