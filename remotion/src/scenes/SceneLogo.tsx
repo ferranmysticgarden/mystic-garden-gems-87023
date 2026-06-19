@@ -24,7 +24,7 @@ export const SceneLogo: React.FC = () => {
             fontSize: 140,
             fontWeight: 900,
             color: C.gold,
-            WebkitTextStroke: `5px ${C.purpleDeep}`,
+            fontFamily: "Outfit, Arial Black, sans-serif",
             textShadow: `0 8px 0 ${C.purpleDeep}, 0 20px 40px rgba(0,0,0,0.7)`,
             letterSpacing: -3,
             lineHeight: 0.9,
