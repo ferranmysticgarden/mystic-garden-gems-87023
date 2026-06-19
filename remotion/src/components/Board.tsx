@@ -1,6 +1,28 @@
 import React from "react";
 import { staticFile, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
-import { C, FLOWERS } from "../theme";
+import { C, FLOWERS, FLOWER_COLORS } from "../theme";
+
+const FlowerSVG: React.FC<{ idx: number; size: number }> = ({ idx, size }) => {
+  const { petal, center } = FLOWER_COLORS[idx % FLOWER_COLORS.length];
+  return (
+    <svg viewBox="0 0 100 100" width={size * 0.85} height={size * 0.85}>
+      {[0, 60, 120, 180, 240, 300].map((a) => (
+        <ellipse
+          key={a}
+          cx={50}
+          cy={28}
+          rx={14}
+          ry={20}
+          fill={petal}
+          transform={`rotate(${a} 50 50)`}
+          stroke="rgba(0,0,0,0.15)"
+          strokeWidth={1.5}
+        />
+      ))}
+      <circle cx={50} cy={50} r={11} fill={center} stroke="rgba(0,0,0,0.2)" strokeWidth={1.5} />
+    </svg>
+  );
+};
 
 interface Cell {
   kind: "flower" | "photo";
