@@ -161,7 +161,8 @@ const ClipScene: React.FC<{ src: string; direction?: "in" | "out" | "panL" | "pa
 };
 
 // Final logo lockup
-const LogoLockup: React.FC = () => {
+const LogoLockup: React.FC<{ vertical?: boolean }> = ({ vertical = false }) => {
+  const k = vertical ? 0.62 : 1;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame: frame - 20, fps, config: { damping: 9, stiffness: 140 } });
@@ -185,7 +186,7 @@ const LogoLockup: React.FC = () => {
         <div
           style={{
             fontFamily: display.fontFamily,
-            fontSize: 180,
+            fontSize: 180 * k,
             lineHeight: 0.95,
             color: "white",
             letterSpacing: "0.02em",
@@ -198,7 +199,7 @@ const LogoLockup: React.FC = () => {
           style={{
             fontFamily: body.fontFamily,
             fontWeight: 900,
-            fontSize: 56,
+            fontSize: 56 * k,
             color: "#FFD93D",
             marginTop: 14,
             letterSpacing: "0.15em",
@@ -214,7 +215,7 @@ const LogoLockup: React.FC = () => {
           transform: `scale(${ctaPulse})`,
           fontFamily: body.fontFamily,
           fontWeight: 900,
-          fontSize: 80,
+          fontSize: 80 * k,
           color: "white",
           background: "linear-gradient(90deg,#E91E63,#FF9800)",
           padding: "24px 60px",
@@ -231,50 +232,52 @@ const LogoLockup: React.FC = () => {
   );
 };
 
-export const MainVideoV3: React.FC = () => {
+export const MainVideoV3: React.FC<{ vertical?: boolean }> = ({ vertical = false }) => {
+  // Scale text down for 9:16 since canvas is narrower
+  const k = vertical ? 0.62 : 1;
   return (
     <AbsoluteFill style={{ background: "black" }}>
       {/* Scene 1: Hook — fairy among mushrooms */}
       <Sequence from={0} durationInFrames={SCENE}>
         <ClipScene src={CLIPS[0]} direction="in" />
         <Grade />
-        <KineticText text="ENTRA AL JARDÍN MÁGICO" accent="#FFD93D" highlight="MÁGICO" size={130} yPercent={75} delay={8} />
+        <KineticText text="ENTRA AL JARDÍN MÁGICO" accent="#FFD93D" highlight="MÁGICO" size={130 * k} yPercent={vertical ? 70 : 75} delay={8} />
       </Sequence>
 
       {/* Scene 2: Forest flythrough */}
       <Sequence from={SCENE} durationInFrames={SCENE}>
         <ClipScene src={CLIPS[1]} direction="panR" />
         <Grade />
-        <KineticText text="UN MUNDO QUE COBRA VIDA" accent="#7CFFB2" highlight="VIDA" size={120} yPercent={78} delay={10} />
+        <KineticText text="UN MUNDO QUE COBRA VIDA" accent="#7CFFB2" highlight="VIDA" size={120 * k} yPercent={vertical ? 72 : 78} delay={10} />
       </Sequence>
 
       {/* Scene 3: Board explosion */}
       <Sequence from={SCENE * 2} durationInFrames={SCENE}>
         <ClipScene src={CLIPS[2]} direction="in" />
         <Grade />
-        <KineticText text="COMBINA · EXPLOTA · GANA" accent="#FFD93D" highlight="GANA" size={120} yPercent={78} delay={6} />
+        <KineticText text="COMBINA · EXPLOTA · GANA" accent="#FFD93D" highlight="GANA" size={120 * k} yPercent={vertical ? 72 : 78} delay={6} />
       </Sequence>
 
       {/* Scene 4: Photos transform — THE USP */}
       <Sequence from={SCENE * 3} durationInFrames={SCENE}>
         <ClipScene src={CLIPS[3]} direction="out" />
         <Grade />
-        <KineticText text="CON TUS FOTOS" accent="#FF4FB7" highlight="TUS FOTOS" size={170} yPercent={12} delay={6} />
-        <KineticText text="EN CADA PARTIDA" accent="#FFD93D" size={100} yPercent={82} delay={20} />
+        <KineticText text="CON TUS FOTOS" accent="#FF4FB7" highlight="TUS FOTOS" size={170 * k} yPercent={vertical ? 10 : 12} delay={6} />
+        <KineticText text="EN CADA PARTIDA" accent="#FFD93D" size={100 * k} yPercent={vertical ? 80 : 82} delay={20} />
       </Sequence>
 
       {/* Scene 5: Combo explosion */}
       <Sequence from={SCENE * 4} durationInFrames={SCENE}>
         <ClipScene src={CLIPS[4]} direction="in" />
         <Grade />
-        <KineticText text="CIENTOS DE NIVELES" accent="#FFD93D" highlight="NIVELES" size={130} yPercent={76} delay={6} />
+        <KineticText text="CIENTOS DE NIVELES" accent="#FFD93D" highlight="NIVELES" size={130 * k} yPercent={vertical ? 72 : 76} delay={6} />
       </Sequence>
 
       {/* Scene 6: Castle finale + CTA */}
       <Sequence from={SCENE * 5} durationInFrames={SCENE}>
         <ClipScene src={CLIPS[5]} direction="in" />
         <Grade />
-        <LogoLockup />
+        <LogoLockup vertical={vertical} />
       </Sequence>
 
       {/* White flashes between cuts for energy */}
@@ -286,5 +289,7 @@ export const MainVideoV3: React.FC = () => {
     </AbsoluteFill>
   );
 };
+
+export const MainVideoV3Vertical: React.FC = () => <MainVideoV3 vertical />;
 
 export const V3_DURATION = TOTAL;

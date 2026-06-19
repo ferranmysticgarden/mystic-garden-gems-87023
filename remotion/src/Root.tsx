@@ -1,6 +1,6 @@
 import { Composition } from "remotion";
 import { MainVideo } from "./MainVideo";
-import { MainVideoV3, V3_DURATION } from "./MainVideoV3";
+import { MainVideoV3, MainVideoV3Vertical, V3_DURATION } from "./MainVideoV3";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -19,6 +19,14 @@ export const RemotionRoot: React.FC = () => (
       fps={30}
       width={1920}
       height={1080}
+    />
+    <Composition
+      id="v3-vertical"
+      component={MainVideoV3Vertical}
+      durationInFrames={V3_DURATION}
+      fps={30}
+      width={1080}
+      height={1920}
     />
   </>
 );
