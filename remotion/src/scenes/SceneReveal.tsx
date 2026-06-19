@@ -19,14 +19,14 @@ export const SceneReveal: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: `translate(-50%, -50%) translateX(${shake}px) scale(${scale})` }}>
-        <Board cells={showPhotos ? photoBoard : flowerBoard} size={120} />
+      <div style={{ position: "absolute", top: "42%", left: "50%", transform: `translate(-50%, -50%) translateX(${shake}px) scale(${scale * 0.85})` }}>
+        <Board cells={showPhotos ? photoBoard : flowerBoard} size={110} />
       </div>
       <AbsoluteFill style={{ background: C.white, opacity: flash, pointerEvents: "none" }} />
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 100 }}>
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 40 }}>
         {frame >= 40 && (
-          <BigText delay={40} size={150} color={C.gold} stroke={C.purpleDeep}>
-            No. Juega con<br />tus fotos
+          <BigText delay={40} size={110} color={C.gold} stroke={C.purpleDeep}>
+            No. Juega con tus fotos
           </BigText>
         )}
       </AbsoluteFill>
