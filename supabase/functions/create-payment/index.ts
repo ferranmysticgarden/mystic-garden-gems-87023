@@ -54,14 +54,15 @@ const PRODUCT_PRICES: Record<string, string> = {
   "chest_silver": "price_1TAmplB6GI8NmIPnlk5g494D",
   "chest_gold": "price_1TAlj7B6GI8NmIPnletS1ST2",
   // ============ NUEVOS PRODUCTOS 2026-06 ============
-  // IMPORTANTE: estos price IDs son placeholders. El usuario debe crear los productos
-  // reales en Stripe Dashboard (cuenta FCG, sufijo B6GI8NmIPn) y reemplazar.
-  // Mientras tanto el fallback inline (price_data) abajo asegura que el checkout funciona.
   "piggy_bank_unlock": "price_TBD_piggy_bank_unlock_B6GI8NmIPn",
   "season_pass_premium": "price_TBD_season_pass_premium_B6GI8NmIPn",
   "streak_bonus_5days": "price_TBD_streak_bonus_5days_B6GI8NmIPn",
   "streak_bonus_7days": "price_TBD_streak_bonus_7days_B6GI8NmIPn",
   "streak_3wins_bonus": "price_TBD_streak_3wins_bonus_B6GI8NmIPn",
+  "theme_racing_unlock": "price_1TkmscPxvUpv2yakoao9rMCq",
+  "theme_pirates_unlock": "price_1TkmwYPxvUpv2yaks8h2NGZY",
+  "theme_unicorns_unlock": "price_1Tkmx2PxvUpv2yakfWuj2Uj4",
+  "theme_manga_unlock": "price_1TkmxoPxvUpv2yakkCHlGeVN",
 };
 
 serve(async (req) => {
@@ -155,6 +156,10 @@ serve(async (req) => {
       streak_bonus_5days: { amount: 399, name: "🔥 Bono Racha 5 Días" },
       streak_bonus_7days: { amount: 599, name: "🔥 Bono Racha 7 Días" },
       streak_3wins_bonus: { amount: 199, name: "⚡ Bono 3 Victorias Seguidas" },
+      theme_racing_unlock: { amount: 299, name: "🏎️ Carreras F1" },
+      theme_pirates_unlock: { amount: 299, name: "🏴‍☠️ Piratas" },
+      theme_unicorns_unlock: { amount: 299, name: "🦄 Unicornios Mágicos" },
+      theme_manga_unlock: { amount: 299, name: "🌸 Manga / Anime" },
     };
     const fallback = FALLBACK_PRICE_DATA[productId];
 

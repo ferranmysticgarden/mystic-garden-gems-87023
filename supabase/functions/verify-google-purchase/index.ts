@@ -49,6 +49,10 @@ const PRODUCT_REWARDS: Record<string, { gems?: number; lives?: number; powerups?
   "streak_bonus_5days": { gems: 200, lives: 5 },
   "streak_bonus_7days": { gems: 400, lives: 10, powerups: 3 },
   "streak_3wins_bonus": { gems: 100, lives: 3, powerups: 2 },
+  "theme_racing_unlock": {},
+  "theme_pirates_unlock": {},
+  "theme_unicorns_unlock": {},
+  "theme_manga_unlock": {},
 };
 
 const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
@@ -128,6 +132,10 @@ const GOOGLE_PLAY_PRODUCT_ALIASES: Record<string, string> = {
   streakbonus5days: 'streak_bonus_5days',
   streakbonus7days: 'streak_bonus_7days',
   streak3winsbonus: 'streak_3wins_bonus',
+  themeracingunlockb6gi8nmipn: 'theme_racing_unlock',
+  themepiratesunlockb6gi8nmipn: 'theme_pirates_unlock',
+  themeunicornsunlockb6gi8nmipn: 'theme_unicorns_unlock',
+  thememangaunlockb6gi8nmipn: 'theme_manga_unlock',
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
@@ -607,6 +615,13 @@ serve(async (req) => {
           expires_at: null,
         });
       }
+
+      if (["theme_racing_unlock", "theme_pirates_unlock", "theme_unicorns_unlock", "theme_manga_unlock"].includes(productId)) {
+        await supabaseClient.functions.invoke('unlock-theme', {
+          body: { themeId: productId.replace('theme_', '').replace('_unlock', ''), method: 'purchase', purchaseRef: orderId || purchaseKey },
+        });
+      }
+
 
       await supabaseClient.from('app_events').insert({
         event_name: 'gp_purchase_granted',

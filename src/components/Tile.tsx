@@ -1,9 +1,11 @@
 import { memo, useCallback } from 'react';
 import { useTileSkin } from '@/hooks/useTileSkin';
 import { TILE_DEFAULT_EMOJIS, type TileType } from '@/constants/tileTypes';
+import { useUserThemes } from '@/hooks/useUserThemes';
+import { THEME_TILE_MAP } from '@/data/themes';
 
 interface TileProps {
-  tile: string; // ID canónico (t1..t6) o '' (vacío)
+  tile: string;
   row: number;
   col: number;
   isSelected: boolean;
@@ -15,13 +17,16 @@ interface TileProps {
 
 export const Tile = memo(({ tile, row, col, isSelected, isAnimating, isTarget, isHighlighted, onTileClick }: TileProps) => {
   const skins = useTileSkin();
+  const { activeTheme } = useUserThemes();
   const handleClick = useCallback(() => {
     onTileClick(row, col);
   }, [onTileClick, row, col]);
 
   const tileId = tile as TileType;
   const photo = skins[tileId] ?? null;
+  const themeAsset = THEME_TILE_MAP[activeTheme]?.[tileId];
   const emoji = TILE_DEFAULT_EMOJIS[tileId];
+  const showImage = typeof themeAsset === 'string' && themeAsset.startsWith('/');
 
   return (
     <button
@@ -47,15 +52,11 @@ export const Tile = memo(({ tile, row, col, isSelected, isAnimating, isTarget, i
       }}
     >
       {photo ? (
-        <img
-          src={photo}
-          alt=""
-          loading="eager"
-          draggable={false}
-          className="w-[82%] h-[82%] object-cover rounded-full pointer-events-none"
-        />
+        <img src={photo} alt="" loading="eager" draggable={false} className="w-[82%] h-[82%] object-cover rounded-full pointer-events-none" />
+      ) : showImage ? (
+        <img src={themeAsset} alt="" loading="eager" draggable={false} className="w-[82%] h-[82%] object-contain pointer-events-none" width={1024} height={1024} />
       ) : (
-        <span>{emoji ?? tile}</span>
+        <span>{themeAsset ?? emoji ?? tile}</span>
       )}
     </button>
   );

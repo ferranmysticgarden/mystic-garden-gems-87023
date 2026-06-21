@@ -79,6 +79,9 @@ import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
 import { toast } from "sonner";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
+import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
+import { THEME_MAP, type ThemeId } from "@/data/themes";
+import { useUserThemes } from "@/hooks/useUserThemes";
 type Screen = "menu" | "game" | "levels" | "shop" | "customize";
 const Index = () => {
   const navigate = useNavigate();
@@ -110,10 +113,12 @@ const Index = () => {
     reloadFromDB,
   } = useGameState();
 
+  const { maybeAutoUnlockByLevel, setActiveTheme } = useUserThemes();
   const { newlyUnlocked, clearNewlyUnlocked, checkLevelAchievements, checkGemsAchievements } = useAchievements(
     user?.id,
   );
   const [screen, setScreenState] = useState<Screen>("menu");
+  const [recentUnlockedTheme, setRecentUnlockedTheme] = useState<ThemeId | null>(null);
 
   // Sync music volume with screen changes
   const setScreen = useCallback(
@@ -558,13 +563,11 @@ const Index = () => {
   };
   const handleWin = useCallback(
     async (stars: number, reward: { gems?: number }) => {
-      // CAMBIO 3 — bonus: añade gemas pero NO avanza currentLevel
       const isBonus = !!currentLevel.bonus;
       completeLevel(currentLevel.id, reward, !isBonus);
       trackEvent('level_completed', { level: currentLevel.id, bonus: isBonus });
       toast.success(`${t("game.win")}${reward.gems ? ` +${reward.gems} 💎` : ""}`);
 
-      // Reset consecutive losses on win
       setConsecutiveLosses(0);
       setConsecutiveLossesByLevel((prev) => ({ ...prev, [currentLevel.id]: 0 }));
 
@@ -573,13 +576,8 @@ const Index = () => {
 
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
-      if (reward.gems) {
-        await checkGemsAchievements(gameState.gems + reward.gems);
-      }
+      if (reward.gems) await checkGemsAchievements(gameState.gems + reward.gems);
 
-      // CAMBIO 2 — tras ganar nivel 1 por primera vez, intro de personalizar
-      // La flag se marca al cerrar el modal (onAccept/onDismiss), no aquí,
-      // para evitar que se "queme" si el modal queda pisado por otra UI.
       if (currentLevel.id === 1 && !localStorage.getItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN)) {
         trackEvent('customize_intro_shown', {});
         setShowCustomizeIntro(true);
@@ -604,15 +602,11 @@ const Index = () => {
         setTimeout(() => setShowPostVictoryOffer(true), 1500);
       }
 
-      // T5 piggy
       if (!isBonus) piggyBank.deposit(5).catch(() => {});
       if (!isBonus) seasonPass.addProgress(50).catch(() => {});
       const newStreak = isBonus ? winStreak.count : winStreak.registerWin();
 
-      // CAMBIO 7 — tras 3 victorias seguidas, marcar power-up para el siguiente nivel
-      if (!isBonus && newStreak >= 3) {
-        markWinStreakPowerupPending();
-      }
+      if (!isBonus && newStreak >= 3) markWinStreakPowerupPending();
 
       if (newStreak === 3 && !isBonus) {
         const lastShown = parseInt(localStorage.getItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN) ?? "0", 10);
@@ -622,7 +616,13 @@ const Index = () => {
         }
       }
 
-      // CAMBIO 10 — banner Zeigarnik al volver al menú
+      if (!isBonus) {
+        const unlockedThemeId = await maybeAutoUnlockByLevel();
+        if (unlockedThemeId) {
+          setRecentUnlockedTheme(unlockedThemeId);
+        }
+      }
+
       setShowEndOfSessionBanner(true);
       setScreen("menu");
     },
@@ -941,8 +941,22 @@ const Index = () => {
     );
   }
   if (screen === "customize") {
-    return <CustomizeScreen onBack={() => setScreen("menu")} />;
+    return (
+      <>
+        <CustomizeScreen onBack={() => setScreen("menu")} />
+        <ThemeUnlockedModal
+          theme={recentUnlockedTheme ? THEME_MAP[recentUnlockedTheme] : null}
+          open={!!recentUnlockedTheme}
+          onClose={() => setRecentUnlockedTheme(null)}
+          onUseNow={() => {
+            if (recentUnlockedTheme) setActiveTheme(recentUnlockedTheme);
+            setRecentUnlockedTheme(null);
+          }}
+        />
+      </>
+    );
   }
+
   if (screen === "levels") {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
     return (
