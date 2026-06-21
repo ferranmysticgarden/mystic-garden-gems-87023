@@ -126,6 +126,7 @@ export const GameScreen = ({
     setShuffleTrigger(0);
     setUndoTrigger(0);
     setIsHammerActive(false);
+    madeAnyComboOrBigRef.current = false;
     // CAMBIO 7 — consumir power-up por racha si está pendiente (3 victorias seguidas)
     if (!level.bonus && consumeWinStreakPowerup()) {
       try {
