@@ -24,6 +24,22 @@
     "super": "SUPER COMBO!",
     "unbelievable": "INACREDITÁVEL!"
   },
+  "combo_tips": {
+    "intro": {
+      "title": "Faça MAIS pontos!",
+      "body": "Junte 4 ou mais peças iguais para ganhar um BÔNUS gigante. E se encadear combos enquanto as peças caem… multiplica seus pontos até x5!",
+      "cascade": "Cascatas: x2, x3, x4, até x5!",
+      "cta": "Vamos lá!"
+    },
+    "defeat": {
+      "title": "Dica para a próxima",
+      "body": "Tente juntar 4 ou 5 peças em linha. Cada combinação grande vale muito mais, e as cascatas multiplicam seus pontos."
+    },
+    "first_big": {
+      "title": "INCRÍVEL!",
+      "body": "Você acabou de fazer um MEGA combo! Continue assim para multiplicar seus pontos."
+    }
+  },
   "celebration": {
     "title": "INCRÍVEL!",
     "subtitle": "Você completou o nível {level}!",
