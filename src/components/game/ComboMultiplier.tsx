@@ -1,45 +1,60 @@
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface ComboMultiplierProps {
+  /** Multiplicador actual de la cascada (1 = jugada inicial, 2-5 = combos) */
   combo: number;
   onComboEnd?: () => void;
 }
 
+/**
+ * CAMBIO SCORING — feedback visual del multiplicador por cascada.
+ * Se muestra centrado, con bounce + glow dorado, sólo cuando combo >= 2.
+ */
 export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => {
-  const [show, setShow] = useState(false);
+  const { t } = useLanguage();
+  const [visibleCombo, setVisibleCombo] = useState(0);
 
   useEffect(() => {
-    if (combo >= 3) {
-      setShow(true);
+    if (combo >= 2) {
+      setVisibleCombo(combo);
       const timer = setTimeout(() => {
-        setShow(false);
+        setVisibleCombo(0);
         onComboEnd?.();
-      }, 800); // Reducido de 2000ms a 800ms para no molestar
+      }, 850);
       return () => clearTimeout(timer);
     }
   }, [combo, onComboEnd]);
 
-  if (!show || combo < 3) return null;
+  if (visibleCombo < 2) return null;
 
-  const getMultiplierText = () => {
-    if (combo >= 7) return '🔥x4';
-    if (combo >= 5) return '⚡x3';
-    if (combo >= 3) return '✨x2';
-    return '';
+  const getGradient = () => {
+    if (visibleCombo >= 5) return 'from-red-500 via-orange-500 to-yellow-400';
+    if (visibleCombo >= 4) return 'from-orange-500 via-yellow-500 to-amber-400';
+    if (visibleCombo >= 3) return 'from-yellow-500 via-amber-400 to-yellow-300';
+    return 'from-amber-400 via-yellow-300 to-amber-200';
   };
 
-  const getColorClass = () => {
-    if (combo >= 7) return 'from-red-500 to-orange-500';
-    if (combo >= 5) return 'from-yellow-500 to-orange-500';
-    return 'from-purple-500 to-pink-500';
-  };
+  const label = t('combo.x') || 'COMBO';
 
-  // Ahora aparece en la esquina superior derecha, pequeño y sin bloquear
   return (
-    <div className="fixed top-20 right-4 pointer-events-none z-40 animate-in slide-in-from-right duration-300">
-      <div className={`bg-gradient-to-r ${getColorClass()} px-3 py-1.5 rounded-full shadow-lg`}>
-        <p className="text-lg font-bold text-white drop-shadow">
-          {getMultiplierText()}
+    <div
+      key={visibleCombo}
+      className="fixed inset-0 pointer-events-none z-[55] flex items-center justify-center"
+    >
+      <div
+        className={`bg-gradient-to-br ${getGradient()} px-8 py-4 rounded-3xl animate-scale-in`}
+        style={{
+          boxShadow:
+            '0 0 60px rgba(251, 191, 36, 0.9), 0 0 120px rgba(251, 191, 36, 0.5), inset 0 2px 0 rgba(255,255,255,0.4)',
+          border: '3px solid rgba(255, 255, 255, 0.6)',
+        }}
+      >
+        <p
+          className="text-5xl font-black text-white tracking-wider drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
+          style={{ textShadow: '0 0 20px rgba(255,255,255,0.8)' }}
+        >
+          {label} x{visibleCombo}!
         </p>
       </div>
     </div>
