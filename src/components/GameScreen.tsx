@@ -906,6 +906,15 @@ export const GameScreen = ({
           firstMatchMade={firstMatchMade}
         />
 
+        {/* Tip 1 — Intro a combos antes del primer nivel score */}
+        <ComboTipIntroModal
+          levelId={level.id}
+          isScoreLevel={level.objective.type === 'score' && !level.bonus}
+        />
+
+        {/* Tip 3 — Primera vez con match-5+ o combo x3+ */}
+        <FirstBigComboBanner trigger={firstBigTrigger} levelId={level.id} />
+
         {/* Premium Win Celebration */}
         {gameOver && won && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && !showRescueOffer && (
           <LevelCompleteCelebration
