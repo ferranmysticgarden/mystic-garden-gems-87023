@@ -18,6 +18,12 @@
     "shuffle": "Shuffle",
     "undo": "Undo"
   },
+  "combo": {
+    "x": "COMBO",
+    "amazing": "AMAZING!",
+    "super": "SUPER COMBO!",
+    "unbelievable": "UNBELIEVABLE!"
+  },
   "celebration": {
     "title": "AMAZING!",
     "subtitle": "You completed level {level}!",
