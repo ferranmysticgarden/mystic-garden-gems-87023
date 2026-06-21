@@ -364,6 +364,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_themes: {
+        Row: {
+          guest_session_id: string | null
+          id: string
+          level_at_unlock: number | null
+          theme_id: string
+          unlocked_at: string
+          unlocked_method: Database["public"]["Enums"]["theme_unlock_method"]
+          user_id: string | null
+        }
+        Insert: {
+          guest_session_id?: string | null
+          id?: string
+          level_at_unlock?: number | null
+          theme_id: string
+          unlocked_at?: string
+          unlocked_method: Database["public"]["Enums"]["theme_unlock_method"]
+          user_id?: string | null
+        }
+        Update: {
+          guest_session_id?: string | null
+          id?: string
+          level_at_unlock?: number | null
+          theme_id?: string
+          unlocked_at?: string
+          unlocked_method?: Database["public"]["Enums"]["theme_unlock_method"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -379,6 +409,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      theme_unlock_method: "level" | "purchase" | "gems"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -507,6 +538,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      theme_unlock_method: ["level", "purchase", "gems"],
     },
   },
 } as const
