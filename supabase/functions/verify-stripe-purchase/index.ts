@@ -49,13 +49,15 @@ const PRODUCT_REWARDS: Record<string, {
   first_purchase: { gems: 500, lives: 20, noAdsDays: 1 },
   extra_moves: { powerups: 5 },
   // ============ NUEVOS PRODUCTOS 2026-06 (catálogo additive, lógica intacta) ============
-  // piggy_bank_unlock y season_pass_premium: reward 0 aquí. El reward real lo entrega
-  // unlock-piggy-bank / unlock-season-pass tras validar el user_purchases insertado abajo.
   piggy_bank_unlock: {},
   season_pass_premium: {},
   streak_bonus_5days: { gems: 200, lives: 5 },
   streak_bonus_7days: { gems: 400, lives: 10, powerups: 3 },
   streak_3wins_bonus: { gems: 100, lives: 3, powerups: 2 },
+  theme_racing_unlock: {},
+  theme_pirates_unlock: {},
+  theme_unicorns_unlock: {},
+  theme_manga_unlock: {},
 };
 
 const getGrantWindowStartIso = (sessionCreatedSeconds: number) =>
@@ -215,6 +217,12 @@ const applyStripeGrant = async (
     product_id: productId,
     stripe_session_id: sessionId,
   });
+
+  if (["theme_racing_unlock", "theme_pirates_unlock", "theme_unicorns_unlock", "theme_manga_unlock"].includes(productId)) {
+    await supabaseAdmin.functions.invoke('unlock-theme', {
+      body: { themeId: productId.replace('theme_', '').replace('_unlock', ''), method: 'purchase', purchaseRef: sessionId },
+    });
+  }
 };
 
 /**

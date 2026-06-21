@@ -50,6 +50,10 @@ const PRODUCT_REWARDS: Record<
   unlimited_lives_30min: { unlimitedLivesMinutes: 30 },
   first_purchase: { gems: 500, lives: 20, noAdsDays: 1 },
   extra_moves: { powerups: 5 },
+  theme_racing_unlock: {},
+  theme_pirates_unlock: {},
+  theme_unicorns_unlock: {},
+  theme_manga_unlock: {},
 };
 
 const getGrantWindowStartIso = (sessionCreatedSeconds: number) =>

@@ -348,4 +348,32 @@ export const PRODUCTS: Product[] = [
     lives: 3,
     powerups: 2,
   },
+  {
+    id: 'theme_racing_unlock',
+    nameKey: 'themes.racing.name',
+    name: '🏎️ Carreras F1',
+    price: 2.99,
+    currency: 'EUR',
+  },
+  {
+    id: 'theme_pirates_unlock',
+    nameKey: 'themes.pirates.name',
+    name: '🏴‍☠️ Piratas',
+    price: 2.99,
+    currency: 'EUR',
+  },
+  {
+    id: 'theme_unicorns_unlock',
+    nameKey: 'themes.unicorns.name',
+    name: '🦄 Unicornios Mágicos',
+    price: 2.99,
+    currency: 'EUR',
+  },
+  {
+    id: 'theme_manga_unlock',
+    nameKey: 'themes.manga.name',
+    name: '🌸 Manga / Anime',
+    price: 2.99,
+    currency: 'EUR',
+  },
 ];
