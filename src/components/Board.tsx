@@ -13,7 +13,8 @@ interface Position {
 }
 
 interface BoardProps {
-  onMatch: (tiles: string[], count: number) => void;
+  /** CAMBIO SCORING — emite tiles, tamaño del grupo más grande de esta cascada, y nº de cascada (1 = jugada inicial, 2+ = combos automáticos) */
+  onMatch: (tiles: string[], biggestGroupSize: number, cascadeStep: number) => void;
   onMove: () => void;
   targetTile?: string;
   disabled?: boolean;
