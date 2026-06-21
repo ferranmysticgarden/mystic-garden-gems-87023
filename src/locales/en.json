@@ -24,6 +24,22 @@
     "super": "SUPER COMBO!",
     "unbelievable": "UNBELIEVABLE!"
   },
+  "combo_tips": {
+    "intro": {
+      "title": "Score BIG points!",
+      "body": "Match 4 or more pieces in a row for a HUGE bonus. Chain combos as pieces fall to multiply your score up to x5!",
+      "cascade": "Cascades: x2, x3, x4, up to x5!",
+      "cta": "Let's go!"
+    },
+    "defeat": {
+      "title": "Tip for next time",
+      "body": "Try to match 4 or 5 pieces in a row. Big matches score way more, and cascades multiply your points."
+    },
+    "first_big": {
+      "title": "AMAZING!",
+      "body": "You just made a MEGA combo! Keep it up to multiply your score."
+    }
+  },
   "celebration": {
     "title": "AMAZING!",
     "subtitle": "You completed level {level}!",
