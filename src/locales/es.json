@@ -24,6 +24,22 @@
     "super": "¡SUPER COMBO!",
     "unbelievable": "¡INCREÍBLE!"
   },
+  "combo_tips": {
+    "intro": {
+      "title": "¡Consigue MÁS puntos!",
+      "body": "Junta 4 o más fichas iguales para conseguir un BONUS gigante. Y si encadenas combos al caer las fichas… ¡multiplicas tus puntos hasta x5!",
+      "cascade": "Cascadas: x2, x3, x4, ¡hasta x5!",
+      "cta": "¡Vamos!"
+    },
+    "defeat": {
+      "title": "Truco para la próxima",
+      "body": "Intenta juntar 4 o 5 fichas en línea. Cada match grande vale mucho más, y las cascadas multiplican tus puntos."
+    },
+    "first_big": {
+      "title": "¡INCREÍBLE!",
+      "body": "¡Acabas de hacer un MEGA combo! Sigue así para multiplicar tus puntos."
+    }
+  },
   "celebration": {
     "title": "¡INCREÍBLE!",
     "subtitle": "¡Has completado el nivel {level}!",
