@@ -361,6 +361,7 @@ export const GameScreen = ({
 
     // Tracking — match grande
     if (biggestGroupSize >= 4) {
+      madeAnyComboOrBigRef.current = true;
       try {
         trackEvent('big_match_made', {
           size: biggestGroupSize >= 6 ? 6 : biggestGroupSize,
@@ -368,6 +369,13 @@ export const GameScreen = ({
           score_earned: gained,
         });
       } catch {}
+      // Tip 3 — primera vez en la vida del jugador con match-5+
+      if (biggestGroupSize >= 5) {
+        setFirstBigTrigger((n) => n + 1);
+      }
+    }
+    if (mult >= 2) {
+      madeAnyComboOrBigRef.current = true;
     }
 
     // FX visuales escalados
