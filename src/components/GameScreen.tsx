@@ -97,6 +97,9 @@ export const GameScreen = ({
   const cascadeMaxRef = useRef(1);
   const cascadeTotalRef = useRef(0);
   const cascadeEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tips educativos
+  const madeAnyComboOrBigRef = useRef(false);
+  const [firstBigTrigger, setFirstBigTrigger] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const [showNearWinMessage, setShowNearWinMessage] = useState(false);
   const [isHammerActive, setIsHammerActive] = useState(false);
