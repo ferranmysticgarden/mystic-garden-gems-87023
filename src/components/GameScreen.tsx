@@ -932,6 +932,17 @@ export const GameScreen = ({
               <h2 className="text-4xl font-bold mb-4 text-destructive">
                 {t('game.lose')}
               </h2>
+
+              {/* Tip 2 — Banner educativo si perdió nivel score sin combos */}
+              <ComboTipDefeatBanner
+                levelId={level.id}
+                shouldShow={
+                  level.objective.type === 'score' &&
+                  !level.bonus &&
+                  !madeAnyComboOrBigRef.current
+                }
+              />
+
               <Button
                 onClick={() => {
                   const target = level.bonus ? 0 : level.objective.count;
