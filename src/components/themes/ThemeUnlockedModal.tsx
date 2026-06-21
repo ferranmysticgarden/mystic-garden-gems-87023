@@ -18,8 +18,9 @@ export const ThemeUnlockedModal = ({ theme, open, onUseNow, onClose }: ThemeUnlo
       <div className="bg-card border w-full max-w-sm p-6 text-center" style={{ borderRadius: 8 }}>
         <div className="text-5xl mb-3">🧚✨</div>
         <h2 className="text-xl font-bold mb-2">{t('themes.unlocked_title')}</h2>
-        <p className="text-sm text-muted-foreground mb-4">{t('themes.unlocked_body', { theme: t(theme.nameKey) })}</p>
+        <p className="text-sm text-muted-foreground mb-4">{t('themes.unlocked_body')} {t(theme.nameKey)}</p>
         <div className="grid grid-cols-3 gap-2 mb-5">
+
           {theme.iconPaths.slice(0, 6).map((path, idx) => (
             <div key={idx} className="aspect-square border bg-muted/40 p-1" style={{ borderRadius: 6 }}>
               <img src={path} alt="" className="w-full h-full object-contain" loading="lazy" width={1024} height={1024} />

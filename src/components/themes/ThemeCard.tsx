@@ -25,7 +25,8 @@ export const ThemeCard = ({ theme, unlocked, active, loading, onApply, onUnlockW
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate">{t(theme.nameKey)}</p>
             <p className="text-[11px] text-muted-foreground">
-              {theme.tier === 'premium' ? t('themes.premium') : theme.unlockLevel ? t('themes.unlock_at_level', { level: theme.unlockLevel }) : t('themes.available_now')}
+              {theme.tier === 'premium' ? t('themes.premium') : theme.unlockLevel ? `${t('themes.unlock_at_level')} ${theme.unlockLevel}` : t('themes.available_now')}
+
             </p>
           </div>
         </div>
