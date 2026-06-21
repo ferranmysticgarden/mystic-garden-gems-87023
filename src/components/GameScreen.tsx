@@ -15,6 +15,9 @@ import { Level6Offer } from './game/Level6Offer';
 import { UltimateRescueOffer } from './game/UltimateRescueOffer';
 import { LevelCompleteCelebration } from './effects/LevelCompleteCelebration';
 import { Level1Tutorial } from './game/Level1Tutorial';
+import { ComboTipIntroModal } from './game/ComboTipIntroModal';
+import { ComboTipDefeatBanner } from './game/ComboTipDefeatBanner';
+import { FirstBigComboBanner } from './game/FirstBigComboBanner';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { TILE_DEFAULT_EMOJIS, type TileType } from '@/constants/tileTypes';
 import { useTileSkin } from '@/hooks/useTileSkin';
@@ -94,6 +97,9 @@ export const GameScreen = ({
   const cascadeMaxRef = useRef(1);
   const cascadeTotalRef = useRef(0);
   const cascadeEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tips educativos
+  const madeAnyComboOrBigRef = useRef(false);
+  const [firstBigTrigger, setFirstBigTrigger] = useState(0);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const [showNearWinMessage, setShowNearWinMessage] = useState(false);
   const [isHammerActive, setIsHammerActive] = useState(false);
@@ -120,6 +126,7 @@ export const GameScreen = ({
     setShuffleTrigger(0);
     setUndoTrigger(0);
     setIsHammerActive(false);
+    madeAnyComboOrBigRef.current = false;
     // CAMBIO 7 — consumir power-up por racha si está pendiente (3 victorias seguidas)
     if (!level.bonus && consumeWinStreakPowerup()) {
       try {
@@ -354,6 +361,7 @@ export const GameScreen = ({
 
     // Tracking — match grande
     if (biggestGroupSize >= 4) {
+      madeAnyComboOrBigRef.current = true;
       try {
         trackEvent('big_match_made', {
           size: biggestGroupSize >= 6 ? 6 : biggestGroupSize,
@@ -361,6 +369,13 @@ export const GameScreen = ({
           score_earned: gained,
         });
       } catch {}
+      // Tip 3 — primera vez en la vida del jugador con match-5+
+      if (biggestGroupSize >= 5) {
+        setFirstBigTrigger((n) => n + 1);
+      }
+    }
+    if (mult >= 2) {
+      madeAnyComboOrBigRef.current = true;
     }
 
     // FX visuales escalados
@@ -396,6 +411,7 @@ export const GameScreen = ({
       }
       if (max >= 3) {
         setSuperComboMax(max);
+        setFirstBigTrigger((n) => n + 1);
         try {
           trackEvent('super_combo_celebrated', { level: level.id, multiplier: max });
         } catch {}
@@ -890,6 +906,15 @@ export const GameScreen = ({
           firstMatchMade={firstMatchMade}
         />
 
+        {/* Tip 1 — Intro a combos antes del primer nivel score */}
+        <ComboTipIntroModal
+          levelId={level.id}
+          isScoreLevel={level.objective.type === 'score' && !level.bonus}
+        />
+
+        {/* Tip 3 — Primera vez con match-5+ o combo x3+ */}
+        <FirstBigComboBanner trigger={firstBigTrigger} levelId={level.id} />
+
         {/* Premium Win Celebration */}
         {gameOver && won && !showCloseDefeatOffer && !showFlashOffer && !showDefeatPacksOffer && !showBuyMovesOffer && !showLevel6Offer && !showRescueOffer && (
           <LevelCompleteCelebration
@@ -907,6 +932,17 @@ export const GameScreen = ({
               <h2 className="text-4xl font-bold mb-4 text-destructive">
                 {t('game.lose')}
               </h2>
+
+              {/* Tip 2 — Banner educativo si perdió nivel score sin combos */}
+              <ComboTipDefeatBanner
+                levelId={level.id}
+                shouldShow={
+                  level.objective.type === 'score' &&
+                  !level.bonus &&
+                  !madeAnyComboOrBigRef.current
+                }
+              />
+
               <Button
                 onClick={() => {
                   const target = level.bonus ? 0 : level.objective.count;
