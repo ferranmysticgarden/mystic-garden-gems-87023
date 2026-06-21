@@ -442,11 +442,18 @@ export const Board = ({
         // Move NOT consumed — swap was invalid
       } else {
         onMove(); // Only consume move on valid swap
+        // CAMBIO SCORING — nueva jugada: reset paso de cascada (removeMatches lo incrementará a 1)
+        cascadeStepRef.current = 0;
         matchCountRef.current += 1;
         backgroundMusic.duck(400);
-        playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
+        if (!hasFiredFirstMatchRef.current) {
+          hasFiredFirstMatchRef.current = true;
+          try { onFirstValidMatch?.(); } catch {}
+        }
+      }
+    }, 80);
         if (!hasFiredFirstMatchRef.current) {
           hasFiredFirstMatchRef.current = true;
           try { onFirstValidMatch?.(); } catch {}
