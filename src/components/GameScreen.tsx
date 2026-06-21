@@ -7,6 +7,7 @@ import { CloseDefeatOffer } from './game/CloseDefeatOffer';
 import { GemsBanner } from './game/GemsBanner';
 import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
+import { SuperComboBanner } from './game/SuperComboBanner';
 import { BuyMovesOffer } from './game/BuyMovesOffer';
 import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { Level10Paywall } from './game/Level10Paywall';
@@ -89,6 +90,10 @@ export const GameScreen = ({
   const [rescueData, setRescueData] = useState({ attempts: 0, movesShort: 0, levelNumber: 1 });
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
+  const [superComboMax, setSuperComboMax] = useState(0);
+  const cascadeMaxRef = useRef(1);
+  const cascadeTotalRef = useRef(0);
+  const cascadeEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const [showNearWinMessage, setShowNearWinMessage] = useState(false);
   const [isHammerActive, setIsHammerActive] = useState(false);
@@ -331,9 +336,41 @@ export const GameScreen = ({
     }
   }, [moves, score, collected, checkWinCondition, gameOver, level, playVictorySound, playLoseSound, getProgressPercentage, estimateMovesNeeded, hasPurchasedOnce, saveCurrentLevelPurchaseState]);
 
-  const handleMatch = useCallback((tiles: string[], count: number) => {
-    setScore((prev) => prev + count * 10);
-    setCombo((prev) => prev + 1);
+  const handleMatch = useCallback((tiles: string[], biggestGroupSize: number, cascadeStep: number) => {
+    // CAMBIO SCORING — bonus por tamaño de match
+    const base =
+      biggestGroupSize >= 6 ? 300 :
+      biggestGroupSize === 5 ? 150 :
+      biggestGroupSize === 4 ? 80 :
+      30;
+    const mult = Math.min(Math.max(cascadeStep, 1), 5);
+    const gained = base * mult;
+
+    setScore((prev) => prev + gained);
+    setCombo(mult);
+
+    if (mult > cascadeMaxRef.current) cascadeMaxRef.current = mult;
+    cascadeTotalRef.current += gained;
+
+    // Tracking — match grande
+    if (biggestGroupSize >= 4) {
+      try {
+        trackEvent('big_match_made', {
+          size: biggestGroupSize >= 6 ? 6 : biggestGroupSize,
+          level: level.id,
+          score_earned: gained,
+        });
+      } catch {}
+    }
+
+    // FX visuales escalados
+    try {
+      if (biggestGroupSize >= 6) {
+        confetti({ particleCount: 100, spread: 90, origin: { y: 0.5 }, colors: ['#FFD700', '#FFA500', '#FF6B00'] });
+      } else if (biggestGroupSize >= 5) {
+        confetti({ particleCount: 60, spread: 75, origin: { y: 0.5 }, colors: ['#FFD700', '#FFFFFF'] });
+      }
+    } catch {}
 
     setCollected((prev) => {
       const next = { ...prev };
@@ -342,7 +379,32 @@ export const GameScreen = ({
       });
       return next;
     });
-  }, []);
+
+    // Detección fin de cadena (idle ~700ms sin nuevos matches)
+    if (cascadeEndTimerRef.current) clearTimeout(cascadeEndTimerRef.current);
+    cascadeEndTimerRef.current = setTimeout(() => {
+      const max = cascadeMaxRef.current;
+      const total = cascadeTotalRef.current;
+      if (max >= 2) {
+        try {
+          trackEvent('combo_chain', {
+            max_multiplier: max,
+            total_score: total,
+            level: level.id,
+          });
+        } catch {}
+      }
+      if (max >= 3) {
+        setSuperComboMax(max);
+        try {
+          trackEvent('super_combo_celebrated', { level: level.id, multiplier: max });
+        } catch {}
+      }
+      cascadeMaxRef.current = 1;
+      cascadeTotalRef.current = 0;
+      setCombo(0);
+    }, 700);
+  }, [level.id]);
 
   const handleMove = useCallback(() => {
     setMoves((prev) => Math.max(0, prev - 1));
@@ -750,6 +812,7 @@ export const GameScreen = ({
 
         {/* Combo Multiplier */}
         <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
+        <SuperComboBanner maxMultiplier={superComboMax} onDone={() => setSuperComboMax(0)} />
 
         {/* Close Defeat Offer */}
         {showCloseDefeatOffer && (

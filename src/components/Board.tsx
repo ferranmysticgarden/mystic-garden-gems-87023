@@ -13,7 +13,8 @@ interface Position {
 }
 
 interface BoardProps {
-  onMatch: (tiles: string[], count: number) => void;
+  /** CAMBIO SCORING — emite tiles, tamaño del grupo más grande de esta cascada, y nº de cascada (1 = jugada inicial, 2+ = combos automáticos) */
+  onMatch: (tiles: string[], biggestGroupSize: number, cascadeStep: number) => void;
   onMove: () => void;
   targetTile?: string;
   disabled?: boolean;
@@ -51,6 +52,7 @@ export const Board = ({
   const [isShuffling, setIsShuffling] = useState(false);
   const [showShuffleMessage, setShowShuffleMessage] = useState(false);
   const matchCountRef = useRef(0);
+  const cascadeStepRef = useRef(0);
   const hasFiredFirstMatchRef = useRef(false);
   
   // Use mystical fairy sounds
@@ -269,12 +271,46 @@ export const Board = ({
     return matches;
   }, []);
 
+  // CAMBIO SCORING — calcula tamaño del grupo conectado más grande (gestiona T/L correctamente)
+  const computeBiggestGroup = useCallback((currentBoard: string[][], positions: Position[]): number => {
+    if (positions.length === 0) return 0;
+    const posSet = new Set(positions.map(p => `${p.row}-${p.col}`));
+    const visited = new Set<string>();
+    let maxGroup = 0;
+    for (const p of positions) {
+      const key = `${p.row}-${p.col}`;
+      if (visited.has(key)) continue;
+      const tileType = currentBoard[p.row][p.col];
+      if (!tileType) { visited.add(key); continue; }
+      const stack: Position[] = [p];
+      let size = 0;
+      while (stack.length) {
+        const cur = stack.pop()!;
+        const k = `${cur.row}-${cur.col}`;
+        if (visited.has(k)) continue;
+        visited.add(k);
+        size++;
+        const neighbors = [[1,0],[-1,0],[0,1],[0,-1]];
+        for (const [dr, dc] of neighbors) {
+          const nr = cur.row + dr, nc = cur.col + dc;
+          const nk = `${nr}-${nc}`;
+          if (posSet.has(nk) && !visited.has(nk) && currentBoard[nr][nc] === tileType) {
+            stack.push({ row: nr, col: nc });
+          }
+        }
+      }
+      if (size > maxGroup) maxGroup = size;
+    }
+    return maxGroup;
+  }, []);
+
   const removeMatches = useCallback((currentBoard: string[][], matches: Position[]) => {
     if (matches.length === 0) return currentBoard;
 
     const newBoard = currentBoard.map(row => [...row]);
     const matchedTiles: string[] = [];
-    
+    const biggestGroup = computeBiggestGroup(currentBoard, matches);
+
     // Animate tiles before removing
     const animatingKeys = new Set<string>();
     matches.forEach(({ row, col }) => {
@@ -315,11 +351,15 @@ export const Board = ({
       }
       
       setBoard(newBoard);
-      onMatch(matchedTiles, matches.length);
+      // CAMBIO SCORING — incrementa paso de cascada y emite tamaño real del grupo + sonido escalado
+      cascadeStepRef.current += 1;
+      const step = cascadeStepRef.current;
+      try { playMatchSound(Math.max(0, step - 1)); } catch {}
+      onMatch(matchedTiles, biggestGroup, step);
     }, 90);
 
     return newBoard;
-  }, [onMatch]);
+  }, [onMatch, adaptiveBoost, targetTile, computeBiggestGroup, playMatchSound]);
 
   // Check for no valid moves after board settles
   useEffect(() => {
@@ -402,9 +442,10 @@ export const Board = ({
         // Move NOT consumed — swap was invalid
       } else {
         onMove(); // Only consume move on valid swap
+        // CAMBIO SCORING — nueva jugada: reset paso de cascada (removeMatches lo incrementará a 1)
+        cascadeStepRef.current = 0;
         matchCountRef.current += 1;
         backgroundMusic.duck(400);
-        playMatchSound(matchCountRef.current);
         removeMatches(newBoard, matches);
         setIsSwapping(false);
         if (!hasFiredFirstMatchRef.current) {
@@ -413,7 +454,7 @@ export const Board = ({
         }
       }
     }, 80);
-  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound, onFirstValidMatch]);
+  }, [board, findMatches, removeMatches, onMove, playInvalidSound, onFirstValidMatch]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;

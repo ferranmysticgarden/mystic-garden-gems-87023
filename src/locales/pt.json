@@ -18,6 +18,12 @@
     "shuffle": "Embaralhar",
     "undo": "Desfazer"
   },
+  "combo": {
+    "x": "COMBO",
+    "amazing": "INCRÍVEL!",
+    "super": "SUPER COMBO!",
+    "unbelievable": "INACREDITÁVEL!"
+  },
   "celebration": {
     "title": "INCRÍVEL!",
     "subtitle": "Você completou o nível {level}!",
