@@ -454,13 +454,7 @@ export const Board = ({
         }
       }
     }, 80);
-        if (!hasFiredFirstMatchRef.current) {
-          hasFiredFirstMatchRef.current = true;
-          try { onFirstValidMatch?.(); } catch {}
-        }
-      }
-    }, 80);
-  }, [board, findMatches, removeMatches, onMove, playInvalidSound, playMatchSound, onFirstValidMatch]);
+  }, [board, findMatches, removeMatches, onMove, playInvalidSound, onFirstValidMatch]);
 
   const handleTileClick = useCallback((row: number, col: number) => {
     if (disabled) return;
