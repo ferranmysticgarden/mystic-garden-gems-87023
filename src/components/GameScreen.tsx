@@ -411,6 +411,7 @@ export const GameScreen = ({
       }
       if (max >= 3) {
         setSuperComboMax(max);
+        setFirstBigTrigger((n) => n + 1);
         try {
           trackEvent('super_combo_celebrated', { level: level.id, multiplier: max });
         } catch {}
