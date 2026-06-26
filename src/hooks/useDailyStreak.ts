@@ -109,59 +109,27 @@ export const useDailyStreak = () => {
     if (!user?.id || !streakData.canClaimToday) return null;
 
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const reward = streakData.todayReward;
+      // BUGFIX: el UPDATE directo a no_ads_until era bloqueado por
+      // guard_game_progress_client_updates (días 3, 5, 7). Movemos
+      // toda la lógica a la edge function con service-role.
+      const { data, error } = await supabase.functions.invoke('claim-daily-streak', {
+        body: {},
+      });
 
-      // Get current game state
-      const { data: gameState, error: fetchError } = await supabase
-        .from('game_progress')
-        .select('gems, lives, no_ads_until, current_streak, max_streak')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      const currentGems = gameState?.gems || 0;
-      const currentLives = Math.min((gameState?.lives || 0) + reward.lives, 10); // Cap at 10 lives
-      
-      // Calculate no ads time — write to no_ads_until, NOT unlimited_lives_until
-      let noAdsUntil = gameState?.no_ads_until 
-        ? new Date(gameState.no_ads_until as string) 
-        : null;
-      
-      if (reward.noAdsMinutes > 0) {
-        const now = new Date();
-        if (!noAdsUntil || noAdsUntil < now) {
-          noAdsUntil = new Date(now.getTime() + reward.noAdsMinutes * 60 * 1000);
-        } else {
-          noAdsUntil = new Date(noAdsUntil.getTime() + reward.noAdsMinutes * 60 * 1000);
-        }
+      if (error) throw error;
+      if (!data?.success) {
+        console.error('Error claiming daily reward:', data?.error || 'unknown');
+        return null;
       }
 
-      const newStreak = streakData.currentStreak;
-      const newMaxStreak = Math.max(gameState?.max_streak || 0, newStreak);
+      const reward = data.reward as DailyReward;
+      const today = new Date().toISOString().split('T')[0];
 
-      // Update database
-      const { error: updateError } = await supabase
-        .from('game_progress')
-        .update({
-          gems: currentGems + reward.gems,
-          lives: currentLives,
-          current_streak: newStreak,
-          max_streak: newMaxStreak,
-          last_login_date: today,
-          streak_claimed_today: true,
-          no_ads_until: noAdsUntil?.toISOString() || null,
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Update local state
       setStreakData(prev => ({
         ...prev,
         canClaimToday: false,
-        maxStreak: newMaxStreak,
+        currentStreak: data.currentStreak ?? prev.currentStreak,
+        maxStreak: data.maxStreak ?? prev.maxStreak,
         lastLoginDate: today,
       }));
 
@@ -170,7 +138,7 @@ export const useDailyStreak = () => {
       console.error('Error claiming daily reward:', error);
       return null;
     }
-  }, [user?.id, streakData]);
+  }, [user?.id, streakData.canClaimToday]);
 
   return {
     streakData,
