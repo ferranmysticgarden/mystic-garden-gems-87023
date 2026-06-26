@@ -973,6 +973,16 @@ const Index = () => {
   return (
     <>
     <PurchaseLoadingOverlay />
+    <ThemeUnlockedModal
+      theme={recentUnlockedTheme ? THEME_MAP[recentUnlockedTheme] : null}
+      open={!!recentUnlockedTheme}
+      onClose={() => setRecentUnlockedTheme(null)}
+      onUseNow={() => {
+        if (recentUnlockedTheme) setActiveTheme(recentUnlockedTheme);
+        setRecentUnlockedTheme(null);
+        setScreen("customize");
+      }}
+    />
     <div className="min-h-screen px-4 py-6 md:py-10 relative z-10">
       <div className="max-w-md mx-auto flex min-h-[calc(100vh-3rem)] flex-col justify-center">
         {/* User Info & Music Control */}
