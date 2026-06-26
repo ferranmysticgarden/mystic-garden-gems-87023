@@ -370,7 +370,6 @@ serve(async (req) => {
         );
         logStep("✅ Theme unlocked via webhook", { themeId });
       }
-    }
     } catch (grantError) {
       logStep("ERROR applying Stripe grant", {
         error: grantError instanceof Error ? grantError.message : String(grantError),
