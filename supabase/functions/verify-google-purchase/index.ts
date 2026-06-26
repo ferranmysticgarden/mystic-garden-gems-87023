@@ -617,9 +617,11 @@ serve(async (req) => {
       }
 
       if (["theme_racing_unlock", "theme_pirates_unlock", "theme_unicorns_unlock", "theme_manga_unlock"].includes(productId)) {
-        await supabaseClient.functions.invoke('unlock-theme', {
-          body: { themeId: productId.replace('theme_', '').replace('_unlock', ''), method: 'purchase', purchaseRef: orderId || purchaseKey },
-        });
+        const themeId = productId.replace('theme_', '').replace('_unlock', '');
+        await supabaseClient.from('user_themes').upsert(
+          { user_id: userId, theme_id: themeId, unlocked_method: 'purchase' },
+          { onConflict: 'user_id,theme_id', ignoreDuplicates: true },
+        );
       }
 
 
