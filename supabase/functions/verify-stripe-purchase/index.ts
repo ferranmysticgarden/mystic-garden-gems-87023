@@ -219,9 +219,11 @@ const applyStripeGrant = async (
   });
 
   if (["theme_racing_unlock", "theme_pirates_unlock", "theme_unicorns_unlock", "theme_manga_unlock"].includes(productId)) {
-    await supabaseAdmin.functions.invoke('unlock-theme', {
-      body: { themeId: productId.replace('theme_', '').replace('_unlock', ''), method: 'purchase', purchaseRef: sessionId },
-    });
+    const themeId = productId.replace('theme_', '').replace('_unlock', '');
+    await supabaseAdmin.from('user_themes').upsert(
+      { user_id: userId, theme_id: themeId, unlocked_method: 'purchase' },
+      { onConflict: 'user_id,theme_id', ignoreDuplicates: true },
+    );
   }
 };
 

@@ -361,6 +361,15 @@ serve(async (req) => {
           logStep("✅ Game progress created");
         }
       }
+
+      if (["theme_racing_unlock", "theme_pirates_unlock", "theme_unicorns_unlock", "theme_manga_unlock"].includes(productId)) {
+        const themeId = productId.replace('theme_', '').replace('_unlock', '');
+        await supabaseAdmin.from('user_themes').upsert(
+          { user_id: userId, theme_id: themeId, unlocked_method: 'purchase' },
+          { onConflict: 'user_id,theme_id', ignoreDuplicates: true },
+        );
+        logStep("✅ Theme unlocked via webhook", { themeId });
+      }
     } catch (grantError) {
       logStep("ERROR applying Stripe grant", {
         error: grantError instanceof Error ? grantError.message : String(grantError),
