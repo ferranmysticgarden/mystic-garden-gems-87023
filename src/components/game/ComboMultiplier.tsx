@@ -24,6 +24,9 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
       }, 850);
       return () => clearTimeout(timer);
     }
+    // BUGFIX: si el padre resetea combo<2 antes del timeout interno,
+    // ocultar el banner para que no quede permanente en pantalla.
+    setVisibleCombo(0);
   }, [combo, onComboEnd]);
 
   if (visibleCombo < 2) return null;
