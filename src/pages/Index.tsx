@@ -551,6 +551,7 @@ const Index = () => {
   const handlePlayClick = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       // CAMBIO 1 — NO se consume vida al entrar; sólo al perder/abandonar
+      clearPostDefeatOfferLock();
       trackEvent("level_start", {
         level: currentLevel.id,
         source: "play_button",
@@ -558,8 +559,12 @@ const Index = () => {
       });
       setScreen("game");
     } else {
-      trackEvent("no_lives_modal_shown", { trigger: "retry" });
-      setShowNoLivesModal(true);
+      if (isPostDefeatOfferLocked()) {
+        trackEvent("no_lives_modal_suppressed", { trigger: "retry", reason: "post_defeat_offer_lock" });
+      } else {
+        trackEvent("no_lives_modal_shown", { trigger: "retry" });
+        setShowNoLivesModal(true);
+      }
     }
   };
   const handleWin = useCallback(
