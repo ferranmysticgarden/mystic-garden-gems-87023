@@ -720,6 +720,7 @@ const Index = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       selectLevel(levelId);
       // CAMBIO 1 — NO se consume vida al entrar
+      clearPostDefeatOfferLock();
       trackEvent("level_start", {
         level: levelId,
         source: "level_select",
@@ -728,8 +729,12 @@ const Index = () => {
       });
       setScreen("game");
     } else {
-      trackEvent("no_lives_modal_shown", { trigger: "level_select" });
-      setShowNoLivesModal(true);
+      if (isPostDefeatOfferLocked()) {
+        trackEvent("no_lives_modal_suppressed", { trigger: "level_select", reason: "post_defeat_offer_lock" });
+      } else {
+        trackEvent("no_lives_modal_shown", { trigger: "level_select" });
+        setShowNoLivesModal(true);
+      }
     }
   };
   const applyLocalProductEffects = useCallback(
