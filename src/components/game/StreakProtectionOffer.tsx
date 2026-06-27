@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Shield, X, Flame } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
+import { lockPostDefeatOffers } from '@/utils/postDefeatOfferLock';
 
 interface StreakProtectionOfferProps {
   currentStreak: number;
@@ -20,6 +22,8 @@ export const StreakProtectionOffer = ({
 }: StreakProtectionOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
+  useEffect(() => { lockPostDefeatOffers('streak_protection'); }, []);
+
 
   const handleBuy = async () => {
     const success = await createPayment('streak_protection');

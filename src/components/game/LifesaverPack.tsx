@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { Heart, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
+import { lockPostDefeatOffers } from '@/utils/postDefeatOfferLock';
 
 interface LifesaverPackProps {
   onBuy: () => void;
@@ -16,6 +18,9 @@ interface LifesaverPackProps {
 export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
+
+  useEffect(() => { lockPostDefeatOffers('lifesaver_pack'); }, []);
+
 
   const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
     trackEvent('offer_dismissed', {

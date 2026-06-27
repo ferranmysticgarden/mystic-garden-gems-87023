@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
+import { lockPostDefeatOffers } from '@/utils/postDefeatOfferLock';
 
 interface ContinueGameOfferProps {
   progressPercent: number;
@@ -15,6 +17,8 @@ export const ContinueGameOffer = ({
   onExit 
 }: ContinueGameOfferProps) => {
   const { createPayment, loading, getPrice } = usePayment();
+  useEffect(() => { lockPostDefeatOffers('continue_game'); }, []);
+
 
   const handleBuy = async () => {
     const success = await createPayment('continue_game');

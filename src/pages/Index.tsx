@@ -72,6 +72,7 @@ import { LEVELS } from "@/data/levels";
 import { PRODUCTS } from "@/data/products";
 import { markStarterGemsAsPurchased } from "@/utils/purchaseUtils";
 import { canShowStarterGems, markStarterGemsShown, markStarterGemsDismissed } from "@/utils/starterGemsGate";
+import { isPostDefeatOfferLocked, clearPostDefeatOfferLock, lockPostDefeatOffers } from "@/utils/postDefeatOfferLock";
 import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
 import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
@@ -550,6 +551,7 @@ const Index = () => {
   const handlePlayClick = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       // CAMBIO 1 — NO se consume vida al entrar; sólo al perder/abandonar
+      clearPostDefeatOfferLock();
       trackEvent("level_start", {
         level: currentLevel.id,
         source: "play_button",
@@ -557,8 +559,12 @@ const Index = () => {
       });
       setScreen("game");
     } else {
-      trackEvent("no_lives_modal_shown", { trigger: "retry" });
-      setShowNoLivesModal(true);
+      if (isPostDefeatOfferLocked()) {
+        trackEvent("no_lives_modal_suppressed", { trigger: "retry", reason: "post_defeat_offer_lock" });
+      } else {
+        trackEvent("no_lives_modal_shown", { trigger: "retry" });
+        setShowNoLivesModal(true);
+      }
     }
   };
   const handleWin = useCallback(
@@ -667,12 +673,19 @@ const Index = () => {
     setConsecutiveLosses((prev) => {
       const newCount = prev + 1;
       if (newCount >= 3 && currentLevel.id >= 5) {
-        setTimeout(() => setShowFlashOffer(true), 1000);
+        setTimeout(() => {
+          lockPostDefeatOffers("flash_offer");
+          setShowFlashOffer(true);
+        }, 1000);
       }
       return newCount;
     });
     if (currentLevel.id >= 4 && !hasSeenWelcomeOffer() && canShowStarterGems()) {
       setTimeout(() => {
+        if (isPostDefeatOfferLocked()) {
+          trackEvent("offer_suppressed", { offer: "starter_gems", reason: "post_defeat_offer_lock", level: currentLevel.id });
+          return;
+        }
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
         trackEvent("offer_shown", { offer: "starter_gems", productId: "starter_gems", product: "starter_gems", trigger: "defeat", source: "auto_popup", level: currentLevel.id });
         markStarterGemsShown();
@@ -707,6 +720,7 @@ const Index = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       selectLevel(levelId);
       // CAMBIO 1 — NO se consume vida al entrar
+      clearPostDefeatOfferLock();
       trackEvent("level_start", {
         level: levelId,
         source: "level_select",
@@ -715,8 +729,12 @@ const Index = () => {
       });
       setScreen("game");
     } else {
-      trackEvent("no_lives_modal_shown", { trigger: "level_select" });
-      setShowNoLivesModal(true);
+      if (isPostDefeatOfferLocked()) {
+        trackEvent("no_lives_modal_suppressed", { trigger: "level_select", reason: "post_defeat_offer_lock" });
+      } else {
+        trackEvent("no_lives_modal_shown", { trigger: "level_select" });
+        setShowNoLivesModal(true);
+      }
     }
   };
   const applyLocalProductEffects = useCallback(
