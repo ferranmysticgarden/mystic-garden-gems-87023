@@ -152,9 +152,10 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
           <button 
             onClick={handleDismiss}
-            className="absolute top-3 right-3 text-white/70 hover:text-white z-20 transition-colors"
+            aria-label="Cerrar"
+            className="absolute top-3 right-3 z-30 bg-black/60 hover:bg-black/80 rounded-full p-2 text-white shadow-lg transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
 
           <div className="text-center relative z-10">

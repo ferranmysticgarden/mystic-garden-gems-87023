@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Gem, Heart, Sparkles, Loader2 } from 'lucide-react';
+import { Gem, Heart, Sparkles, Loader2, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePayment } from '@/hooks/usePayment';
 import { trackEvent } from '@/lib/trackEvent';
@@ -79,7 +79,14 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-      <div className="gradient-card shadow-card rounded-2xl p-6 max-w-md w-full">
+      <div className="gradient-card shadow-card rounded-2xl p-6 max-w-md w-full relative">
+        <button
+          onClick={() => handleDismiss('no_thanks')}
+          aria-label="Cerrar"
+          className="absolute top-3 right-3 z-20 bg-black/50 hover:bg-black/70 rounded-full p-2 text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <div className="text-center mb-4">
           <div className="text-6xl mb-3">💔</div>
           <p className="text-yellow-400 text-sm font-bold mb-1">🔥 OFERTA EXCLUSIVA - Solo HOY 🔥</p>
