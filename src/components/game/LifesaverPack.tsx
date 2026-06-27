@@ -19,6 +19,9 @@ export const LifesaverPack = ({ onBuy, onDismiss }: LifesaverPackProps) => {
   const { createPayment, loading, getPrice } = usePayment();
   const { language } = useLanguage();
 
+  useEffect(() => { lockPostDefeatOffers('lifesaver_pack'); }, []);
+
+
   const handleDismiss = (reason: 'close_x' | 'no_thanks') => {
     trackEvent('offer_dismissed', {
       offer: 'lifesaver_pack',
