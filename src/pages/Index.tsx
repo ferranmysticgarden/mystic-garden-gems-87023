@@ -673,12 +673,19 @@ const Index = () => {
     setConsecutiveLosses((prev) => {
       const newCount = prev + 1;
       if (newCount >= 3 && currentLevel.id >= 5) {
-        setTimeout(() => setShowFlashOffer(true), 1000);
+        setTimeout(() => {
+          lockPostDefeatOffers("flash_offer");
+          setShowFlashOffer(true);
+        }, 1000);
       }
       return newCount;
     });
     if (currentLevel.id >= 4 && !hasSeenWelcomeOffer() && canShowStarterGems()) {
       setTimeout(() => {
+        if (isPostDefeatOfferLocked()) {
+          trackEvent("offer_suppressed", { offer: "starter_gems", reason: "post_defeat_offer_lock", level: currentLevel.id });
+          return;
+        }
         emitAnalyticsEvent("first_purchase_offer_shown", { product: "starter_gems", level: currentLevel.id });
         trackEvent("offer_shown", { offer: "starter_gems", productId: "starter_gems", product: "starter_gems", trigger: "defeat", source: "auto_popup", level: currentLevel.id });
         markStarterGemsShown();
