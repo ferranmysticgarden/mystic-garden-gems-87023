@@ -35,23 +35,20 @@ export const SuperComboBanner = ({ maxMultiplier, onDone }: SuperComboBannerProp
       : t('combo.amazing') || '¡INCREÍBLE!';
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[58] flex items-center justify-center">
-      <div className="animate-scale-in">
-        <h1
-          className="text-7xl md:text-8xl font-black tracking-wider text-center"
-          style={{
-            background:
-              'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            filter:
-              'drop-shadow(0 0 30px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 60px rgba(255, 165, 0, 0.5))',
-            textShadow: '0 4px 12px rgba(0,0,0,0.4)',
-          }}
+    <div className="fixed top-32 right-3 pointer-events-none z-[41] animate-fade-in">
+      <div
+        className="px-2.5 py-1 rounded-xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,215,0,0.95) 0%, rgba(255,107,0,0.95) 100%)',
+          boxShadow: '0 2px 12px rgba(255, 165, 0, 0.5)',
+          border: '1px solid rgba(255,255,255,0.5)',
+        }}
+      >
+        <p
+          className="text-xs font-black text-white tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
         >
           {text}
-        </h1>
+        </p>
       </div>
     </div>
   );

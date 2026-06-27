@@ -43,19 +43,17 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
   return (
     <div
       key={visibleCombo}
-      className="fixed inset-0 pointer-events-none z-[55] flex items-center justify-center"
+      className="fixed top-20 right-3 pointer-events-none z-[40] animate-fade-in"
     >
       <div
-        className={`bg-gradient-to-br ${getGradient()} px-8 py-4 rounded-3xl animate-scale-in`}
+        className={`bg-gradient-to-br ${getGradient()} px-2.5 py-1 rounded-xl`}
         style={{
-          boxShadow:
-            '0 0 60px rgba(251, 191, 36, 0.9), 0 0 120px rgba(251, 191, 36, 0.5), inset 0 2px 0 rgba(255,255,255,0.4)',
-          border: '3px solid rgba(255, 255, 255, 0.6)',
+          boxShadow: '0 2px 12px rgba(251, 191, 36, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.5)',
         }}
       >
         <p
-          className="text-5xl font-black text-white tracking-wider drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
-          style={{ textShadow: '0 0 20px rgba(255,255,255,0.8)' }}
+          className="text-sm font-black text-white tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
         >
           {label} x{visibleCombo}!
         </p>
