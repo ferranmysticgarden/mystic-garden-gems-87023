@@ -72,6 +72,7 @@ import { LEVELS } from "@/data/levels";
 import { PRODUCTS } from "@/data/products";
 import { markStarterGemsAsPurchased } from "@/utils/purchaseUtils";
 import { canShowStarterGems, markStarterGemsShown, markStarterGemsDismissed } from "@/utils/starterGemsGate";
+import { isPostDefeatOfferLocked, clearPostDefeatOfferLock, lockPostDefeatOffers } from "@/utils/postDefeatOfferLock";
 import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
 import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
