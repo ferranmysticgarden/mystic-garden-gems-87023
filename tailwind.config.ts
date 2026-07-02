@@ -144,6 +144,7 @@ export default {
         "pop": "pop 0.4s ease-out",
         "shine": "shine 3s linear infinite",
         "float": "float 3s ease-in-out infinite",
+        "fade-in": "fade-in 0.25s ease-out",
       },
     },
   },
