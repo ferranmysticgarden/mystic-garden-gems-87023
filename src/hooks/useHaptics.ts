@@ -19,7 +19,7 @@ export const useHaptics = () => {
   const impact = useCallback(async (style: Style = 'light') => {
     if (!FEATURE_FLAGS.haptics) return;
     try {
-      const mod = await import('@capacitor/haptics').catch(() => null);
+      const mod = await (new Function('return import("@capacitor/haptics")')()).catch(() => null);
       if (mod && (mod as any).Haptics) {
         const H = (mod as any).Haptics;
         const S = (mod as any).ImpactStyle ?? {};
