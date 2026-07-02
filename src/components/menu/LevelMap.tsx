@@ -193,7 +193,11 @@ export const LevelMap = ({
           const nodeState = isCompleted ? "completed" : isCurrent ? "current" : isLocked ? "locked" : "unlocked";
           const nodeSize = isLocked ? LOCKED_NODE_SIZE : UNLOCKED_NODE_SIZE;
           const nodeVisual = getNodeVisual(nodeState);
-          const earnedStarCount = isCompleted ? Math.max(1, Math.min(3, starsEarned[n.id] ?? 3)) : 0;
+          const rawStars = starsEarned[n.id];
+          const earnedStarCount = isCompleted
+            ? Math.max(1, Math.min(3, typeof rawStars === "number" ? rawStars : 3))
+            : 0;
+          const showStars = isCompleted && earnedStarCount > 0;
 
           return (
             <div
@@ -206,7 +210,7 @@ export const LevelMap = ({
                 top: n.y - UNLOCKED_NODE_SIZE / 2 - 24,
               }}
             >
-              {isCompleted && (
+              {showStars && (
                 <div className="absolute top-0 left-1/2 flex -translate-x-1/2 items-end gap-0.5 pointer-events-none" aria-hidden="true">
                   {[1, 2, 3].map((starIndex) => {
                     const starObtained = starIndex <= earnedStarCount;
@@ -274,8 +278,15 @@ export const LevelMap = ({
               </button>
 
               {isCurrent && (
-                <div className="absolute -top-12 -right-12 z-20 pointer-events-none animate-bounce">
-                  <FairyLuna variant="pointing" size={56} />
+                <div className="absolute -top-20 -right-16 z-20 pointer-events-none animate-luna-float">
+                  <div className="relative">
+                    <div
+                      className="absolute inset-0 -m-3 rounded-full blur-xl opacity-80"
+                      style={{ background: "radial-gradient(circle, hsl(45 100% 65% / 0.9) 0%, hsl(45 100% 55% / 0.5) 45%, transparent 75%)" }}
+                      aria-hidden="true"
+                    />
+                    <FairyLuna variant="pointing" size={96} className="relative drop-shadow-[0_0_12px_rgba(255,215,0,0.7)]" />
+                  </div>
                 </div>
               )}
             </div>
