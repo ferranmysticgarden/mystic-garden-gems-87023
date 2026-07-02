@@ -149,12 +149,9 @@ export const LevelMap = ({
               )}
 
               {isCurrent && (
-                <img
-                  src="/celebration/fairy_trophy.png"
-                  alt=""
-                  className="absolute -top-8 -right-8 w-10 h-10 pointer-events-none animate-bounce"
-                  loading="lazy"
-                />
+                <div className="absolute -top-14 -right-10 pointer-events-none animate-bounce">
+                  <FairyLuna variant="pointing" size={56} />
+                </div>
               )}
             </button>
           );
