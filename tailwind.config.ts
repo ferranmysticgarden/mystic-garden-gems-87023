@@ -144,7 +144,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
         "scale-in": "scale-in 0.3s ease-out",
-        "pop": "pop 0.4s ease-out",
+        "pop": "pop 0.2s ease-out forwards",
         "shine": "shine 3s linear infinite",
         "float": "float 3s ease-in-out infinite",
         "fade-in": "fade-in 0.25s ease-out",
