@@ -689,11 +689,15 @@ export const GameScreen = ({
                     {(() => {
                       const id = level.objective.target as TileType;
                       const photo = tileSkins[id];
-                      return photo ? (
-                        <img src={photo} alt="" className={`w-10 h-10 object-cover rounded-full ${isRetry.current ? '' : 'animate-pulse'}`} />
-                      ) : (
-                        <span className={`text-4xl ${isRetry.current ? '' : 'animate-pulse'}`}>{TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>
-                      );
+                      if (photo) {
+                        return <img src={photo} alt="" className={`w-10 h-10 object-cover rounded-full ${isRetry.current ? '' : 'animate-pulse'}`} />;
+                      }
+                      // Icono del tema activo; fallback al emoji default si el tema no define ese tile.
+                      const themeAsset = THEME_TILE_MAP[activeTheme]?.[id];
+                      if (typeof themeAsset === 'string' && themeAsset.startsWith('/')) {
+                        return <img src={themeAsset} alt="" className={`w-10 h-10 object-contain ${isRetry.current ? '' : 'animate-pulse'}`} loading="eager" width={1024} height={1024} />;
+                      }
+                      return <span className={`text-4xl ${isRetry.current ? '' : 'animate-pulse'}`}>{themeAsset ?? TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>;
                     })()}
                     <span className="text-2xl font-bold text-gold">×{level.objective.count}</span>
                   </div>
