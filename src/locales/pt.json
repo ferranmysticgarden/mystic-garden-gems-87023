@@ -180,5 +180,66 @@
     "body": "Substitua as flores por fotos da sua família, pets ou o que quiser. É grátis!",
     "accept": "Sim, me mostre!",
     "later": "Mais tarde"
+  },
+  "powerup": {
+    "intro": {
+      "cost": "Custo:",
+      "free": "Grátis desta vez!",
+      "use_now": "Usar agora",
+      "confirm": "Sim, usar",
+      "cancel": "Cancelar",
+      "hammer": {
+        "title": "🔨 Martelo",
+        "desc": "Quebra qualquer peça do tabuleiro. Toque no martelo e depois na peça que quer eliminar."
+      },
+      "shuffle": {
+        "title": "🔀 Embaralhar",
+        "desc": "Reorganiza todas as peças do tabuleiro. Use quando não encontrar movimentos."
+      },
+      "undo": {
+        "title": "↩️ Desfazer",
+        "desc": "Reverte seu último movimento sem perder a tentativa."
+      }
+    }
+  },
+  "howtoplay": {
+    "title": "Como jogar",
+    "matches": {
+      "title": "Pontuação por combinação",
+      "m3": "Match-3 (3 iguais)",
+      "m4": "Match-4 (4 iguais)",
+      "m5": "Match-5 (5 iguais)",
+      "m6": "Match-6+ (6 ou mais)",
+      "hint": "Quanto maior a combinação, mais pontos e bônus especiais."
+    },
+    "combos": {
+      "title": "Combos em cascata",
+      "desc": "Quando as peças caem e formam novas combinações em sequência, sua pontuação é multiplicada:"
+    },
+    "powerups": {
+      "title": "Power-ups",
+      "hammer": "Martelo — quebra 1 peça",
+      "shuffle": "Embaralhar — reorganiza o tabuleiro",
+      "undo": "Desfazer — reverte último movimento",
+      "hint": "Se não tiver gemas suficientes, aparece um aviso. Os power-ups do inventário são grátis."
+    },
+    "objectives": {
+      "title": "Tipos de nível",
+      "collect": "Coletar: junte X peças de um tipo",
+      "score": "Pontuação: atinja X pontos antes que acabem os movimentos",
+      "bonus": "Bônus: níveis especiais com recompensa extra"
+    },
+    "themes": {
+      "title": "Temas e personalização",
+      "desc": "Você pode mudar os ícones do tabuleiro (flores, animais, frutas, sobremesas…) ou colocar SUAS fotos em cada peça pela seção Personalizar."
+    },
+    "economy": {
+      "title": "Economia do jogo",
+      "lives": "Vidas: regeneram com o tempo",
+      "piggy": "Cofrinho: acumula gemas em derrotas; desbloqueie-o",
+      "pass": "Passe do Jardim: recompensas premium por progredir",
+      "streak": "Sequência diária: entre todo dia para bônus"
+    },
+    "footer": "Boa sorte no jardim!"
   }
 }
