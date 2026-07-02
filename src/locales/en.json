@@ -100,7 +100,8 @@
     "levels": "Levels",
     "shop": "Shop",
     "settings": "Settings",
-    "customize": "Customize"
+    "customize": "Customize",
+    "how_to_play": "How to play"
   },
   "customize": {
     "title": "Customize your tiles",
