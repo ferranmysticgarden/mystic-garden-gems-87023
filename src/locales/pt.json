@@ -28,6 +28,16 @@
     "spectacular": "ESPETACULAR!",
     "magic": "MÁGICO!"
   },
+  "sugar_crush": {
+    "title": "SUGAR CRUSH!",
+    "subtitle": "Movimentos bônus!"
+  },
+  "worlds": {
+    "w1": "Jardim Encantado",
+    "w2": "Floresta Mística",
+    "w3": "Céu Estrelado",
+    "w4": "Reino Dourado"
+  },
 
   "combo_tips": {
     "intro": {
