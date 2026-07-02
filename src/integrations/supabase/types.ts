@@ -77,6 +77,7 @@ export type Database = {
           max_streak: number | null
           no_ads_until: string | null
           shuffle_count: number
+          stars_earned: Json
           streak_claimed_today: boolean | null
           undo_count: number
           unlimited_lives_until: string | null
@@ -97,6 +98,7 @@ export type Database = {
           max_streak?: number | null
           no_ads_until?: string | null
           shuffle_count?: number
+          stars_earned?: Json
           streak_claimed_today?: boolean | null
           undo_count?: number
           unlimited_lives_until?: string | null
@@ -117,6 +119,7 @@ export type Database = {
           max_streak?: number | null
           no_ads_until?: string | null
           shuffle_count?: number
+          stars_earned?: Json
           streak_claimed_today?: boolean | null
           undo_count?: number
           unlimited_lives_until?: string | null
