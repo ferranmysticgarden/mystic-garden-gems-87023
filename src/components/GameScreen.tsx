@@ -956,7 +956,10 @@ export const GameScreen = ({
                     progress_abs: progressAbs,
                     target,
                     moves_left: moves,
+                    score,
+                    moves_used: Math.max(0, (initialMoves ?? level.moves) - moves),
                   });
+
                 }}
                 className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
               >
