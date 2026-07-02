@@ -14,7 +14,7 @@ import { ThemeCard } from "@/components/themes/ThemeCard";
 import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
 import { ThemePurchaseConfirmModal } from "@/components/themes/ThemePurchaseConfirmModal";
 import { useUserThemes } from "@/hooks/useUserThemes";
-import { THEME_MAP, type ThemeId } from "@/data/themes";
+import { THEME_MAP, THEME_TILE_MAP, type ThemeId } from "@/data/themes";
 import { usePayment } from "@/hooks/usePayment";
 import { useGameState } from "@/hooks/useGameState";
 
@@ -22,7 +22,7 @@ interface CustomizeScreenProps {
   onBack: () => void;
 }
 
-const TILE_EMOJIS = ["🌸", "🪻", "🌼", "🍃", "🌻", "🌷"];
+
 const SLOT_BORDERS = [
   "border-rose-500 shadow-[0_0_18px_-4px_rgba(244,63,94,0.7)]",
   "border-sky-500 shadow-[0_0_18px_-4px_rgba(14,165,233,0.7)]",
