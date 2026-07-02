@@ -9,27 +9,42 @@ interface ComboMultiplierProps {
 
 /**
  * CAMBIO SCORING — feedback visual del multiplicador por cascada.
- * Banner pequeño y lateral, animación sutil, sin tapar el tablero.
+ * Banner pequeño, lateral y sin bloquear. Cada combo vive su propio
+ * ciclo de ~900 ms; no depende de que la cascada continúe.
  */
 export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => {
   const { t } = useLanguage();
-  const [visibleCombo, setVisibleCombo] = useState(0);
+  const [visibleCombo, setVisibleCombo] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endRef = useRef(onComboEnd);
 
+  // Mantener la callback actual sin reiniciar el timer en cada render.
+  useEffect(() => {
+    endRef.current = onComboEnd;
+  }, [onComboEnd]);
+
+  // Cada vez que el multiplicador sube a >=2, mostramos el banner y
+  // forzamos su cierre tras 900 ms, independientemente de los matches
+  // posteriores. Si el combo sube más, reiniciamos el ciclo con el valor mayor.
   useEffect(() => {
     if (combo >= 2) {
       setVisibleCombo(combo);
-      const timer = setTimeout(() => {
-        setVisibleCombo(0);
-        onComboEnd?.();
-      }, 850);
-      return () => clearTimeout(timer);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setVisibleCombo(null);
+        endRef.current?.();
+      }, 900);
     }
-    // BUGFIX: si el padre resetea combo<2 antes del timeout interno,
-    // ocultar el banner para que no quede permanente en pantalla.
-    setVisibleCombo(0);
-  }, [combo, onComboEnd]);
+  }, [combo]);
 
-  if (visibleCombo < 2) return null;
+  // Limpieza al desmontar para no dejar timers huérfanos.
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  if (!visibleCombo || visibleCombo < 2) return null;
 
   const getGradient = () => {
     if (visibleCombo >= 5) return 'from-red-500 via-orange-500 to-yellow-400';
@@ -46,14 +61,11 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
       className="fixed top-12 right-2 pointer-events-none z-40 animate-fade-in"
     >
       <div
-        className={`bg-gradient-to-br ${getGradient()} px-1.5 py-0.5 rounded-lg`}
-        style={{
-          boxShadow: '0 1px 6px rgba(251, 191, 36, 0.4)',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-        }}
+        className={`bg-gradient-to-br ${getGradient()} px-1 py-0.5 rounded-lg border border-white/50`}
       >
         <p
-          className="text-[10px] font-bold text-white tracking-wide drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]"
+          className="text-[10px] font-bold text-white tracking-wide"
+          style={{ textShadow: '0 1px 1px rgba(0,0,0,0.5)' }}
         >
           {label} x{visibleCombo}!
         </p>
