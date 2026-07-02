@@ -4,6 +4,9 @@ import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useLanguage } from '@/hooks/useLanguage';
 import { TILE_TYPES } from '@/constants/tileTypes';
+import { ScreenShake } from '@/components/game/ScreenShake';
+import { FEATURE_FLAGS } from '@/config/featureFlags';
+import { useHaptics } from '@/hooks/useHaptics';
 
 const BOARD_SIZE = 8;
 
