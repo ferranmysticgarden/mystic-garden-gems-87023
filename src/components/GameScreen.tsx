@@ -37,8 +37,9 @@ import { isRetryOfLevel, markLevelEntered } from '@/utils/retryTracker';
 
 interface GameScreenProps {
   level: Level;
-  onWin: (stars: number, reward: { gems?: number }) => void;
-  onLose: (payload?: { progress_pct: number; progress_abs: number; target: number; moves_left: number }) => void;
+  onWin: (stars: number, reward: { gems?: number }, telemetry?: { score: number; moves_used: number }) => void;
+  onLose: (payload?: { progress_pct: number; progress_abs: number; target: number; moves_left: number; score: number; moves_used: number }) => void;
+
   onBack: () => void;
   onQuit?: () => void;
   onShowExitModal: () => void;
