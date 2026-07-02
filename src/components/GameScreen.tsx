@@ -20,7 +20,9 @@ import { ComboTipDefeatBanner } from './game/ComboTipDefeatBanner';
 import { FirstBigComboBanner } from './game/FirstBigComboBanner';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { TILE_DEFAULT_EMOJIS, type TileType } from '@/constants/tileTypes';
+import { THEME_TILE_MAP } from '@/data/themes';
 import { useTileSkin } from '@/hooks/useTileSkin';
+import { useUserThemes } from '@/hooks/useUserThemes';
 import { FirstMoveHint } from './game/FirstMoveHint';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
@@ -79,6 +81,7 @@ export const GameScreen = ({
 }: GameScreenProps) => {
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
+  const { activeTheme } = useUserThemes();
   const [moves, setMoves] = useState(initialMoves ?? level.moves);
   const [score, setScore] = useState(initialScore ?? 0);
   const [collected, setCollected] = useState<Record<string, number>>(initialCollected ?? {});
@@ -686,11 +689,15 @@ export const GameScreen = ({
                     {(() => {
                       const id = level.objective.target as TileType;
                       const photo = tileSkins[id];
-                      return photo ? (
-                        <img src={photo} alt="" className={`w-10 h-10 object-cover rounded-full ${isRetry.current ? '' : 'animate-pulse'}`} />
-                      ) : (
-                        <span className={`text-4xl ${isRetry.current ? '' : 'animate-pulse'}`}>{TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>
-                      );
+                      if (photo) {
+                        return <img src={photo} alt="" className={`w-10 h-10 object-cover rounded-full ${isRetry.current ? '' : 'animate-pulse'}`} />;
+                      }
+                      // Icono del tema activo; fallback al emoji default si el tema no define ese tile.
+                      const themeAsset = THEME_TILE_MAP[activeTheme]?.[id];
+                      if (typeof themeAsset === 'string' && themeAsset.startsWith('/')) {
+                        return <img src={themeAsset} alt="" className={`w-10 h-10 object-contain ${isRetry.current ? '' : 'animate-pulse'}`} loading="eager" width={1024} height={1024} />;
+                      }
+                      return <span className={`text-4xl ${isRetry.current ? '' : 'animate-pulse'}`}>{themeAsset ?? TILE_DEFAULT_EMOJIS[id] ?? level.objective.target}</span>;
                     })()}
                     <span className="text-2xl font-bold text-gold">×{level.objective.count}</span>
                   </div>
