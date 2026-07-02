@@ -411,12 +411,12 @@ export const GameScreen = ({
         } catch {}
       }
       if (max >= 3) {
-        setSuperComboMax(max);
         setFirstBigTrigger((n) => n + 1);
         try {
           trackEvent('super_combo_celebrated', { level: level.id, multiplier: max });
         } catch {}
       }
+
       cascadeMaxRef.current = 1;
       cascadeTotalRef.current = 0;
       setCombo(0);
