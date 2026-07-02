@@ -125,6 +125,16 @@ export default {
             transform: "translateY(-20px)",
           },
         },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(-4px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -134,6 +144,7 @@ export default {
         "pop": "pop 0.4s ease-out",
         "shine": "shine 3s linear infinite",
         "float": "float 3s ease-in-out infinite",
+        "fade-in": "fade-in 0.25s ease-out",
       },
     },
   },
