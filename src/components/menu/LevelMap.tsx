@@ -69,6 +69,9 @@ export const LevelMap = ({
       className="relative w-full overflow-y-auto"
       style={{ maxHeight: "calc(100vh - 140px)" }}
     >
+      <div className="sticky top-0 z-20">
+        <WorldBanner currentLevel={currentLevel} />
+      </div>
       <div className="relative w-full" style={{ height: totalHeight }}>
         {/* Connecting path (SVG) */}
         <svg
