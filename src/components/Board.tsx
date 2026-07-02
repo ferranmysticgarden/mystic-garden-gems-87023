@@ -550,31 +550,89 @@ export const Board = ({
           </div>
         </div>
       )}
-      
-      <div 
-        className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-200 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
-        style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
-          boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-          border: '2px solid rgba(147, 51, 234, 0.3)',
-        }}
-      >
-        {board.map((row, rowIndex) =>
-          row.map((tile, colIndex) => (
-            <Tile
-              key={`${rowIndex}-${colIndex}`}
-              tile={tile}
-              row={rowIndex}
-              col={colIndex}
-              isSelected={selected?.row === rowIndex && selected?.col === colIndex}
-              isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
-              isTarget={targetTile === tile}
-              isHighlighted={highlightedTiles?.some(p => p.row === rowIndex && p.col === colIndex)}
-              onTileClick={handleTileClick}
+
+      <ScreenShake trigger={shakeTrigger} intensity={shakeIntensityRef.current}>
+        <div className="relative">
+          <div
+            className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-200 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
+            style={{
+              background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
+              boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+              border: '2px solid rgba(147, 51, 234, 0.3)',
+            }}
+          >
+            {board.map((row, rowIndex) =>
+              row.map((tile, colIndex) => (
+                <Tile
+                  key={`${rowIndex}-${colIndex}`}
+                  tile={tile}
+                  row={rowIndex}
+                  col={colIndex}
+                  isSelected={selected?.row === rowIndex && selected?.col === colIndex}
+                  isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
+                  isTarget={targetTile === tile}
+                  isHighlighted={highlightedTiles?.some(p => p.row === rowIndex && p.col === colIndex)}
+                  onTileClick={handleTileClick}
+                />
+              ))
+            )}
+          </div>
+
+          {FEATURE_FLAGS.tileParticles && bursts.length > 0 && (
+            <div className="absolute inset-3 pointer-events-none z-30">
+              {bursts.map((b) => {
+                const parts = b.big ? 6 : 4;
+                const size = b.big ? 'text-lg' : 'text-sm';
+                return (
+                  <div
+                    key={b.id}
+                    className="absolute"
+                    style={{
+                      left: `${((b.col + 0.5) / BOARD_SIZE) * 100}%`,
+                      top: `${((b.row + 0.5) / BOARD_SIZE) * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    {Array.from({ length: parts }).map((_, i) => {
+                      const angle = (i / parts) * Math.PI * 2;
+                      const dist = b.big ? 42 : 26;
+                      const dx = Math.cos(angle) * dist;
+                      const dy = Math.sin(angle) * dist + (b.big ? 8 : 4);
+                      const emoji = i % 2 === 0 ? '✨' : '⭐';
+                      return (
+                        <span
+                          key={i}
+                          className={`absolute ${size} select-none`}
+                          style={{
+                            left: 0,
+                            top: 0,
+                            animation: 'tile-burst 600ms ease-out forwards',
+                            ['--tx' as never]: `${dx}px`,
+                            ['--ty' as never]: `${dy}px`,
+                            filter: 'drop-shadow(0 0 3px rgba(255,220,120,0.9))',
+                          } as React.CSSProperties}
+                        >
+                          {emoji}
+                        </span>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {flash && (
+            <div
+              className="absolute inset-0 pointer-events-none z-40 rounded-2xl"
+              style={{
+                background: 'radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%)',
+                animation: 'fade-out 140ms ease-out forwards',
+              }}
             />
-          ))
-        )}
-      </div>
+          )}
+        </div>
+      </ScreenShake>
     </div>
   );
 };
