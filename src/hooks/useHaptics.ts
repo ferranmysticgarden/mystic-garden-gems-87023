@@ -2,37 +2,39 @@ import { useCallback } from 'react';
 import { FEATURE_FLAGS } from '@/config/featureFlags';
 
 /**
- * Haptics con guard silencioso. Si el plugin nativo no está presente
- * (AAB 2091 o web), usa navigator.vibrate como fallback y nunca lanza.
+ * Haptics con guard silencioso.
+ * En AAB 2091 no está el plugin @capacitor/haptics, así que solo usamos
+ * navigator.vibrate como fallback. Nunca lanza. En AAB 2092+ se podrá
+ * añadir el plugin sin tocar este hook si se hace via window global.
  */
 type Style = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
 
 const webVibrate = (ms: number) => {
   try {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      (navigator as Navigator & { vibrate: (p: number | number[]) => boolean }).vibrate(ms);
-    }
+    const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }) : null;
+    if (nav && typeof nav.vibrate === 'function') nav.vibrate(ms);
   } catch {}
 };
 
 export const useHaptics = () => {
   const impact = useCallback(async (style: Style = 'light') => {
     if (!FEATURE_FLAGS.haptics) return;
+    // Bridge nativo opcional inyectado por wrapper Capacitor si existe
     try {
-      const mod = await (new Function('return import("@capacitor/haptics")')()).catch(() => null);
-      if (mod && (mod as any).Haptics) {
-        const H = (mod as any).Haptics;
-        const S = (mod as any).ImpactStyle ?? {};
-        if (['success', 'warning', 'error'].includes(style)) {
+      const w = window as unknown as { Capacitor?: { Plugins?: { Haptics?: { impact?: (o: unknown) => Promise<void>; notification?: (o: unknown) => Promise<void> } } } };
+      const H = w?.Capacitor?.Plugins?.Haptics;
+      if (H) {
+        if (['success', 'warning', 'error'].includes(style) && H.notification) {
           await H.notification({ type: style }).catch(() => {});
-        } else {
-          const map: Record<string, unknown> = { light: S.Light, medium: S.Medium, heavy: S.Heavy };
-          await H.impact({ style: map[style] ?? S.Light }).catch(() => {});
+          return;
         }
-        return;
+        if (H.impact) {
+          const styleMap: Record<string, string> = { light: 'LIGHT', medium: 'MEDIUM', heavy: 'HEAVY' };
+          await H.impact({ style: styleMap[style] ?? 'LIGHT' }).catch(() => {});
+          return;
+        }
       }
     } catch {}
-    // Fallback web silencioso
     const dur = style === 'heavy' || style === 'error' ? 30 : style === 'medium' ? 15 : 8;
     webVibrate(dur);
   }, []);
