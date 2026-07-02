@@ -100,7 +100,8 @@
     "levels": "Niveles",
     "shop": "Tienda",
     "settings": "Ajustes",
-    "customize": "Personalizar"
+    "customize": "Personalizar",
+    "how_to_play": "Cómo jugar"
   },
   "customize": {
     "title": "Personaliza tus fichas",
