@@ -37,10 +37,11 @@ export const LEVELS: Level[] = [
   { id: 12, objective: { type: 'collect', target: 't3', count: 20 }, moves: 22, stars: { one: 20, two: 25, three: 30 }, reward: {} },
   { id: 13, objective: { type: 'score', target: 'points', count: 2200 }, moves: 25, stars: { one: 2200, two: 3000, three: 3800 }, reward: {} },
   { id: 14, objective: { type: 'collect', target: 't1', count: 25 }, moves: 20, stars: { one: 25, two: 30, three: 35 }, reward: {} },
-  { id: 15, objective: { type: 'collect', target: 't4', count: 35 }, moves: 22, stars: { one: 35, two: 40, three: 45 }, reward: { gems: 15 } },
+  // AJUSTE 2092 — L15 near-miss (-9%) según auditoría 14d
+  { id: 15, objective: { type: 'collect', target: 't4', count: 32 }, moves: 22, stars: { one: 32, two: 37, three: 42 }, reward: { gems: 15 } },
   { id: 16, objective: { type: 'score', target: 'points', count: 1700 }, moves: 19, stars: { one: 1700, two: 2300, three: 2900 }, reward: {} },
-  // CAMBIO 8 — RITMO: L17 pico (+15%), L18 relief (-25%)
-  { id: 17, objective: { type: 'collect', target: 't2', count: 30 }, moves: 17, stars: { one: 30, two: 34, three: 38 }, reward: {} },
+  // AJUSTE 2092 — L17 peak (-10%) según auditoría 14d
+  { id: 17, objective: { type: 'collect', target: 't2', count: 27 }, moves: 17, stars: { one: 27, two: 31, three: 35 }, reward: {} },
   { id: 18, objective: { type: 'collect', target: 't3', count: 24 }, moves: 20, stars: { one: 24, two: 28, three: 32 }, reward: {} },
   { id: 19, objective: { type: 'score', target: 'points', count: 2300 }, moves: 25, stars: { one: 2300, two: 3100, three: 3900 }, reward: {} },
   { id: 20, objective: { type: 'collect', target: 't1', count: 30 }, moves: 22, stars: { one: 30, two: 35, three: 40 }, reward: { gems: 20 } },

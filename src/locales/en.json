@@ -28,6 +28,16 @@
     "spectacular": "SPECTACULAR!",
     "magic": "MAGIC!"
   },
+  "sugar_crush": {
+    "title": "SUGAR CRUSH!",
+    "subtitle": "Bonus moves!"
+  },
+  "worlds": {
+    "w1": "Enchanted Garden",
+    "w2": "Mystic Forest",
+    "w3": "Starry Sky",
+    "w4": "Golden Kingdom"
+  },
 
   "combo_tips": {
     "intro": {

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { Lock, Star, Play } from "lucide-react";
 import { LEVELS } from "@/data/levels";
 import { useLanguage } from "@/hooks/useLanguage";
+import { WorldBanner } from "@/components/menu/WorldBanner";
+import { FairyLuna } from "@/components/menu/FairyLuna";
 
 interface LevelMapProps {
   currentLevel: number;
@@ -67,6 +69,9 @@ export const LevelMap = ({
       className="relative w-full overflow-y-auto"
       style={{ maxHeight: "calc(100vh - 140px)" }}
     >
+      <div className="sticky top-0 z-20">
+        <WorldBanner currentLevel={currentLevel} />
+      </div>
       <div className="relative w-full" style={{ height: totalHeight }}>
         {/* Connecting path (SVG) */}
         <svg
@@ -144,12 +149,9 @@ export const LevelMap = ({
               )}
 
               {isCurrent && (
-                <img
-                  src="/celebration/fairy_trophy.png"
-                  alt=""
-                  className="absolute -top-8 -right-8 w-10 h-10 pointer-events-none animate-bounce"
-                  loading="lazy"
-                />
+                <div className="absolute -top-14 -right-10 pointer-events-none animate-bounce">
+                  <FairyLuna variant="pointing" size={56} />
+                </div>
               )}
             </button>
           );
