@@ -12,7 +12,7 @@ export type TileType = (typeof TILE_TYPES)[number];
 /** Mapping default emoji por tipo (fallback cuando el slot no tiene foto). */
 export const TILE_DEFAULT_EMOJIS: Record<TileType, string> = {
   t1: "🌸",
-  t2: "🌺",
+  t2: "🪻",
   t3: "🌼",
   t4: "🍃",
   t5: "🌻",
