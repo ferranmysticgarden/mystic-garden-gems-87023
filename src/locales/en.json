@@ -100,7 +100,8 @@
     "levels": "Levels",
     "shop": "Shop",
     "settings": "Settings",
-    "customize": "Customize"
+    "customize": "Customize",
+    "how_to_play": "How to play"
   },
   "customize": {
     "title": "Customize your tiles",
@@ -179,5 +180,66 @@
     "body": "Replace flowers with photos of your family, pets, or anything you love. It is free!",
     "accept": "Yes, show me!",
     "later": "Later"
+  },
+  "powerup": {
+    "intro": {
+      "cost": "Cost:",
+      "free": "Free this time!",
+      "use_now": "Use now",
+      "confirm": "Yes, use",
+      "cancel": "Cancel",
+      "hammer": {
+        "title": "🔨 Hammer",
+        "desc": "Breaks any tile on the board. Tap the hammer, then the tile you want to remove."
+      },
+      "shuffle": {
+        "title": "🔀 Shuffle",
+        "desc": "Reorganizes all tiles on the board. Use it when you can't find a move."
+      },
+      "undo": {
+        "title": "↩️ Undo",
+        "desc": "Reverts your last move without losing the attempt."
+      }
+    }
+  },
+  "howtoplay": {
+    "title": "How to play",
+    "matches": {
+      "title": "Match scoring",
+      "m3": "Match-3 (3 in a row)",
+      "m4": "Match-4 (4 in a row)",
+      "m5": "Match-5 (5 in a row)",
+      "m6": "Match-6+ (6 or more)",
+      "hint": "Bigger matches award more points and special bonuses."
+    },
+    "combos": {
+      "title": "Cascading combos",
+      "desc": "When tiles fall and trigger more matches in a row, your score is multiplied:"
+    },
+    "powerups": {
+      "title": "Power-ups",
+      "hammer": "Hammer — breaks 1 tile",
+      "shuffle": "Shuffle — reorganizes the board",
+      "undo": "Undo — reverts last move",
+      "hint": "If you don't have enough gems, you'll see a warning. Inventory power-ups are free."
+    },
+    "objectives": {
+      "title": "Level types",
+      "collect": "Collect: gather X tiles of a type",
+      "score": "Score: reach X points before moves run out",
+      "bonus": "Bonus: special levels with extra reward"
+    },
+    "themes": {
+      "title": "Themes and personalization",
+      "desc": "You can change the board icons (flowers, animals, fruits, desserts…) or put YOUR photos on each tile from the Customize section."
+    },
+    "economy": {
+      "title": "Game economy",
+      "lives": "Lives: regenerate over time",
+      "piggy": "Piggy bank: accumulates gems on losses; unlock it",
+      "pass": "Garden Pass: premium rewards for progressing",
+      "streak": "Daily streak: log in every day for bonuses"
+    },
+    "footer": "Good luck in the garden!"
   }
 }

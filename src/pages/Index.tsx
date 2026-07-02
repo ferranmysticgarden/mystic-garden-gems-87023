@@ -78,12 +78,13 @@ import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
 import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
 import { toast } from "sonner";
-import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle } from "lucide-react";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
+import { HowToPlayScreen } from "@/components/HowToPlayScreen";
 import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
 import { THEME_MAP, type ThemeId } from "@/data/themes";
 import { useUserThemes } from "@/hooks/useUserThemes";
-type Screen = "menu" | "game" | "levels" | "shop" | "customize";
+type Screen = "menu" | "game" | "levels" | "shop" | "customize" | "howtoplay";
 const Index = () => {
   const navigate = useNavigate();
   const adminTapsRef = useRef<number[]>([]);
@@ -126,7 +127,7 @@ const Index = () => {
     (newScreen: Screen) => {
       trackEvent('screen_view', { screen: newScreen });
       setScreenState(newScreen);
-      setMusicScreen(newScreen === "customize" ? "menu" : newScreen);
+      setMusicScreen(newScreen === "customize" || newScreen === "howtoplay" ? "menu" : newScreen);
     },
     [setMusicScreen],
   );
@@ -983,6 +984,9 @@ const Index = () => {
       </>
     );
   }
+  if (screen === "howtoplay") {
+    return <HowToPlayScreen onBack={() => setScreen("menu")} />;
+  }
 
   if (screen === "levels") {
     const maxUnlockedLevel = Math.max(1, ...gameState.completedLevels) + 1;
@@ -1153,6 +1157,18 @@ const Index = () => {
             >
               <Grid3x3 className="w-5 h-5 mr-2" />
               {t("menu.levels")}
+            </Button>
+          </div>
+
+          {/* Cómo jugar - siempre visible */}
+          <div className="mt-3">
+            <Button
+              onClick={() => setScreen("howtoplay")}
+              variant="outline"
+              className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
+            >
+              <HelpCircle className="w-5 h-5 mr-2" />
+              {t("menu.how_to_play")}
             </Button>
           </div>
 
