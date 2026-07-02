@@ -53,7 +53,7 @@ export const LEVELS: Level[] = [
   { id: 22, objective: { type: 'score', target: 'points', count: 2700 }, moves: 25, stars: { one: 2700, two: 3500, three: 4300 }, reward: {} },
   { id: 23, objective: { type: 'collect', target: 't2', count: 21 }, moves: 22, stars: { one: 21, two: 25, three: 29 }, reward: {} },
   { id: 24, objective: { type: 'collect', target: 't3', count: 32 }, moves: 25, stars: { one: 32, two: 36, three: 40 }, reward: {} },
-  { id: 25, objective: { type: 'score', target: 'points', count: 2500 }, moves: 25, stars: { one: 2500, two: 3300, three: 4100 }, reward: { gems: 25 } },
+  { id: 25, objective: { type: 'score', target: 'points', count: 2100 }, moves: 27, stars: { one: 2100, two: 2800, three: 3500 }, reward: { gems: 25 } },
   { id: 26, objective: { type: 'collect', target: 't1', count: 35 }, moves: 22, stars: { one: 35, two: 40, three: 45 }, reward: {} },
   // L27 pico, L28 relief
   { id: 27, objective: { type: 'collect', target: 't4', count: 46 }, moves: 25, stars: { one: 46, two: 51, three: 56 }, reward: {} },
