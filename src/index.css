@@ -43,6 +43,13 @@
 .animate-combo-stamp-in { animation: combo-stamp-in 250ms ease-out both; }
 .animate-combo-stamp-out { animation: combo-stamp-out 300ms ease-in both; }
 .animate-fade-out { animation: fade-out 600ms ease-out forwards; }
+
+@keyframes luna-float {
+  0%, 100% { transform: translateY(-3px) rotate(-2deg); }
+  50% { transform: translateY(6px) rotate(2deg); }
+}
+.animate-luna-float { animation: luna-float 2s ease-in-out infinite; }
+
 @keyframes fade-out { to { opacity: 0; } }
 
 /* Particles for tile bursts (TileParticles / Board FX) */
