@@ -15,6 +15,8 @@ import { Level6Offer } from './game/Level6Offer';
 import { UltimateRescueOffer } from './game/UltimateRescueOffer';
 import { LevelCompleteCelebration } from './effects/LevelCompleteCelebration';
 import { Level1Tutorial } from './game/Level1Tutorial';
+import { PowerupIntroModal } from './game/PowerupIntroModal';
+import { shouldShowIntro, markIntroShown, shouldConfirmSpend, incrementConfirmCount, type PowerupType } from '@/utils/powerupTutorial';
 import { ComboTipIntroModal } from './game/ComboTipIntroModal';
 import { ComboTipDefeatBanner } from './game/ComboTipDefeatBanner';
 import { FirstBigComboBanner } from './game/FirstBigComboBanner';
