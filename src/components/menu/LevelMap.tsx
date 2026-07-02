@@ -271,13 +271,13 @@ export const LevelMap = ({
                 ) : (
                   <span className="relative z-10 text-xl leading-none">{n.id}</span>
                 )}
+              </button>
 
               {isCurrent && (
-                <div className="absolute -top-16 -right-12 z-20 pointer-events-none animate-bounce">
+                <div className="absolute -top-12 -right-12 z-20 pointer-events-none animate-bounce">
                   <FairyLuna variant="pointing" size={56} />
                 </div>
               )}
-              </button>
             </div>
           );
         })}
