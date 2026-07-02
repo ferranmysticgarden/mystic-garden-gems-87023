@@ -42,11 +42,31 @@ const loadActiveTheme = (): ThemeId => {
   }
 };
 
+// Store módulo-nivel para activeTheme: garantiza que TODAS las instancias
+// del hook (CustomizeScreen, Tile, GameHeader…) compartan el mismo valor
+// y se re-rendericen cuando cambia. Patrón useSyncExternalStore, igual que
+// tileSkinStore. Sin esto, cada componente tenía su copia local desincronizada.
+let activeThemeSnapshot: ThemeId = loadActiveTheme();
+const activeThemeListeners = new Set<() => void>();
+const activeThemeStore = {
+  getSnapshot: (): ThemeId => activeThemeSnapshot,
+  subscribe: (listener: () => void) => {
+    activeThemeListeners.add(listener);
+    return () => activeThemeListeners.delete(listener);
+  },
+  set: (next: ThemeId) => {
+    if (activeThemeSnapshot === next) return;
+    activeThemeSnapshot = next;
+    try { localStorage.setItem(ACTIVE_THEME_KEY, next); } catch { /* best effort */ }
+    activeThemeListeners.forEach((l) => l());
+  },
+};
+
 export const useUserThemes = () => {
   const { user } = useAuth();
   const { gameState } = useGameState();
   const [unlockMap, setUnlockMap] = useState<ThemeUnlockMap>(() => ({ flowers: 'default', ...loadGuestUnlocks() }));
-  const [activeTheme, setActiveThemeState] = useState<ThemeId>(() => loadActiveTheme());
+  const activeTheme = useSyncExternalStore(activeThemeStore.subscribe, activeThemeStore.getSnapshot, activeThemeStore.getSnapshot);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
