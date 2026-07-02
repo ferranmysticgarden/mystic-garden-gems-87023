@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface SuperComboBannerProps {
@@ -9,44 +9,60 @@ interface SuperComboBannerProps {
 
 /**
  * CAMBIO SCORING — banner "¡INCREÍBLE!" / "¡SUPER COMBO!" tras cadenas x3+.
- * Banner pequeño y lateral, animación sutil, sin tapar el tablero.
+ * Banner pequeño, lateral y sin bloquear. Cada super-combo vive su propio
+ * ciclo de ~900 ms; no depende de que la cascada continúe.
  */
 export const SuperComboBanner = ({ maxMultiplier, onDone }: SuperComboBannerProps) => {
   const { t } = useLanguage();
-  const [show, setShow] = useState(false);
+  const [visibleMult, setVisibleMult] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doneRef = useRef(onDone);
 
+  // Mantener la callback actual sin reiniciar el timer en cada render.
+  useEffect(() => {
+    doneRef.current = onDone;
+  }, [onDone]);
+
+  // Cada vez que el multiplicador máximo sube a >=3, mostramos el banner y
+  // forzamos su cierre tras 900 ms, independientemente de los matches posteriores.
   useEffect(() => {
     if (maxMultiplier >= 3) {
-      setShow(true);
-      const timer = setTimeout(() => {
-        setShow(false);
-        onDone?.();
-      }, 850);
-      return () => clearTimeout(timer);
+      setVisibleMult(maxMultiplier);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setVisibleMult(null);
+        doneRef.current?.();
+      }, 900);
     }
-  }, [maxMultiplier, onDone]);
+  }, [maxMultiplier]);
 
-  if (!show || maxMultiplier < 3) return null;
+  // Limpieza al desmontar.
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  if (!visibleMult || visibleMult < 3) return null;
 
   const text =
-    maxMultiplier >= 5
+    visibleMult >= 5
       ? t('combo.unbelievable') || '¡INCREÍBLE!'
-      : maxMultiplier >= 4
+      : visibleMult >= 4
       ? t('combo.super') || '¡SUPER COMBO!'
       : t('combo.amazing') || '¡INCREÍBLE!';
 
   return (
-    <div className="fixed top-20 right-2 pointer-events-none z-40 animate-fade-in">
+    <div key={visibleMult} className="fixed top-20 right-2 pointer-events-none z-40 animate-fade-in">
       <div
-        className="px-1.5 py-0.5 rounded-lg"
+        className="px-1 py-0.5 rounded-lg border border-white/50"
         style={{
           background: 'linear-gradient(135deg, rgba(255,215,0,0.95) 0%, rgba(255,107,0,0.95) 100%)',
-          boxShadow: '0 1px 6px rgba(255, 165, 0, 0.4)',
-          border: '1px solid rgba(255,255,255,0.5)',
         }}
       >
         <p
-          className="text-[10px] font-bold text-white tracking-wide drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]"
+          className="text-[10px] font-bold text-white tracking-wide"
+          style={{ textShadow: '0 1px 1px rgba(0,0,0,0.6)' }}
         >
           {text}
         </p>
