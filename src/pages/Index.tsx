@@ -79,6 +79,10 @@ import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
 import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
 import { toast } from "sonner";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle } from "lucide-react";
+import { LevelMap } from "@/components/menu/LevelMap";
+import { SideIconsColumn } from "@/components/menu/SideIconsColumn";
+import { WatchAdCornerButton } from "@/components/menu/WatchAdCornerButton";
+import { SplashScreen } from "@/components/SplashScreen";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
 import { HowToPlayScreen } from "@/components/HowToPlayScreen";
 import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
@@ -137,6 +141,7 @@ const Index = () => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showFirstWin, setShowFirstWin] = useState(false);
   const [gamesPlayed, setGamesPlayed] = useState(0);
+  const [showAdModal, setShowAdModal] = useState(false);
 
   // New monetization modals
   const [showFlashOffer, setShowFlashOffer] = useState(false);
