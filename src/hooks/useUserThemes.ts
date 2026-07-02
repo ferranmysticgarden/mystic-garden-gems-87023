@@ -103,16 +103,17 @@ export const useUserThemes = () => {
   }, [refresh]);
 
   useEffect(() => {
-    if (!THEME_MAP[activeTheme] || !(activeTheme in unlockMap)) {
-      setActiveThemeState(DEFAULT_THEME_ID);
-      localStorage.setItem(ACTIVE_THEME_KEY, DEFAULT_THEME_ID);
+    // Guard aflojado: solo reset si el tema NO existe en THEME_MAP (id inválido).
+    // Antes se reseteaba también si no estaba en unlockMap, provocando carrera
+    // con refresh() async y volviendo a 'flowers' un tema recién aplicado.
+    if (!THEME_MAP[activeTheme]) {
+      activeThemeStore.set(DEFAULT_THEME_ID);
     }
-  }, [activeTheme, unlockMap]);
+  }, [activeTheme]);
 
   const setActiveTheme = useCallback((themeId: ThemeId) => {
     if (!(themeId in unlockMap)) return false;
-    setActiveThemeState(themeId);
-    localStorage.setItem(ACTIVE_THEME_KEY, themeId);
+    activeThemeStore.set(themeId);
     trackEvent('theme_applied', { theme_id: themeId });
     return true;
   }, [unlockMap]);
