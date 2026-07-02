@@ -4,6 +4,9 @@ import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useLanguage } from '@/hooks/useLanguage';
 import { TILE_TYPES } from '@/constants/tileTypes';
+import { ScreenShake } from '@/components/game/ScreenShake';
+import { FEATURE_FLAGS } from '@/config/featureFlags';
+import { useHaptics } from '@/hooks/useHaptics';
 
 const BOARD_SIZE = 8;
 
@@ -54,7 +57,15 @@ export const Board = ({
   const matchCountRef = useRef(0);
   const cascadeStepRef = useRef(0);
   const hasFiredFirstMatchRef = useRef(false);
-  
+
+  // FX: shake trigger + intensity + particle bursts + white flash for x5+
+  const [shakeTrigger, setShakeTrigger] = useState(0);
+  const shakeIntensityRef = useRef<'light' | 'medium' | 'heavy'>('light');
+  const [bursts, setBursts] = useState<Array<{ id: number; row: number; col: number; big: boolean }>>([]);
+  const burstIdRef = useRef(0);
+  const [flash, setFlash] = useState(false);
+  const { impact } = useHaptics();
+
   // Use mystical fairy sounds
   const { playSelectSound, playMatchSound, playInvalidSound, playShuffleSound } = useMysticSounds();
 
@@ -320,6 +331,37 @@ export const Board = ({
     });
     
     setAnimatingTiles(animatingKeys);
+
+    // FX: shake + partículas + flash + haptics según tamaño del match / cascada
+    try {
+      const step = cascadeStepRef.current + 1; // este step está a punto de emitirse
+      const big = biggestGroup >= 5 || step >= 4;
+      // Screen shake
+      if (FEATURE_FLAGS.screenShake && biggestGroup >= 4) {
+        shakeIntensityRef.current =
+          biggestGroup >= 6 || step >= 4 ? 'heavy' : biggestGroup >= 5 ? 'medium' : 'light';
+        setShakeTrigger((n) => n + 1);
+      }
+      // Haptics
+      if (biggestGroup >= 5 || step >= 4) impact('heavy');
+      else if (biggestGroup >= 4) impact('medium');
+      else impact('light');
+      // Flash blanco en combo x5+
+      if (step >= 5) {
+        setFlash(true);
+        setTimeout(() => setFlash(false), 140);
+      }
+      // Partículas: burst por cada tile eliminado
+      if (FEATURE_FLAGS.tileParticles) {
+        const now = burstIdRef.current;
+        const added = matches.map((m, i) => ({ id: now + i, row: m.row, col: m.col, big }));
+        burstIdRef.current = now + matches.length;
+        setBursts((prev) => [...prev, ...added]);
+        const ids = added.map((a) => a.id);
+        setTimeout(() => setBursts((prev) => prev.filter((b) => !ids.includes(b.id))), 700);
+      }
+    } catch {}
+
     
     setTimeout(() => {
       setAnimatingTiles(new Set());
@@ -508,31 +550,89 @@ export const Board = ({
           </div>
         </div>
       )}
-      
-      <div 
-        className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-200 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
-        style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
-          boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-          border: '2px solid rgba(147, 51, 234, 0.3)',
-        }}
-      >
-        {board.map((row, rowIndex) =>
-          row.map((tile, colIndex) => (
-            <Tile
-              key={`${rowIndex}-${colIndex}`}
-              tile={tile}
-              row={rowIndex}
-              col={colIndex}
-              isSelected={selected?.row === rowIndex && selected?.col === colIndex}
-              isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
-              isTarget={targetTile === tile}
-              isHighlighted={highlightedTiles?.some(p => p.row === rowIndex && p.col === colIndex)}
-              onTileClick={handleTileClick}
+
+      <ScreenShake trigger={shakeTrigger} intensity={shakeIntensityRef.current}>
+        <div className="relative">
+          <div
+            className={`grid grid-cols-8 gap-1 p-3 rounded-2xl transition-all duration-200 ${isShuffling ? 'opacity-60 scale-95' : ''}`}
+            style={{
+              background: 'linear-gradient(180deg, hsl(270 50% 20% / 0.9), hsl(270 60% 12% / 0.95))',
+              boxShadow: '0 0 30px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+              border: '2px solid rgba(147, 51, 234, 0.3)',
+            }}
+          >
+            {board.map((row, rowIndex) =>
+              row.map((tile, colIndex) => (
+                <Tile
+                  key={`${rowIndex}-${colIndex}`}
+                  tile={tile}
+                  row={rowIndex}
+                  col={colIndex}
+                  isSelected={selected?.row === rowIndex && selected?.col === colIndex}
+                  isAnimating={animatingTiles.has(`${rowIndex}-${colIndex}`)}
+                  isTarget={targetTile === tile}
+                  isHighlighted={highlightedTiles?.some(p => p.row === rowIndex && p.col === colIndex)}
+                  onTileClick={handleTileClick}
+                />
+              ))
+            )}
+          </div>
+
+          {FEATURE_FLAGS.tileParticles && bursts.length > 0 && (
+            <div className="absolute inset-3 pointer-events-none z-30">
+              {bursts.map((b) => {
+                const parts = b.big ? 6 : 4;
+                const size = b.big ? 'text-lg' : 'text-sm';
+                return (
+                  <div
+                    key={b.id}
+                    className="absolute"
+                    style={{
+                      left: `${((b.col + 0.5) / BOARD_SIZE) * 100}%`,
+                      top: `${((b.row + 0.5) / BOARD_SIZE) * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    {Array.from({ length: parts }).map((_, i) => {
+                      const angle = (i / parts) * Math.PI * 2;
+                      const dist = b.big ? 42 : 26;
+                      const dx = Math.cos(angle) * dist;
+                      const dy = Math.sin(angle) * dist + (b.big ? 8 : 4);
+                      const emoji = i % 2 === 0 ? '✨' : '⭐';
+                      return (
+                        <span
+                          key={i}
+                          className={`absolute ${size} select-none`}
+                          style={{
+                            left: 0,
+                            top: 0,
+                            animation: 'tile-burst 600ms ease-out forwards',
+                            ['--tx' as never]: `${dx}px`,
+                            ['--ty' as never]: `${dy}px`,
+                            filter: 'drop-shadow(0 0 3px rgba(255,220,120,0.9))',
+                          } as React.CSSProperties}
+                        >
+                          {emoji}
+                        </span>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {flash && (
+            <div
+              className="absolute inset-0 pointer-events-none z-40 rounded-2xl"
+              style={{
+                background: 'radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%)',
+                animation: 'fade-out 140ms ease-out forwards',
+              }}
             />
-          ))
-        )}
-      </div>
+          )}
+        </div>
+      </ScreenShake>
     </div>
   );
 };
