@@ -8,6 +8,7 @@ export interface GameState {
   gems: number;
   currentLevel: number;
   completedLevels: number[];
+  starsEarned: Record<number, number>;
   hammers: number;
   undos: number;
   shuffles: number;
@@ -20,6 +21,7 @@ const INITIAL_STATE: GameState = {
   gems: 0,
   currentLevel: 1,
   completedLevels: [],
+  starsEarned: {},
   hammers: 3,
   undos: 0,
   shuffles: 0,
@@ -34,9 +36,43 @@ const LIFE_REFILL_TIME = 35 * 60 * 1000; // 35 minutes
 const loadLocalProgress = (): GameState | null => {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        ...INITIAL_STATE,
+        ...parsed,
+        starsEarned: parsed.starsEarned || {},
+      };
+    }
   } catch {}
   return null;
+};
+
+const normalizeStarsEarned = (value: unknown): Record<number, number> => {
+  if (!value || typeof value !== 'object') return {};
+  return Object.entries(value as Record<string, unknown>).reduce<Record<number, number>>((acc, [key, raw]) => {
+    const levelId = Number(key);
+    const stars = Number(raw);
+    if (Number.isFinite(levelId) && Number.isFinite(stars)) {
+      acc[levelId] = Math.max(1, Math.min(3, Math.round(stars)));
+    }
+    return acc;
+  }, {});
+};
+
+const mergeStarsEarned = (
+  primary: Record<number, number> = {},
+  secondary: Record<number, number> = {},
+): Record<number, number> => {
+  const merged = { ...primary };
+  Object.entries(secondary).forEach(([levelId, rawStars]) => {
+    const numericLevelId = Number(levelId);
+    const stars = Math.max(1, Math.min(3, Math.round(Number(rawStars))));
+    if (Number.isFinite(numericLevelId) && Number.isFinite(stars)) {
+      merged[numericLevelId] = Math.max(merged[numericLevelId] ?? 0, stars);
+    }
+  });
+  return merged;
 };
 
 /** Save guest progress to localStorage */
@@ -56,6 +92,7 @@ export const useGameState = () => {
 
   // Track if we've loaded from DB at least once
   const hasLoadedRef = useRef(false);
+  const supportsStarsEarnedRef = useRef(true);
 
   // Block saves during reload to prevent race conditions
   const blockSaveRef = useRef(false);
@@ -87,11 +124,13 @@ export const useGameState = () => {
         if (error) throw error;
 
         if (data) {
+          const dataWithStars = data as typeof data & { stars_earned?: unknown };
           const dbState: GameState = {
             lives: data.lives,
             gems: data.gems,
             currentLevel: data.current_level,
             completedLevels: data.completed_levels || [],
+            starsEarned: normalizeStarsEarned(dataWithStars.stars_earned),
             hammers: data.hammer_count,
             undos: data.undo_count,
             shuffles: data.shuffle_count,
@@ -107,6 +146,7 @@ export const useGameState = () => {
               ...dbState,
               currentLevel: Math.max(dbState.currentLevel, local.currentLevel),
               completedLevels: [...new Set([...dbState.completedLevels, ...local.completedLevels])],
+              starsEarned: mergeStarsEarned(dbState.starsEarned, local.starsEarned),
               gems: dbState.gems + local.gems,
               lives: Math.max(dbState.lives, local.lives),
               hammers: dbState.hammers + local.hammers,
@@ -162,23 +202,37 @@ export const useGameState = () => {
           console.log('[SAVE] Saving progress:', {
             level: gameState.currentLevel,
             completed: gameState.completedLevels,
+            starsEarned: gameState.starsEarned,
             gems: gameState.gems,
             lives: gameState.lives,
           });
-          const { error } = await supabase
+          const baseProgressPayload = {
+            user_id: user.id,
+            lives: gameState.lives,
+            gems: gameState.gems,
+            current_level: gameState.currentLevel,
+            completed_levels: gameState.completedLevels,
+            hammer_count: gameState.hammers,
+            undo_count: gameState.undos,
+            shuffle_count: gameState.shuffles,
+            last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
+            unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
+          };
+          const progressPayload = supportsStarsEarnedRef.current
+            ? { ...baseProgressPayload, stars_earned: gameState.starsEarned }
+            : baseProgressPayload;
+
+          let { error } = await supabase
             .from('game_progress')
-            .upsert({
-              user_id: user.id,
-              lives: gameState.lives,
-              gems: gameState.gems,
-              current_level: gameState.currentLevel,
-              completed_levels: gameState.completedLevels,
-              hammer_count: gameState.hammers,
-              undo_count: gameState.undos,
-              shuffle_count: gameState.shuffles,
-              last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
-              unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
-            }, { onConflict: 'user_id' });
+            .upsert(progressPayload as any, { onConflict: 'user_id' });
+
+          if (error && supportsStarsEarnedRef.current && /stars_earned/i.test(error.message || '')) {
+            supportsStarsEarnedRef.current = false;
+            const retry = await supabase
+              .from('game_progress')
+              .upsert(baseProgressPayload, { onConflict: 'user_id' });
+            error = retry.error;
+          }
 
           if (error) {
             console.error('[SAVE] ❌ FAILED:', error.message, error.code);
@@ -275,7 +329,7 @@ export const useGameState = () => {
     });
   }, []);
 
-  const completeLevel = useCallback((levelId: number, reward: { gems?: number }, advanceLevel: boolean = true) => {
+  const completeLevel = useCallback((levelId: number, reward: { gems?: number }, advanceLevel: boolean = true, starsEarned: number = 3) => {
     console.log('[GAME] ✅ completeLevel called! levelId:', levelId, 'reward:', reward, 'advance:', advanceLevel);
     setGameState((prev) => {
       const newCompletedLevels = prev.completedLevels.includes(levelId)
@@ -283,11 +337,16 @@ export const useGameState = () => {
         : [...prev.completedLevels, levelId];
 
       const newCurrent = advanceLevel ? levelId + 1 : prev.currentLevel;
+      const safeStarsEarned = Math.max(1, Math.min(3, Math.round(starsEarned || 3)));
       console.log('[GAME] State update: currentLevel', prev.currentLevel, '→', newCurrent, 'completed:', newCompletedLevels);
       return {
         ...prev,
         currentLevel: newCurrent,
         completedLevels: newCompletedLevels,
+        starsEarned: {
+          ...(prev.starsEarned || {}),
+          [levelId]: Math.max(prev.starsEarned?.[levelId] ?? 0, safeStarsEarned),
+        },
         gems: prev.gems + (reward.gems || 0),
       };
     });
@@ -369,11 +428,13 @@ export const useGameState = () => {
         .maybeSingle();
       if (error) throw error;
       if (data) {
+        const dataWithStars = data as typeof data & { stars_earned?: unknown };
         const dbState: GameState = {
           lives: data.lives,
           gems: data.gems,
           currentLevel: data.current_level,
           completedLevels: data.completed_levels || [],
+          starsEarned: normalizeStarsEarned(dataWithStars.stars_earned),
           hammers: data.hammer_count,
           undos: data.undo_count,
           shuffles: data.shuffle_count,
