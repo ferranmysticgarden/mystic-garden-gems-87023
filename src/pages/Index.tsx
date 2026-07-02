@@ -1198,6 +1198,8 @@ const Index = () => {
       {/* Splash (one-shot per session) */}
       <SplashScreen />
 
+      {/* Shop Modal - SIEMPRE ACCESIBLE */}
+      {screen === "shop" && (
         <Shop
           onClose={() => setScreen("menu")}
           onPurchase={handlePurchase}
