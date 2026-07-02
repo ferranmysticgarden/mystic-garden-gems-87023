@@ -576,7 +576,7 @@ const Index = () => {
   const handleWin = useCallback(
     async (stars: number, reward: { gems?: number }, telemetry?: { score: number; moves_used: number }) => {
       const isBonus = !!currentLevel.bonus;
-      completeLevel(currentLevel.id, reward, !isBonus);
+      completeLevel(currentLevel.id, reward, !isBonus, stars);
       trackEvent('level_completed', {
         level: currentLevel.id,
         bonus: isBonus,
@@ -1083,6 +1083,7 @@ const Index = () => {
           <LevelMap
             currentLevel={gameState.currentLevel}
             completedLevels={gameState.completedLevels}
+            starsEarned={gameState.starsEarned}
             onLevelClick={handleSelectLevel}
           />
         </div>
