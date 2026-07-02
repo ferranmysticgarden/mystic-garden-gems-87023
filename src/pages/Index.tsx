@@ -652,12 +652,12 @@ const Index = () => {
       winStreak,
     ],
   );
-  const handleLose = useCallback((payload?: { progress_pct: number; progress_abs: number; target: number; moves_left: number }) => {
+  const handleLose = useCallback((payload?: { progress_pct: number; progress_abs: number; target: number; moves_left: number; score: number; moves_used: number }) => {
     // CAMBIO 1 — perder consume vida
     loseLife();
     trackEvent('life_consumed', { reason: 'lose', level: currentLevel.id });
     winStreak.registerLoss();
-    // CAMBIO 5A — payload con near-miss data
+    // CAMBIO 5A — payload con near-miss data + telemetría de scoring
     trackEvent("level_failed", {
       level: currentLevel.id,
       consecutive_losses: consecutiveLosses + 1,
@@ -666,7 +666,10 @@ const Index = () => {
       progress_abs: payload?.progress_abs ?? null,
       target: payload?.target ?? null,
       moves_left: payload?.moves_left ?? null,
+      score: payload?.score ?? null,
+      moves_used: payload?.moves_used ?? null,
     });
+
     toast.error(t("game.lose"));
     setGamesPlayed((prev) => prev + 1);
 
