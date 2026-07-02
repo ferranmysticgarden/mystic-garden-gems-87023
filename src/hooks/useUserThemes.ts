@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { LS_KEYS } from '@/constants/localStorageKeys';
 import { DEFAULT_THEME_ID, THEME_LEVEL_UNLOCKS, THEME_MAP, THEMES, type ThemeId, type ThemeUnlockMethod } from '@/data/themes';
