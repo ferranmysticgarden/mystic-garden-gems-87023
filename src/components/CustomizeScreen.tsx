@@ -174,12 +174,15 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
               <Button variant="outline" size="sm" onClick={() => handleApplyTheme('flowers')}>{t('themes.reset')}</Button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {TILE_EMOJIS.map((emoji, idx) => {
+              {TILE_TYPES.map((tileId, idx) => {
                 const photo = photos[idx];
                 const isProcessing = processingIdx === idx;
+                // Icono derivado del tema activo (emoji o ruta /themes/.../icon_N.png)
+                const themeAsset = THEME_TILE_MAP[activeTheme]?.[tileId] ?? '';
+                const showImage = typeof themeAsset === 'string' && themeAsset.startsWith('/');
                 return (
                   <button
-                    key={idx}
+                    key={tileId}
                     onClick={() => handleSlotClick(idx)}
                     disabled={processingIdx !== null && !isProcessing}
                     className={`relative aspect-square rounded-2xl border-[6px] ${SLOT_BORDERS[idx]} bg-card overflow-hidden flex items-center justify-center transition-transform active:scale-95 disabled:opacity-60`}
@@ -194,7 +197,11 @@ export const CustomizeScreen = ({ onBack }: CustomizeScreenProps) => {
                       </>
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <span className="text-5xl opacity-80">{emoji}</span>
+                        {showImage ? (
+                          <img src={themeAsset} alt="" className="w-3/4 h-3/4 object-contain opacity-90" loading="lazy" width={1024} height={1024} />
+                        ) : (
+                          <span className="text-5xl opacity-80">{themeAsset}</span>
+                        )}
                         <span className="absolute bottom-2 right-2 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center shadow-md">
                           <Plus className="w-5 h-5" />
                         </span>
