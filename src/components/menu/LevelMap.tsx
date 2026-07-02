@@ -278,8 +278,15 @@ export const LevelMap = ({
               </button>
 
               {isCurrent && (
-                <div className="absolute -top-12 -right-12 z-20 pointer-events-none animate-bounce">
-                  <FairyLuna variant="pointing" size={56} />
+                <div className="absolute -top-20 -right-16 z-20 pointer-events-none animate-luna-float">
+                  <div className="relative">
+                    <div
+                      className="absolute inset-0 -m-3 rounded-full blur-xl opacity-80"
+                      style={{ background: "radial-gradient(circle, hsl(45 100% 65% / 0.9) 0%, hsl(45 100% 55% / 0.5) 45%, transparent 75%)" }}
+                      aria-hidden="true"
+                    />
+                    <FairyLuna variant="pointing" size={96} className="relative drop-shadow-[0_0_12px_rgba(255,215,0,0.7)]" />
+                  </div>
                 </div>
               )}
             </div>
