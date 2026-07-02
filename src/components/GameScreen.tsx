@@ -827,9 +827,8 @@ export const GameScreen = ({
           </div>
         )}
 
-        {/* Combo Multiplier */}
-        <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
-        <SuperComboBanner maxMultiplier={superComboMax} onDone={() => setSuperComboMax(0)} />
+        {/* ComboMultiplier ahora se renderiza dentro del wrapper del Board (sello centrado). */}
+
 
         {/* Close Defeat Offer */}
         {showCloseDefeatOffer && (
