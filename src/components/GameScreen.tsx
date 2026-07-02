@@ -7,7 +7,7 @@ import { CloseDefeatOffer } from './game/CloseDefeatOffer';
 import { GemsBanner } from './game/GemsBanner';
 import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
-import { SuperComboBanner } from './game/SuperComboBanner';
+// SuperComboBanner eliminado — su rol lo absorbe ComboMultiplier (sello Candy-Crush centrado).
 import { BuyMovesOffer } from './game/BuyMovesOffer';
 import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { Level10Paywall } from './game/Level10Paywall';
