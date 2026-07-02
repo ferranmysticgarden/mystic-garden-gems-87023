@@ -22,8 +22,13 @@
     "x": "COMBO",
     "amazing": "INCRÍVEL!",
     "super": "SUPER COMBO!",
-    "unbelievable": "INACREDITÁVEL!"
+    "unbelievable": "INACREDITÁVEL!",
+    "genial": "ÓTIMO!",
+    "incredible": "INCRÍVEL!",
+    "spectacular": "ESPETACULAR!",
+    "magic": "MÁGICO!"
   },
+
   "combo_tips": {
     "intro": {
       "title": "Faça MAIS pontos!",
