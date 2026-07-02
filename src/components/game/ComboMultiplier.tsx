@@ -9,7 +9,7 @@ interface ComboMultiplierProps {
 
 /**
  * CAMBIO SCORING — feedback visual del multiplicador por cascada.
- * Se muestra centrado, con bounce + glow dorado, sólo cuando combo >= 2.
+ * Banner pequeño y lateral, animación sutil, sin tapar el tablero.
  */
 export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => {
   const { t } = useLanguage();
@@ -43,17 +43,17 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
   return (
     <div
       key={visibleCombo}
-      className="fixed top-20 right-3 pointer-events-none z-[40] animate-fade-in"
+      className="fixed top-12 right-2 pointer-events-none z-40 animate-fade-in"
     >
       <div
-        className={`bg-gradient-to-br ${getGradient()} px-2.5 py-1 rounded-xl`}
+        className={`bg-gradient-to-br ${getGradient()} px-1.5 py-0.5 rounded-lg`}
         style={{
-          boxShadow: '0 2px 12px rgba(251, 191, 36, 0.5)',
+          boxShadow: '0 1px 6px rgba(251, 191, 36, 0.4)',
           border: '1px solid rgba(255, 255, 255, 0.5)',
         }}
       >
         <p
-          className="text-sm font-black text-white tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+          className="text-[10px] font-bold text-white tracking-wide drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]"
         >
           {label} x{visibleCombo}!
         </p>
