@@ -99,15 +99,9 @@ export default {
           },
         },
         "pop": {
-          "0%": {
-            transform: "scale(1)",
-          },
-          "50%": {
-            transform: "scale(1.2)",
-          },
-          "100%": {
-            transform: "scale(0)",
-          },
+          "0%": { transform: "scale(1)", opacity: "1" },
+          "60%": { transform: "scale(1.15)", opacity: "1" },
+          "100%": { transform: "scale(0)", opacity: "0" },
         },
         "shine": {
           "0%": {
