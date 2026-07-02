@@ -45,6 +45,12 @@
 .animate-fade-out { animation: fade-out 600ms ease-out forwards; }
 @keyframes fade-out { to { opacity: 0; } }
 
+/* Particles for tile bursts (TileParticles / Board FX) */
+@keyframes tile-burst {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 1; }
+  100% { transform: translate(var(--tx, 0), var(--ty, 0)) scale(1); opacity: 0; }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
