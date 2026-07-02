@@ -127,7 +127,7 @@ const Index = () => {
     (newScreen: Screen) => {
       trackEvent('screen_view', { screen: newScreen });
       setScreenState(newScreen);
-      setMusicScreen(newScreen === "customize" ? "menu" : newScreen);
+      setMusicScreen(newScreen === "customize" || newScreen === "howtoplay" ? "menu" : newScreen);
     },
     [setMusicScreen],
   );
