@@ -560,65 +560,106 @@ export const GameScreen = ({
     }
   };
 
+  /** Ejecuta la acción real del power-up (sin modales). Aquí NO se toca
+   *  la lógica de coste/tracking existente, solo se segmenta para poder
+   *  interceptar con intro/confirm sin duplicar código. */
+  const executePowerup = (type: PowerupType) => {
+    if (type === 'hammer') {
+      // Activa modo martillo. El gasto real de gemas ocurre al aplicar sobre una ficha
+      // (lógica original en useHammer / onHammerUse), no aquí.
+      setIsHammerActive(true);
+      return;
+    }
+    if (type === 'shuffle') {
+      const isPaid = shuffles === 0;
+      if (isPaid) onSpendGems?.(60); else onUseShuffle?.();
+      trackEvent('powerup_used', {
+        type: 'shuffle',
+        level: level.id,
+        payment: isPaid ? 'gems' : 'stock',
+        cost: isPaid ? 60 : 0,
+        gems_remaining: gems - (isPaid ? 60 : 0),
+      });
+      setShuffleTrigger((p) => p + 1);
+      return;
+    }
+    if (type === 'undo') {
+      const isPaid = undos === 0;
+      if (isPaid) onSpendGems?.(25); else onUseUndo?.();
+      trackEvent('powerup_used', {
+        type: 'undo',
+        level: level.id,
+        payment: isPaid ? 'gems' : 'stock',
+        cost: isPaid ? 25 : 0,
+        gems_remaining: gems - (isPaid ? 25 : 0),
+      });
+      setUndoTrigger((p) => p + 1);
+      return;
+    }
+  };
+
+  /** Router común: primera vez → intro; siguientes 3 con gasto → confirm; luego directo. */
+  const requestPowerup = (type: PowerupType, willSpendGems: boolean) => {
+    if (shouldShowIntro(type)) {
+      setPendingPowerup({ type, mode: 'intro', willSpendGems });
+      return;
+    }
+    if (willSpendGems && shouldConfirmSpend(type)) {
+      setPendingPowerup({ type, mode: 'confirm', willSpendGems });
+      return;
+    }
+    executePowerup(type);
+  };
+
   const handleHammerClick = () => {
+    // Toggle: si ya está activo, desactivar sin modal
     if (isHammerActive) {
       setIsHammerActive(false);
       return;
     }
-    if (hammers > 0 || gems >= 40) {
-      setIsHammerActive(true);
-    } else {
-      toast.error(t('game.not_enough_gems') || "Necesitas 40 gemas para el Martillo");
+    const hasStock = hammers > 0;
+    if (!hasStock && gems < 40) {
+      toast.error(t('game.not_enough_gems') || 'Necesitas 40 gemas para el Martillo');
+      return;
     }
+    requestPowerup('hammer', !hasStock);
   };
 
   const handleShuffleClick = () => {
     const isPaid = shuffles === 0;
-    if (!isPaid || gems >= 60) {
-      if (isPaid) {
-        onSpendGems?.(60);
-      } else {
-        onUseShuffle?.();
-      }
-
-      // Tracking ÚNICO y DETALLADO
-      trackEvent('powerup_used', { 
-        type: 'shuffle', 
-        level: level.id, 
-        payment: isPaid ? 'gems' : 'stock',
-        cost: isPaid ? 60 : 0,
-        gems_remaining: gems - (isPaid ? 60 : 0)
-      });
-
-      setShuffleTrigger(prev => prev + 1);
-    } else {
-      toast.error(t('game.not_enough_gems') || "Necesitas 60 gemas para Mezclar");
+    if (isPaid && gems < 60) {
+      toast.error(t('game.not_enough_gems') || 'Necesitas 60 gemas para Mezclar');
+      return;
     }
+    requestPowerup('shuffle', isPaid);
   };
 
   const handleUndoClick = () => {
     const isPaid = undos === 0;
-    if (!isPaid || gems >= 25) {
-      if (isPaid) {
-        onSpendGems?.(25);
-      } else {
-        onUseUndo?.();
-      }
-
-      // Tracking ÚNICO y DETALLADO
-      trackEvent('powerup_used', { 
-        type: 'undo', 
-        level: level.id, 
-        payment: isPaid ? 'gems' : 'stock',
-        cost: isPaid ? 25 : 0,
-        gems_remaining: gems - (isPaid ? 25 : 0)
-      });
-
-      setUndoTrigger(prev => prev + 1);
-    } else {
-      toast.error(t('game.not_enough_gems') || "Necesitas 25 gemas para Deshacer");
+    if (isPaid && gems < 25) {
+      toast.error(t('game.not_enough_gems') || 'Necesitas 25 gemas para Deshacer');
+      return;
     }
+    requestPowerup('undo', isPaid);
   };
+
+  const handlePowerupModalConfirm = () => {
+    if (!pendingPowerup) return;
+    const { type, mode, willSpendGems } = pendingPowerup;
+    markIntroShown(type);
+    if (mode === 'confirm' && willSpendGems) incrementConfirmCount(type);
+    // Si venimos de "intro" y va a gastar gemas, contamos también este uso
+    // como una de las 3 confirmaciones consumidas.
+    if (mode === 'intro' && willSpendGems) incrementConfirmCount(type);
+    setPendingPowerup(null);
+    executePowerup(type);
+  };
+
+  const handlePowerupModalCancel = () => {
+    if (pendingPowerup) markIntroShown(pendingPowerup.type);
+    setPendingPowerup(null);
+  };
+
 
   const handleRescueDismiss = () => {
     setShowRescueOffer(false);
