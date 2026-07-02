@@ -7,7 +7,7 @@ import { CloseDefeatOffer } from './game/CloseDefeatOffer';
 import { GemsBanner } from './game/GemsBanner';
 import { FlashOffer } from './game/FlashOffer';
 import { ComboMultiplier } from './game/ComboMultiplier';
-import { SuperComboBanner } from './game/SuperComboBanner';
+// SuperComboBanner eliminado — su rol lo absorbe ComboMultiplier (sello Candy-Crush centrado).
 import { BuyMovesOffer } from './game/BuyMovesOffer';
 import { DefeatPacksOffer } from './game/DefeatPacksOffer';
 import { Level10Paywall } from './game/Level10Paywall';
@@ -94,7 +94,7 @@ export const GameScreen = ({
   const [rescueData, setRescueData] = useState({ attempts: 0, movesShort: 0, levelNumber: 1 });
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [superComboMax, setSuperComboMax] = useState(0);
+  // superComboMax eliminado — ComboMultiplier centrado ya cubre x3+ con sus propios textos.
   const cascadeMaxRef = useRef(1);
   const cascadeTotalRef = useRef(0);
   const cascadeEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -411,12 +411,12 @@ export const GameScreen = ({
         } catch {}
       }
       if (max >= 3) {
-        setSuperComboMax(max);
         setFirstBigTrigger((n) => n + 1);
         try {
           trackEvent('super_combo_celebrated', { level: level.id, multiplier: max });
         } catch {}
       }
+
       cascadeMaxRef.current = 1;
       cascadeTotalRef.current = 0;
       setCombo(0);
@@ -727,7 +727,7 @@ export const GameScreen = ({
         <FirstMoveHint levelId={level.id} />
 
         {/* Board */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="relative flex-1 flex items-center justify-center">
           <Board
             onMatch={handleMatch}
             onMove={handleMove}
@@ -763,7 +763,10 @@ export const GameScreen = ({
               : 0
             }
           />
+          {/* Sello combo estilo Candy Crush — centrado sobre el tablero, no bloquea clicks */}
+          <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
         </div>
+
 
         {/* Power-ups UI */}
         <div className="grid grid-cols-3 gap-3 mb-4">
@@ -827,9 +830,8 @@ export const GameScreen = ({
           </div>
         )}
 
-        {/* Combo Multiplier */}
-        <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
-        <SuperComboBanner maxMultiplier={superComboMax} onDone={() => setSuperComboMax(0)} />
+        {/* ComboMultiplier ahora se renderiza dentro del wrapper del Board (sello centrado). */}
+
 
         {/* Close Defeat Offer */}
         {showCloseDefeatOffer && (

@@ -135,14 +135,14 @@ export default {
             transform: "translateY(0)",
           },
         },
-        "fade-out": {
-          "0%": { opacity: "1", transform: "translateY(0) scale(1)" },
-          "100%": { opacity: "0", transform: "translateY(-4px) scale(0.96)" },
+        "combo-stamp-in": {
+          "0%": { opacity: "0", transform: "scale(0.3)" },
+          "60%": { opacity: "1", transform: "scale(1.2)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
         },
-        "combo-pop": {
-          "0%": { opacity: "0", transform: "translateY(-6px) scale(0.85)" },
-          "60%": { opacity: "1", transform: "translateY(0) scale(1.08)" },
-          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        "combo-stamp-out": {
+          "0%": { opacity: "1", transform: "scale(1) translateY(0)" },
+          "100%": { opacity: "0", transform: "scale(1.15) translateY(-6px)" },
         },
       },
       animation: {
@@ -154,9 +154,10 @@ export default {
         "shine": "shine 3s linear infinite",
         "float": "float 3s ease-in-out infinite",
         "fade-in": "fade-in 0.25s ease-out",
-        "fade-out": "fade-out 0.25s ease-in forwards",
-        "combo-pop": "combo-pop 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards",
+        "combo-stamp-in": "combo-stamp-in 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards",
+        "combo-stamp-out": "combo-stamp-out 0.3s ease-in forwards",
       },
+
 
     },
   },
