@@ -57,7 +57,15 @@ export const Board = ({
   const matchCountRef = useRef(0);
   const cascadeStepRef = useRef(0);
   const hasFiredFirstMatchRef = useRef(false);
-  
+
+  // FX: shake trigger + intensity + particle bursts + white flash for x5+
+  const [shakeTrigger, setShakeTrigger] = useState(0);
+  const shakeIntensityRef = useRef<'light' | 'medium' | 'heavy'>('light');
+  const [bursts, setBursts] = useState<Array<{ id: number; row: number; col: number; big: boolean }>>([]);
+  const burstIdRef = useRef(0);
+  const [flash, setFlash] = useState(false);
+  const { impact } = useHaptics();
+
   // Use mystical fairy sounds
   const { playSelectSound, playMatchSound, playInvalidSound, playShuffleSound } = useMysticSounds();
 
