@@ -22,7 +22,7 @@ interface CustomizeScreenProps {
   onBack: () => void;
 }
 
-const TILE_EMOJIS = ["🌸", "🌺", "🌼", "🍃", "🌻", "🌷"];
+const TILE_EMOJIS = ["🌸", "🪻", "🌼", "🍃", "🌻", "🌷"];
 const SLOT_BORDERS = [
   "border-rose-500 shadow-[0_0_18px_-4px_rgba(244,63,94,0.7)]",
   "border-sky-500 shadow-[0_0_18px_-4px_rgba(14,165,233,0.7)]",
