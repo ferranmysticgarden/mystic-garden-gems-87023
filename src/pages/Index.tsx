@@ -1052,7 +1052,7 @@ const Index = () => {
             </button>
           </div>
         </div>
-        {/* Header */}
+        {/* Compact HUD */}
         <GameHeader
           lives={gameState.lives}
           gems={gameState.gems}
@@ -1063,9 +1063,10 @@ const Index = () => {
             setScreen("shop");
           }}
         />
-        {/* T5 — Piggy bank button (only after level 1) */}
+
+        {/* Piggy bank (after level 1) */}
         {!isNewUser && (
-          <div className="flex justify-end -mt-3 mb-3">
+          <div className="flex justify-end -mt-3 mb-2">
             <PiggyBank
               amount={piggyBank.amount}
               cap={piggyBank.cap}
@@ -1076,180 +1077,127 @@ const Index = () => {
             />
           </div>
         )}
-        {/* Streak Reminder Banner - SOLO después de nivel 2 */}
-        {!isNewUser && <StreakReminderBanner onClick={() => setShowStreakCalendar(true)} />}
-        {/* Day Counter - SOLO después de nivel 2 */}
-        {!isNewUser && <DayCounter currentStreak={streakData.currentStreak} />}
-        {/* Visual Garden - SOLO después de nivel 3 */}
-        {!isNewUser && (
-          <div className="mb-4">
-            <VisualGarden levelsCompleted={gameState.completedLevels.length} />
-          </div>
-        )}
-        {/* Progression Bar - SOLO después de nivel 3 */}
-        {!isNewUser && (
-          <div className="mb-4">
-            <ProgressionBar />
-          </div>
-        )}
-        {/* Logo - hidden admin access: tap 5 times */}
-        <div className="mb-6 flex justify-center text-center">
-          <button
-            type="button"
-            className="mx-auto flex w-full max-w-xs flex-col items-center rounded-3xl px-6 py-4 transition-transform duration-150 active:scale-[0.98] touch-manipulation"
-            onPointerUp={handleAdminAccessTap}
-            aria-label="Mystic Garden"
-          >
-            <h1 className="text-5xl font-bold text-gold mb-2 drop-shadow-lg select-none">{t("game.title")}</h1>
-            <div className="text-6xl mb-4">🌸🌺🌼</div>
-            <span className="sr-only">Pulsa 5 veces para abrir el panel de administración</span>
-          </button>
+
+        {/* Level Map - main content */}
+        <div className="mt-2">
+          <LevelMap
+            currentLevel={gameState.currentLevel}
+            completedLevels={gameState.completedLevels}
+            onLevelClick={handleSelectLevel}
+          />
         </div>
-        {/* Main Menu */}
-        <div className="gradient-card shadow-card rounded-2xl p-6 mb-4">
-          <div className="text-center mb-6">
-            <div className="text-lg font-semibold mb-2">
-              {t("game.level")} {gameState.currentLevel}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {currentLevel.objective.type === "score"
-                ? `${t("game.collect")} ${currentLevel.objective.count} ${t("game.points")}`
-                : `${t("game.collect")} ${currentLevel.objective.count} ${currentLevel.objective.target}`}
-            </div>
-          </div>
-          <Button
-            onClick={handlePlayClick}
-            className="w-full gradient-gold shadow-gold text-xl py-6 hover:scale-105 transition-all mb-3"
-            id="play-game-btn"
-          >
-            <Play className="w-6 h-6 mr-2" />
-            {t("game.play")}
-          </Button>
-          <Button
-            onClick={() => {
-              trackEvent('shop_opened', { source: 'main_button' });
-              setScreen("shop");
-            }}
-            variant="outline"
-            className="w-full mb-2 hover:scale-105 active:scale-95 transition-transform duration-100"
-          >
-            <ShoppingBag className="w-5 h-5 mr-2" />
-            Abrir tienda
-          </Button>
-          <p className="text-center text-xs text-muted-foreground mb-4">
-            Si quieres comprar, pulsa <span className="font-semibold text-foreground">Abrir tienda</span> o el botón de{" "}
-            <span className="font-semibold text-foreground">💎 gemas</span> arriba.
-          </p>
-          {!user && (
-            <Button
-              onClick={handleDirectGoogleSignIn}
-              variant="outline"
-              className="w-full mb-4 hover:scale-105 active:scale-95 transition-transform duration-100"
-            >
-              Continuar con Google
-            </Button>
-          )}
 
-          {/* HERO: Personalizar (movido fuera del grid; era un botón outline gris) */}
+        {/* Secondary actions row */}
+        <div className="mt-4 flex flex-col gap-2 pb-6">
           <PersonalizeHeroButton onClick={() => setScreen("customize")} />
-
-          {/* Botones de navegación principal - SIEMPRE VISIBLES */}
-          <div className="mt-1">
-            <Button
-              onClick={() => setScreen("levels")}
-              variant="outline"
-              className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
-            >
-              <Grid3x3 className="w-5 h-5 mr-2" />
-              {t("menu.levels")}
-            </Button>
-          </div>
-
-          {/* Cómo jugar - siempre visible */}
-          <div className="mt-3">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               onClick={() => setScreen("howtoplay")}
               variant="outline"
-              className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
+              size="sm"
+              className="w-full"
             >
-              <HelpCircle className="w-5 h-5 mr-2" />
+              <HelpCircle className="w-4 h-4 mr-1" />
               {t("menu.how_to_play")}
             </Button>
+            {!user ? (
+              <Button
+                onClick={handleDirectGoogleSignIn}
+                variant="outline"
+                size="sm"
+                className="w-full"
+                aria-label="Continuar con Google"
+              >
+                <User className="w-4 h-4 mr-1" />
+                Google
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  trackEvent('shop_opened', { source: 'secondary_button' });
+                  setScreen("shop");
+                }}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                <ShoppingBag className="w-4 h-4 mr-1" />
+                {t("menu.shop")}
+              </Button>
+            )}
           </div>
-
-          {/* Botones secundarios - SOLO después de nivel 2 */}
+          {/* Player Rank (after level 5) */}
           {!isNewUser && (
-            <>
-              <div className="mt-3">
-                <Button
-                  onClick={() => {
-                    trackEvent('shop_opened', { source: 'secondary_button' });
-                    setScreen("shop");
-                  }}
-                  variant="outline"
-                  className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
-                >
-                  <ShoppingBag className="w-5 h-5 mr-2" />
-                  {t("menu.shop")}
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <Button
-                  onClick={() => setShowBattlePass(true)}
-                  variant="outline"
-                  className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 hover:border-yellow-400"
-                >
-                  <Crown className="w-5 h-5 mr-2 text-yellow-400" />
-                  <span className="text-yellow-400 font-semibold text-sm">Battle Pass</span>
-                </Button>
-                <Button
-                  onClick={() => setShowStreakCalendar(true)}
-                  variant="outline"
-                  className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50 hover:border-orange-400 relative"
-                >
-                  <Flame className="w-5 h-5 mr-2 text-orange-400" />
-                  <span className="text-orange-400 font-semibold text-sm">
-                    Racha {streakData.currentStreak > 0 ? `🔥${streakData.currentStreak}` : ""}
-                  </span>
-                  {streakData.canClaimToday && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                  )}
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <Button
-                  onClick={() => setShowDailyMissions(true)}
-                  variant="outline"
-                  className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 hover:border-blue-400"
-                >
-                  <Target className="w-5 h-5 mr-2 text-blue-400" />
-                  <span className="text-blue-400 font-semibold text-sm">Misiones</span>
-                </Button>
-                <Button
-                  onClick={() => setShowLootChest(true)}
-                  variant="outline"
-                  className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/50 hover:border-amber-400"
-                >
-                  <Gift className="w-5 h-5 mr-2 text-amber-400" />
-                  <span className="text-amber-400 font-semibold text-sm">Cofres</span>
-                </Button>
-              </div>
-              {/* Player Rank Display */}
-              <div className="mt-4">
-                <PlayerRank levelsCompleted={gameState.completedLevels.length} />
-              </div>
-            </>
+            <div className="mt-2">
+              <PlayerRank levelsCompleted={gameState.completedLevels.length} />
+            </div>
           )}
         </div>
-        {/* Rewarded Ads Section - SOLO después de nivel 3 */}
-        {!isNewUser && (
-          <div className="mb-4">
-            <RewardedAds onRewardEarned={handleRewardedAdEarned} currentLevel={gameState.currentLevel} />
-          </div>
-        )}
+
+        {/* Hidden admin access (tap 5 times) */}
+        <button
+          type="button"
+          onPointerUp={handleAdminAccessTap}
+          className="fixed bottom-1 left-1 w-10 h-10 opacity-0 z-50"
+          aria-hidden="true"
+          tabIndex={-1}
+        />
       </div>
-      {/* Shop Modal - SIEMPRE ACCESIBLE */}
-      {screen === "shop" && (
+
+      {/* Side icon column (after level 2) */}
+      <SideIconsColumn
+        visible={!isNewUser}
+        onBattlePass={() => setShowBattlePass(true)}
+        onStreak={() => setShowStreakCalendar(true)}
+        onMissions={() => setShowDailyMissions(true)}
+        onLootChest={() => setShowLootChest(true)}
+        onShop={() => {
+          trackEvent('shop_opened', { source: 'side_icons' });
+          setScreen("shop");
+        }}
+        streakCount={streakData.currentStreak}
+        canClaimStreak={streakData.canClaimToday}
+      />
+
+      {/* Corner rewarded ad button */}
+      {!isNewUser && (
+        <WatchAdCornerButton onClick={() => setShowAdModal(true)} />
+      )}
+
+      {/* Rewarded ad modal (bottom sheet) */}
+      {showAdModal && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 flex items-end"
+          onClick={() => setShowAdModal(false)}
+        >
+          <div
+            className="w-full bg-background border-t border-border rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-lg">Ver anuncio</h3>
+              <button
+                onClick={() => setShowAdModal(false)}
+                aria-label="Cerrar"
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+            <RewardedAds
+              onRewardEarned={(g) => {
+                handleRewardedAdEarned(g);
+                setShowAdModal(false);
+              }}
+              currentLevel={gameState.currentLevel}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Splash (one-shot per session) */}
+      <SplashScreen />
+
         <Shop
           onClose={() => setScreen("menu")}
           onPurchase={handlePurchase}
