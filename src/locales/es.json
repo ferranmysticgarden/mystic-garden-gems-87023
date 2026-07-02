@@ -103,6 +103,21 @@
     "customize": "Personalizar",
     "how_to_play": "Cómo jugar"
   },
+  "splash": {
+    "tagline": "Match-3 Photos"
+  },
+  "side_icons": {
+    "battle_pass": "Battle Pass",
+    "pass": "Pass",
+    "streak": "Racha diaria",
+    "streak_short": "Racha",
+    "missions": "Misiones diarias",
+    "missions_short": "Misión",
+    "chests": "Cofres",
+    "chests_short": "Cofre",
+    "shop": "Tienda",
+    "shop_short": "Tienda"
+  },
   "customize": {
     "title": "Personaliza tus fichas",
     "subtitle": "Elige una foto para cada tipo de ficha del juego.",

@@ -103,6 +103,21 @@
     "customize": "Customize",
     "how_to_play": "How to play"
   },
+  "splash": {
+    "tagline": "Match-3 Photos"
+  },
+  "side_icons": {
+    "battle_pass": "Battle Pass",
+    "pass": "Pass",
+    "streak": "Daily streak",
+    "streak_short": "Streak",
+    "missions": "Daily missions",
+    "missions_short": "Quest",
+    "chests": "Loot chests",
+    "chests_short": "Chest",
+    "shop": "Shop",
+    "shop_short": "Shop"
+  },
   "customize": {
     "title": "Customize your tiles",
     "subtitle": "Pick a photo for each tile type in the game.",
