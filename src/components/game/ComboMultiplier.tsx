@@ -9,38 +9,40 @@ interface ComboMultiplierProps {
 
 /**
  * CAMBIO SCORING — feedback visual del multiplicador por cascada.
- * Banner pequeño, lateral y sin bloquear. Cada combo vive su propio
- * ciclo de ~900 ms; no depende de que la cascada continúe.
+ * Banner lateral pequeño pero legible. Ciclo por combo:
+ *   250ms pop-in → 900ms visible → 250ms fade-out. Total ≈ 1400ms.
  */
 export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => {
   const { t } = useLanguage();
   const [visibleCombo, setVisibleCombo] = useState<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [phase, setPhase] = useState<'in' | 'out'>('in');
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endRef = useRef(onComboEnd);
 
-  // Mantener la callback actual sin reiniciar el timer en cada render.
   useEffect(() => {
     endRef.current = onComboEnd;
   }, [onComboEnd]);
 
-  // Cada vez que el multiplicador sube a >=2, mostramos el banner y
-  // forzamos su cierre tras 900 ms, independientemente de los matches
-  // posteriores. Si el combo sube más, reiniciamos el ciclo con el valor mayor.
   useEffect(() => {
     if (combo >= 2) {
       setVisibleCombo(combo);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
+      setPhase('in');
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+      // Tras 1150ms empieza el fade-out; a los 1400ms se desmonta.
+      hideTimer.current = setTimeout(() => setPhase('out'), 1150);
+      clearTimer.current = setTimeout(() => {
         setVisibleCombo(null);
         endRef.current?.();
-      }, 900);
+      }, 1400);
     }
   }, [combo]);
 
-  // Limpieza al desmontar para no dejar timers huérfanos.
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      if (clearTimer.current) clearTimeout(clearTimer.current);
     };
   }, []);
 
@@ -54,18 +56,20 @@ export const ComboMultiplier = ({ combo, onComboEnd }: ComboMultiplierProps) => 
   };
 
   const label = t('combo.x') || 'COMBO';
+  const anim = phase === 'in' ? 'animate-combo-pop' : 'animate-fade-out';
 
   return (
     <div
       key={visibleCombo}
-      className="fixed top-12 right-2 pointer-events-none z-40 animate-fade-in"
+      className={`fixed top-24 right-3 pointer-events-none z-40 ${anim}`}
     >
       <div
-        className={`bg-gradient-to-br ${getGradient()} px-1 py-0.5 rounded-lg border border-white/50`}
+        className={`bg-gradient-to-br ${getGradient()} px-3 py-1.5 rounded-xl border border-white/70`}
+        style={{ boxShadow: '0 0 12px rgba(255,200,60,0.55)' }}
       >
         <p
-          className="text-[10px] font-bold text-white tracking-wide"
-          style={{ textShadow: '0 1px 1px rgba(0,0,0,0.5)' }}
+          className="text-base font-black text-white tracking-wide leading-none"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}
         >
           {label} x{visibleCombo}!
         </p>

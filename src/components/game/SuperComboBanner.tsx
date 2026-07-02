@@ -9,37 +9,39 @@ interface SuperComboBannerProps {
 
 /**
  * CAMBIO SCORING — banner "¡INCREÍBLE!" / "¡SUPER COMBO!" tras cadenas x3+.
- * Banner pequeño, lateral y sin bloquear. Cada super-combo vive su propio
- * ciclo de ~900 ms; no depende de que la cascada continúe.
+ * Banner lateral pequeño pero legible. Ciclo por evento:
+ *   250ms pop-in → 900ms visible → 250ms fade-out. Total ≈ 1400ms.
  */
 export const SuperComboBanner = ({ maxMultiplier, onDone }: SuperComboBannerProps) => {
   const { t } = useLanguage();
   const [visibleMult, setVisibleMult] = useState<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [phase, setPhase] = useState<'in' | 'out'>('in');
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(onDone);
 
-  // Mantener la callback actual sin reiniciar el timer en cada render.
   useEffect(() => {
     doneRef.current = onDone;
   }, [onDone]);
 
-  // Cada vez que el multiplicador máximo sube a >=3, mostramos el banner y
-  // forzamos su cierre tras 900 ms, independientemente de los matches posteriores.
   useEffect(() => {
     if (maxMultiplier >= 3) {
       setVisibleMult(maxMultiplier);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
+      setPhase('in');
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+      hideTimer.current = setTimeout(() => setPhase('out'), 1150);
+      clearTimer.current = setTimeout(() => {
         setVisibleMult(null);
         doneRef.current?.();
-      }, 900);
+      }, 1400);
     }
   }, [maxMultiplier]);
 
-  // Limpieza al desmontar.
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      if (clearTimer.current) clearTimeout(clearTimer.current);
     };
   }, []);
 
@@ -52,17 +54,23 @@ export const SuperComboBanner = ({ maxMultiplier, onDone }: SuperComboBannerProp
       ? t('combo.super') || '¡SUPER COMBO!'
       : t('combo.amazing') || '¡INCREÍBLE!';
 
+  const anim = phase === 'in' ? 'animate-combo-pop' : 'animate-fade-out';
+
   return (
-    <div key={visibleMult} className="fixed top-20 right-2 pointer-events-none z-40 animate-fade-in">
+    <div
+      key={visibleMult}
+      className={`fixed top-36 right-3 pointer-events-none z-40 ${anim}`}
+    >
       <div
-        className="px-1 py-0.5 rounded-lg border border-white/50"
+        className="px-3 py-1.5 rounded-xl border border-white/70"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,215,0,0.95) 0%, rgba(255,107,0,0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(255,215,0,0.97) 0%, rgba(255,107,0,0.97) 100%)',
+          boxShadow: '0 0 14px rgba(255,165,0,0.6)',
         }}
       >
         <p
-          className="text-[10px] font-bold text-white tracking-wide"
-          style={{ textShadow: '0 1px 1px rgba(0,0,0,0.6)' }}
+          className="text-base font-black text-white tracking-wide leading-none"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
         >
           {text}
         </p>
