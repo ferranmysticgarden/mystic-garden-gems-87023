@@ -1160,6 +1160,18 @@ const Index = () => {
             </Button>
           </div>
 
+          {/* Cómo jugar - siempre visible */}
+          <div className="mt-3">
+            <Button
+              onClick={() => setScreen("howtoplay")}
+              variant="outline"
+              className="w-full hover:scale-105 active:scale-95 transition-transform duration-100"
+            >
+              <HelpCircle className="w-5 h-5 mr-2" />
+              {t("menu.how_to_play")}
+            </Button>
+          </div>
+
           {/* Botones secundarios - SOLO después de nivel 2 */}
           {!isNewUser && (
             <>
