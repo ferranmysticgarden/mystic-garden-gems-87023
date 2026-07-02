@@ -331,6 +331,37 @@ export const Board = ({
     });
     
     setAnimatingTiles(animatingKeys);
+
+    // FX: shake + partículas + flash + haptics según tamaño del match / cascada
+    try {
+      const step = cascadeStepRef.current + 1; // este step está a punto de emitirse
+      const big = biggestGroup >= 5 || step >= 4;
+      // Screen shake
+      if (FEATURE_FLAGS.screenShake && biggestGroup >= 4) {
+        shakeIntensityRef.current =
+          biggestGroup >= 6 || step >= 4 ? 'heavy' : biggestGroup >= 5 ? 'medium' : 'light';
+        setShakeTrigger((n) => n + 1);
+      }
+      // Haptics
+      if (biggestGroup >= 5 || step >= 4) impact('heavy');
+      else if (biggestGroup >= 4) impact('medium');
+      else impact('light');
+      // Flash blanco en combo x5+
+      if (step >= 5) {
+        setFlash(true);
+        setTimeout(() => setFlash(false), 140);
+      }
+      // Partículas: burst por cada tile eliminado
+      if (FEATURE_FLAGS.tileParticles) {
+        const now = burstIdRef.current;
+        const added = matches.map((m, i) => ({ id: now + i, row: m.row, col: m.col, big }));
+        burstIdRef.current = now + matches.length;
+        setBursts((prev) => [...prev, ...added]);
+        const ids = added.map((a) => a.id);
+        setTimeout(() => setBursts((prev) => prev.filter((b) => !ids.includes(b.id))), 700);
+      }
+    } catch {}
+
     
     setTimeout(() => {
       setAnimatingTiles(new Set());
