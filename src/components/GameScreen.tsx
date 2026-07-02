@@ -94,7 +94,7 @@ export const GameScreen = ({
   const [rescueData, setRescueData] = useState({ attempts: 0, movesShort: 0, levelNumber: 1 });
   const [movesShortBy, setMovesShortBy] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [superComboMax, setSuperComboMax] = useState(0);
+  // superComboMax eliminado — ComboMultiplier centrado ya cubre x3+ con sus propios textos.
   const cascadeMaxRef = useRef(1);
   const cascadeTotalRef = useRef(0);
   const cascadeEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
