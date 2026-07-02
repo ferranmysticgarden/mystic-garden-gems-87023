@@ -193,7 +193,11 @@ export const LevelMap = ({
           const nodeState = isCompleted ? "completed" : isCurrent ? "current" : isLocked ? "locked" : "unlocked";
           const nodeSize = isLocked ? LOCKED_NODE_SIZE : UNLOCKED_NODE_SIZE;
           const nodeVisual = getNodeVisual(nodeState);
-          const earnedStarCount = isCompleted ? Math.max(1, Math.min(3, starsEarned[n.id] ?? 3)) : 0;
+          const rawStars = starsEarned[n.id];
+          const earnedStarCount = isCompleted
+            ? Math.max(1, Math.min(3, typeof rawStars === "number" ? rawStars : 3))
+            : 0;
+          const showStars = isCompleted && earnedStarCount > 0;
 
           return (
             <div
@@ -206,7 +210,7 @@ export const LevelMap = ({
                 top: n.y - UNLOCKED_NODE_SIZE / 2 - 24,
               }}
             >
-              {isCompleted && (
+              {showStars && (
                 <div className="absolute top-0 left-1/2 flex -translate-x-1/2 items-end gap-0.5 pointer-events-none" aria-hidden="true">
                   {[1, 2, 3].map((starIndex) => {
                     const starObtained = starIndex <= earnedStarCount;
