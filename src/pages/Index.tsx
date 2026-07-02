@@ -568,10 +568,16 @@ const Index = () => {
     }
   };
   const handleWin = useCallback(
-    async (stars: number, reward: { gems?: number }) => {
+    async (stars: number, reward: { gems?: number }, telemetry?: { score: number; moves_used: number }) => {
       const isBonus = !!currentLevel.bonus;
       completeLevel(currentLevel.id, reward, !isBonus);
-      trackEvent('level_completed', { level: currentLevel.id, bonus: isBonus });
+      trackEvent('level_completed', {
+        level: currentLevel.id,
+        bonus: isBonus,
+        score: telemetry?.score ?? null,
+        moves_used: telemetry?.moves_used ?? null,
+      });
+
       toast.success(`${t("game.win")}${reward.gems ? ` +${reward.gems} 💎` : ""}`);
 
       setConsecutiveLosses(0);
