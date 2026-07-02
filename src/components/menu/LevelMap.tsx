@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { Lock, Star, Play } from "lucide-react";
 import { LEVELS } from "@/data/levels";
 import { useLanguage } from "@/hooks/useLanguage";
+import { WorldBanner } from "@/components/menu/WorldBanner";
+import { FairyLuna } from "@/components/menu/FairyLuna";
 
 interface LevelMapProps {
   currentLevel: number;
