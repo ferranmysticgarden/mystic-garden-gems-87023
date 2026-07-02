@@ -103,7 +103,7 @@ export const THEME_MAP: Record<ThemeId, ThemeDefinition> = Object.fromEntries(
 export const DEFAULT_THEME_ID: ThemeId = 'flowers';
 
 export const THEME_TILE_MAP: Record<ThemeId, Record<string, string>> = {
-  flowers: { t1: '🌸', t2: '🌺', t3: '🌼', t4: '🍃', t5: '🌻', t6: '🌷' },
+  flowers: { t1: '🌸', t2: '🪻', t3: '🌼', t4: '🍃', t5: '🌻', t6: '🌷' },
   animals: Object.fromEntries(['t1','t2','t3','t4','t5','t6'].map((tileId, index) => [tileId, `/themes/animals/icon_${index + 1}.png`])),
   desserts: Object.fromEntries(['t1','t2','t3','t4','t5','t6'].map((tileId, index) => [tileId, `/themes/desserts/icon_${index + 1}.png`])),
   fruits: Object.fromEntries(['t1','t2','t3','t4','t5','t6'].map((tileId, index) => [tileId, `/themes/fruits/icon_${index + 1}.png`])),
