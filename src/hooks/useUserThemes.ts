@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { LS_KEYS } from '@/constants/localStorageKeys';
 import { DEFAULT_THEME_ID, THEME_LEVEL_UNLOCKS, THEME_MAP, THEMES, type ThemeId, type ThemeUnlockMethod } from '@/data/themes';
@@ -42,11 +42,31 @@ const loadActiveTheme = (): ThemeId => {
   }
 };
 
+// Store módulo-nivel para activeTheme: garantiza que TODAS las instancias
+// del hook (CustomizeScreen, Tile, GameHeader…) compartan el mismo valor
+// y se re-rendericen cuando cambia. Patrón useSyncExternalStore, igual que
+// tileSkinStore. Sin esto, cada componente tenía su copia local desincronizada.
+let activeThemeSnapshot: ThemeId = loadActiveTheme();
+const activeThemeListeners = new Set<() => void>();
+const activeThemeStore = {
+  getSnapshot: (): ThemeId => activeThemeSnapshot,
+  subscribe: (listener: () => void) => {
+    activeThemeListeners.add(listener);
+    return () => activeThemeListeners.delete(listener);
+  },
+  set: (next: ThemeId) => {
+    if (activeThemeSnapshot === next) return;
+    activeThemeSnapshot = next;
+    try { localStorage.setItem(ACTIVE_THEME_KEY, next); } catch { /* best effort */ }
+    activeThemeListeners.forEach((l) => l());
+  },
+};
+
 export const useUserThemes = () => {
   const { user } = useAuth();
   const { gameState } = useGameState();
   const [unlockMap, setUnlockMap] = useState<ThemeUnlockMap>(() => ({ flowers: 'default', ...loadGuestUnlocks() }));
-  const [activeTheme, setActiveThemeState] = useState<ThemeId>(() => loadActiveTheme());
+  const activeTheme = useSyncExternalStore(activeThemeStore.subscribe, activeThemeStore.getSnapshot, activeThemeStore.getSnapshot);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -83,16 +103,17 @@ export const useUserThemes = () => {
   }, [refresh]);
 
   useEffect(() => {
-    if (!THEME_MAP[activeTheme] || !(activeTheme in unlockMap)) {
-      setActiveThemeState(DEFAULT_THEME_ID);
-      localStorage.setItem(ACTIVE_THEME_KEY, DEFAULT_THEME_ID);
+    // Guard aflojado: solo reset si el tema NO existe en THEME_MAP (id inválido).
+    // Antes se reseteaba también si no estaba en unlockMap, provocando carrera
+    // con refresh() async y volviendo a 'flowers' un tema recién aplicado.
+    if (!THEME_MAP[activeTheme]) {
+      activeThemeStore.set(DEFAULT_THEME_ID);
     }
-  }, [activeTheme, unlockMap]);
+  }, [activeTheme]);
 
   const setActiveTheme = useCallback((themeId: ThemeId) => {
     if (!(themeId in unlockMap)) return false;
-    setActiveThemeState(themeId);
-    localStorage.setItem(ACTIVE_THEME_KEY, themeId);
+    activeThemeStore.set(themeId);
     trackEvent('theme_applied', { theme_id: themeId });
     return true;
   }, [unlockMap]);
