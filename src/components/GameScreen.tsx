@@ -81,6 +81,7 @@ export const GameScreen = ({
 }: GameScreenProps) => {
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
+  const { activeTheme } = useUserThemes();
   const [moves, setMoves] = useState(initialMoves ?? level.moves);
   const [score, setScore] = useState(initialScore ?? 0);
   const [collected, setCollected] = useState<Record<string, number>>(initialCollected ?? {});
