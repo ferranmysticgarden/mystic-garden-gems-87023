@@ -84,7 +84,7 @@ import { HowToPlayScreen } from "@/components/HowToPlayScreen";
 import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
 import { THEME_MAP, type ThemeId } from "@/data/themes";
 import { useUserThemes } from "@/hooks/useUserThemes";
-type Screen = "menu" | "game" | "levels" | "shop" | "customize";
+type Screen = "menu" | "game" | "levels" | "shop" | "customize" | "howtoplay";
 const Index = () => {
   const navigate = useNavigate();
   const adminTapsRef = useRef<number[]>([]);
