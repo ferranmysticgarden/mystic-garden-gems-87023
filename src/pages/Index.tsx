@@ -78,7 +78,7 @@ import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
 import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
 import { toast } from "sonner";
-import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette } from "lucide-react";
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle } from "lucide-react";
 import { CustomizeScreen } from "@/components/CustomizeScreen";
 import { HowToPlayScreen } from "@/components/HowToPlayScreen";
 import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
