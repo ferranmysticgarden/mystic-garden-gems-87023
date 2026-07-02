@@ -961,6 +961,18 @@ export const GameScreen = ({
           firstMatchMade={firstMatchMade}
         />
 
+        {/* Modal educativo / confirmación de gasto para los 3 power-ups */}
+        {pendingPowerup && (
+          <PowerupIntroModal
+            open
+            type={pendingPowerup.type}
+            mode={pendingPowerup.mode}
+            willSpendGems={pendingPowerup.willSpendGems}
+            onConfirm={handlePowerupModalConfirm}
+            onCancel={handlePowerupModalCancel}
+          />
+        )}
+
         {/* Tip 1 — Intro a combos antes del primer nivel score */}
         <ComboTipIntroModal
           levelId={level.id}
