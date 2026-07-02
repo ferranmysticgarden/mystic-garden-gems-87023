@@ -180,5 +180,66 @@
     "body": "Sustituye las flores por fotos de tu familia, mascotas o lo que quieras. ¡Es gratis!",
     "accept": "¡Sí, mostrar cómo!",
     "later": "Más tarde"
+  },
+  "powerup": {
+    "intro": {
+      "cost": "Coste:",
+      "free": "¡Gratis esta vez!",
+      "use_now": "Usar ahora",
+      "confirm": "Sí, usar",
+      "cancel": "Cancelar",
+      "hammer": {
+        "title": "🔨 Martillo",
+        "desc": "Rompe cualquier ficha del tablero. Toca el martillo y después la ficha que quieras eliminar."
+      },
+      "shuffle": {
+        "title": "🔀 Mezclar",
+        "desc": "Reorganiza todas las fichas del tablero. Úsalo cuando no encuentres movimientos."
+      },
+      "undo": {
+        "title": "↩️ Deshacer",
+        "desc": "Revierte tu último movimiento sin perder el intento."
+      }
+    }
+  },
+  "howtoplay": {
+    "title": "Cómo jugar",
+    "matches": {
+      "title": "Puntuación por combinación",
+      "m3": "Match-3 (3 iguales)",
+      "m4": "Match-4 (4 iguales)",
+      "m5": "Match-5 (5 iguales)",
+      "m6": "Match-6+ (6 o más)",
+      "hint": "Cuanto más grande la combinación, más puntos y bonus especiales."
+    },
+    "combos": {
+      "title": "Combos en cascada",
+      "desc": "Cuando las fichas caen y forman nuevas combinaciones seguidas, se multiplica tu puntuación:"
+    },
+    "powerups": {
+      "title": "Power-ups",
+      "hammer": "Martillo — rompe 1 ficha",
+      "shuffle": "Mezclar — reorganiza el tablero",
+      "undo": "Deshacer — revierte último movimiento",
+      "hint": "Si no tienes gemas suficientes, aparece un aviso. Los power-ups del inventario son gratis."
+    },
+    "objectives": {
+      "title": "Tipos de nivel",
+      "collect": "Recolectar: junta X fichas de un tipo",
+      "score": "Puntuación: alcanza X puntos antes de que se acaben los movimientos",
+      "bonus": "Bonus: niveles especiales con recompensa extra"
+    },
+    "themes": {
+      "title": "Temas y personalización",
+      "desc": "Puedes cambiar los iconos del tablero (flores, animales, frutas, postres…) o poner TUS fotos en cada ficha desde la sección Personalizar."
+    },
+    "economy": {
+      "title": "Economía del juego",
+      "lives": "Vidas: se regeneran con el tiempo",
+      "piggy": "Hucha: acumula gemas al fallar y desbloquéala",
+      "pass": "Pase de Jardín: recompensas premium por progresar",
+      "streak": "Racha diaria: entra cada día para bonus"
+    },
+    "footer": "¡Suerte en el jardín!"
   }
 }
