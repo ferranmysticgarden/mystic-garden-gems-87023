@@ -136,8 +136,13 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[claim-daily-streak] ERROR', message);
+    let message = 'Unknown error';
+    try {
+      if (error instanceof Error) message = error.message;
+      else if (typeof error === 'string') message = error;
+      else message = JSON.stringify(error);
+    } catch { /* ignore */ }
+    console.error('[claim-daily-streak] ERROR', message, 'RAW:', JSON.stringify(error, Object.getOwnPropertyNames(error ?? {})));
     return new Response(JSON.stringify({ success: false, error: message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
