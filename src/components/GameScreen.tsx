@@ -727,7 +727,7 @@ export const GameScreen = ({
         <FirstMoveHint levelId={level.id} />
 
         {/* Board */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="relative flex-1 flex items-center justify-center">
           <Board
             onMatch={handleMatch}
             onMove={handleMove}
@@ -763,7 +763,10 @@ export const GameScreen = ({
               : 0
             }
           />
+          {/* Sello combo estilo Candy Crush — centrado sobre el tablero, no bloquea clicks */}
+          <ComboMultiplier combo={combo} onComboEnd={handleComboEnd} />
         </div>
+
 
         {/* Power-ups UI */}
         <div className="grid grid-cols-3 gap-3 mb-4">
