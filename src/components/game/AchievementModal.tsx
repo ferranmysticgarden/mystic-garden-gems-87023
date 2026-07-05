@@ -49,7 +49,7 @@ export const AchievementModal = ({ achievement, onClose }: AchievementModalProps
           onClick={onClose}
           className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-3 rounded-xl"
         >
-          ¡GENIAL! 🎉
+          {t('combo.genial')} 🎉
         </Button>
       </div>
     </div>
