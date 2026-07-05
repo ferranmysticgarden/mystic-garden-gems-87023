@@ -51,10 +51,10 @@ export const HowToPlayScreen = ({ onBack }: Props) => {
         <Section title={t('howtoplay.combos.title')}>
           <p>{t('howtoplay.combos.desc')}</p>
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <div className="bg-muted/40 p-2 rounded"><b>x2</b> — ¡GENIAL!</div>
-            <div className="bg-muted/40 p-2 rounded"><b>x3</b> — ¡INCREÍBLE!</div>
-            <div className="bg-muted/40 p-2 rounded"><b>x4</b> — ¡ESPECTACULAR!</div>
-            <div className="bg-muted/40 p-2 rounded"><b>x5</b> — ¡MÁGICO!</div>
+            <div className="bg-muted/40 p-2 rounded"><b>x2</b> — {t('combo.genial')}</div>
+            <div className="bg-muted/40 p-2 rounded"><b>x3</b> — {t('combo.incredible')}</div>
+            <div className="bg-muted/40 p-2 rounded"><b>x4</b> — {t('combo.spectacular')}</div>
+            <div className="bg-muted/40 p-2 rounded"><b>x5</b> — {t('combo.magic')}</div>
           </div>
         </Section>
 
