@@ -37,10 +37,10 @@ const detectLanguage = (): Language => {
 export const useLanguage = () => {
   const [language, setLanguageState] = useState<Language>(detectLanguage());
 
-  // Persist on first detection so subsequent renders are stable.
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, language); } catch { /* ignore */ }
-  }, [language]);
+  // Do NOT persist auto-detection. Only persist when the user explicitly picks a
+  // language via setLanguage(). This prevents a bad first-boot detection
+  // (e.g. Android WebView returning 'en-US' momentarily) from getting stuck
+  // forever in localStorage.
 
   const setLanguage = useCallback((lang: Language) => {
     try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* ignore */ }
