@@ -522,6 +522,10 @@ const Index = () => {
     const key = streak === 5 ? LS_KEYS.STREAK_BONUS_5_LAST_SHOWN : LS_KEYS.STREAK_BONUS_7_LAST_SHOWN;
     const last = parseInt(localStorage.getItem(key) ?? "0", 10);
     if (Date.now() - last < 24 * 60 * 60 * 1000) return;
+    if (isPostVictoryOfferLocked()) {
+      trackEvent("offer_suppressed", { source: "StreakBonusOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), streakDays: streak });
+      return;
+    }
     if (!tryClaimEngagementSlot()) return;
     localStorage.setItem(key, String(Date.now()));
     trackEvent("streak_bonus_offer_shown", { streakDays: streak });
