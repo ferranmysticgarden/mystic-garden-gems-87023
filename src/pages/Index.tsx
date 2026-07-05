@@ -563,6 +563,7 @@ const Index = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       // CAMBIO 1 — NO se consume vida al entrar; sólo al perder/abandonar
       clearPostDefeatOfferLock();
+      clearPostVictoryOfferLock();
       trackEvent("level_start", {
         level: currentLevel.id,
         source: "play_button",
@@ -749,6 +750,7 @@ const Index = () => {
       selectLevel(levelId);
       // CAMBIO 1 — NO se consume vida al entrar
       clearPostDefeatOfferLock();
+      clearPostVictoryOfferLock();
       trackEvent("level_start", {
         level: levelId,
         source: "level_select",
