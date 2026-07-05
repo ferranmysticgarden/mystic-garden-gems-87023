@@ -98,10 +98,10 @@ export const FirstWinCelebration = ({ levelsCompleted, gemsEarned = 15, onClose 
         {/* Message */}
         <div className="text-center mb-4 relative z-10">
           <h2 className="text-3xl font-bold text-emerald-300 mb-2">
-            ¡INCREÍBLE! 🎉
+            {t('first_win.title')}
           </h2>
           <p className="text-emerald-100 text-lg mb-3">
-            ¡Has completado tu primer nivel!
+            {t('first_win.subtitle')}
           </p>
 
           {/* GEM RAIN counter */}
@@ -109,18 +109,18 @@ export const FirstWinCelebration = ({ levelsCompleted, gemsEarned = 15, onClose 
             <div className="flex items-center justify-center gap-3">
               <span className="text-5xl animate-bounce">💎</span>
               <div>
-                <p className="text-sm text-yellow-200/80">¡Has ganado!</p>
+                <p className="text-sm text-yellow-200/80">{t('celebration.earned')}</p>
                 <p className="text-4xl font-bold text-yellow-400 tabular-nums">
                   +{gemCount}
                 </p>
-                <p className="text-sm text-yellow-300/70 font-semibold">GEMAS</p>
+                <p className="text-sm text-yellow-300/70 font-semibold">{t('celebration.gems')}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-emerald-500/20 rounded-xl p-3 border border-emerald-400/30">
             <p className="text-yellow-300 font-semibold text-sm">
-              ✨ ¡Eres un natural! Los niveles se ponen más emocionantes ✨
+              {t('first_win.natural')}
             </p>
           </div>
         </div>
@@ -141,11 +141,11 @@ export const FirstWinCelebration = ({ levelsCompleted, gemsEarned = 15, onClose 
           onClick={handleContinue}
           className="w-full py-6 text-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-2 border-emerald-300 shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform"
         >
-          🌸 ¡Siguiente Nivel!
+          {t('celebration.next')}
         </Button>
 
         <p className="text-center text-emerald-300/50 text-xs mt-3">
-          Nivel 1 de 50 completado
+          {t('first_win.progress').replace('{n}', String(levelsCompleted))}
         </p>
       </div>
     </div>
