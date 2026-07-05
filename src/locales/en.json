@@ -33,10 +33,17 @@
     "subtitle": "Bonus moves!"
   },
   "worlds": {
+    "world_label": "World",
     "w1": "Enchanted Garden",
     "w2": "Mystic Forest",
     "w3": "Starry Sky",
     "w4": "Golden Kingdom"
+  },
+  "first_win": {
+    "title": "AMAZING! 🎉",
+    "subtitle": "You completed your first level!",
+    "natural": "✨ You're a natural! Levels get more exciting ✨",
+    "progress": "Level {n} of 50 completed"
   },
 
   "combo_tips": {

@@ -33,10 +33,17 @@
     "subtitle": "¡Movimientos bonus!"
   },
   "worlds": {
+    "world_label": "Mundo",
     "w1": "Jardín Encantado",
     "w2": "Bosque Místico",
     "w3": "Cielo Estelar",
     "w4": "Reino Dorado"
+  },
+  "first_win": {
+    "title": "¡INCREÍBLE! 🎉",
+    "subtitle": "¡Has completado tu primer nivel!",
+    "natural": "✨ ¡Eres un natural! Los niveles se ponen más emocionantes ✨",
+    "progress": "Nivel {n} de 50 completado"
   },
 
   "combo_tips": {
