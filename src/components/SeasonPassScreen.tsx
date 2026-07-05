@@ -40,6 +40,10 @@ export const SeasonPassScreen = ({ onBack }: SeasonPassScreenProps) => {
     setClaimingTier(null);
     if (result.success) {
       trackEvent("season_tier_claimed", { tierId, premium: isPremium });
+      // Anti-avalanche: mark the session engagement slot so the global
+      // achievement modal (unlocked by season progress) doesn't stack
+      // on top of this claim confirmation.
+      try { sessionStorage.setItem('engagement_popup_shown_session', 'true'); } catch { /* ignore */ }
       toast.success(`¡Recompensa reclamada! ${formatReward(result.reward ?? {})}`);
     } else {
       toast.error(result.error ?? "No se pudo reclamar");

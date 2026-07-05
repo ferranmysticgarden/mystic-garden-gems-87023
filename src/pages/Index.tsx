@@ -73,6 +73,7 @@ import { PRODUCTS } from "@/data/products";
 import { markStarterGemsAsPurchased } from "@/utils/purchaseUtils";
 import { canShowStarterGems, markStarterGemsShown, markStarterGemsDismissed } from "@/utils/starterGemsGate";
 import { isPostDefeatOfferLocked, clearPostDefeatOfferLock, lockPostDefeatOffers } from "@/utils/postDefeatOfferLock";
+import { isPostVictoryOfferLocked, clearPostVictoryOfferLock, getPostVictoryOfferLockSource } from "@/utils/postVictoryOfferLock";
 import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
 import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
@@ -521,6 +522,10 @@ const Index = () => {
     const key = streak === 5 ? LS_KEYS.STREAK_BONUS_5_LAST_SHOWN : LS_KEYS.STREAK_BONUS_7_LAST_SHOWN;
     const last = parseInt(localStorage.getItem(key) ?? "0", 10);
     if (Date.now() - last < 24 * 60 * 60 * 1000) return;
+    if (isPostVictoryOfferLocked()) {
+      trackEvent("offer_suppressed", { source: "StreakBonusOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), streakDays: streak });
+      return;
+    }
     if (!tryClaimEngagementSlot()) return;
     localStorage.setItem(key, String(Date.now()));
     trackEvent("streak_bonus_offer_shown", { streakDays: streak });
@@ -558,6 +563,7 @@ const Index = () => {
     if (gameState.lives > 0 || hasUnlimitedLives()) {
       // CAMBIO 1 — NO se consume vida al entrar; sólo al perder/abandonar
       clearPostDefeatOfferLock();
+      clearPostVictoryOfferLock();
       trackEvent("level_start", {
         level: currentLevel.id,
         source: "play_button",
@@ -616,8 +622,12 @@ const Index = () => {
 
       if (currentLevel.id >= 6 && reward.gems && reward.gems > 0 && !isBonus) {
         setLastWinGems(reward.gems);
-        trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
-        setTimeout(() => setShowPostVictoryOffer(true), 1500);
+        if (isPostVictoryOfferLocked()) {
+          trackEvent("offer_suppressed", { source: "PostVictoryOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
+        } else {
+          trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
+          setTimeout(() => setShowPostVictoryOffer(true), 1500);
+        }
       }
 
       if (!isBonus) piggyBank.deposit(5).catch(() => {});
@@ -629,8 +639,12 @@ const Index = () => {
       if (newStreak === 3 && !isBonus) {
         const lastShown = parseInt(localStorage.getItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN) ?? "0", 10);
         if (Date.now() - lastShown > 24 * 60 * 60 * 1000) {
-          localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
-          setTimeout(() => setShowWinStreakOffer(true), 1800);
+          if (isPostVictoryOfferLocked()) {
+            trackEvent("offer_suppressed", { source: "WinStreakOffer", reason: "first_day_active", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
+          } else {
+            localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
+            setTimeout(() => setShowWinStreakOffer(true), 1800);
+          }
         }
       }
 
@@ -736,6 +750,7 @@ const Index = () => {
       selectLevel(levelId);
       // CAMBIO 1 — NO se consume vida al entrar
       clearPostDefeatOfferLock();
+      clearPostVictoryOfferLock();
       trackEvent("level_start", {
         level: levelId,
         source: "level_select",
