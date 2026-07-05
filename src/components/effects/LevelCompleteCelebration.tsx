@@ -26,27 +26,12 @@ export const LevelCompleteCelebration = ({
   const [fairyOk, setFairyOk] = useState(true);
   const playedRef = useRef(false);
 
-  const title =
-    language === 'es' ? '¡INCREÍBLE!' :
-    language === 'pt' ? 'INCRÍVEL!' :
-    'AMAZING!';
-  const sub =
-    language === 'es' ? `¡Has completado el nivel ${levelId}!` :
-    language === 'pt' ? `Você completou o nível ${levelId}!` :
-    `You completed level ${levelId}!`;
-  const earned =
-    language === 'es' ? '¡Has ganado!' :
-    language === 'pt' ? 'Você ganhou!' : 'You earned!';
-  const gemsLabel =
-    language === 'es' ? 'GEMAS' :
-    language === 'pt' ? 'GEMAS' : 'GEMS';
-  const cta =
-    language === 'es' ? '🌸 ¡Siguiente Nivel!' :
-    language === 'pt' ? '🌸 Próximo Nível!' :
-    '🌸 Next Level!';
-  const scoreLabel =
-    language === 'es' ? 'Puntuación' :
-    language === 'pt' ? 'Pontuação' : 'Score';
+  const title = t('celebration.title');
+  const sub = t('celebration.subtitle').replace('{level}', String(levelId));
+  const earned = t('celebration.earned');
+  const gemsLabel = t('celebration.gems');
+  const cta = t('celebration.next');
+  const scoreLabel = t('game.score');
 
   useEffect(() => {
     if (playedRef.current) return;
