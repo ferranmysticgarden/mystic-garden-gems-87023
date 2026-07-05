@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
+import { lockPostVictoryOffers } from '@/utils/postVictoryOfferLock';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface FirstDayOfferProps {
   levelJustCompleted?: number;
@@ -26,6 +28,12 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
 
       // Trigger principal: justo tras completar nivel 3
       if (levelJustCompleted === 3) {
+        // Post-victory lock: block WinStreakOffer / PostVictoryOffer / StreakBonus
+        // hasta el próximo level_start.
+        lockPostVictoryOffers('first_day_offer');
+        try {
+          trackEvent('offer_locked_first_day', { level: levelJustCompleted });
+        } catch { /* ignore */ }
         setShow(true);
         return;
       }
@@ -33,6 +41,7 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
 
     checkEligibility();
   }, [odId, levelJustCompleted, user?.id]);
+
 
   useEffect(() => {
     if (!show) return;
