@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Star, Sparkles, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import confetti from 'canvas-confetti';
 
 interface FirstWinCelebrationProps {
@@ -12,6 +13,7 @@ interface FirstWinCelebrationProps {
 
 export const FirstWinCelebration = ({ levelsCompleted, gemsEarned = 15, onClose }: FirstWinCelebrationProps) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [show, setShow] = useState(false);
   const [gemCount, setGemCount] = useState(0);
 
