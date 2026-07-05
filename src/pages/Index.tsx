@@ -617,8 +617,12 @@ const Index = () => {
 
       if (currentLevel.id >= 6 && reward.gems && reward.gems > 0 && !isBonus) {
         setLastWinGems(reward.gems);
-        trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
-        setTimeout(() => setShowPostVictoryOffer(true), 1500);
+        if (isPostVictoryOfferLocked()) {
+          trackEvent("offer_suppressed", { source: "PostVictoryOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
+        } else {
+          trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
+          setTimeout(() => setShowPostVictoryOffer(true), 1500);
+        }
       }
 
       if (!isBonus) piggyBank.deposit(5).catch(() => {});
@@ -630,8 +634,12 @@ const Index = () => {
       if (newStreak === 3 && !isBonus) {
         const lastShown = parseInt(localStorage.getItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN) ?? "0", 10);
         if (Date.now() - lastShown > 24 * 60 * 60 * 1000) {
-          localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
-          setTimeout(() => setShowWinStreakOffer(true), 1800);
+          if (isPostVictoryOfferLocked()) {
+            trackEvent("offer_suppressed", { source: "WinStreakOffer", reason: "first_day_active", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
+          } else {
+            localStorage.setItem(LS_KEYS.WIN_STREAK_OFFER_LAST_SHOWN, String(Date.now()));
+            setTimeout(() => setShowWinStreakOffer(true), 1800);
+          }
         }
       }
 
