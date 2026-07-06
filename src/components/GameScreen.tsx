@@ -119,6 +119,10 @@ export const GameScreen = ({
   const hasShownBuyMoves = useRef(false);
   // FIX vidas — guard idempotente para asegurar que loseLife() se llama SIEMPRE 1 vez al finalizar derrota
   const defeatFinalizedRef = useRef(false);
+  useEffect(() => {
+    // reset del guard al cambiar de nivel
+    defeatFinalizedRef.current = false;
+  }, [level.id]);
   
   const { hasPurchasedOnce } = usePurchaseGate();
   const { savePendingState } = usePendingPurchase();
