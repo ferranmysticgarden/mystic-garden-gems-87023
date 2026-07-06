@@ -6,6 +6,7 @@ import confetti from 'canvas-confetti';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
@@ -143,28 +144,38 @@ export const LuckySpin = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setCanSpin(false);
     setSpinning(true);
     setReward(null);
-    
+
     const randomIndex = Math.floor(Math.random() * REWARDS.length);
-    
-    const fullRotations = 360 * (3 + Math.random());
-    const segmentOffset = randomIndex * SEGMENT_ANGLE;
-    const targetAngle = fullRotations + (360 - segmentOffset) + SEGMENT_ANGLE / 2;
-    
+
+    // FIX ruleta — alinear segmento premiado con flecha (top / 12 en punto).
+    // conic-gradient empieza en 0° = arriba y va en sentido horario.
+    // Para que el CENTRO del segmento i quede bajo la flecha tras rotar la rueda R grados,
+    // R mod 360 debe ser (360 - (i*SEG + SEG/2)) mod 360.
+    const SEG = SEGMENT_ANGLE;
+    const centerOfSegment = randomIndex * SEG + SEG / 2;
+    const targetMod = ((360 - centerOfSegment) % 360 + 360) % 360;
+    const currentMod = ((rotation % 360) + 360) % 360;
+    let deltaBase = targetMod - currentMod;
+    if (deltaBase <= 0) deltaBase += 360;
+    const fullTurns = 4 + Math.floor(Math.random() * 3); // 4-6 vueltas ENTERAS
+    const totalDelta = fullTurns * 360 + deltaBase;
+
     startRotationRef.current = rotation;
-    targetRotationRef.current = rotation + targetAngle;
+    targetRotationRef.current = rotation + totalDelta;
     startTimeRef.current = 0;
     lastTickRef.current = Math.floor(rotation / SEGMENT_ANGLE);
-    
+
     animationRef.current = requestAnimationFrame(animate);
 
     setTimeout(async () => {
       const wonReward = REWARDS[randomIndex];
 
       localStorage.setItem(`last-spin-${odId}`, new Date().toISOString());
+      trackEvent('lucky_spin_result', { rewardIndex: randomIndex, rewardGems: wonReward.gems });
       window.dispatchEvent(new CustomEvent('lucky_spin_reward', {
         detail: { gems: wonReward.gems },
       }));
-      
+
       setReward(wonReward.gems);
       setCanSpin(false);
     }, spinDurationRef.current + 100);

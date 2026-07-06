@@ -117,6 +117,12 @@ export const GameScreen = ({
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
+  // FIX vidas — guard idempotente para asegurar que loseLife() se llama SIEMPRE 1 vez al finalizar derrota
+  const defeatFinalizedRef = useRef(false);
+  useEffect(() => {
+    // reset del guard al cambiar de nivel
+    defeatFinalizedRef.current = false;
+  }, [level.id]);
   
   const { hasPurchasedOnce } = usePurchaseGate();
   const { savePendingState } = usePendingPurchase();
@@ -196,6 +202,7 @@ export const GameScreen = ({
         setShowCloseDefeatOffer(false);
         setShowFlashOffer(false);
         hasPlayedEndSound.current = false;
+        defeatFinalizedRef.current = false;
         backgroundMusic.setScreen('game');
       };
 
@@ -442,19 +449,48 @@ export const GameScreen = ({
     setMoves(5);
     setGameOver(false);
     setShowCloseDefeatOffer(false);
+    defeatFinalizedRef.current = false;
   };
+
+  // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
+  const finalizeDefeat = useCallback((reason: string) => {
+    if (defeatFinalizedRef.current) return;
+    defeatFinalizedRef.current = true;
+    const target = level.bonus ? 0 : level.objective.count;
+    const progressAbs = level.objective.type === 'score'
+      ? score
+      : (collected[level.objective.target] || 0);
+    const progressPct = target > 0 ? Math.min(100, Math.round((progressAbs / target) * 100)) : 0;
+    trackEvent('defeat_finalized', { level: level.id, reason });
+    if (!hasPlayedEndSound.current) {
+      hasPlayedEndSound.current = true;
+      backgroundMusic.setScreen('defeat');
+      playLoseSound();
+    }
+    onLose({
+      progress_pct: progressPct,
+      progress_abs: progressAbs,
+      target,
+      moves_left: moves,
+      score,
+      moves_used: Math.max(0, (initialMoves ?? level.moves) - moves),
+    });
+  }, [level, score, collected, moves, initialMoves, onLose]);
 
   const handleCloseDefeatDismiss = () => {
     setShowCloseDefeatOffer(false);
-    
+
     if (hasShownFlashOffer.current && !localStorage.getItem('flash_offer_shown_session')) {
       localStorage.setItem('flash_offer_shown_session', 'true');
       setShowFlashOffer(true);
+      return;
     }
+    finalizeDefeat('close_defeat_dismiss');
   };
 
   const handleFlashOfferClose = () => {
     setShowFlashOffer(false);
+    finalizeDefeat('flash_offer_close');
   };
 
   const handleBuyMovesBuy = () => {
@@ -467,20 +503,16 @@ export const GameScreen = ({
     setShowBuyMovesOffer(false);
     setGameOver(true);
     setWon(false);
-    
-    if (!hasPlayedEndSound.current) {
-      hasPlayedEndSound.current = true;
-      backgroundMusic.setScreen('defeat');
-      playLoseSound();
-    }
-    
+
     const progress = getProgressPercentage();
     setProgressAtLoss(progress);
-    
+
     if (progress >= 40) {
       emitAnalyticsEvent('defeat_pack_shown', { level: level.id, progress });
       setShowDefeatPacksOffer(true);
+      return;
     }
+    finalizeDefeat('buy_moves_dismiss');
   };
 
   const handleDefeatPacksBuy = () => {
@@ -493,25 +525,22 @@ export const GameScreen = ({
       localStorage.setItem('flash_offer_shown_session', 'true');
       emitAnalyticsEvent('flash_offer_shown', { level: level.id });
       setShowFlashOffer(true);
+      return;
     }
+    finalizeDefeat('defeat_packs_exit');
   };
 
   const handleLevel10Purchase = () => {
     setMoves(5);
     setShowLevel10Paywall(false);
   };
- 
+
   const handleLevel10Dismiss = () => {
     localStorage.setItem('level10_paywall_dismissed', 'true');
     setShowLevel10Paywall(false);
     setGameOver(true);
     setWon(false);
-    
-    if (!hasPlayedEndSound.current) {
-      hasPlayedEndSound.current = true;
-      backgroundMusic.setScreen('defeat');
-      playLoseSound();
-    }
+    finalizeDefeat('level10_dismiss');
   };
 
   const handleLevel6Purchase = () => {
@@ -523,12 +552,7 @@ export const GameScreen = ({
     setShowLevel6Offer(false);
     setGameOver(true);
     setWon(false);
-    
-    if (!hasPlayedEndSound.current) {
-      hasPlayedEndSound.current = true;
-      backgroundMusic.setScreen('defeat');
-      playLoseSound();
-    }
+    finalizeDefeat('level6_dismiss');
   };
 
   // Handlers para UltimateRescueOffer — CAMBIO 6: contar y escalar gemas
@@ -543,6 +567,7 @@ export const GameScreen = ({
     setGameOver(false);
     setWon(false);
     hasPlayedEndSound.current = false;
+    defeatFinalizedRef.current = false;
     backgroundMusic.setScreen('game');
   };
 
@@ -556,6 +581,7 @@ export const GameScreen = ({
       setGameOver(false);
       setWon(false);
       hasPlayedEndSound.current = false;
+      defeatFinalizedRef.current = false;
       backgroundMusic.setScreen('game');
     }
   };
@@ -663,15 +689,9 @@ export const GameScreen = ({
 
   const handleRescueDismiss = () => {
     setShowRescueOffer(false);
-    // Mostrar pantalla de derrota normal
     setGameOver(true);
     setWon(false);
-    
-    if (!hasPlayedEndSound.current) {
-      hasPlayedEndSound.current = true;
-      backgroundMusic.setScreen('defeat');
-      playLoseSound();
-    }
+    finalizeDefeat('rescue_dismiss');
   };
 
   const getProgress = () => {
@@ -1011,22 +1031,7 @@ export const GameScreen = ({
               />
 
               <Button
-                onClick={() => {
-                  const target = level.bonus ? 0 : level.objective.count;
-                  const progressAbs = level.objective.type === 'score'
-                    ? score
-                    : (collected[level.objective.target] || 0);
-                  const progressPct = target > 0 ? Math.min(100, Math.round((progressAbs / target) * 100)) : 0;
-                  onLose({
-                    progress_pct: progressPct,
-                    progress_abs: progressAbs,
-                    target,
-                    moves_left: moves,
-                    score,
-                    moves_used: Math.max(0, (initialMoves ?? level.moves) - moves),
-                  });
-
-                }}
+                onClick={() => finalizeDefeat('overlay_button')}
                 className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
               >
                 {t('game.continue')}
