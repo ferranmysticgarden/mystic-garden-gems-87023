@@ -55,8 +55,8 @@ export const LEVELS: Level[] = [
   { id: 24, objective: { type: 'collect', target: 't3', count: 32 }, moves: 25, stars: { one: 32, two: 36, three: 40 }, reward: {} },
   { id: 25, objective: { type: 'score', target: 'points', count: 2100 }, moves: 27, stars: { one: 2100, two: 2800, three: 3500 }, reward: { gems: 25 } },
   { id: 26, objective: { type: 'collect', target: 't1', count: 35 }, moves: 22, stars: { one: 35, two: 40, three: 45 }, reward: {} },
-  // L27 pico, L28 relief
-  { id: 27, objective: { type: 'collect', target: 't4', count: 46 }, moves: 25, stars: { one: 46, two: 51, three: 56 }, reward: {} },
+  // AJUSTE Fase 0 — L27 muro absoluto (0% pass 14d, 5 fails/6 starts): target 46→38, stars ajustadas (ratio 1.52)
+  { id: 27, objective: { type: 'collect', target: 't4', count: 38 }, moves: 25, stars: { one: 38, two: 43, three: 48 }, reward: {} },
   { id: 28, objective: { type: 'score', target: 'points', count: 2000 }, moves: 25, stars: { one: 2000, two: 2800, three: 3600 }, reward: {} },
   { id: 29, objective: { type: 'collect', target: 't2', count: 32 }, moves: 22, stars: { one: 32, two: 36, three: 40 }, reward: {} },
   { id: 30, objective: { type: 'collect', target: 't3', count: 38 }, moves: 25, stars: { one: 38, two: 42, three: 46 }, reward: { gems: 30 } },
