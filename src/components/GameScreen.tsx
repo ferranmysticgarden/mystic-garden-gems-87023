@@ -198,6 +198,7 @@ export const GameScreen = ({
         setShowCloseDefeatOffer(false);
         setShowFlashOffer(false);
         hasPlayedEndSound.current = false;
+        defeatFinalizedRef.current = false;
         backgroundMusic.setScreen('game');
       };
 
