@@ -681,15 +681,9 @@ export const GameScreen = ({
 
   const handleRescueDismiss = () => {
     setShowRescueOffer(false);
-    // Mostrar pantalla de derrota normal
     setGameOver(true);
     setWon(false);
-    
-    if (!hasPlayedEndSound.current) {
-      hasPlayedEndSound.current = true;
-      backgroundMusic.setScreen('defeat');
-      playLoseSound();
-    }
+    finalizeDefeat('rescue_dismiss');
   };
 
   const getProgress = () => {
