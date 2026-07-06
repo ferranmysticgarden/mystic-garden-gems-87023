@@ -445,6 +445,7 @@ export const GameScreen = ({
     setMoves(5);
     setGameOver(false);
     setShowCloseDefeatOffer(false);
+    defeatFinalizedRef.current = false;
   };
 
   // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
