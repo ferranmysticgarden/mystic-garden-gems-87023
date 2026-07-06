@@ -117,6 +117,8 @@ export const GameScreen = ({
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
   const hasShownBuyMoves = useRef(false);
+  // FIX vidas — guard idempotente para asegurar que loseLife() se llama SIEMPRE 1 vez al finalizar derrota
+  const defeatFinalizedRef = useRef(false);
   
   const { hasPurchasedOnce } = usePurchaseGate();
   const { savePendingState } = usePendingPurchase();
