@@ -1027,22 +1027,7 @@ export const GameScreen = ({
               />
 
               <Button
-                onClick={() => {
-                  const target = level.bonus ? 0 : level.objective.count;
-                  const progressAbs = level.objective.type === 'score'
-                    ? score
-                    : (collected[level.objective.target] || 0);
-                  const progressPct = target > 0 ? Math.min(100, Math.round((progressAbs / target) * 100)) : 0;
-                  onLose({
-                    progress_pct: progressPct,
-                    progress_abs: progressAbs,
-                    target,
-                    moves_left: moves,
-                    score,
-                    moves_used: Math.max(0, (initialMoves ?? level.moves) - moves),
-                  });
-
-                }}
+                onClick={() => finalizeDefeat('overlay_button')}
                 className="mt-4 gradient-gold shadow-gold text-lg py-4 px-8"
               >
                 {t('game.continue')}
