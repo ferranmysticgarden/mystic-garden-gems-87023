@@ -563,6 +563,7 @@ export const GameScreen = ({
     setGameOver(false);
     setWon(false);
     hasPlayedEndSound.current = false;
+    defeatFinalizedRef.current = false;
     backgroundMusic.setScreen('game');
   };
 
@@ -576,6 +577,7 @@ export const GameScreen = ({
       setGameOver(false);
       setWon(false);
       hasPlayedEndSound.current = false;
+      defeatFinalizedRef.current = false;
       backgroundMusic.setScreen('game');
     }
   };
