@@ -6,6 +6,7 @@ import confetti from 'canvas-confetti';
 import { useMysticSounds } from '@/hooks/useMysticSounds';
 import { backgroundMusic } from '@/hooks/useBackgroundMusic';
 import { usePayment } from '@/hooks/usePayment';
+import { trackEvent } from '@/lib/trackEvent';
 
 const REWARDS = [
   { gems: 10, color: '#FF6B6B', label: '10 💎' },
