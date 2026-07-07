@@ -82,7 +82,7 @@ interface TutorialProps {
 }
 
 export const Tutorial = ({ onComplete }: TutorialProps) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [show, setShow] = useState(false);
 
