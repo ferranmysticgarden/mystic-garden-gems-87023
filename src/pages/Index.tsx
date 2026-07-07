@@ -252,22 +252,20 @@ const Index = () => {
   const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession || loginCooldownActive;
   const odId = user?.id || 'guest';
 
-  // Orquestador LuckySpin (24h check) — P3 staggered 1800ms
+  // Orquestador LuckySpin — BUG 1 fix: slot PROPIO (no compite con streak/spring/missions).
+  // Trigger: 3+ niveles completados + >=24h desde último giro real. Sin cool-down "prompt de hoy".
   useEffect(() => {
-    if (autoPopupsBlocked || gameState.completedLevels.length < 5) return;
+    if (autoPopupsBlocked || gameState.completedLevels.length < 3) return;
+    const luckySlotKey = 'lucky_spin_shown_session';
+    if (sessionStorage.getItem(luckySlotKey) === 'true') return;
     const lastSpin = localStorage.getItem(`last-spin-${odId}`);
-    const promptKey = `last-spin-prompt-${odId}`;
-    const today = new Date().toISOString().split("T")[0];
-    if (localStorage.getItem(promptKey) === today) return;
-    if (!lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24) {
-      const timer = setTimeout(() => {
-        if (tryClaimEngagementSlot()) {
-          setShowLuckySpin(true);
-          localStorage.setItem(promptKey, today);
-        }
-      }, 1800);
-      return () => clearTimeout(timer);
-    }
+    const canOffer = !lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24;
+    if (!canOffer) return;
+    const timer = setTimeout(() => {
+      try { sessionStorage.setItem(luckySlotKey, 'true'); } catch {}
+      setShowLuckySpin(true);
+    }, 1800);
+    return () => clearTimeout(timer);
   }, [autoPopupsBlocked, gameState.completedLevels.length, odId]);
 
   // Orquestador SpringEvent (Gating nivel 8) — P4 2000ms
