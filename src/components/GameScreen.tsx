@@ -514,6 +514,11 @@ export const GameScreen = ({
     setMoves(5);
     setShowBuyMovesOffer(false);
     hasShownBuyMoves.current = false;
+    // BUG 2 + BUG 5
+    terminalStateRef.current = null;
+    defeatFinalizedRef.current = false;
+    setGameOver(false);
+    setPaidRescueActive(true);
   };
 
   const handleBuyMovesDismiss = () => {
@@ -550,6 +555,10 @@ export const GameScreen = ({
   const handleLevel10Purchase = () => {
     setMoves(5);
     setShowLevel10Paywall(false);
+    terminalStateRef.current = null;
+    defeatFinalizedRef.current = false;
+    setGameOver(false);
+    setPaidRescueActive(true);
   };
 
   const handleLevel10Dismiss = () => {
@@ -563,6 +572,10 @@ export const GameScreen = ({
   const handleLevel6Purchase = () => {
     setMoves(3);
     setShowLevel6Offer(false);
+    terminalStateRef.current = null;
+    defeatFinalizedRef.current = false;
+    setGameOver(false);
+    setPaidRescueActive(true);
   };
 
   const handleLevel6Dismiss = () => {
@@ -585,6 +598,8 @@ export const GameScreen = ({
     setWon(false);
     hasPlayedEndSound.current = false;
     defeatFinalizedRef.current = false;
+    terminalStateRef.current = null;
+    setPaidRescueActive(true);
     backgroundMusic.setScreen('game');
   };
 
@@ -599,6 +614,8 @@ export const GameScreen = ({
       setWon(false);
       hasPlayedEndSound.current = false;
       defeatFinalizedRef.current = false;
+      terminalStateRef.current = null;
+      setPaidRescueActive(true);
       backgroundMusic.setScreen('game');
     }
   };
