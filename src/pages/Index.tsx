@@ -174,6 +174,7 @@ const Index = () => {
   const [showComeBackBanner, setShowComeBackBanner] = useState(false);
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // ===== T5/T7/T9: Piggy Bank, Season Pass, Win Streak =====
   const piggyBank = usePiggyBank(user?.id ?? null);
