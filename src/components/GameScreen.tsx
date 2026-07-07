@@ -625,6 +625,8 @@ export const GameScreen = ({
    *  la lógica de coste/tracking existente, solo se segmenta para poder
    *  interceptar con intro/confirm sin duplicar código. */
   const executePowerup = (type: PowerupType) => {
+    // BUG 4 fix — cada uso cuenta para la misión diaria (independiente de si gasta gemas o stock)
+    try { incrementMission('powerups', user?.id ?? null); } catch {}
     if (type === 'hammer') {
       // Activa modo martillo. El gasto real de gemas ocurre al aplicar sobre una ficha
       // (lógica original en useHammer / onHammerUse), no aquí.
