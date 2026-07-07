@@ -273,5 +273,33 @@
       "streak": "Racha diaria: entra cada día para bonus"
     },
     "footer": "¡Suerte en el jardín!"
+  },
+  "nearwin": {
+    "title": "¡CASI LO CONSEGUISTE!",
+    "sub": "Solo te faltaba un poco más..."
+  },
+  "tutorial_ui": {
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "start": "¡Empezar!"
+  },
+  "l1tut": {
+    "welcome_title": "¡Bienvenido al Jardín!",
+    "welcome_body": "Toca una ficha y luego una adyacente para intercambiarlas. Forma grupos de 3 o más iguales para recolectarlas.",
+    "perfect_title": "¡Perfecto! 🎉",
+    "perfect_body": "Sigue así. Recolecta las fichas del objetivo antes de quedarte sin movimientos.",
+    "tap_hint": "Toca el tablero para jugar"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "sound": "Sonido y música",
+    "notifications": "Notificaciones",
+    "notif_enable": "Activar notificaciones",
+    "notif_on": "Activadas",
+    "notif_denied": "Bloqueadas — actívalas en los ajustes del sistema",
+    "notif_unsupported": "No disponible en este dispositivo",
+    "close": "Cerrar",
+    "open": "Ajustes"
   }
 }

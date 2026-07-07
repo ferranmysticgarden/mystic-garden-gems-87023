@@ -273,5 +273,33 @@
       "streak": "Sequência diária: entre todo dia para bônus"
     },
     "footer": "Boa sorte no jardim!"
+  },
+  "nearwin": {
+    "title": "QUASE CONSEGUIU!",
+    "sub": "Faltou tão pouquinho..."
+  },
+  "tutorial_ui": {
+    "skip": "Pular",
+    "next": "Próximo",
+    "start": "Começar!"
+  },
+  "l1tut": {
+    "welcome_title": "Bem-vindo ao Jardim!",
+    "welcome_body": "Toque em uma peça e depois em uma adjacente para trocá-las. Forme grupos de 3 ou mais iguais para coletá-las.",
+    "perfect_title": "Perfeito! 🎉",
+    "perfect_body": "Continue assim. Colete as peças do objetivo antes de acabar os movimentos.",
+    "tap_hint": "Toque no tabuleiro para jogar"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "sound": "Som e música",
+    "notifications": "Notificações",
+    "notif_enable": "Ativar notificações",
+    "notif_on": "Ativadas",
+    "notif_denied": "Bloqueadas — ative-as nos ajustes do sistema",
+    "notif_unsupported": "Não disponível neste dispositivo",
+    "close": "Fechar",
+    "open": "Ajustes"
   }
 }
