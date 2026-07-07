@@ -1057,6 +1057,13 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <AudioControls />
             <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/20 border-2 border-primary/50 hover:bg-primary/30 active:scale-95 transition-transform duration-100"
+              aria-label={t('settings.open') || 'Ajustes'}
+            >
+              <SettingsIcon className="w-6 h-6 text-primary" />
+            </button>
+            <button
               onClick={() => {
                 if (user) {
                   setShowExitModal(true);
