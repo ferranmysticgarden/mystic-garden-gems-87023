@@ -119,9 +119,16 @@ export const GameScreen = ({
   const hasShownBuyMoves = useRef(false);
   // FIX vidas — guard idempotente para asegurar que loseLife() se llama SIEMPRE 1 vez al finalizar derrota
   const defeatFinalizedRef = useRef(false);
+  // BUG 2 fix — estado terminal único por partida ('win' | 'lose' | null).
+  // Bloquea que se dispare el opuesto una vez fijado.
+  const terminalStateRef = useRef<null | 'win' | 'lose'>(null);
+  // BUG 5 fix — flag que desactiva adaptive difficulty tras compra de +movimientos.
+  const [paidRescueActive, setPaidRescueActive] = useState(false);
   useEffect(() => {
     // reset del guard al cambiar de nivel
     defeatFinalizedRef.current = false;
+    terminalStateRef.current = null;
+    setPaidRescueActive(false);
   }, [level.id]);
   
   const { hasPurchasedOnce } = usePurchaseGate();
