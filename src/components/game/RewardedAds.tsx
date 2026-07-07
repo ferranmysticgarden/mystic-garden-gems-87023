@@ -111,6 +111,12 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
       }
     }
 
+    // BUG 4 fix — mission tracker
+    try {
+      const { incrementMission } = await import('@/utils/missionTracker');
+      incrementMission('ads', user?.id);
+    } catch {}
+
     onRewardEarned?.(AD_REWARD);
     setShowingAd(false);
     setLoading(false);
