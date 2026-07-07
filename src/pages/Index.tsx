@@ -78,8 +78,10 @@ import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
 import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
 import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
+import { incrementMission } from "@/utils/missionTracker";
+import { SettingsModal } from "@/components/game/SettingsModal";
 import { toast } from "sonner";
-import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle } from "lucide-react";
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle, Settings as SettingsIcon } from "lucide-react";
 import { LevelMap } from "@/components/menu/LevelMap";
 import { SideIconsColumn } from "@/components/menu/SideIconsColumn";
 import { WatchAdCornerButton } from "@/components/menu/WatchAdCornerButton";
@@ -595,6 +597,9 @@ const Index = () => {
 
       setLastCompletedLevel(currentLevel.id);
       setGamesPlayed((prev) => prev + 1);
+
+      // BUG 4 fix — misión diaria "Completa X niveles"
+      try { incrementMission('levels', user?.id ?? null); } catch {}
 
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
