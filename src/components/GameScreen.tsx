@@ -270,10 +270,12 @@ export const GameScreen = ({
   }, [savePendingState, level.id, moves, score, collected]);
 
   useEffect(() => {
-    if (checkWinCondition() && !gameOver) {
+    // BUG 2 fix — WIN SIEMPRE tiene prioridad. Se comprueba primero y sella el terminalStateRef.
+    if (checkWinCondition() && !gameOver && terminalStateRef.current !== 'lose') {
+      terminalStateRef.current = 'win';
       setGameOver(true);
       setWon(true);
-      
+
       if (!hasPlayedEndSound.current) {
         hasPlayedEndSound.current = true;
         backgroundMusic.setScreen('victory');
@@ -287,11 +289,15 @@ export const GameScreen = ({
       } catch (error) {
         console.error('Error reseteando intentos:', error);
       }
-      
+
       // Confetti & sounds handled inside LevelCompleteCelebration component
-    } else if (moves === 0 && !checkWinCondition() && !gameOver) {
+      return;
+    }
+    // Solo entramos en defeat si NO se ganó y el terminal aún no está sellado.
+    if (moves === 0 && !checkWinCondition() && !gameOver && terminalStateRef.current !== 'win') {
       // Bonus levels never reach defeat path (checkWinCondition returns true at moves===0)
       if (level.bonus) return;
+      terminalStateRef.current = 'lose';
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
