@@ -1308,6 +1308,10 @@ const Index = () => {
         isOpen={showLuckySpin} 
         onClose={() => setShowLuckySpin(false)} 
       />
+      {/* Settings Modal (Idioma + Sonido + Notificaciones) */}
+      {showSettingsModal && (
+        <SettingsModal onClose={() => setShowSettingsModal(false)} />
+      )}
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
       {/* Achievement Modal */}
