@@ -38,6 +38,7 @@ import { toast } from 'sonner';
 import { gemPriceForRescue, incrementRescueCount, resetRescueCount, getRescueCount } from '@/utils/rescuePriceScale';
 import { consumeWinStreakPowerup } from '@/utils/winStreakPowerup';
 import { isRetryOfLevel, markLevelEntered } from '@/utils/retryTracker';
+import { incrementMission } from '@/utils/missionTracker';
 
 interface GameScreenProps {
   level: Level;
@@ -119,9 +120,16 @@ export const GameScreen = ({
   const hasShownBuyMoves = useRef(false);
   // FIX vidas — guard idempotente para asegurar que loseLife() se llama SIEMPRE 1 vez al finalizar derrota
   const defeatFinalizedRef = useRef(false);
+  // BUG 2 fix — estado terminal único por partida ('win' | 'lose' | null).
+  // Bloquea que se dispare el opuesto una vez fijado.
+  const terminalStateRef = useRef<null | 'win' | 'lose'>(null);
+  // BUG 5 fix — flag que desactiva adaptive difficulty tras compra de +movimientos.
+  const [paidRescueActive, setPaidRescueActive] = useState(false);
   useEffect(() => {
     // reset del guard al cambiar de nivel
     defeatFinalizedRef.current = false;
+    terminalStateRef.current = null;
+    setPaidRescueActive(false);
   }, [level.id]);
   
   const { hasPurchasedOnce } = usePurchaseGate();
@@ -263,10 +271,12 @@ export const GameScreen = ({
   }, [savePendingState, level.id, moves, score, collected]);
 
   useEffect(() => {
-    if (checkWinCondition() && !gameOver) {
+    // BUG 2 fix — WIN SIEMPRE tiene prioridad. Se comprueba primero y sella el terminalStateRef.
+    if (checkWinCondition() && !gameOver && terminalStateRef.current !== 'lose') {
+      terminalStateRef.current = 'win';
       setGameOver(true);
       setWon(true);
-      
+
       if (!hasPlayedEndSound.current) {
         hasPlayedEndSound.current = true;
         backgroundMusic.setScreen('victory');
@@ -280,11 +290,15 @@ export const GameScreen = ({
       } catch (error) {
         console.error('Error reseteando intentos:', error);
       }
-      
+
       // Confetti & sounds handled inside LevelCompleteCelebration component
-    } else if (moves === 0 && !checkWinCondition() && !gameOver) {
+      return;
+    }
+    // Solo entramos en defeat si NO se ganó y el terminal aún no está sellado.
+    if (moves === 0 && !checkWinCondition() && !gameOver && terminalStateRef.current !== 'win') {
       // Bonus levels never reach defeat path (checkWinCondition returns true at moves===0)
       if (level.bonus) return;
+      terminalStateRef.current = 'lose';
       const movesNeeded = estimateMovesNeeded();
       setMovesShortBy(movesNeeded);
       
@@ -450,6 +464,10 @@ export const GameScreen = ({
     setGameOver(false);
     setShowCloseDefeatOffer(false);
     defeatFinalizedRef.current = false;
+    // BUG 2 fix — permitir que gane si el objetivo ya estaba cumplido tras el último match.
+    terminalStateRef.current = null;
+    // BUG 5 fix — pagó, se desactiva adaptive difficulty.
+    setPaidRescueActive(true);
   };
 
   // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
@@ -497,6 +515,11 @@ export const GameScreen = ({
     setMoves(5);
     setShowBuyMovesOffer(false);
     hasShownBuyMoves.current = false;
+    // BUG 2 + BUG 5
+    terminalStateRef.current = null;
+    defeatFinalizedRef.current = false;
+    setGameOver(false);
+    setPaidRescueActive(true);
   };
 
   const handleBuyMovesDismiss = () => {
@@ -533,6 +556,10 @@ export const GameScreen = ({
   const handleLevel10Purchase = () => {
     setMoves(5);
     setShowLevel10Paywall(false);
+    terminalStateRef.current = null;
+    defeatFinalizedRef.current = false;
+    setGameOver(false);
+    setPaidRescueActive(true);
   };
 
   const handleLevel10Dismiss = () => {
@@ -546,6 +573,10 @@ export const GameScreen = ({
   const handleLevel6Purchase = () => {
     setMoves(3);
     setShowLevel6Offer(false);
+    terminalStateRef.current = null;
+    defeatFinalizedRef.current = false;
+    setGameOver(false);
+    setPaidRescueActive(true);
   };
 
   const handleLevel6Dismiss = () => {
@@ -568,6 +599,8 @@ export const GameScreen = ({
     setWon(false);
     hasPlayedEndSound.current = false;
     defeatFinalizedRef.current = false;
+    terminalStateRef.current = null;
+    setPaidRescueActive(true);
     backgroundMusic.setScreen('game');
   };
 
@@ -582,6 +615,8 @@ export const GameScreen = ({
       setWon(false);
       hasPlayedEndSound.current = false;
       defeatFinalizedRef.current = false;
+      terminalStateRef.current = null;
+      setPaidRescueActive(true);
       backgroundMusic.setScreen('game');
     }
   };
@@ -590,6 +625,8 @@ export const GameScreen = ({
    *  la lógica de coste/tracking existente, solo se segmenta para poder
    *  interceptar con intro/confirm sin duplicar código. */
   const executePowerup = (type: PowerupType) => {
+    // BUG 4 fix — cada uso cuenta para la misión diaria (independiente de si gasta gemas o stock)
+    try { incrementMission('powerups'); } catch {}
     if (type === 'hammer') {
       // Activa modo martillo. El gasto real de gemas ocurre al aplicar sobre una ficha
       // (lógica original en useHammer / onHammerUse), no aquí.
@@ -830,7 +867,8 @@ export const GameScreen = ({
             triggerUndo={undoTrigger}
             onFirstValidMatch={() => setFirstMatchMade(true)}
             adaptiveBoost={
-              consecutiveLossesOnLevel >= 3 ? 0.30
+              paidRescueActive ? 0
+              : consecutiveLossesOnLevel >= 3 ? 0.30
               : consecutiveLossesOnLevel === 2 ? 0.15
               : 0
             }
@@ -896,8 +934,8 @@ export const GameScreen = ({
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 pointer-events-none">
             <div className="text-center animate-scale-in">
               <div className="text-7xl mb-3">😱</div>
-              <h2 className="text-3xl font-bold text-accent drop-shadow-lg">¡CASI LO CONSEGUISTE!</h2>
-              <p className="text-xl text-foreground/90 mt-2">Solo te faltaba un poco más...</p>
+              <h2 className="text-3xl font-bold text-accent drop-shadow-lg">{t('nearwin.title')}</h2>
+              <p className="text-xl text-foreground/90 mt-2">{t('nearwin.sub')}</p>
             </div>
           </div>
         )}

@@ -78,8 +78,10 @@ import { PersonalizeHeroButton } from "@/components/game/PersonalizeHeroButton";
 import { CustomizeIntroModal } from "@/components/game/CustomizeIntroModal";
 import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
 import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
+import { incrementMission } from "@/utils/missionTracker";
+import { SettingsModal } from "@/components/game/SettingsModal";
 import { toast } from "sonner";
-import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle } from "lucide-react";
+import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle, Settings as SettingsIcon } from "lucide-react";
 import { LevelMap } from "@/components/menu/LevelMap";
 import { SideIconsColumn } from "@/components/menu/SideIconsColumn";
 import { WatchAdCornerButton } from "@/components/menu/WatchAdCornerButton";
@@ -172,6 +174,7 @@ const Index = () => {
   const [showComeBackBanner, setShowComeBackBanner] = useState(false);
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // ===== T5/T7/T9: Piggy Bank, Season Pass, Win Streak =====
   const piggyBank = usePiggyBank(user?.id ?? null);
@@ -252,22 +255,20 @@ const Index = () => {
   const autoPopupsBlocked = suppressAutoPopups || showFirstSessionReward || isFirstSession || loginCooldownActive;
   const odId = user?.id || 'guest';
 
-  // Orquestador LuckySpin (24h check) — P3 staggered 1800ms
+  // Orquestador LuckySpin — BUG 1 fix: slot PROPIO (no compite con streak/spring/missions).
+  // Trigger: 3+ niveles completados + >=24h desde último giro real. Sin cool-down "prompt de hoy".
   useEffect(() => {
-    if (autoPopupsBlocked || gameState.completedLevels.length < 5) return;
+    if (autoPopupsBlocked || gameState.completedLevels.length < 3) return;
+    const luckySlotKey = 'lucky_spin_shown_session';
+    if (sessionStorage.getItem(luckySlotKey) === 'true') return;
     const lastSpin = localStorage.getItem(`last-spin-${odId}`);
-    const promptKey = `last-spin-prompt-${odId}`;
-    const today = new Date().toISOString().split("T")[0];
-    if (localStorage.getItem(promptKey) === today) return;
-    if (!lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24) {
-      const timer = setTimeout(() => {
-        if (tryClaimEngagementSlot()) {
-          setShowLuckySpin(true);
-          localStorage.setItem(promptKey, today);
-        }
-      }, 1800);
-      return () => clearTimeout(timer);
-    }
+    const canOffer = !lastSpin || (Date.now() - new Date(lastSpin).getTime()) / 3600000 >= 24;
+    if (!canOffer) return;
+    const timer = setTimeout(() => {
+      try { sessionStorage.setItem(luckySlotKey, 'true'); } catch {}
+      setShowLuckySpin(true);
+    }, 1800);
+    return () => clearTimeout(timer);
   }, [autoPopupsBlocked, gameState.completedLevels.length, odId]);
 
   // Orquestador SpringEvent (Gating nivel 8) — P4 2000ms
@@ -597,6 +598,9 @@ const Index = () => {
 
       setLastCompletedLevel(currentLevel.id);
       setGamesPlayed((prev) => prev + 1);
+
+      // BUG 4 fix — misión diaria "Completa X niveles"
+      try { incrementMission('levels', user?.id ?? null); } catch {}
 
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
@@ -1053,6 +1057,13 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <AudioControls />
             <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/20 border-2 border-primary/50 hover:bg-primary/30 active:scale-95 transition-transform duration-100"
+              aria-label={t('settings.open') || 'Ajustes'}
+            >
+              <SettingsIcon className="w-6 h-6 text-primary" />
+            </button>
+            <button
               onClick={() => {
                 if (user) {
                   setShowExitModal(true);
@@ -1297,6 +1308,10 @@ const Index = () => {
         isOpen={showLuckySpin} 
         onClose={() => setShowLuckySpin(false)} 
       />
+      {/* Settings Modal (Idioma + Sonido + Notificaciones) */}
+      {showSettingsModal && (
+        <SettingsModal onClose={() => setShowSettingsModal(false)} />
+      )}
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
       {/* Achievement Modal */}

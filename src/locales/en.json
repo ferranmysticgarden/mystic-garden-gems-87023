@@ -273,5 +273,33 @@
       "streak": "Daily streak: log in every day for bonuses"
     },
     "footer": "Good luck in the garden!"
+  },
+  "nearwin": {
+    "title": "SO CLOSE!",
+    "sub": "You almost made it..."
+  },
+  "tutorial_ui": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Let's go!"
+  },
+  "l1tut": {
+    "welcome_title": "Welcome to the Garden!",
+    "welcome_body": "Tap a tile, then an adjacent one to swap them. Match 3 or more identical tiles to collect them.",
+    "perfect_title": "Perfect! 🎉",
+    "perfect_body": "Keep going. Collect the objective tiles before you run out of moves.",
+    "tap_hint": "Tap the board to play"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "sound": "Sound & music",
+    "notifications": "Notifications",
+    "notif_enable": "Enable notifications",
+    "notif_on": "Enabled",
+    "notif_denied": "Blocked — enable them in system settings",
+    "notif_unsupported": "Not available on this device",
+    "close": "Close",
+    "open": "Settings"
   }
 }
