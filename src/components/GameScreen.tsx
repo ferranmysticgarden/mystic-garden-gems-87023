@@ -38,6 +38,7 @@ import { toast } from 'sonner';
 import { gemPriceForRescue, incrementRescueCount, resetRescueCount, getRescueCount } from '@/utils/rescuePriceScale';
 import { consumeWinStreakPowerup } from '@/utils/winStreakPowerup';
 import { isRetryOfLevel, markLevelEntered } from '@/utils/retryTracker';
+import { incrementMission } from '@/utils/missionTracker';
 
 interface GameScreenProps {
   level: Level;
@@ -864,7 +865,8 @@ export const GameScreen = ({
             triggerUndo={undoTrigger}
             onFirstValidMatch={() => setFirstMatchMade(true)}
             adaptiveBoost={
-              consecutiveLossesOnLevel >= 3 ? 0.30
+              paidRescueActive ? 0
+              : consecutiveLossesOnLevel >= 3 ? 0.30
               : consecutiveLossesOnLevel === 2 ? 0.15
               : 0
             }
