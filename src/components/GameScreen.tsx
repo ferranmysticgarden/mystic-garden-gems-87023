@@ -463,6 +463,10 @@ export const GameScreen = ({
     setGameOver(false);
     setShowCloseDefeatOffer(false);
     defeatFinalizedRef.current = false;
+    // BUG 2 fix — permitir que gane si el objetivo ya estaba cumplido tras el último match.
+    terminalStateRef.current = null;
+    // BUG 5 fix — pagó, se desactiva adaptive difficulty.
+    setPaidRescueActive(true);
   };
 
   // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
