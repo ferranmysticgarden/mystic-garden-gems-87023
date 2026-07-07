@@ -117,9 +117,9 @@ export const Tutorial = ({ onComplete }: TutorialProps) => {
 
   const step = STEPS[currentStep];
   const lang: 'es' | 'en' | 'pt' = language;
-  const skipLabel = lang === 'es' ? 'Saltar' : lang === 'pt' ? 'Pular' : 'Skip';
-  const nextLabel = lang === 'es' ? 'Siguiente' : lang === 'pt' ? 'Próximo' : 'Next';
-  const startLabel = lang === 'es' ? '¡Empezar!' : lang === 'pt' ? 'Começar!' : "Let's go!";
+  const skipLabel = t('tutorial_ui.skip');
+  const nextLabel = t('tutorial_ui.next');
+  const startLabel = t('tutorial_ui.start');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">

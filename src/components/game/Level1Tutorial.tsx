@@ -11,7 +11,7 @@ interface Level1TutorialProps {
 const STORAGE_KEY = 'mg_tutorial_level1_done_v1';
 
 export const Level1Tutorial = ({ levelId, firstMatchMade, onDismiss }: Level1TutorialProps) => {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -21,7 +21,6 @@ export const Level1Tutorial = ({ levelId, firstMatchMade, onDismiss }: Level1Tut
     if (!done) setVisible(true);
   }, [levelId]);
 
-  // advance to step 2 on first match, auto-dismiss shortly after
   useEffect(() => {
     if (!visible) return;
     if (firstMatchMade && step === 1) {
@@ -37,29 +36,10 @@ export const Level1Tutorial = ({ levelId, firstMatchMade, onDismiss }: Level1Tut
 
   if (!visible || levelId !== 1) return null;
 
-  const step1Title =
-    language === 'es' ? '¡Bienvenido al Jardín!' :
-    language === 'pt' ? 'Bem-vindo ao Jardim!' :
-    'Welcome to the Garden!';
-  const step1Body =
-    language === 'es' ? 'Toca una ficha y luego una adyacente para intercambiarlas. Forma grupos de 3 o más iguales para recolectarlas.' :
-    language === 'pt' ? 'Toque em uma peça e depois em uma adjacente para trocá-las. Forme grupos de 3 ou mais iguais para coletá-las.' :
-    'Tap a tile, then an adjacent one to swap them. Match 3 or more identical tiles to collect them.';
-  const step2Title =
-    language === 'es' ? '¡Perfecto! 🎉' :
-    language === 'pt' ? 'Perfeito! 🎉' :
-    'Perfect! 🎉';
-  const step2Body =
-    language === 'es' ? 'Sigue así. Recolecta las fichas del objetivo antes de quedarte sin movimientos.' :
-    language === 'pt' ? 'Continue assim. Colete as peças do objetivo antes de acabar os movimentos.' :
-    'Keep going. Collect the objective tiles before you run out of moves.';
-  const tapHint =
-    language === 'es' ? 'Toca el tablero para jugar' :
-    language === 'pt' ? 'Toque no tabuleiro para jogar' :
-    'Tap the board to play';
+  const title = step === 1 ? t('l1tut.welcome_title') : t('l1tut.perfect_title');
+  const body = step === 1 ? t('l1tut.welcome_body') : t('l1tut.perfect_body');
+  const tapHint = t('l1tut.tap_hint');
 
-  const title = step === 1 ? step1Title : step2Title;
-  const body = step === 1 ? step1Body : step2Body;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none animate-fade-in">
