@@ -454,12 +454,17 @@ serve(async (req) => {
 
     console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, requestedProduct=${requestedProductId || rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
-    await supabaseClient.from('app_events').insert({
-      event_name: 'gp_verify_started',
+    const verifyStartPayload = {
       event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, purchaseTokenPrefix: purchaseToken.slice(0, 12), packageCandidates, isGuest, userId },
       platform: 'android',
       device_id: purchaseToken.slice(0, 24),
-    });
+    };
+    // Emit both the legacy name and the plan-canonical name (`gp_verify_start`) so
+    // existing dashboards keep working and the new funnel matches the plan spec.
+    await supabaseClient.from('app_events').insert([
+      { event_name: 'gp_verify_started', ...verifyStartPayload },
+      { event_name: 'gp_verify_start', ...verifyStartPayload },
+    ]);
 
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
     const [primaryPackageName, ...fallbackPackageNames] = packageCandidates;
