@@ -51,6 +51,32 @@ let billingSetupStarted = false;
 let billingListenersAttached = false;
 let lastPurchaseCancellation: { productId: string; timestamp: number } | null = null;
 
+// Timestamp of the last native billing dialog launch — used to detect
+// "fast dismiss" (user closed the sheet in <2s, likely price shock / misclick).
+let lastNativeCallStartAt: number | null = null;
+const FAST_DISMISS_THRESHOLD_MS = 2000;
+
+/**
+ * Refresh the trackEvent price cache from live Google Play ProductDetails.
+ * Called every time products are (re)loaded so purchase funnel events carry
+ * real local price + currency for every canonical productId.
+ */
+const syncBillingMetaCache = (products: Record<string, ProductDetails>) => {
+  PRODUCTS.forEach((p) => {
+    const gpId = resolveGooglePlayProductId(p.id, products);
+    if (!gpId) return;
+    const details = products[gpId];
+    if (!details) return;
+    const priceMicros = Number(details.priceAmountMicros) || 0;
+    setBillingProductMeta(p.id, {
+      price_local: priceMicros / 1_000_000,
+      currency: details.priceCurrencyCode || 'EUR',
+      price_micros: priceMicros,
+      formatted: details.price || '',
+    });
+  });
+};
+
 const reportPurchaseCancelled = (productId?: string | null, error?: string, source?: string) => {
   const resolvedProductId = productId ?? lastAttemptedProductId ?? 'unknown';
   const now = Date.now();
