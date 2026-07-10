@@ -332,12 +332,16 @@ export const useGooglePlayBilling = () => {
         }
 
         console.log('[PURCHASE] success confirmed via Google Play');
+        const successPriceMeta = getProductPriceMeta(verifiedProductId);
         trackEvent('purchase_verified', {
           platform: 'android',
           product: verifiedProductId,
           requested_product: trackedProductId,
           google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
+          price_local: successPriceMeta.price_local,
+          currency: successPriceMeta.currency,
+          price_micros: successPriceMeta.price_micros,
         });
         // Unified success event for cross-platform funnel analysis
         trackEvent('purchase_success', {
@@ -345,6 +349,9 @@ export const useGooglePlayBilling = () => {
           platform: 'android',
           google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
+          price_local: successPriceMeta.price_local,
+          currency: successPriceMeta.currency,
+          price_micros: successPriceMeta.price_micros,
         });
         // ─── Firebase Analytics: GA4 standard 'purchase' event for Google Ads ───
         // Fires ONLY here, after server-side Google Play verification succeeded
