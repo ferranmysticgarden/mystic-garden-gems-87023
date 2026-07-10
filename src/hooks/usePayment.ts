@@ -60,12 +60,20 @@ export const usePayment = () => {
       return false;
     }
 
+    const resolvedSource = source || 'unknown';
+    if (resolvedSource === 'unknown') {
+      console.warn(`[PAYMENT] purchase_attempt with source=unknown for ${productId}; caller should pass an explicit source.`);
+    }
+    const attemptPriceMeta = getProductPriceMeta(productId);
     trackEvent('purchase_attempt', {
       product: productId,
       productId,
-      source: source || 'unknown',
+      source: resolvedSource,
       platform: isAndroid ? 'android' : 'web',
       billing_available: isAndroid ? googlePlayBilling.isAvailable : 'web',
+      price_local: attemptPriceMeta.price_local,
+      currency: attemptPriceMeta.currency,
+      price_micros: attemptPriceMeta.price_micros,
     });
 
     activePaymentProduct = productId;
