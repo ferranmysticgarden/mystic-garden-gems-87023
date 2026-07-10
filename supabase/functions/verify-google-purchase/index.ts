@@ -484,12 +484,15 @@ serve(async (req) => {
 
     if (!verification.valid) {
       console.error('[ERROR] Purchase verification failed:', verification.error);
-      await supabaseClient.from('app_events').insert({
-        event_name: 'gp_verify_failed',
-        event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
+      const verifyFailPayload = {
+        event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, http_status: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
         platform: 'android',
         device_id: purchaseToken.slice(0, 24),
-      });
+      };
+      await supabaseClient.from('app_events').insert([
+        { event_name: 'gp_verify_failed', ...verifyFailPayload },
+        { event_name: 'gp_verify_fail', ...verifyFailPayload },
+      ]);
 
       const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
       const responsePayload: Record<string, unknown> = {
