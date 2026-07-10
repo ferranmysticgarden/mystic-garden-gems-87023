@@ -5,7 +5,7 @@ import { useGooglePlayBilling } from './useGooglePlayBilling';
 import { toast } from 'sonner';
 import { PRODUCTS } from '@/data/products';
 
-import { trackEvent } from '@/lib/trackEvent';
+import { trackEvent, getProductPriceMeta } from '@/lib/trackEvent';
 
 const PENDING_PRODUCT_KEY = 'stripe_pending_product';
 let activePaymentProduct: string | null = null;
