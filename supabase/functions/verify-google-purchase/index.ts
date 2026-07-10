@@ -662,6 +662,17 @@ serve(async (req) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("[ERROR] verify-google-purchase:", errorMessage);
+    // Best-effort telemetry for unexpected server-side crashes so the funnel
+    // shows the tail-end failure mode. Never rethrow — tracking must not break
+    // the response.
+    try {
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_verify_fail',
+        event_data: { reason: 'unhandled_exception', error: errorMessage },
+        platform: 'android',
+        device_id: null,
+      });
+    } catch { /* swallow */ }
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
