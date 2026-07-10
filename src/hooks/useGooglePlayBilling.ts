@@ -223,6 +223,7 @@ export const useGooglePlayBilling = () => {
       updateSharedBillingState((state) => {
         state.products = productDetails;
       });
+      syncBillingMetaCache(productDetails);
       trackEvent('billing_status', {
         ready: loadedCount > 0,
         products_loaded: loadedCount,
