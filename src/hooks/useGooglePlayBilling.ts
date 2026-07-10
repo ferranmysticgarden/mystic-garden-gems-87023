@@ -4,7 +4,7 @@ import GooglePlayBilling, { ProductDetails, PurchaseResult } from '@/plugins/Goo
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
-import { trackEvent } from '@/lib/trackEvent';
+import { trackEvent, setBillingProductMeta, getProductPriceMeta, getResponseCodeLabel } from '@/lib/trackEvent';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { PRODUCTS } from '@/data/products';
 import {
@@ -50,6 +50,32 @@ let lastAttemptedProductId: string | null = null;
 let billingSetupStarted = false;
 let billingListenersAttached = false;
 let lastPurchaseCancellation: { productId: string; timestamp: number } | null = null;
+
+// Timestamp of the last native billing dialog launch — used to detect
+// "fast dismiss" (user closed the sheet in <2s, likely price shock / misclick).
+let lastNativeCallStartAt: number | null = null;
+const FAST_DISMISS_THRESHOLD_MS = 2000;
+
+/**
+ * Refresh the trackEvent price cache from live Google Play ProductDetails.
+ * Called every time products are (re)loaded so purchase funnel events carry
+ * real local price + currency for every canonical productId.
+ */
+const syncBillingMetaCache = (products: Record<string, ProductDetails>) => {
+  PRODUCTS.forEach((p) => {
+    const gpId = resolveGooglePlayProductId(p.id, products);
+    if (!gpId) return;
+    const details = products[gpId];
+    if (!details) return;
+    const priceMicros = Number(details.priceAmountMicros) || 0;
+    setBillingProductMeta(p.id, {
+      price_local: priceMicros / 1_000_000,
+      currency: details.priceCurrencyCode || 'EUR',
+      price_micros: priceMicros,
+      formatted: details.price || '',
+    });
+  });
+};
 
 const reportPurchaseCancelled = (productId?: string | null, error?: string, source?: string) => {
   const resolvedProductId = productId ?? lastAttemptedProductId ?? 'unknown';
@@ -197,6 +223,7 @@ export const useGooglePlayBilling = () => {
       updateSharedBillingState((state) => {
         state.products = productDetails;
       });
+      syncBillingMetaCache(productDetails);
       trackEvent('billing_status', {
         ready: loadedCount > 0,
         products_loaded: loadedCount,
@@ -305,12 +332,16 @@ export const useGooglePlayBilling = () => {
         }
 
         console.log('[PURCHASE] success confirmed via Google Play');
+        const successPriceMeta = getProductPriceMeta(verifiedProductId);
         trackEvent('purchase_verified', {
           platform: 'android',
           product: verifiedProductId,
           requested_product: trackedProductId,
           google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
+          price_local: successPriceMeta.price_local,
+          currency: successPriceMeta.currency,
+          price_micros: successPriceMeta.price_micros,
         });
         // Unified success event for cross-platform funnel analysis
         trackEvent('purchase_success', {
@@ -318,6 +349,9 @@ export const useGooglePlayBilling = () => {
           platform: 'android',
           google_product: purchase.productId,
           guest: Boolean(data?.isGuest),
+          price_local: successPriceMeta.price_local,
+          currency: successPriceMeta.currency,
+          price_micros: successPriceMeta.price_micros,
         });
         // ─── Firebase Analytics: GA4 standard 'purchase' event for Google Ads ───
         // Fires ONLY here, after server-side Google Play verification succeeded
@@ -514,27 +548,55 @@ export const useGooglePlayBilling = () => {
       // Only track from native listener — the catch block in purchase() already handles user-initiated cancellations
       // This avoids duplicate purchase_cancelled events
       const resolvedProductId = nativeProductId ?? lastAttemptedProductId ?? 'unknown';
+      const cancelPriceMeta = getProductPriceMeta(resolvedProductId);
+      const dtMs = lastNativeCallStartAt ? Date.now() - lastNativeCallStartAt : null;
       trackEvent('purchase_cancelled_native', {
         platform: 'android',
         product: resolvedProductId,
         productId: resolvedProductId,
         response_code: responseCode,
+        response_code_label: getResponseCodeLabel(responseCode),
         debug_message: debugMessage,
         stage,
+        price_local: cancelPriceMeta.price_local,
+        currency: cancelPriceMeta.currency,
+        price_micros: cancelPriceMeta.price_micros,
+        time_to_dismiss_ms: dtMs,
       });
+      // Fast-dismiss signal (<2s): likely price shock / misclick, distinct from thoughtful cancel
+      if (dtMs !== null && dtMs < FAST_DISMISS_THRESHOLD_MS) {
+        trackEvent('gp_dialog_dismissed_fast', {
+          platform: 'android',
+          product: resolvedProductId,
+          productId: resolvedProductId,
+          time_to_dismiss_ms: dtMs,
+          response_code: responseCode,
+          response_code_label: getResponseCodeLabel(responseCode),
+          price_local: cancelPriceMeta.price_local,
+          currency: cancelPriceMeta.currency,
+          price_micros: cancelPriceMeta.price_micros,
+        });
+      }
+      lastNativeCallStartAt = null;
     });
 
     void GooglePlayBilling.addListener('purchaseError', ({ error, responseCode, debugMessage, stage, productId: nativeProductId }) => {
       const resolvedProductId = nativeProductId ?? lastAttemptedProductId ?? 'unknown';
+      const errPriceMeta = getProductPriceMeta(resolvedProductId);
       trackEvent('purchase_error', {
         platform: 'android',
         product: resolvedProductId,
         productId: resolvedProductId,
         error,
         response_code: responseCode,
+        response_code_label: getResponseCodeLabel(responseCode),
         debug_message: debugMessage,
         stage,
+        price_local: errPriceMeta.price_local,
+        currency: errPriceMeta.currency,
+        price_micros: errPriceMeta.price_micros,
       });
+      lastNativeCallStartAt = null;
     });
 
     void GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
@@ -644,12 +706,23 @@ export const useGooglePlayBilling = () => {
 
       purchaseFlowStarted = true;
       window.dispatchEvent(new Event('purchase_loading_start'));
-      trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
+      const nativeCallPriceMeta = getProductPriceMeta(productId);
+      lastNativeCallStartAt = Date.now();
+      trackEvent('gp_native_call_start', {
+        product: productId,
+        google_id: googlePlayProductId,
+        price_local: nativeCallPriceMeta.price_local,
+        currency: nativeCallPriceMeta.currency,
+        price_micros: nativeCallPriceMeta.price_micros,
+      });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
       trackEvent('gp_native_call_success', {
         product: productId,
         google_id: googlePlayProductId,
         has_token: !!result?.purchaseToken,
+        price_local: nativeCallPriceMeta.price_local,
+        currency: nativeCallPriceMeta.currency,
+        price_micros: nativeCallPriceMeta.price_micros,
       });
       if (result?.purchaseToken) {
         purchaseInitiatedByUser.add(result.purchaseToken);

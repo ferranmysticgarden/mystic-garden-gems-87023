@@ -418,8 +418,7 @@ serve(async (req) => {
     const hasExplicitRequested = typeof requestedProductId === 'string' && requestedProductId.trim().length > 0;
     if (hasExplicitRequested && !isRequestedProductAllowedForSku(normalizedRawSku, productId)) {
       console.error(`[SECURITY] Reward mismatch blocked: rawSku=${normalizedRawSku} requested=${productId} (raw=${rawProductId}, requestedRaw=${requestedProductId})`);
-      await supabaseClient.from('app_events').insert({
-        event_name: 'gp_verify_failed',
+      const rewardMismatchPayload = {
         event_data: {
           productId,
           rawProductId,
@@ -432,7 +431,11 @@ serve(async (req) => {
         },
         platform: 'android',
         device_id: purchaseToken.slice(0, 24),
-      });
+      };
+      await supabaseClient.from('app_events').insert([
+        { event_name: 'gp_verify_failed', ...rewardMismatchPayload },
+        { event_name: 'gp_verify_fail', ...rewardMismatchPayload },
+      ]);
       return new Response(JSON.stringify({
         success: false,
         reason: 'requested_product_not_allowed',
@@ -454,12 +457,17 @@ serve(async (req) => {
 
     console.log(`[INFO] Verifying purchase: rawProduct=${rawProductId}, requestedProduct=${requestedProductId || rawProductId}, normalizedProduct=${productId}, order=${orderId}, user=${userId || 'GUEST'}, isGuest=${isGuest}`);
 
-    await supabaseClient.from('app_events').insert({
-      event_name: 'gp_verify_started',
+    const verifyStartPayload = {
       event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, purchaseTokenPrefix: purchaseToken.slice(0, 12), packageCandidates, isGuest, userId },
       platform: 'android',
       device_id: purchaseToken.slice(0, 24),
-    });
+    };
+    // Emit both the legacy name and the plan-canonical name (`gp_verify_start`) so
+    // existing dashboards keep working and the new funnel matches the plan spec.
+    await supabaseClient.from('app_events').insert([
+      { event_name: 'gp_verify_started', ...verifyStartPayload },
+      { event_name: 'gp_verify_start', ...verifyStartPayload },
+    ]);
 
     const serviceAccountKey = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT") || null;
     const [primaryPackageName, ...fallbackPackageNames] = packageCandidates;
@@ -479,12 +487,15 @@ serve(async (req) => {
 
     if (!verification.valid) {
       console.error('[ERROR] Purchase verification failed:', verification.error);
-      await supabaseClient.from('app_events').insert({
-        event_name: 'gp_verify_failed',
-        event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
+      const verifyFailPayload = {
+        event_data: { productId, rawProductId, requestedProductId: requestedProductId || null, orderId: orderId || null, packageName: resolvedPackageName, error: verification.error || 'Purchase verification failed', googleStatus: verification.statusCode ?? null, http_status: verification.statusCode ?? null, reason: verification.reason ?? null, isGuest, userId },
         platform: 'android',
         device_id: purchaseToken.slice(0, 24),
-      });
+      };
+      await supabaseClient.from('app_events').insert([
+        { event_name: 'gp_verify_failed', ...verifyFailPayload },
+        { event_name: 'gp_verify_fail', ...verifyFailPayload },
+      ]);
 
       const status = verification.statusCode === 403 || verification.statusCode === 401 ? 503 : 400;
       const responsePayload: Record<string, unknown> = {
@@ -651,6 +662,17 @@ serve(async (req) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("[ERROR] verify-google-purchase:", errorMessage);
+    // Best-effort telemetry for unexpected server-side crashes so the funnel
+    // shows the tail-end failure mode. Never rethrow — tracking must not break
+    // the response.
+    try {
+      await supabaseClient.from('app_events').insert({
+        event_name: 'gp_verify_fail',
+        event_data: { reason: 'unhandled_exception', error: errorMessage },
+        platform: 'android',
+        device_id: null,
+      });
+    } catch { /* swallow */ }
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

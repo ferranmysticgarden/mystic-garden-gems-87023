@@ -5,7 +5,7 @@ import { useGooglePlayBilling } from './useGooglePlayBilling';
 import { toast } from 'sonner';
 import { PRODUCTS } from '@/data/products';
 
-import { trackEvent } from '@/lib/trackEvent';
+import { trackEvent, getProductPriceMeta } from '@/lib/trackEvent';
 
 const PENDING_PRODUCT_KEY = 'stripe_pending_product';
 let activePaymentProduct: string | null = null;
@@ -60,12 +60,20 @@ export const usePayment = () => {
       return false;
     }
 
+    const resolvedSource = source || 'unknown';
+    if (resolvedSource === 'unknown') {
+      console.warn(`[PAYMENT] purchase_attempt with source=unknown for ${productId}; caller should pass an explicit source.`);
+    }
+    const attemptPriceMeta = getProductPriceMeta(productId);
     trackEvent('purchase_attempt', {
       product: productId,
       productId,
-      source: source || 'unknown',
+      source: resolvedSource,
       platform: isAndroid ? 'android' : 'web',
       billing_available: isAndroid ? googlePlayBilling.isAvailable : 'web',
+      price_local: attemptPriceMeta.price_local,
+      currency: attemptPriceMeta.currency,
+      price_micros: attemptPriceMeta.price_micros,
     });
 
     activePaymentProduct = productId;
@@ -82,6 +90,16 @@ export const usePayment = () => {
         });
 
         try {
+          trackEvent('purchase_bridge_reached', {
+            product: productId,
+            productId,
+            platform: 'android',
+            source: resolvedSource,
+            billing_available: googlePlayBilling.isAvailable,
+            price_local: attemptPriceMeta.price_local,
+            currency: attemptPriceMeta.currency,
+            price_micros: attemptPriceMeta.price_micros,
+          });
           const success = await googlePlayBilling.purchase(productId);
           trackEvent('payment_bridge_result', { product: productId, productId, platform: 'android', success });
           return success;
@@ -122,6 +140,16 @@ export const usePayment = () => {
           timestamp: Date.now(),
         }));
         stripeRedirectInProgress = true;
+        trackEvent('purchase_bridge_reached', {
+          product: productId,
+          productId,
+          platform: 'web',
+          source: resolvedSource,
+          billing_available: 'web',
+          price_local: attemptPriceMeta.price_local,
+          currency: attemptPriceMeta.currency,
+          price_micros: attemptPriceMeta.price_micros,
+        });
         console.log('[PAYMENT] Saved pending product before Stripe redirect:', productId);
         toast.success('Redirigiendo a la pasarela de pago...');
         window.location.assign(data.url);
