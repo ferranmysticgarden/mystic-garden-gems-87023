@@ -418,8 +418,7 @@ serve(async (req) => {
     const hasExplicitRequested = typeof requestedProductId === 'string' && requestedProductId.trim().length > 0;
     if (hasExplicitRequested && !isRequestedProductAllowedForSku(normalizedRawSku, productId)) {
       console.error(`[SECURITY] Reward mismatch blocked: rawSku=${normalizedRawSku} requested=${productId} (raw=${rawProductId}, requestedRaw=${requestedProductId})`);
-      await supabaseClient.from('app_events').insert({
-        event_name: 'gp_verify_failed',
+      const rewardMismatchPayload = {
         event_data: {
           productId,
           rawProductId,
@@ -432,7 +431,11 @@ serve(async (req) => {
         },
         platform: 'android',
         device_id: purchaseToken.slice(0, 24),
-      });
+      };
+      await supabaseClient.from('app_events').insert([
+        { event_name: 'gp_verify_failed', ...rewardMismatchPayload },
+        { event_name: 'gp_verify_fail', ...rewardMismatchPayload },
+      ]);
       return new Response(JSON.stringify({
         success: false,
         reason: 'requested_product_not_allowed',
