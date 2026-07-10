@@ -4,7 +4,7 @@ import GooglePlayBilling, { ProductDetails, PurchaseResult } from '@/plugins/Goo
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispatchPurchaseCompleted } from './usePurchaseGate';
-import { trackEvent } from '@/lib/trackEvent';
+import { trackEvent, setBillingProductMeta, getProductPriceMeta, getResponseCodeLabel } from '@/lib/trackEvent';
 import { emitAnalyticsEvent } from '@/lib/analytics';
 import { PRODUCTS } from '@/data/products';
 import {
