@@ -548,27 +548,55 @@ export const useGooglePlayBilling = () => {
       // Only track from native listener — the catch block in purchase() already handles user-initiated cancellations
       // This avoids duplicate purchase_cancelled events
       const resolvedProductId = nativeProductId ?? lastAttemptedProductId ?? 'unknown';
+      const cancelPriceMeta = getProductPriceMeta(resolvedProductId);
+      const dtMs = lastNativeCallStartAt ? Date.now() - lastNativeCallStartAt : null;
       trackEvent('purchase_cancelled_native', {
         platform: 'android',
         product: resolvedProductId,
         productId: resolvedProductId,
         response_code: responseCode,
+        response_code_label: getResponseCodeLabel(responseCode),
         debug_message: debugMessage,
         stage,
+        price_local: cancelPriceMeta.price_local,
+        currency: cancelPriceMeta.currency,
+        price_micros: cancelPriceMeta.price_micros,
+        time_to_dismiss_ms: dtMs,
       });
+      // Fast-dismiss signal (<2s): likely price shock / misclick, distinct from thoughtful cancel
+      if (dtMs !== null && dtMs < FAST_DISMISS_THRESHOLD_MS) {
+        trackEvent('gp_dialog_dismissed_fast', {
+          platform: 'android',
+          product: resolvedProductId,
+          productId: resolvedProductId,
+          time_to_dismiss_ms: dtMs,
+          response_code: responseCode,
+          response_code_label: getResponseCodeLabel(responseCode),
+          price_local: cancelPriceMeta.price_local,
+          currency: cancelPriceMeta.currency,
+          price_micros: cancelPriceMeta.price_micros,
+        });
+      }
+      lastNativeCallStartAt = null;
     });
 
     void GooglePlayBilling.addListener('purchaseError', ({ error, responseCode, debugMessage, stage, productId: nativeProductId }) => {
       const resolvedProductId = nativeProductId ?? lastAttemptedProductId ?? 'unknown';
+      const errPriceMeta = getProductPriceMeta(resolvedProductId);
       trackEvent('purchase_error', {
         platform: 'android',
         product: resolvedProductId,
         productId: resolvedProductId,
         error,
         response_code: responseCode,
+        response_code_label: getResponseCodeLabel(responseCode),
         debug_message: debugMessage,
         stage,
+        price_local: errPriceMeta.price_local,
+        currency: errPriceMeta.currency,
+        price_micros: errPriceMeta.price_micros,
       });
+      lastNativeCallStartAt = null;
     });
 
     void GooglePlayBilling.addListener('purchasePending', ({ productId }) => {
