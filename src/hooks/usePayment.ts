@@ -90,6 +90,16 @@ export const usePayment = () => {
         });
 
         try {
+          trackEvent('purchase_bridge_reached', {
+            product: productId,
+            productId,
+            platform: 'android',
+            source: resolvedSource,
+            billing_available: googlePlayBilling.isAvailable,
+            price_local: attemptPriceMeta.price_local,
+            currency: attemptPriceMeta.currency,
+            price_micros: attemptPriceMeta.price_micros,
+          });
           const success = await googlePlayBilling.purchase(productId);
           trackEvent('payment_bridge_result', { product: productId, productId, platform: 'android', success });
           return success;
