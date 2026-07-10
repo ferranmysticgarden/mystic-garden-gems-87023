@@ -140,6 +140,16 @@ export const usePayment = () => {
           timestamp: Date.now(),
         }));
         stripeRedirectInProgress = true;
+        trackEvent('purchase_bridge_reached', {
+          product: productId,
+          productId,
+          platform: 'web',
+          source: resolvedSource,
+          billing_available: 'web',
+          price_local: attemptPriceMeta.price_local,
+          currency: attemptPriceMeta.currency,
+          price_micros: attemptPriceMeta.price_micros,
+        });
         console.log('[PAYMENT] Saved pending product before Stripe redirect:', productId);
         toast.success('Redirigiendo a la pasarela de pago...');
         window.location.assign(data.url);
