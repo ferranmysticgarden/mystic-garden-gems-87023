@@ -706,12 +706,23 @@ export const useGooglePlayBilling = () => {
 
       purchaseFlowStarted = true;
       window.dispatchEvent(new Event('purchase_loading_start'));
-      trackEvent('gp_native_call_start', { product: productId, google_id: googlePlayProductId });
+      const nativeCallPriceMeta = getProductPriceMeta(productId);
+      lastNativeCallStartAt = Date.now();
+      trackEvent('gp_native_call_start', {
+        product: productId,
+        google_id: googlePlayProductId,
+        price_local: nativeCallPriceMeta.price_local,
+        currency: nativeCallPriceMeta.currency,
+        price_micros: nativeCallPriceMeta.price_micros,
+      });
       const result = await GooglePlayBilling.purchase({ productId: googlePlayProductId });
       trackEvent('gp_native_call_success', {
         product: productId,
         google_id: googlePlayProductId,
         has_token: !!result?.purchaseToken,
+        price_local: nativeCallPriceMeta.price_local,
+        currency: nativeCallPriceMeta.currency,
+        price_micros: nativeCallPriceMeta.price_micros,
       });
       if (result?.purchaseToken) {
         purchaseInitiatedByUser.add(result.purchaseToken);
