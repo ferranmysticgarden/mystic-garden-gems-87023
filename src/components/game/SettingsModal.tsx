@@ -111,6 +111,16 @@ export const SettingsModal = ({ onClose, onOpenReferral }: Props) => {
           </div>
         </section>
 
+        {onOpenReferral && (
+          <Button
+            onClick={() => { onOpenReferral(); onClose(); }}
+            className="w-full mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold"
+          >
+            <Gift className="w-4 h-4 mr-2" />
+            {t('settings.invite_friends') || 'Invitar amigos'}
+          </Button>
+        )}
+
         <Button onClick={onClose} className="w-full" variant="outline">
           {t('settings.close') || 'Cerrar'}
         </Button>
