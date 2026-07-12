@@ -1,4 +1,4 @@
-import { X, Globe, Bell, Volume2 } from 'lucide-react';
+import { X, Globe, Bell, Volume2, Gift } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { AudioControls } from '@/components/game/AudioControls';
@@ -7,6 +7,7 @@ import { trackEvent } from '@/lib/trackEvent';
 
 interface Props {
   onClose: () => void;
+  onOpenReferral?: () => void;
 }
 
 const LANGS: Array<{ code: 'es' | 'en' | 'pt'; label: string; flag: string }> = [
@@ -15,7 +16,7 @@ const LANGS: Array<{ code: 'es' | 'en' | 'pt'; label: string; flag: string }> = 
   { code: 'pt', label: 'Português', flag: '🇧🇷' },
 ];
 
-export const SettingsModal = ({ onClose }: Props) => {
+export const SettingsModal = ({ onClose, onOpenReferral }: Props) => {
   const { t, language, setLanguage } = useLanguage();
   const { isSupported, permission, requestPermission } = usePushNotifications();
 
@@ -109,6 +110,16 @@ export const SettingsModal = ({ onClose }: Props) => {
             )}
           </div>
         </section>
+
+        {onOpenReferral && (
+          <Button
+            onClick={() => { onOpenReferral(); onClose(); }}
+            className="w-full mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold"
+          >
+            <Gift className="w-4 h-4 mr-2" />
+            {t('settings.invite_friends') || 'Invitar amigos'}
+          </Button>
+        )}
 
         <Button onClick={onClose} className="w-full" variant="outline">
           {t('settings.close') || 'Cerrar'}

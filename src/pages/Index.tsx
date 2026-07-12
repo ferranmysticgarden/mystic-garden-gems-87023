@@ -80,6 +80,9 @@ import { EndOfSessionBanner } from "@/components/game/EndOfSessionBanner";
 import { markWinStreakPowerupPending } from "@/utils/winStreakPowerup";
 import { incrementMission } from "@/utils/missionTracker";
 import { SettingsModal } from "@/components/game/SettingsModal";
+import { ReferralModal } from "@/components/game/ReferralModal";
+import { useReferral } from "@/hooks/useReferral";
+import { capturePendingReferralFromUrl } from "@/utils/referralDeepLink";
 import { toast } from "sonner";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle, Settings as SettingsIcon } from "lucide-react";
 import { LevelMap } from "@/components/menu/LevelMap";
@@ -175,6 +178,11 @@ const Index = () => {
   const [comebackDays, setComebackDays] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const referral = useReferral(user?.id ?? null);
+
+  // Capture ?ref= from URL on mount (before auth)
+  useEffect(() => { capturePendingReferralFromUrl(); }, []);
 
   // ===== T5/T7/T9: Piggy Bank, Season Pass, Win Streak =====
   const piggyBank = usePiggyBank(user?.id ?? null);
@@ -601,6 +609,9 @@ const Index = () => {
 
       // BUG 4 fix — misión diaria "Completa X niveles"
       try { incrementMission('levels', user?.id ?? null); } catch {}
+
+      // Referral qualification check (fires when referred user reaches level 5)
+      try { referral.checkQualification(currentLevel.id); } catch {}
 
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
@@ -1308,9 +1319,19 @@ const Index = () => {
         isOpen={showLuckySpin} 
         onClose={() => setShowLuckySpin(false)} 
       />
-      {/* Settings Modal (Idioma + Sonido + Notificaciones) */}
+      {/* Settings Modal (Idioma + Sonido + Notificaciones + Invitar) */}
       {showSettingsModal && (
-        <SettingsModal onClose={() => setShowSettingsModal(false)} />
+        <SettingsModal
+          onClose={() => setShowSettingsModal(false)}
+          onOpenReferral={() => setShowReferralModal(true)}
+        />
+      )}
+      {/* Referral Modal */}
+      {showReferralModal && (
+        <ReferralModal
+          onClose={() => setShowReferralModal(false)}
+          onRedeemSuccess={(gems) => { if (gems > 0) addGems(gems); }}
+        />
       )}
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
