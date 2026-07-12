@@ -1,4 +1,4 @@
-import { X, Globe, Bell, Volume2 } from 'lucide-react';
+import { X, Globe, Bell, Volume2, Gift } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { AudioControls } from '@/components/game/AudioControls';
