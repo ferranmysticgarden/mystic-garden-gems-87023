@@ -7,6 +7,7 @@ import { trackEvent } from '@/lib/trackEvent';
 
 interface Props {
   onClose: () => void;
+  onOpenReferral?: () => void;
 }
 
 const LANGS: Array<{ code: 'es' | 'en' | 'pt'; label: string; flag: string }> = [
