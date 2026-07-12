@@ -16,7 +16,7 @@ const LANGS: Array<{ code: 'es' | 'en' | 'pt'; label: string; flag: string }> = 
   { code: 'pt', label: 'Português', flag: '🇧🇷' },
 ];
 
-export const SettingsModal = ({ onClose }: Props) => {
+export const SettingsModal = ({ onClose, onOpenReferral }: Props) => {
   const { t, language, setLanguage } = useLanguage();
   const { isSupported, permission, requestPermission } = usePushNotifications();
 
