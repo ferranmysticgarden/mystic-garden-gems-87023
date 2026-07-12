@@ -283,6 +283,72 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          qualified_at: string | null
+          redeemed_at: string
+          referred_gems_granted: number
+          referred_rewarded_at: string | null
+          referred_user_id: string
+          referrer_gems_granted: number
+          referrer_rewarded_at: string | null
+          referrer_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          redeemed_at?: string
+          referred_gems_granted?: number
+          referred_rewarded_at?: string | null
+          referred_user_id: string
+          referrer_gems_granted?: number
+          referrer_rewarded_at?: string | null
+          referrer_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          redeemed_at?: string
+          referred_gems_granted?: number
+          referred_rewarded_at?: string | null
+          referred_user_id?: string
+          referrer_gems_granted?: number
+          referrer_rewarded_at?: string | null
+          referrer_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       season_passes: {
         Row: {
           claimed_tiers: number[]
