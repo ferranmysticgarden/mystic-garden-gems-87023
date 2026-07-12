@@ -610,6 +610,9 @@ const Index = () => {
       // BUG 4 fix — misión diaria "Completa X niveles"
       try { incrementMission('levels', user?.id ?? null); } catch {}
 
+      // Referral qualification check (fires when referred user reaches level 5)
+      try { referral.checkQualification(currentLevel.id); } catch {}
+
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
       if (reward.gems) await checkGemsAchievements(gameState.gems + reward.gems);
@@ -1316,9 +1319,19 @@ const Index = () => {
         isOpen={showLuckySpin} 
         onClose={() => setShowLuckySpin(false)} 
       />
-      {/* Settings Modal (Idioma + Sonido + Notificaciones) */}
+      {/* Settings Modal (Idioma + Sonido + Notificaciones + Invitar) */}
       {showSettingsModal && (
-        <SettingsModal onClose={() => setShowSettingsModal(false)} />
+        <SettingsModal
+          onClose={() => setShowSettingsModal(false)}
+          onOpenReferral={() => setShowReferralModal(true)}
+        />
+      )}
+      {/* Referral Modal */}
+      {showReferralModal && (
+        <ReferralModal
+          onClose={() => setShowReferralModal(false)}
+          onRedeemSuccess={(gems) => { if (gems > 0) addGems(gems); }}
+        />
       )}
       {/* Tutorial - auto-skip (desactivado) */}
       <Tutorial onComplete={() => console.log("Tutorial completado")} />
