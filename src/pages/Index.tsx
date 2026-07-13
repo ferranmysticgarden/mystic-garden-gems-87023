@@ -633,7 +633,7 @@ const Index = () => {
 
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
-      if (reward.gems) await checkGemsAchievements(gameState.gems + reward.gems);
+      if (boostedGems) await checkGemsAchievements(gameState.gems + boostedGems);
 
       if (currentLevel.id === 1 && !localStorage.getItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN)) {
         trackEvent('customize_intro_shown', {});
@@ -653,8 +653,8 @@ const Index = () => {
         }
       }
 
-      if (currentLevel.id >= 6 && reward.gems && reward.gems > 0 && !isBonus) {
-        setLastWinGems(reward.gems);
+      if (currentLevel.id >= 6 && boostedGems && boostedGems > 0 && !isBonus) {
+        setLastWinGems(boostedGems);
         if (isPostVictoryOfferLocked()) {
           trackEvent("offer_suppressed", { source: "PostVictoryOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
         } else {
