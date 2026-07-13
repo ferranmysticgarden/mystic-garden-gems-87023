@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, HashRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { MysticBackground } from "@/components/effects";
+import { DeferredMysticBackground } from "@/components/effects/DeferredMysticBackground";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
 import { useEdgeToEdge } from "@/hooks/useEdgeToEdge";
@@ -33,7 +33,7 @@ const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
 const ConditionalBackground = () => {
   const { pathname } = useLocation();
   if (pathname === '/product') return null;
-  return <MysticBackground />;
+  return <DeferredMysticBackground />;
 };
 
 const App = () => {

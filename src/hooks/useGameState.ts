@@ -88,7 +88,17 @@ export const useGameState = () => {
     // On first render, load from localStorage immediately (guest mode)
     return loadLocalProgress() || INITIAL_STATE;
   });
-  const [loading, setLoading] = useState(true);
+  // Optimistic: if there's no supabase auth token in localStorage, we're a guest.
+  // Guests read from localStorage synchronously, so no loading state is needed.
+  const [loading, setLoading] = useState(() => {
+    try {
+      const keys = Object.keys(localStorage);
+      const hasAuth = keys.some(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      return hasAuth; // only block render for potentially-logged-in users
+    } catch {
+      return true;
+    }
+  });
 
   // Track if we've loaded from DB at least once
   const hasLoadedRef = useRef(false);

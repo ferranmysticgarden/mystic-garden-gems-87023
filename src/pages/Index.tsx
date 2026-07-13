@@ -344,6 +344,25 @@ const Index = () => {
     }
   }, [authLoading, user]);
 
+  // Emit first_render_ready once when the Menu is actually painted (idle callback)
+  const firstRenderReadyRef = useRef(false);
+  useEffect(() => {
+    if (firstRenderReadyRef.current) return;
+    if (authLoading || gameLoading) return;
+    if (screen !== 'menu') return;
+    firstRenderReadyRef.current = true;
+    const mountTs = (typeof performance !== 'undefined' && performance.timeOrigin) ? performance.timeOrigin : Date.now();
+    const emit = () => {
+      trackEvent('first_render_ready', {
+        msSinceOrigin: Math.round(performance.now()),
+        wallMs: Date.now() - mountTs,
+      });
+    };
+    const ric = (window as unknown as { requestIdleCallback?: (fn: () => void, opts?: { timeout: number }) => number }).requestIdleCallback;
+    if (typeof ric === 'function') ric(emit, { timeout: 1500 });
+    else setTimeout(emit, 0);
+  }, [authLoading, gameLoading, screen]);
+
   // Limpiar prompt de login si se detecta usuario (ej: tras login exitoso)
   useEffect(() => {
     if (user) {
@@ -1263,8 +1282,8 @@ const Index = () => {
         </div>
       )}
 
-      {/* Splash (one-shot per session) */}
-      <SplashScreen />
+      {/* Splash (one-shot per session) — auto-dismiss on auth+game ready or 800ms cap */}
+      <SplashScreen ready={!authLoading && !gameLoading} />
 
       {/* Shop Modal - SIEMPRE ACCESIBLE */}
       {screen === "shop" && (
