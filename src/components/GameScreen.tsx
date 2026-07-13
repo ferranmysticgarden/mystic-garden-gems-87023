@@ -62,6 +62,7 @@ interface GameScreenProps {
   onUseChange?: () => void;
   onUseUndo?: () => void;
   consecutiveLossesOnLevel?: number;
+  onPaidRescue?: () => void;
 }
 
 export const GameScreen = ({ 
@@ -83,7 +84,13 @@ export const GameScreen = ({
   onUseChange,
   onUseUndo,
   consecutiveLossesOnLevel = 0,
+  onPaidRescue,
 }: GameScreenProps) => {
+  // BUG 2 fix — helper único: activa flag y resetea contador de derrotas del nivel
+  const markPaidRescue = () => {
+    setPaidRescueActive(true);
+    try { onPaidRescue?.(); } catch {}
+  };
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
   const { activeTheme } = useUserThemes();
