@@ -11,7 +11,7 @@ export interface GameState {
   starsEarned: Record<number, number>;
   hammers: number;
   undos: number;
-  shuffles: number;
+  changes: number;
   lastLifeRefill: number;
   unlimitedLivesUntil: number | null;
 }
