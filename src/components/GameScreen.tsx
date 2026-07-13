@@ -716,14 +716,58 @@ export const GameScreen = ({
     requestPowerup('hammer', !hasStock);
   };
 
-  const handleShuffleClick = () => {
-    const isPaid = shuffles === 0;
-    if (isPaid && gems < 60) {
-      toast.error(t('game.not_enough_gems') || 'Necesitas 60 gemas para Mezclar');
+  const handleChangeClick = () => {
+    // Toggle: si ya está activo, desactivar sin cobrar
+    if (isChangeActive) {
+      setIsChangeActive(false);
+      setChangeTilePending(null);
       return;
     }
-    requestPowerup('shuffle', isPaid);
+    const isPaid = changes === 0;
+    if (isPaid && gems < 60) {
+      toast.error(t('game.not_enough_gems') || 'Necesitas 60 gemas para Cambio');
+      return;
+    }
+    requestPowerup('change', isPaid);
   };
+
+  // Handlers específicos del power-up Cambio (modo + modal + aplicación)
+  const handleChangeTileTap = (row: number, col: number) => {
+    setChangeTilePending({ row, col });
+  };
+
+  const handleChangeIconPick = (newType: ChangeTileType) => {
+    if (!changeTilePending) return;
+    const isPaid = changeWillSpendRef.current;
+    // Cobrar/gastar stock AHORA (solo si el usuario efectivamente elige un icono)
+    if (isPaid) onSpendGems?.(60); else onUseChange?.();
+    trackEvent('powerup_used', {
+      type: 'change',
+      level: level.id,
+      payment: isPaid ? 'gems' : 'stock',
+      cost: isPaid ? 60 : 0,
+      gems_remaining: gems - (isPaid ? 60 : 0),
+      tile_new_type: newType,
+    });
+    changeSeqRef.current += 1;
+    setChangeApply({
+      row: changeTilePending.row,
+      col: changeTilePending.col,
+      newType,
+      seq: changeSeqRef.current,
+    });
+    setChangeTilePending(null);
+    setIsChangeActive(false);
+    changeWillSpendRef.current = false;
+  };
+
+  const handleChangeModalCancel = () => {
+    setChangeTilePending(null);
+    // El modo Cambio permanece activo por si quiere elegir otra ficha; el usuario
+    // puede pulsar el botón Cambio de nuevo para salir. Alternativa: cerrar el modo.
+    setIsChangeActive(false);
+  };
+
 
   const handleUndoClick = () => {
     const isPaid = undos === 0;
