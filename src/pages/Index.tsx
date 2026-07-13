@@ -1194,11 +1194,19 @@ const Index = () => {
           )}
         </div>
 
-        {/* Hidden admin access (tap 5 times) */}
+        {/* Hidden admin access (tap 5 times) — 72×72 con onClick para fiabilidad en móvil */}
         <button
           type="button"
-          onPointerUp={handleAdminAccessTap}
-          className="fixed bottom-1 left-1 w-10 h-10 opacity-0 z-50"
+          onClick={handleAdminAccessTap}
+          className="fixed bottom-0 left-0 w-[72px] h-[72px] opacity-0 z-[60]"
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+        {/* Zona secundaria: esquina inferior derecha, mismo handler (por si tapas Google Play badge o similar) */}
+        <button
+          type="button"
+          onClick={handleAdminAccessTap}
+          className="fixed bottom-0 right-0 w-[72px] h-[72px] opacity-0 z-[60]"
           aria-hidden="true"
           tabIndex={-1}
         />
