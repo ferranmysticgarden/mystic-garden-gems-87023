@@ -229,6 +229,10 @@
         "title": "🔀 Embaralhar",
         "desc": "Reorganiza todas as peças do tabuleiro. Use quando não encontrar movimentos."
       },
+      "change": {
+        "title": "🔄 Trocar",
+        "desc": "Transforma uma peça do tabuleiro no ícone que você escolher. Toque em Trocar, depois na peça e por fim no novo ícone."
+      },
       "undo": {
         "title": "↩️ Desfazer",
         "desc": "Reverte seu último movimento sem perder a tentativa."
