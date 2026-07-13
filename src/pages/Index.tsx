@@ -118,10 +118,10 @@ const Index = () => {
     setOnLivesFull,
     addHammer,
     addUndo,
-    addShuffle,
+    addChange,
     useHammer,
     useUndo,
-    useShuffle,
+    useChange,
     reloadFromDB,
   } = useGameState();
 
