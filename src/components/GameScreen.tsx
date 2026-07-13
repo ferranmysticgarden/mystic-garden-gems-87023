@@ -35,7 +35,7 @@ import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 import { trackEvent } from "@/lib/trackEvent";
 import { Hammer, RefreshCcw, RotateCcw, Gem, Gift } from 'lucide-react';
 import { ChangeIconModal } from './game/ChangeIconModal';
-import type { TileType } from '@/constants/tileTypes';
+import type { TileType as ChangeTileType } from '@/constants/tileTypes';
 import { toast } from 'sonner';
 import { gemPriceForRescue, incrementRescueCount, resetRescueCount, getRescueCount } from '@/utils/rescuePriceScale';
 import { consumeWinStreakPowerup } from '@/utils/winStreakPowerup';
