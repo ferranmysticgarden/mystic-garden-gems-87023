@@ -24,7 +24,9 @@ interface BoardProps {
   levelId?: number;
   isHammerActive?: boolean;
   onHammerUse?: (row: number, col: number) => void;
-  triggerShuffle?: number;
+  isChangeActive?: boolean;
+  onChangeTileClick?: (row: number, col: number) => void;
+  changeApply?: { row: number; col: number; newType: string; seq: number } | null;
   triggerUndo?: number;
   highlightedTiles?: Position[];
   onFirstValidMatch?: () => void;
