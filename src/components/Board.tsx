@@ -514,12 +514,20 @@ export const Board = ({
     if (disabled) return;
     if (isSwapping || animatingTiles.size > 0) return;
 
+    // MODO CAMBIO: notifica al padre para que abra el modal de selección de icono.
+    // No se muta el tablero hasta que el usuario elige un icono (el padre llamará via changeApply).
+    if (isChangeActive) {
+      onChangeTileClick?.(row, col);
+      return;
+    }
+
     // MODO MARTILLO: Si está activo, elimina la ficha y sale
     if (isHammerActive) {
       removeMatches(board, [{ row, col }]);
       onHammerUse?.(row, col);
       return;
     }
+
 
     if (!selected) {
       playSelectSound();
