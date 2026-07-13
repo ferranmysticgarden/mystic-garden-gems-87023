@@ -1106,6 +1106,13 @@ export const GameScreen = ({
           />
         )}
 
+        {/* Modal de selección de icono para el power-up Cambio */}
+        <ChangeIconModal
+          open={!!changeTilePending}
+          onPick={handleChangeIconPick}
+          onCancel={handleChangeModalCancel}
+        />
+
         {/* Tip 1 — Intro a combos antes del primer nivel score */}
         <ComboTipIntroModal
           levelId={level.id}
