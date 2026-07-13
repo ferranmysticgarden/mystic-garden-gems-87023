@@ -935,7 +935,9 @@ export const GameScreen = ({
 
               setIsHammerActive(false);
             }}
-            triggerShuffle={shuffleTrigger}
+            isChangeActive={isChangeActive}
+            onChangeTileClick={handleChangeTileTap}
+            changeApply={changeApply}
             triggerUndo={undoTrigger}
             onFirstValidMatch={() => setFirstMatchMade(true)}
             adaptiveBoost={
