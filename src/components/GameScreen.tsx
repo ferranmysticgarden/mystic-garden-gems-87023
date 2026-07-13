@@ -666,17 +666,12 @@ export const GameScreen = ({
       setIsHammerActive(true);
       return;
     }
-    if (type === 'shuffle') {
-      const isPaid = shuffles === 0;
-      if (isPaid) onSpendGems?.(60); else onUseShuffle?.();
-      trackEvent('powerup_used', {
-        type: 'shuffle',
-        level: level.id,
-        payment: isPaid ? 'gems' : 'stock',
-        cost: isPaid ? 60 : 0,
-        gems_remaining: gems - (isPaid ? 60 : 0),
-      });
-      setShuffleTrigger((p) => p + 1);
+    if (type === 'change') {
+      // Activa modo Cambio SIN cobrar aún. El coste se aplica cuando el usuario
+      // elige un icono en el modal (handleChangeIconPick). Salir del modo con X = gratis.
+      const isPaid = changes === 0;
+      changeWillSpendRef.current = isPaid;
+      setIsChangeActive(true);
       return;
     }
     if (type === 'undo') {
