@@ -112,7 +112,12 @@ export const GameScreen = ({
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const [showNearWinMessage, setShowNearWinMessage] = useState(false);
   const [isHammerActive, setIsHammerActive] = useState(false);
-  const [shuffleTrigger, setShuffleTrigger] = useState(0);
+  const [isChangeActive, setIsChangeActive] = useState(false);
+  const [changeTilePending, setChangeTilePending] = useState<{ row: number; col: number } | null>(null);
+  const [changeApply, setChangeApply] = useState<{ row: number; col: number; newType: string; seq: number } | null>(null);
+  const changeSeqRef = useRef(0);
+  // Guardamos si el próximo Cambio va a gastar gemas para cobrar solo al aplicar
+  const changeWillSpendRef = useRef(false);
   const [undoTrigger, setUndoTrigger] = useState(0);
   // UX educativa power-ups: modal explicativo/confirmación antes de ejecutar
   const [pendingPowerup, setPendingPowerup] = useState<null | { type: PowerupType; mode: 'intro' | 'confirm'; willSpendGems: boolean }>(null);
