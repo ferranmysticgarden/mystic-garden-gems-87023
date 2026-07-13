@@ -237,6 +237,9 @@
         "title": "↩️ Desfazer",
         "desc": "Reverte seu último movimento sem perder a tentativa."
       }
+    },
+    "change": {
+      "pick_icon": "Escolha um ícone"
     }
   },
   "howtoplay": {
