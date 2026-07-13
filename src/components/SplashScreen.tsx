@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { trackEvent } from "@/lib/trackEvent";
 
 const SPLASH_KEY = "mg_splash_shown_session";
 
@@ -17,14 +18,19 @@ export const SplashScreen = ({ onDone }: SplashScreenProps) => {
     }
   });
   const [fading, setFading] = useState(false);
+  const shownAtRef = useRef<number>(0);
 
   useEffect(() => {
     if (!visible) return;
     try {
       sessionStorage.setItem(SPLASH_KEY, "1");
     } catch {}
+    shownAtRef.current = performance.now();
+    trackEvent('splash_shown', { ts: Date.now() });
     const fadeTimer = setTimeout(() => setFading(true), 1700);
     const hideTimer = setTimeout(() => {
+      const durationMs = Math.round(performance.now() - shownAtRef.current);
+      trackEvent('splash_dismissed', { durationMs });
       setVisible(false);
       onDone?.();
     }, 2200);
