@@ -60,7 +60,7 @@ export const HowToPlayScreen = ({ onBack }: Props) => {
 
         <Section title={t('howtoplay.powerups.title')}>
           <Row icon="🔨" label={t('howtoplay.powerups.hammer')} value={<span><Gem className="inline w-3 h-3" /> 40</span>} />
-          <Row icon="🔀" label={t('howtoplay.powerups.shuffle')} value={<span><Gem className="inline w-3 h-3" /> 60</span>} />
+          <Row icon="🔄" label={t('howtoplay.powerups.change')} value={<span><Gem className="inline w-3 h-3" /> 60</span>} />
           <Row icon="↩️" label={t('howtoplay.powerups.undo')} value={<span><Gem className="inline w-3 h-3" /> 25</span>} />
           <p className="text-xs text-muted-foreground pt-1">{t('howtoplay.powerups.hint')}</p>
         </Section>
