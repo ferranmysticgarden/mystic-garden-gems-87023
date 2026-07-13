@@ -282,7 +282,7 @@ Sumérgete en un bosque encantado lleno de gemas brillantes y misterios por desc
 
 ✨ CARACTERÍSTICAS:
 • +50 niveles desafiantes
-• Power-ups mágicos: Martillo, Shuffle, Deshacer
+• Power-ups mágicos: Martillo, Cambio, Deshacer
 • Sistema de racha diaria con recompensas
 • Ruleta de la suerte gratuita
 • Battle Pass con premios exclusivos
