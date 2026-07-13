@@ -259,7 +259,7 @@
     "powerups": {
       "title": "Power-ups",
       "hammer": "Hammer — breaks 1 tile",
-      "shuffle": "Shuffle — reorganizes the board",
+      "change": "Change — transforms 1 tile into the icon you pick",
       "undo": "Undo — reverts last move",
       "hint": "If you don't have enough gems, you'll see a warning. Inventory power-ups are free."
     },
