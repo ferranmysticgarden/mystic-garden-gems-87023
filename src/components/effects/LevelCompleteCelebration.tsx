@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Star, Sparkles } from 'lucide-react';
+import { Star, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
 import confetti from 'canvas-confetti';
@@ -9,6 +9,7 @@ interface LevelCompleteCelebrationProps {
   gemsEarned: number;
   score: number;
   onContinue: () => void;
+  onExit?: () => void;
 }
 
 const FAIRY_SRC = '/celebration/fairy_trophy.png';
@@ -20,6 +21,7 @@ export const LevelCompleteCelebration = ({
   gemsEarned,
   score,
   onContinue,
+  onExit,
 }: LevelCompleteCelebrationProps) => {
   const { t, language } = useLanguage();
   const [gemCount, setGemCount] = useState(0);
@@ -95,6 +97,18 @@ export const LevelCompleteCelebration = ({
             '0 0 60px rgba(255, 215, 0, 0.45), 0 0 120px rgba(168, 85, 247, 0.35)',
         }}
       >
+        {/* Close button (X) — vuelve al menú principal manteniendo la recompensa */}
+        {onExit && (
+          <button
+            type="button"
+            aria-label="Cerrar"
+            onClick={onExit}
+            className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 border border-white/20 flex items-center justify-center text-white active:scale-95 transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Sparkle particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <Sparkles className="absolute top-4 left-6 w-5 h-5 text-yellow-300/60 animate-pulse" />

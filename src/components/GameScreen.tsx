@@ -1136,6 +1136,7 @@ export const GameScreen = ({
             gemsEarned={level.reward?.gems ?? 0}
             score={score}
             onContinue={() => onWin(1, level.reward, { score, moves_used: Math.max(0, (initialMoves ?? level.moves) - moves) })}
+            onExit={() => onWin(1, level.reward, { score, moves_used: Math.max(0, (initialMoves ?? level.moves) - moves) })}
           />
         )}
 
