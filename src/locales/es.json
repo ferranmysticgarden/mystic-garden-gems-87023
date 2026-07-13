@@ -229,6 +229,10 @@
         "title": "🔀 Mezclar",
         "desc": "Reorganiza todas las fichas del tablero. Úsalo cuando no encuentres movimientos."
       },
+      "change": {
+        "title": "🔄 Cambio",
+        "desc": "Transforma una ficha del tablero en el icono que tú elijas. Toca Cambio, luego la ficha y después el nuevo icono."
+      },
       "undo": {
         "title": "↩️ Deshacer",
         "desc": "Revierte tu último movimiento sin perder el intento."
