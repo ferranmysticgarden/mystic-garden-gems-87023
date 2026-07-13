@@ -812,17 +812,17 @@ const Index = () => {
 
         for (let i = 0; i < perType; i++) {
           addHammer();
-          addShuffle();
+          addChange();
           addUndo();
         }
 
         if (remainder >= 1) addHammer();
-        if (remainder >= 2) addShuffle();
+        if (remainder >= 2) addChange();
       }
 
       return true;
     },
-    [user, activateUnlimitedLives, addGems, addHammer, addLives, addShuffle, addUndo],
+    [user, activateUnlimitedLives, addGems, addHammer, addLives, addChange, addUndo],
   );
 
 
@@ -888,11 +888,11 @@ const Index = () => {
         const remainder = rewards.powerups % 3;
         for (let i = 0; i < perType; i++) {
           addHammer();
-          addShuffle();
+          addChange();
           addUndo();
         }
         if (remainder >= 1) addHammer();
-        if (remainder >= 2) addShuffle();
+        if (remainder >= 2) addChange();
       }
       if (rewards.unlimitedLivesMinutes) {
         activateUnlimitedLives(rewards.unlimitedLivesMinutes / 60);
@@ -901,7 +901,7 @@ const Index = () => {
 
     window.addEventListener("first_purchase_completed", handleGooglePlayRewards);
     return () => window.removeEventListener("first_purchase_completed", handleGooglePlayRewards);
-  }, [user, reloadFromDB, addGems, addLives, addHammer, addShuffle, addUndo, activateUnlimitedLives, applyLocalProductEffects]);
+  }, [user, reloadFromDB, addGems, addLives, addHammer, addChange, addUndo, activateUnlimitedLives, applyLocalProductEffects]);
   const handleQuickLifePurchased = ({ lives, gems }: { lives: number; gems: number }) => {
     if (lives > 0) addLives(lives);
     if (gems > 0) addGems(gems);
@@ -995,10 +995,10 @@ const Index = () => {
         gems={gameState.gems}
         onSpendGems={spendGems}
         hammers={gameState.hammers}
-        shuffles={gameState.shuffles}
+        changes={gameState.changes}
         undos={gameState.undos}
         onUseHammer={useHammer}
-        onUseShuffle={useShuffle}
+        onUseChange={useChange}
         onUseUndo={useUndo}
       />
     );
