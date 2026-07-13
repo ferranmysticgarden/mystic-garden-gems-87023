@@ -214,7 +214,7 @@ export const useGameState = () => {
             completed_levels: gameState.completedLevels,
             hammer_count: gameState.hammers,
             undo_count: gameState.undos,
-            shuffle_count: gameState.shuffles,
+            shuffle_count: gameState.changes,
             last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
             unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
           };
