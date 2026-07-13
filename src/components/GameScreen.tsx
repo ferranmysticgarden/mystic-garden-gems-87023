@@ -562,6 +562,10 @@ export const GameScreen = ({
   };
 
   const handleLevel10Purchase = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowLevel10Paywall(false);
+      return;
+    }
     setMoves(5);
     setShowLevel10Paywall(false);
     terminalStateRef.current = null;
