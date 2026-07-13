@@ -364,8 +364,8 @@ export const useGameState = () => {
     setGameState((prev) => ({ ...prev, undos: prev.undos + 1 }));
   }, []);
 
-  const addShuffle = useCallback(() => {
-    setGameState((prev) => ({ ...prev, shuffles: prev.shuffles + 1 }));
+  const addChange = useCallback(() => {
+    setGameState((prev) => ({ ...prev, changes: prev.changes + 1 }));
   }, []);
 
   const useHammer = useCallback(() => {
@@ -386,10 +386,10 @@ export const useGameState = () => {
     });
   }, []);
 
-  const useShuffle = useCallback(() => {
+  const useChange = useCallback(() => {
     setGameState((prev) => {
-      if (prev.shuffles > 0) {
-        return { ...prev, shuffles: prev.shuffles - 1 };
+      if (prev.changes > 0) {
+        return { ...prev, changes: prev.changes - 1 };
       }
       return prev;
     });
