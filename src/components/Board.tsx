@@ -445,14 +445,22 @@ export const Board = ({
     return () => clearTimeout(timeoutId);
   }, [board, findMatches, removeMatches, animatingTiles.size, isSwapping, isShuffling, hasValidMoves, shuffleBoard, disabled, playShuffleSound]);
 
-  // Ejecutar Shuffle manual
+  // Ejecutar Cambio: transforma la ficha seleccionada en el nuevo tipo elegido por el usuario.
+  // El settle effect (linea ~407) detectará matches automáticamente tras la mutación.
   useEffect(() => {
-    if (triggerShuffle && triggerShuffle > 0) {
-      playShuffleSound();
-      const shuffled = shuffleBoard(board);
-      setBoard(shuffled);
-    }
-  }, [triggerShuffle]);
+    if (!changeApply || changeApply.seq <= 0) return;
+    playShuffleSound();
+    setBoard((prev) => {
+      if (!prev.length) return prev;
+      const next = prev.map((r) => [...r]);
+      if (next[changeApply.row] && next[changeApply.row][changeApply.col] !== undefined) {
+        next[changeApply.row][changeApply.col] = changeApply.newType;
+      }
+      return next;
+    });
+    // Reset combo cascade ref para que el próximo match cuente como cascada 1
+    cascadeStepRef.current = 0;
+  }, [changeApply?.seq]);
 
   // Ejecutar Undo manual
   useEffect(() => {
