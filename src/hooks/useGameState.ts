@@ -11,7 +11,7 @@ export interface GameState {
   starsEarned: Record<number, number>;
   hammers: number;
   undos: number;
-  shuffles: number;
+  changes: number;
   lastLifeRefill: number;
   unlimitedLivesUntil: number | null;
 }
@@ -24,7 +24,7 @@ const INITIAL_STATE: GameState = {
   starsEarned: {},
   hammers: 3,
   undos: 0,
-  shuffles: 0,
+  changes: 0,
   lastLifeRefill: Date.now(),
   unlimitedLivesUntil: null,
 };
@@ -133,7 +133,7 @@ export const useGameState = () => {
             starsEarned: normalizeStarsEarned(dataWithStars.stars_earned),
             hammers: data.hammer_count,
             undos: data.undo_count,
-            shuffles: data.shuffle_count,
+            changes: data.shuffle_count,
             lastLifeRefill: new Date(data.last_life_refill).getTime(),
             unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
           };
@@ -151,7 +151,7 @@ export const useGameState = () => {
               lives: Math.max(dbState.lives, local.lives),
               hammers: dbState.hammers + local.hammers,
               undos: dbState.undos + local.undos,
-              shuffles: dbState.shuffles + local.shuffles,
+              changes: dbState.changes + local.changes,
             };
             setGameState(merged);
             // Clear guest progress after merge
@@ -214,7 +214,7 @@ export const useGameState = () => {
             completed_levels: gameState.completedLevels,
             hammer_count: gameState.hammers,
             undo_count: gameState.undos,
-            shuffle_count: gameState.shuffles,
+            shuffle_count: gameState.changes,
             last_life_refill: new Date(gameState.lastLifeRefill).toISOString(),
             unlimited_lives_until: gameState.unlimitedLivesUntil ? new Date(gameState.unlimitedLivesUntil).toISOString() : null,
           };
@@ -364,8 +364,8 @@ export const useGameState = () => {
     setGameState((prev) => ({ ...prev, undos: prev.undos + 1 }));
   }, []);
 
-  const addShuffle = useCallback(() => {
-    setGameState((prev) => ({ ...prev, shuffles: prev.shuffles + 1 }));
+  const addChange = useCallback(() => {
+    setGameState((prev) => ({ ...prev, changes: prev.changes + 1 }));
   }, []);
 
   const useHammer = useCallback(() => {
@@ -386,10 +386,10 @@ export const useGameState = () => {
     });
   }, []);
 
-  const useShuffle = useCallback(() => {
+  const useChange = useCallback(() => {
     setGameState((prev) => {
-      if (prev.shuffles > 0) {
-        return { ...prev, shuffles: prev.shuffles - 1 };
+      if (prev.changes > 0) {
+        return { ...prev, changes: prev.changes - 1 };
       }
       return prev;
     });
@@ -437,7 +437,7 @@ export const useGameState = () => {
           starsEarned: normalizeStarsEarned(dataWithStars.stars_earned),
           hammers: data.hammer_count,
           undos: data.undo_count,
-          shuffles: data.shuffle_count,
+          changes: data.shuffle_count,
           lastLifeRefill: new Date(data.last_life_refill).getTime(),
           unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
         };
@@ -461,10 +461,10 @@ export const useGameState = () => {
     selectLevel,
     addHammer,
     addUndo,
-    addShuffle,
+    addChange,
     useHammer,
     useUndo,
-    useShuffle,
+    useChange,
     activateUnlimitedLives,
     hasUnlimitedLives,
     getTimeUntilNextLife,

@@ -16,6 +16,7 @@
     "magic_shuffle": "Magic is reshuffling the garden...",
     "hammer": "Hammer",
     "shuffle": "Shuffle",
+    "change": "Change",
     "undo": "Undo"
   },
   "combo": {
@@ -228,10 +229,17 @@
         "title": "🔀 Shuffle",
         "desc": "Reorganizes all tiles on the board. Use it when you can't find a move."
       },
+      "change": {
+        "title": "🔄 Change",
+        "desc": "Transform a tile on the board into the icon you choose. Tap Change, then the tile, then the new icon."
+      },
       "undo": {
         "title": "↩️ Undo",
         "desc": "Reverts your last move without losing the attempt."
       }
+    },
+    "change": {
+      "pick_icon": "Pick an icon"
     }
   },
   "howtoplay": {
@@ -251,7 +259,7 @@
     "powerups": {
       "title": "Power-ups",
       "hammer": "Hammer — breaks 1 tile",
-      "shuffle": "Shuffle — reorganizes the board",
+      "change": "Change — transforms 1 tile into the icon you pick",
       "undo": "Undo — reverts last move",
       "hint": "If you don't have enough gems, you'll see a warning. Inventory power-ups are free."
     },

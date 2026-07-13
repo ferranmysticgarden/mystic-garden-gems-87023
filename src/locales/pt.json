@@ -16,6 +16,7 @@
     "magic_shuffle": "A magia está reorganizando o jardim...",
     "hammer": "Martelo",
     "shuffle": "Embaralhar",
+    "change": "Trocar",
     "undo": "Desfazer"
   },
   "combo": {
@@ -228,10 +229,17 @@
         "title": "🔀 Embaralhar",
         "desc": "Reorganiza todas as peças do tabuleiro. Use quando não encontrar movimentos."
       },
+      "change": {
+        "title": "🔄 Trocar",
+        "desc": "Transforma uma peça do tabuleiro no ícone que você escolher. Toque em Trocar, depois na peça e por fim no novo ícone."
+      },
       "undo": {
         "title": "↩️ Desfazer",
         "desc": "Reverte seu último movimento sem perder a tentativa."
       }
+    },
+    "change": {
+      "pick_icon": "Escolha um ícone"
     }
   },
   "howtoplay": {
@@ -251,7 +259,7 @@
     "powerups": {
       "title": "Power-ups",
       "hammer": "Martelo — quebra 1 peça",
-      "shuffle": "Embaralhar — reorganiza o tabuleiro",
+      "change": "Trocar — transforma 1 peça no ícone que você escolher",
       "undo": "Desfazer — reverte último movimento",
       "hint": "Se não tiver gemas suficientes, aparece um aviso. Os power-ups do inventário são grátis."
     },

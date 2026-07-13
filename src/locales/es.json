@@ -16,6 +16,7 @@
     "magic_shuffle": "La magia reorganiza el jardín...",
     "hammer": "Martillo",
     "shuffle": "Mezclar",
+    "change": "Cambio",
     "undo": "Deshacer"
   },
   "combo": {
@@ -228,10 +229,17 @@
         "title": "🔀 Mezclar",
         "desc": "Reorganiza todas las fichas del tablero. Úsalo cuando no encuentres movimientos."
       },
+      "change": {
+        "title": "🔄 Cambio",
+        "desc": "Transforma una ficha del tablero en el icono que tú elijas. Toca Cambio, luego la ficha y después el nuevo icono."
+      },
       "undo": {
         "title": "↩️ Deshacer",
         "desc": "Revierte tu último movimiento sin perder el intento."
       }
+    },
+    "change": {
+      "pick_icon": "Elige un icono"
     }
   },
   "howtoplay": {
@@ -251,7 +259,7 @@
     "powerups": {
       "title": "Power-ups",
       "hammer": "Martillo — rompe 1 ficha",
-      "shuffle": "Mezclar — reorganiza el tablero",
+      "change": "Cambio — transforma 1 ficha en el icono que elijas",
       "undo": "Deshacer — revierte último movimiento",
       "hint": "Si no tienes gemas suficientes, aparece un aviso. Los power-ups del inventario son gratis."
     },

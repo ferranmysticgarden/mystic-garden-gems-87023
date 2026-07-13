@@ -33,7 +33,9 @@ import { useAttemptTracker } from '@/hooks/useAttemptTracker';
 import confetti from 'canvas-confetti';
 import { usePendingPurchase } from '@/hooks/usePendingPurchase';
 import { trackEvent } from "@/lib/trackEvent";
-import { Hammer, RefreshCw, RotateCcw, Gem, Gift } from 'lucide-react';
+import { Hammer, RefreshCcw, RotateCcw, Gem, Gift } from 'lucide-react';
+import { ChangeIconModal } from './game/ChangeIconModal';
+import type { TileType as ChangeTileType } from '@/constants/tileTypes';
 import { toast } from 'sonner';
 import { gemPriceForRescue, incrementRescueCount, resetRescueCount, getRescueCount } from '@/utils/rescuePriceScale';
 import { consumeWinStreakPowerup } from '@/utils/winStreakPowerup';
@@ -54,10 +56,10 @@ interface GameScreenProps {
   gems?: number;
   onSpendGems?: (amount: number) => void;
   hammers?: number;
-  shuffles?: number;
+  changes?: number;
   undos?: number;
   onUseHammer?: () => void;
-  onUseShuffle?: () => void;
+  onUseChange?: () => void;
   onUseUndo?: () => void;
   consecutiveLossesOnLevel?: number;
 }
@@ -75,10 +77,10 @@ export const GameScreen = ({
   gems = 0,
   onSpendGems,
   hammers = 0,
-  shuffles = 0,
+  changes = 0,
   undos = 0,
   onUseHammer,
-  onUseShuffle,
+  onUseChange,
   onUseUndo,
   consecutiveLossesOnLevel = 0,
 }: GameScreenProps) => {
@@ -110,10 +112,15 @@ export const GameScreen = ({
   const [progressAtLoss, setProgressAtLoss] = useState(0);
   const [showNearWinMessage, setShowNearWinMessage] = useState(false);
   const [isHammerActive, setIsHammerActive] = useState(false);
-  const [shuffleTrigger, setShuffleTrigger] = useState(0);
+  const [isChangeActive, setIsChangeActive] = useState(false);
+  const [changeTilePending, setChangeTilePending] = useState<{ row: number; col: number } | null>(null);
+  const [changeApply, setChangeApply] = useState<{ row: number; col: number; newType: string; seq: number } | null>(null);
+  const changeSeqRef = useRef(0);
+  // Guardamos si el próximo Cambio va a gastar gemas para cobrar solo al aplicar
+  const changeWillSpendRef = useRef(false);
   const [undoTrigger, setUndoTrigger] = useState(0);
   // UX educativa power-ups: modal explicativo/confirmación antes de ejecutar
-  const [pendingPowerup, setPendingPowerup] = useState<null | { type: 'hammer' | 'shuffle' | 'undo'; mode: 'intro' | 'confirm'; willSpendGems: boolean }>(null);
+  const [pendingPowerup, setPendingPowerup] = useState<null | { type: PowerupType; mode: 'intro' | 'confirm'; willSpendGems: boolean }>(null);
   const [firstMatchMade, setFirstMatchMade] = useState(false);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
@@ -145,7 +152,9 @@ export const GameScreen = ({
 
   // Resetear estado al cambiar de nivel
   useEffect(() => {
-    setShuffleTrigger(0);
+    setIsChangeActive(false);
+    setChangeTilePending(null);
+    setChangeApply(null);
     setUndoTrigger(0);
     setIsHammerActive(false);
     madeAnyComboOrBigRef.current = false;
@@ -657,17 +666,12 @@ export const GameScreen = ({
       setIsHammerActive(true);
       return;
     }
-    if (type === 'shuffle') {
-      const isPaid = shuffles === 0;
-      if (isPaid) onSpendGems?.(60); else onUseShuffle?.();
-      trackEvent('powerup_used', {
-        type: 'shuffle',
-        level: level.id,
-        payment: isPaid ? 'gems' : 'stock',
-        cost: isPaid ? 60 : 0,
-        gems_remaining: gems - (isPaid ? 60 : 0),
-      });
-      setShuffleTrigger((p) => p + 1);
+    if (type === 'change') {
+      // Activa modo Cambio SIN cobrar aún. El coste se aplica cuando el usuario
+      // elige un icono en el modal (handleChangeIconPick). Salir del modo con X = gratis.
+      const isPaid = changes === 0;
+      changeWillSpendRef.current = isPaid;
+      setIsChangeActive(true);
       return;
     }
     if (type === 'undo') {
@@ -712,14 +716,58 @@ export const GameScreen = ({
     requestPowerup('hammer', !hasStock);
   };
 
-  const handleShuffleClick = () => {
-    const isPaid = shuffles === 0;
-    if (isPaid && gems < 60) {
-      toast.error(t('game.not_enough_gems') || 'Necesitas 60 gemas para Mezclar');
+  const handleChangeClick = () => {
+    // Toggle: si ya está activo, desactivar sin cobrar
+    if (isChangeActive) {
+      setIsChangeActive(false);
+      setChangeTilePending(null);
       return;
     }
-    requestPowerup('shuffle', isPaid);
+    const isPaid = changes === 0;
+    if (isPaid && gems < 60) {
+      toast.error(t('game.not_enough_gems') || 'Necesitas 60 gemas para Cambio');
+      return;
+    }
+    requestPowerup('change', isPaid);
   };
+
+  // Handlers específicos del power-up Cambio (modo + modal + aplicación)
+  const handleChangeTileTap = (row: number, col: number) => {
+    setChangeTilePending({ row, col });
+  };
+
+  const handleChangeIconPick = (newType: ChangeTileType) => {
+    if (!changeTilePending) return;
+    const isPaid = changeWillSpendRef.current;
+    // Cobrar/gastar stock AHORA (solo si el usuario efectivamente elige un icono)
+    if (isPaid) onSpendGems?.(60); else onUseChange?.();
+    trackEvent('powerup_used', {
+      type: 'change',
+      level: level.id,
+      payment: isPaid ? 'gems' : 'stock',
+      cost: isPaid ? 60 : 0,
+      gems_remaining: gems - (isPaid ? 60 : 0),
+      tile_new_type: newType,
+    });
+    changeSeqRef.current += 1;
+    setChangeApply({
+      row: changeTilePending.row,
+      col: changeTilePending.col,
+      newType,
+      seq: changeSeqRef.current,
+    });
+    setChangeTilePending(null);
+    setIsChangeActive(false);
+    changeWillSpendRef.current = false;
+  };
+
+  const handleChangeModalCancel = () => {
+    setChangeTilePending(null);
+    // El modo Cambio permanece activo por si quiere elegir otra ficha; el usuario
+    // puede pulsar el botón Cambio de nuevo para salir. Alternativa: cerrar el modo.
+    setIsChangeActive(false);
+  };
+
 
   const handleUndoClick = () => {
     const isPaid = undos === 0;
@@ -887,7 +935,9 @@ export const GameScreen = ({
 
               setIsHammerActive(false);
             }}
-            triggerShuffle={shuffleTrigger}
+            isChangeActive={isChangeActive}
+            onChangeTileClick={handleChangeTileTap}
+            changeApply={changeApply}
             triggerUndo={undoTrigger}
             onFirstValidMatch={() => setFirstMatchMade(true)}
             adaptiveBoost={
@@ -921,20 +971,21 @@ export const GameScreen = ({
           </button>
 
           <button
-            onClick={handleShuffleClick}
+            onClick={handleChangeClick}
             disabled={gameOver}
-            className="relative p-3 rounded-2xl bg-muted/30 border border-white/10 flex flex-col items-center gap-1 transition-all active:scale-95 hover:bg-muted/40"
+            className={`relative p-3 rounded-2xl flex flex-col items-center gap-1 transition-all active:scale-95 ${isChangeActive ? 'bg-accent/40 border-2 border-accent shadow-gold' : 'bg-muted/30 border border-white/10 hover:bg-muted/40'}`}
           >
-            <RefreshCw className="w-6 h-6 text-foreground/70" />
-            <span className="text-[10px] font-bold uppercase">{t('game.shuffle') || 'Mezclar'}</span>
+            <RefreshCcw className={`w-6 h-6 ${isChangeActive ? 'text-accent animate-spin' : 'text-foreground/70'}`} />
+            <span className="text-[10px] font-bold uppercase">{t('game.change') || 'Cambio'}</span>
             <div className="absolute -top-2 -right-1 bg-background border border-accent/50 rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow-sm">
-              {shuffles > 0 ? (
-                <span className="text-[10px] font-bold text-accent">x{shuffles}</span>
+              {changes > 0 ? (
+                <span className="text-[10px] font-bold text-accent">x{changes}</span>
               ) : (
                 <span className="text-[10px] font-bold text-yellow-400 flex items-center">60<Gem className="w-2 h-2 ml-0.5" /></span>
               )}
             </div>
           </button>
+
 
           <button
             onClick={handleUndoClick}
@@ -1054,6 +1105,13 @@ export const GameScreen = ({
             onCancel={handlePowerupModalCancel}
           />
         )}
+
+        {/* Modal de selección de icono para el power-up Cambio */}
+        <ChangeIconModal
+          open={!!changeTilePending}
+          onPick={handleChangeIconPick}
+          onCancel={handleChangeModalCancel}
+        />
 
         {/* Tip 1 — Intro a combos antes del primer nivel score */}
         <ComboTipIntroModal

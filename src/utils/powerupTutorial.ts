@@ -13,7 +13,7 @@
  *   Los usos con stock (gratis) no cuentan.
  */
 
-export type PowerupType = 'hammer' | 'shuffle' | 'undo';
+export type PowerupType = 'hammer' | 'change' | 'undo';
 
 const INTRO_KEY = (t: PowerupType) => `pu_intro_shown_v1_${t}`;
 const CONFIRM_KEY = (t: PowerupType) => `pu_confirm_count_v1_${t}`;
@@ -48,12 +48,12 @@ export const incrementConfirmCount = (type: PowerupType): void => {
 
 export const POWERUP_COST: Record<PowerupType, number> = {
   hammer: 40,
-  shuffle: 60,
+  change: 60,
   undo: 25,
 };
 
 export const POWERUP_EMOJI: Record<PowerupType, string> = {
   hammer: '🔨',
-  shuffle: '🔀',
+  change: '🔄',
   undo: '↩️',
 };

@@ -116,7 +116,7 @@ export const UserDetailModal = ({ userId, open, onClose, onRefresh }: UserDetail
     { key: 'current_level', label: 'Nivel', type: 'number' },
     { key: 'hammer_count', label: 'Martillos', type: 'number' },
     { key: 'undo_count', label: 'Deshacer', type: 'number' },
-    { key: 'shuffle_count', label: 'Barajar', type: 'number' },
+    { key: 'shuffle_count', label: 'Cambios', type: 'number' },
   ];
 
   const currentRole = detail?.roles?.length ? detail.roles[0].role : 'user';
