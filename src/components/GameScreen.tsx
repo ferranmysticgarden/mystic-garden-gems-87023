@@ -487,7 +487,7 @@ export const GameScreen = ({
     // BUG 2 fix — permitir que gane si el objetivo ya estaba cumplido tras el último match.
     terminalStateRef.current = null;
     // BUG 5 fix — pagó, se desactiva adaptive difficulty.
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
@@ -543,7 +543,7 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     defeatFinalizedRef.current = false;
     setGameOver(false);
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   const handleBuyMovesDismiss = () => {
@@ -587,7 +587,7 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     defeatFinalizedRef.current = false;
     setGameOver(false);
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   const handleLevel10Dismiss = () => {
@@ -608,7 +608,7 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     defeatFinalizedRef.current = false;
     setGameOver(false);
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   const handleLevel6Dismiss = () => {
@@ -636,7 +636,7 @@ export const GameScreen = ({
     hasPlayedEndSound.current = false;
     defeatFinalizedRef.current = false;
     terminalStateRef.current = null;
-    setPaidRescueActive(true);
+    markPaidRescue();
     backgroundMusic.setScreen('game');
   };
 
@@ -656,7 +656,7 @@ export const GameScreen = ({
       hasPlayedEndSound.current = false;
       defeatFinalizedRef.current = false;
       terminalStateRef.current = null;
-      setPaidRescueActive(true);
+      markPaidRescue();
       backgroundMusic.setScreen('game');
     }
   };
