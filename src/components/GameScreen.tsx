@@ -583,6 +583,10 @@ export const GameScreen = ({
   };
 
   const handleLevel6Purchase = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowLevel6Offer(false);
+      return;
+    }
     setMoves(3);
     setShowLevel6Offer(false);
     terminalStateRef.current = null;
