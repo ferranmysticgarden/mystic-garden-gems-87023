@@ -1,59 +1,72 @@
-# Plan: arreglo flujo post-nivel-1 (Mega Pack + CustomizeIntro)
+# Plan — 3 features en una pasada
 
-## Decisión: FirstDayOffer al nivel 3 (no nivel 2)
-Nivel 2 sigue siendo onboarding muy temprano; nivel 3 ya hay 3 wins (señal de retención D0), coincide con el regalo gratuito de +20 gemas (refuerzo positivo previo a la oferta). Estándar del sector match-3 (King/Playrix) sitúa la primera oferta agresiva entre niveles 3-5.
+## FEATURE 1 — Racing/Pirates/Unicorns/Manga gratis por nivel
 
-## Cambios
+**`src/data/themes.ts`**
+- En `THEME_LEVEL_UNLOCKS`: añadir `racing: 20, pirates: 35, unicorns: 50, manga: 65`.
+- En los 4 objetos de `THEMES`: cambiar `tier: 'premium'` → `tier: 'free'`, añadir `unlockLevel: 20/35/50/65`, eliminar `gemPrice`, `eurPrice`, `productId` (o mantener `productId` interno comentado; user pidió "productos IAP siguen en products.ts sin mostrarse" → basta con no exponerlos aquí).
+- `PREMIUM_THEME_IDS` → vaciar `[]` (referenciado sólo por lógica de visualización premium; se conserva export para compatibilidad).
 
-### 1. `src/components/game/FirstDayOffer.tsx`
-- Cambiar trigger: `levelJustCompleted === 1` → `levelJustCompleted === 3`.
-- Mantener el fallback de cuenta nueva (<2h) por si llegan al nivel 3 en otro flujo.
-- Eliminar el delay 1500ms (queda 0 ms, el padre ya gestiona orden).
+**`src/components/themes/ThemeCard.tsx`**
+- Rama premium (líneas 52-60): eliminar. Rama fallback locked: mostrar `"themes.unlock_at_level" + theme.unlockLevel` en botón deshabilitado.
+- Texto info (línea 27-29): ya cubre `unlockLevel`; verificar orden `unlockLevel` antes de `premium`.
 
-### 2. `src/pages/Index.tsx` — montaje de FirstDayOffer (~línea 1234)
-- Añadir guarda `!autoPopupsBlocked` al render condicional.
-- Mantener `gameState.completedLevels.length >= 1` para no romper fallback de cuenta nueva.
+**`src/hooks/useUserThemes.ts`**
+- `maybeAutoUnlockByLevel` ya funciona genéricamente sobre `THEME_LEVEL_UNLOCKS`. Al ampliar el mapa, auto-unlock funciona sin cambios.
 
-### 3. `src/pages/Index.tsx` — bloque CustomizeIntro (~líneas 580-585)
-- Quitar el `setItem(CUSTOMIZE_INTRO_SHOWN, 'true')` de ahí.
-- Mantener la condición de disparo (`currentLevel.id === 1 && !flag`).
-- Disparar `setShowCustomizeIntro(true)` directamente (sin delay 1200ms — el modal está por encima de la celebración por z-index `z-[110]` y la celebración ya tiene su propia secuencia).
+**`src/components/CustomizeScreen.tsx`**
+- Verificar props pasadas a `ThemeCard` — quitar handlers premium si sólo se usaban para racing/pirates/unicorns/manga; los props quedan opcionales, no rompe.
 
-### 4. `src/pages/Index.tsx` — render CustomizeIntroModal (~líneas 1484-1489)
-- Envolver con `!autoPopupsBlocked &&`.
-- En `onAccept` y `onDismiss`: marcar `LS_KEYS.CUSTOMIZE_INTRO_SHOWN = 'true'` ANTES de cerrar. Así la flag sólo se consume cuando el usuario interactuó con el modal real.
+## FEATURE 2 — Halloween (nivel 80) y Navidad (nivel 100)
 
-## Archivos modificados
-- `src/components/game/FirstDayOffer.tsx`
-- `src/pages/Index.tsx`
+**Assets (12 PNGs, `imagegen` tier standard, 512×512 transparente — el mínimo del generador es 512, no 256; se sirven escalados como los otros temas)**
+- `public/themes/halloween/icon_1..6.png`: calabaza, murciélago, fantasma, tumba, luna llena, poción púrpura. Estilo Pixar/3D, paleta púrpura/naranja/negro.
+- `public/themes/christmas/icon_1..6.png`: reno, muñeco de nieve, regalo, campana dorada, muérdago, estrella. Estilo Pixar/3D, paleta rojo/verde/dorado/blanco.
 
-## Archivos NO tocados (FROZEN respetados)
-- `useGooglePlayBilling.ts`
-- `DIAGNOSTICO_PAGOS.md`
-- `BillingPlugin.java`
-- Edge functions de pago
+**`src/data/themes.ts`**
+- `ThemeId`: añadir `'halloween' | 'christmas'`.
+- Nuevos objetos en `THEMES` con `tier: 'free'`, `unlockLevel: 80/100`, `iconPaths`.
+- `THEME_LEVEL_UNLOCKS`: `halloween: 80, christmas: 100`.
+- `THEME_TILE_MAP`: entradas paralelas a los otros.
+- Nuevo export `SURPRISE_THEME_IDS: ThemeId[] = ['halloween', 'christmas']`.
 
-## Comando reset para tu móvil (DevTools → Console del WebView, o vía `chrome://inspect`)
-```js
-(function(){
-  const keys = Object.keys(localStorage);
-  const removed = [];
-  keys.forEach(k => {
-    if (k === 'CUSTOMIZE_INTRO_SHOWN'
-        || k.startsWith('first-day-offer-')
-        || k.startsWith('first-win-celebrated-')
-        || k === 'first_session_reward_claimed') {
-      localStorage.removeItem(k);
-      removed.push(k);
-    }
-  });
-  console.log('Flags eliminadas:', removed);
-})();
-```
-(El nombre real de `LS_KEYS.CUSTOMIZE_INTRO_SHOWN` lo verifico antes de implementar para que el comando sea literal — ahora mismo el plan asume que la constante existe en `src/constants/localStorageKeys.ts`.)
+**`src/locales/{es,en,pt}.json`**
+- `themes.halloween.name`, `themes.christmas.name`, `themes.surprise_title` ("¡TEMA SORPRESA!" / "SURPRISE THEME!" / "TEMA SURPRESA!").
 
-## Riesgo
-Bajo. Cambios sólo en presentación/triggers. Sin cambios en pagos, BD, ni RLS. Sin nuevos eventos de tracking.
+**`src/components/themes/ThemeUnlockedModal.tsx`**
+- Detectar `SURPRISE_THEME_IDS.includes(theme.id)`: título → `themes.surprise_title`, header emoji distinto (🎉🎁), estilo con borde dorado/animación.
 
-## Confirmación necesaria
-¿OK con nivel 3 (vs 2)? ¿OK con el resto? Al recibir tu OK implemento y te paso el comando final con el nombre exacto de la clave.
+**`src/components/themes/ThemeCard.tsx`**
+- Si `!unlocked && SURPRISE_THEME_IDS.includes(theme.id)`: sustituir grid de iconos por 6 "?" grandes (bloquea preview del tema sorpresa).
+
+## FEATURE 3 — Eventos temporales
+
+**`src/data/events.ts` (nuevo)**
+- Tipos: `EventType = 'double_gems' | 'fairy_week'`, `GameEvent = { id, type, startsAt: Date, endsAt: Date, nameKey, descKey, multiplier, icon }`.
+- Helpers:
+  - `getCurrentEvent(now = new Date()): GameEvent | null` — recorre lista + auto-generación de "double_gems" para el fin de semana actual (Fri 00:00 – Sun 23:59 local).
+  - `getRewardMultiplier(now?): number` — devuelve `multiplier` del evento activo o 1.
+- Lista `MANUAL_EVENTS` con ejemplos de "fairy_week" (comentado listo para activar).
+
+**`src/pages/Index.tsx`**
+- En `handleWin`: `const boosted = { ...reward, gems: Math.round((reward.gems ?? 0) * getRewardMultiplier()) };` → pasar `boosted` a `completeLevel` y a `toast`. Tracking `event_reward_boosted` cuando `multiplier > 1`.
+- Renderizar `<EventBanner />` encima del mapa (dentro del bloque `screen === 'menu'`).
+
+**`src/components/game/EventBanner.tsx` (nuevo)**
+- `useEffect` cada 60s para recomputar countdown; muestra icono + nombre + "Termina en HH:MM:SS".
+- `useEffect` mount → tracking `event_active_shown` una vez por sesión + evento id (localStorage `event_shown_<id>`).
+
+**`src/locales/{es,en,pt}.json`**
+- `events.double_gems.name/desc`, `events.fairy_week.name/desc`, `events.ends_in`.
+
+## Verificación final
+- `rg -n "'premium'" src/data/themes.ts` → 0 hits.
+- `rg -n "halloween|christmas" src/data/themes.ts src/locales/` → presentes.
+- `rg -n "getRewardMultiplier|EventBanner" src/` → aplicado en handleWin + render.
+- FROZEN intactos: no se tocan `BillingPlugin.java`, `useGooglePlayBilling.ts`, `googleAuth.ts`, `useDeepLinks.ts`, `capacitor.config.ts`, `AndroidManifest.xml`, edge functions de pago ni `DIAGNOSTICO_PAGOS.md`.
+- Publicar OTA.
+
+## Notas
+- `products.ts` (IAP de temas) queda intacto — no se muestra en UI, mantiene compatibilidad si algún flujo antiguo lo referencia.
+- Los 4 temas ex-premium desbloqueados por compra previa siguen desbloqueados (unlock_method en DB no se toca).
+- Assets generados a 512×512 (mínimo del generador imagegen), no 256 — se sirven escalados igual que animals/desserts/fruits.
