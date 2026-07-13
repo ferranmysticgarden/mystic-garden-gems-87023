@@ -256,7 +256,7 @@
     "powerups": {
       "title": "Power-ups",
       "hammer": "Martillo — rompe 1 ficha",
-      "shuffle": "Mezclar — reorganiza el tablero",
+      "change": "Cambio — transforma 1 ficha en el icono que elijas",
       "undo": "Deshacer — revierte último movimiento",
       "hint": "Si no tienes gemas suficientes, aparece un aviso. Los power-ups del inventario son gratis."
     },
