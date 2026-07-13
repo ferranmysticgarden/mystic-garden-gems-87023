@@ -658,7 +658,7 @@ const Index = () => {
         if (isPostVictoryOfferLocked()) {
           trackEvent("offer_suppressed", { source: "PostVictoryOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
         } else {
-          trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
+          trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: boostedGems });
           setTimeout(() => setShowPostVictoryOffer(true), 1500);
         }
       }
