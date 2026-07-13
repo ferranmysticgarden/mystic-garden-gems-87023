@@ -237,6 +237,9 @@
         "title": "↩️ Undo",
         "desc": "Reverts your last move without losing the attempt."
       }
+    },
+    "change": {
+      "pick_icon": "Pick an icon"
     }
   },
   "howtoplay": {
