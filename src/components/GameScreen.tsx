@@ -971,20 +971,21 @@ export const GameScreen = ({
           </button>
 
           <button
-            onClick={handleShuffleClick}
+            onClick={handleChangeClick}
             disabled={gameOver}
-            className="relative p-3 rounded-2xl bg-muted/30 border border-white/10 flex flex-col items-center gap-1 transition-all active:scale-95 hover:bg-muted/40"
+            className={`relative p-3 rounded-2xl flex flex-col items-center gap-1 transition-all active:scale-95 ${isChangeActive ? 'bg-accent/40 border-2 border-accent shadow-gold' : 'bg-muted/30 border border-white/10 hover:bg-muted/40'}`}
           >
-            <RefreshCw className="w-6 h-6 text-foreground/70" />
-            <span className="text-[10px] font-bold uppercase">{t('game.shuffle') || 'Mezclar'}</span>
+            <RefreshCcw className={`w-6 h-6 ${isChangeActive ? 'text-accent animate-spin' : 'text-foreground/70'}`} />
+            <span className="text-[10px] font-bold uppercase">{t('game.change') || 'Cambio'}</span>
             <div className="absolute -top-2 -right-1 bg-background border border-accent/50 rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow-sm">
-              {shuffles > 0 ? (
-                <span className="text-[10px] font-bold text-accent">x{shuffles}</span>
+              {changes > 0 ? (
+                <span className="text-[10px] font-bold text-accent">x{changes}</span>
               ) : (
                 <span className="text-[10px] font-bold text-yellow-400 flex items-center">60<Gem className="w-2 h-2 ml-0.5" /></span>
               )}
             </div>
           </button>
+
 
           <button
             onClick={handleUndoClick}
