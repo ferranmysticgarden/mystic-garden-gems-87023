@@ -151,7 +151,7 @@ export const useGameState = () => {
               lives: Math.max(dbState.lives, local.lives),
               hammers: dbState.hammers + local.hammers,
               undos: dbState.undos + local.undos,
-              shuffles: dbState.shuffles + local.shuffles,
+              changes: dbState.changes + local.changes,
             };
             setGameState(merged);
             // Clear guest progress after merge
