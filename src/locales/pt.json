@@ -259,7 +259,7 @@
     "powerups": {
       "title": "Power-ups",
       "hammer": "Martelo — quebra 1 peça",
-      "shuffle": "Embaralhar — reorganiza o tabuleiro",
+      "change": "Trocar — transforma 1 peça no ícone que você escolher",
       "undo": "Desfazer — reverte último movimento",
       "hint": "Se não tiver gemas suficientes, aparece um aviso. Os power-ups do inventário são grátis."
     },
