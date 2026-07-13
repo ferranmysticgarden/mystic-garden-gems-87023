@@ -94,6 +94,8 @@ import { HowToPlayScreen } from "@/components/HowToPlayScreen";
 import { ThemeUnlockedModal } from "@/components/themes/ThemeUnlockedModal";
 import { THEME_MAP, type ThemeId } from "@/data/themes";
 import { useUserThemes } from "@/hooks/useUserThemes";
+import { EventBanner } from "@/components/game/EventBanner";
+import { getRewardMultiplier, getCurrentEvent } from "@/data/events";
 type Screen = "menu" | "game" | "levels" | "shop" | "customize" | "howtoplay";
 const Index = () => {
   const navigate = useNavigate();
@@ -591,7 +593,23 @@ const Index = () => {
   const handleWin = useCallback(
     async (stars: number, reward: { gems?: number }, telemetry?: { score: number; moves_used: number }) => {
       const isBonus = !!currentLevel.bonus;
-      completeLevel(currentLevel.id, reward, !isBonus, stars);
+      // FEATURE 3 — aplica multiplicador de evento activo a las gemas de recompensa
+      const multiplier = getRewardMultiplier();
+      const baseGems = reward.gems ?? 0;
+      const boostedGems = Math.round(baseGems * multiplier);
+      const boostedReward = { ...reward, gems: boostedGems };
+      if (multiplier > 1 && baseGems > 0) {
+        const ev = getCurrentEvent();
+        trackEvent('event_reward_boosted', {
+          level: currentLevel.id,
+          base_gems: baseGems,
+          boosted_gems: boostedGems,
+          multiplier,
+          event_id: ev?.id ?? null,
+          event_type: ev?.type ?? null,
+        });
+      }
+      completeLevel(currentLevel.id, boostedReward, !isBonus, stars);
       trackEvent('level_completed', {
         level: currentLevel.id,
         bonus: isBonus,
@@ -599,7 +617,7 @@ const Index = () => {
         moves_used: telemetry?.moves_used ?? null,
       });
 
-      toast.success(`${t("game.win")}${reward.gems ? ` +${reward.gems} 💎` : ""}`);
+      toast.success(`${t("game.win")}${boostedGems ? ` +${boostedGems} 💎${multiplier > 1 ? ` (x${multiplier})` : ''}` : ""}`);
 
       setConsecutiveLosses(0);
       setConsecutiveLossesByLevel((prev) => ({ ...prev, [currentLevel.id]: 0 }));
@@ -615,7 +633,7 @@ const Index = () => {
 
       const completedCount = gameState.completedLevels.length + 1;
       await checkLevelAchievements(completedCount);
-      if (reward.gems) await checkGemsAchievements(gameState.gems + reward.gems);
+      if (boostedGems) await checkGemsAchievements(gameState.gems + boostedGems);
 
       if (currentLevel.id === 1 && !localStorage.getItem(LS_KEYS.CUSTOMIZE_INTRO_SHOWN)) {
         trackEvent('customize_intro_shown', {});
@@ -635,12 +653,12 @@ const Index = () => {
         }
       }
 
-      if (currentLevel.id >= 6 && reward.gems && reward.gems > 0 && !isBonus) {
-        setLastWinGems(reward.gems);
+      if (currentLevel.id >= 6 && boostedGems && boostedGems > 0 && !isBonus) {
+        setLastWinGems(boostedGems);
         if (isPostVictoryOfferLocked()) {
           trackEvent("offer_suppressed", { source: "PostVictoryOffer", reason: "post_victory_offer_lock", active_id: getPostVictoryOfferLockSource(), level: currentLevel.id });
         } else {
-          trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: reward.gems });
+          trackEvent("victory_celebration_shown", { level: currentLevel.id, gems_reward: boostedGems });
           setTimeout(() => setShowPostVictoryOffer(true), 1500);
         }
       }
@@ -1115,6 +1133,9 @@ const Index = () => {
             />
           </div>
         )}
+
+        {/* FEATURE 3 — Banner de evento temporal activo (encima del mapa) */}
+        <EventBanner />
 
         {/* Level Map - main content */}
         <div className="mt-2">
