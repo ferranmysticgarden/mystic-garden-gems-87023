@@ -133,7 +133,7 @@ export const useGameState = () => {
             starsEarned: normalizeStarsEarned(dataWithStars.stars_earned),
             hammers: data.hammer_count,
             undos: data.undo_count,
-            shuffles: data.shuffle_count,
+            changes: data.shuffle_count,
             lastLifeRefill: new Date(data.last_life_refill).getTime(),
             unlimitedLivesUntil: data.unlimited_lives_until ? new Date(data.unlimited_lives_until).getTime() : null,
           };
