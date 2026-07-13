@@ -607,6 +607,10 @@ export const GameScreen = ({
   const rescueCountForLevel = getRescueCount(level.id);
 
   const handleRescueBuy = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowRescueOffer(false);
+      return;
+    }
     incrementRescueCount(level.id);
     trackEvent('extra_moves_purchased', { level: level.id, count: rescueCountForLevel + 1, payment: 'stripe' });
     setShowRescueOffer(false);
