@@ -991,6 +991,7 @@ const Index = () => {
         }}
         onShowExitModal={() => setShowExitModal(true)}
         consecutiveLossesOnLevel={consecutiveLossesByLevel[currentLevel.id] ?? 0}
+        onPaidRescue={() => setConsecutiveLossesByLevel((prev) => ({ ...prev, [currentLevel.id]: 0 }))}
         {...restoredProps}
         gems={gameState.gems}
         onSpendGems={spendGems}

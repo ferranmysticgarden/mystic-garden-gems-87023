@@ -13,6 +13,28 @@ const translations: Record<Language, Translations> = {
 };
 
 const STORAGE_KEY = 'mg_lang_v1';
+const MIGRATION_FLAG = 'mg_lang_migrated_v1';
+
+// BUG 4 fix — migración única: si el usuario tiene 'en' persistido PERO el
+// navegador prefiere español (primer idioma es-*), forzar 'es' una sola vez.
+// Corrige el bug histórico de Android WebView que dejó 'en' pegado a usuarios ES.
+(function migrateStuckEnglishForSpanishUsers() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (localStorage.getItem(MIGRATION_FLAG)) return;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'en') {
+      const langs: string[] = Array.isArray(navigator.languages) && navigator.languages.length
+        ? Array.from(navigator.languages)
+        : [navigator.language || ''];
+      const primary = (langs[0] || '').toLowerCase();
+      if (primary.startsWith('es')) {
+        localStorage.setItem(STORAGE_KEY, 'es');
+      }
+    }
+    localStorage.setItem(MIGRATION_FLAG, '1');
+  } catch { /* ignore */ }
+})();
 
 const detectLanguage = (): Language => {
   try {

@@ -62,6 +62,7 @@ interface GameScreenProps {
   onUseChange?: () => void;
   onUseUndo?: () => void;
   consecutiveLossesOnLevel?: number;
+  onPaidRescue?: () => void;
 }
 
 export const GameScreen = ({ 
@@ -83,7 +84,13 @@ export const GameScreen = ({
   onUseChange,
   onUseUndo,
   consecutiveLossesOnLevel = 0,
+  onPaidRescue,
 }: GameScreenProps) => {
+  // BUG 2 fix — helper único: activa flag y resetea contador de derrotas del nivel
+  const markPaidRescue = () => {
+    setPaidRescueActive(true);
+    try { onPaidRescue?.(); } catch {}
+  };
   const { t } = useLanguage();
   const tileSkins = useTileSkin();
   const { activeTheme } = useUserThemes();
@@ -480,7 +487,7 @@ export const GameScreen = ({
     // BUG 2 fix — permitir que gane si el objetivo ya estaba cumplido tras el último match.
     terminalStateRef.current = null;
     // BUG 5 fix — pagó, se desactiva adaptive difficulty.
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
@@ -536,7 +543,7 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     defeatFinalizedRef.current = false;
     setGameOver(false);
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   const handleBuyMovesDismiss = () => {
@@ -580,7 +587,7 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     defeatFinalizedRef.current = false;
     setGameOver(false);
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   const handleLevel10Dismiss = () => {
@@ -601,7 +608,7 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     defeatFinalizedRef.current = false;
     setGameOver(false);
-    setPaidRescueActive(true);
+    markPaidRescue();
   };
 
   const handleLevel6Dismiss = () => {
@@ -629,7 +636,7 @@ export const GameScreen = ({
     hasPlayedEndSound.current = false;
     defeatFinalizedRef.current = false;
     terminalStateRef.current = null;
-    setPaidRescueActive(true);
+    markPaidRescue();
     backgroundMusic.setScreen('game');
   };
 
@@ -649,7 +656,7 @@ export const GameScreen = ({
       hasPlayedEndSound.current = false;
       defeatFinalizedRef.current = false;
       terminalStateRef.current = null;
-      setPaidRescueActive(true);
+      markPaidRescue();
       backgroundMusic.setScreen('game');
     }
   };
@@ -1129,6 +1136,7 @@ export const GameScreen = ({
             gemsEarned={level.reward?.gems ?? 0}
             score={score}
             onContinue={() => onWin(1, level.reward, { score, moves_used: Math.max(0, (initialMoves ?? level.moves) - moves) })}
+            onExit={() => onWin(1, level.reward, { score, moves_used: Math.max(0, (initialMoves ?? level.moves) - moves) })}
           />
         )}
 
