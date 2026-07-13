@@ -152,7 +152,9 @@ export const GameScreen = ({
 
   // Resetear estado al cambiar de nivel
   useEffect(() => {
-    setShuffleTrigger(0);
+    setIsChangeActive(false);
+    setChangeTilePending(null);
+    setChangeApply(null);
     setUndoTrigger(0);
     setIsHammerActive(false);
     madeAnyComboOrBigRef.current = false;
