@@ -229,6 +229,10 @@
         "title": "🔀 Shuffle",
         "desc": "Reorganizes all tiles on the board. Use it when you can't find a move."
       },
+      "change": {
+        "title": "🔄 Change",
+        "desc": "Transform a tile on the board into the icon you choose. Tap Change, then the tile, then the new icon."
+      },
       "undo": {
         "title": "↩️ Undo",
         "desc": "Reverts your last move without losing the attempt."
