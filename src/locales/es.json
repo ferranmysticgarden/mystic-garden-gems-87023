@@ -237,6 +237,9 @@
         "title": "↩️ Deshacer",
         "desc": "Revierte tu último movimiento sin perder el intento."
       }
+    },
+    "change": {
+      "pick_icon": "Elige un icono"
     }
   },
   "howtoplay": {
