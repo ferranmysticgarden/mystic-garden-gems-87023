@@ -625,6 +625,10 @@ export const GameScreen = ({
   };
 
   const handleRescueWithGems = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowRescueOffer(false);
+      return;
+    }
     if (gems >= rescuePriceForCurrentLevel && onSpendGems) {
       onSpendGems(rescuePriceForCurrentLevel);
       incrementRescueCount(level.id);
