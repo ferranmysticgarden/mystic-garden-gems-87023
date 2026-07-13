@@ -56,10 +56,10 @@ interface GameScreenProps {
   gems?: number;
   onSpendGems?: (amount: number) => void;
   hammers?: number;
-  shuffles?: number;
+  changes?: number;
   undos?: number;
   onUseHammer?: () => void;
-  onUseShuffle?: () => void;
+  onUseChange?: () => void;
   onUseUndo?: () => void;
   consecutiveLossesOnLevel?: number;
 }
@@ -77,10 +77,10 @@ export const GameScreen = ({
   gems = 0,
   onSpendGems,
   hammers = 0,
-  shuffles = 0,
+  changes = 0,
   undos = 0,
   onUseHammer,
-  onUseShuffle,
+  onUseChange,
   onUseUndo,
   consecutiveLossesOnLevel = 0,
 }: GameScreenProps) => {
@@ -115,7 +115,7 @@ export const GameScreen = ({
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
   const [undoTrigger, setUndoTrigger] = useState(0);
   // UX educativa power-ups: modal explicativo/confirmación antes de ejecutar
-  const [pendingPowerup, setPendingPowerup] = useState<null | { type: 'hammer' | 'shuffle' | 'undo'; mode: 'intro' | 'confirm'; willSpendGems: boolean }>(null);
+  const [pendingPowerup, setPendingPowerup] = useState<null | { type: PowerupType; mode: 'intro' | 'confirm'; willSpendGems: boolean }>(null);
   const [firstMatchMade, setFirstMatchMade] = useState(false);
   const hasPlayedEndSound = useRef(false);
   const hasShownFlashOffer = useRef(false);
