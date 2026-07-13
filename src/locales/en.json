@@ -172,9 +172,24 @@
     "desserts": { "name": "🍰 Desserts" },
     "fruits": { "name": "🍓 Fruits" },
     "racing": { "name": "🏎️ F1 Racing" },
-    "pirates": { "name": "🏴‍☠️ Pirates" },
+    "pirates": { "name": "💀 Skull Pirates" },
     "unicorns": { "name": "🦄 Magical Unicorns" },
-    "manga": { "name": "🌸 Manga / Anime" }
+    "manga": { "name": "🌸 Manga / Anime" },
+    "halloween": { "name": "🎃 Halloween Terror" },
+    "christmas": { "name": "❄️ Magic Christmas" },
+    "surprise_title": "SURPRISE THEME!",
+    "surprise_hidden": "??? Secret theme"
+  },
+  "events": {
+    "double_gems": {
+      "name": "💎 Double Gems Weekend",
+      "desc": "All gem rewards x2"
+    },
+    "fairy_week": {
+      "name": "🧚 Fairy Week",
+      "desc": "Level rewards x2"
+    },
+    "ends_in": "Ends in"
   },
   "achievements": {
     "title": "Achievements",
