@@ -516,6 +516,10 @@ export const GameScreen = ({
   };
 
   const handleBuyMovesBuy = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowBuyMovesOffer(false);
+      return;
+    }
     setMoves(5);
     setShowBuyMovesOffer(false);
     hasShownBuyMoves.current = false;
