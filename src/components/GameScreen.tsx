@@ -460,6 +460,10 @@ export const GameScreen = ({
   }, []);
 
   const handleCloseDefeatBuy = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowCloseDefeatOffer(false);
+      return;
+    }
     setMoves(5);
     setGameOver(false);
     setShowCloseDefeatOffer(false);
