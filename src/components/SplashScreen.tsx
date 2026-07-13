@@ -3,12 +3,17 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { trackEvent } from "@/lib/trackEvent";
 
 const SPLASH_KEY = "mg_splash_shown_session";
+const MAX_DURATION_MS = 800;
+const MIN_VISIBLE_MS = 400;
+const FADE_MS = 300;
 
 interface SplashScreenProps {
   onDone?: () => void;
+  /** External readiness signal (auth+state loaded). Splash dismisses on ready OR MAX_DURATION_MS. */
+  ready?: boolean;
 }
 
-export const SplashScreen = ({ onDone }: SplashScreenProps) => {
+export const SplashScreen = ({ onDone, ready = false }: SplashScreenProps) => {
   const { t } = useLanguage();
   const [visible, setVisible] = useState<boolean>(() => {
     try {
@@ -19,32 +24,45 @@ export const SplashScreen = ({ onDone }: SplashScreenProps) => {
   });
   const [fading, setFading] = useState(false);
   const shownAtRef = useRef<number>(0);
+  const dismissedRef = useRef(false);
 
-  useEffect(() => {
-    if (!visible) return;
-    try {
-      sessionStorage.setItem(SPLASH_KEY, "1");
-    } catch {}
-    shownAtRef.current = performance.now();
-    trackEvent('splash_shown', { ts: Date.now() });
-    const fadeTimer = setTimeout(() => setFading(true), 1700);
-    const hideTimer = setTimeout(() => {
-      const durationMs = Math.round(performance.now() - shownAtRef.current);
-      trackEvent('splash_dismissed', { durationMs });
+  const dismiss = (reason: 'timeout' | 'ready') => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
+    const durationMs = Math.round(performance.now() - shownAtRef.current);
+    setFading(true);
+    trackEvent('splash_dismissed', { durationMs, reason });
+    setTimeout(() => {
       setVisible(false);
       onDone?.();
-    }, 2200);
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [visible, onDone]);
+    }, FADE_MS);
+  };
+
+  // Mount: mark session, emit shown, schedule hard timeout
+  useEffect(() => {
+    if (!visible) return;
+    try { sessionStorage.setItem(SPLASH_KEY, "1"); } catch {}
+    shownAtRef.current = performance.now();
+    trackEvent('splash_shown', { ts: Date.now() });
+    const hardTimer = setTimeout(() => dismiss('timeout'), MAX_DURATION_MS);
+    return () => clearTimeout(hardTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // React to readiness (with MIN_VISIBLE_MS floor to avoid flash)
+  useEffect(() => {
+    if (!visible || !ready || dismissedRef.current) return;
+    const elapsed = performance.now() - shownAtRef.current;
+    const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    const t = setTimeout(() => dismiss('ready'), wait);
+    return () => clearTimeout(t);
+  }, [ready, visible]);
 
   if (!visible) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-300 ${
         fading ? "opacity-0" : "opacity-100"
       }`}
       style={{ pointerEvents: fading ? "none" : "auto" }}
