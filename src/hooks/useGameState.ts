@@ -24,7 +24,7 @@ const INITIAL_STATE: GameState = {
   starsEarned: {},
   hammers: 3,
   undos: 0,
-  shuffles: 0,
+  changes: 0,
   lastLifeRefill: Date.now(),
   unlimitedLivesUntil: null,
 };
