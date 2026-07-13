@@ -460,6 +460,10 @@ export const GameScreen = ({
   }, []);
 
   const handleCloseDefeatBuy = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowCloseDefeatOffer(false);
+      return;
+    }
     setMoves(5);
     setGameOver(false);
     setShowCloseDefeatOffer(false);
@@ -512,6 +516,10 @@ export const GameScreen = ({
   };
 
   const handleBuyMovesBuy = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowBuyMovesOffer(false);
+      return;
+    }
     setMoves(5);
     setShowBuyMovesOffer(false);
     hasShownBuyMoves.current = false;
@@ -554,6 +562,10 @@ export const GameScreen = ({
   };
 
   const handleLevel10Purchase = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowLevel10Paywall(false);
+      return;
+    }
     setMoves(5);
     setShowLevel10Paywall(false);
     terminalStateRef.current = null;
@@ -571,6 +583,10 @@ export const GameScreen = ({
   };
 
   const handleLevel6Purchase = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowLevel6Offer(false);
+      return;
+    }
     setMoves(3);
     setShowLevel6Offer(false);
     terminalStateRef.current = null;
@@ -591,6 +607,10 @@ export const GameScreen = ({
   const rescueCountForLevel = getRescueCount(level.id);
 
   const handleRescueBuy = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowRescueOffer(false);
+      return;
+    }
     incrementRescueCount(level.id);
     trackEvent('extra_moves_purchased', { level: level.id, count: rescueCountForLevel + 1, payment: 'stripe' });
     setShowRescueOffer(false);
@@ -605,6 +625,10 @@ export const GameScreen = ({
   };
 
   const handleRescueWithGems = () => {
+    if (terminalStateRef.current === 'win' || won) {
+      setShowRescueOffer(false);
+      return;
+    }
     if (gems >= rescuePriceForCurrentLevel && onSpendGems) {
       onSpendGems(rescuePriceForCurrentLevel);
       incrementRescueCount(level.id);
