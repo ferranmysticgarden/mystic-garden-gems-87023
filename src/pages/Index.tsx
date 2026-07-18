@@ -363,6 +363,16 @@ const Index = () => {
     else setTimeout(emit, 0);
   }, [authLoading, gameLoading, screen]);
 
+  // Track when the main menu UI is actually visible to the user
+  const menuVisibleRef = useRef(false);
+  useEffect(() => {
+    if (menuVisibleRef.current) return;
+    if (authLoading || gameLoading) return;
+    if (screen !== 'menu') return;
+    menuVisibleRef.current = true;
+    trackEvent('menu_visible', {});
+  }, [authLoading, gameLoading, screen]);
+
   // Limpiar prompt de login si se detecta usuario (ej: tras login exitoso)
   useEffect(() => {
     if (user) {
