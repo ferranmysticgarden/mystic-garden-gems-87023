@@ -157,6 +157,10 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
               <div className="inline-block bg-green-500 rounded-full px-4 py-1">
                 <p className="text-white font-bold text-sm">🔥 90% OFF 🔥</p>
               </div>
+
+              <div className="mt-3 flex justify-center">
+                <SocialProofBadge count={getStableBuyersCount('mega_pack_inicial')} />
+              </div>
             </div>
 
             {/* Timer más visible */}
@@ -168,10 +172,14 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
 
             <Button 
               onClick={handleBuy}
-              disabled={loading}
+              disabled={loading || (isAndroid && !priceReady)}
               className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-5 rounded-xl text-lg shadow-lg shadow-yellow-500/30"
             >
-              {loading ? '⏳ Procesando...' : '🎁 ¡QUIERO MI REGALO!'}
+              {loading
+                ? '⏳ Procesando...'
+                : isAndroid && !priceReady
+                  ? '⏳ Cargando precio…'
+                  : '🎁 ¡QUIERO MI REGALO!'}
             </Button>
 
             <Button 
