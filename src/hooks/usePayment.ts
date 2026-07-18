@@ -181,9 +181,22 @@ export const usePayment = () => {
     return getProductFallbackPrice(productId, fallbackPrice);
   };
 
+  /**
+   * True when the price the UI is about to show is the SAME one the
+   * native Google Play dialog will use. On web (Stripe) always true.
+   * On Android, only true once GP catalog has resolved for the SKU —
+   * this avoids showing €X.YY that then differs from the native dialog.
+   */
+  const isPriceReady = (productId: string): boolean => {
+    if (!isAndroid) return true;
+    if (!googlePlayBilling.isAvailable) return false;
+    return Boolean(googlePlayBilling.getProductPrice(productId));
+  };
+
   return {
     createPayment,
     getPrice,
+    isPriceReady,
     loading: Boolean(loadingProduct) || googlePlayBilling.loading,
     loadingProduct,
     isAndroid,
