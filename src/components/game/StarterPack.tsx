@@ -220,14 +220,22 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
 
               {/* Discount framing centralizado */}
               <DiscountPrice productId="starter_gems" currentPrice={price} />
+
+              <div className="mt-2 flex justify-center">
+                <SocialProofBadge count={getStableBuyersCount('starter_gems')} />
+              </div>
             </div>
 
             <Button 
               onClick={handleBuy}
-              disabled={loading}
+              disabled={loading || (isAndroid && !priceReady)}
               className="w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 hover:from-yellow-500 hover:via-yellow-600 hover:to-orange-600 text-black font-bold py-6 rounded-xl text-xl shadow-lg shadow-yellow-500/50 transform hover:scale-105 transition-all active:scale-95"
             >
-              {loading ? '⏳ Procesando...' : '🎁 ¡COMPRAR AHORA!'}
+              {loading
+                ? '⏳ Procesando...'
+                : isAndroid && !priceReady
+                  ? '⏳ Cargando precio…'
+                  : '🎁 ¡COMPRAR AHORA!'}
             </Button>
 
             <p className="text-yellow-300/60 text-xs mt-2">
