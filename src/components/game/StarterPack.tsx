@@ -8,6 +8,7 @@ import { hasPurchasedStarterGems, markStarterGemsAsPurchased } from '@/utils/pur
 import { OfferCountdownTimer } from '@/components/offers/OfferCountdownTimer';
 import { DiscountPrice } from '@/components/offers/DiscountPrice';
 import { PhotoTilesPreview } from '@/components/offers/PhotoTilesPreview';
+import { SocialProofBadge, getStableBuyersCount } from '@/components/offers/SocialProofBadge';
 import { markOfferDismissed, isOfferOnCooldown } from '@/utils/offerCooldown';
 import confetti from 'canvas-confetti';
 
@@ -25,9 +26,10 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'visible'>('entering');
   const timeRemainingRef = useRef(TIMER_SECONDS);
   const { user } = useAuth();
-  const { createPayment, loading, getPrice } = usePayment();
+  const { createPayment, loading, getPrice, isPriceReady, isAndroid } = usePayment();
 
-  const price = getPrice('starter_gems', '€0.50');
+  const priceReady = isPriceReady('starter_gems');
+  const price = getPrice('starter_gems', '€0,50');
 
   const alreadyBoughtStarter = hasPurchasedStarterGems();
 
