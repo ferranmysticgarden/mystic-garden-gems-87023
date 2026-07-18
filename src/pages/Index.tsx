@@ -1420,9 +1420,11 @@ const Index = () => {
         <Suspense fallback={null}>
           <ExitConfirmModal
             onStay={() => setShowExitModal(false)}
-            onExit={() => {
+            onExit={async () => {
               setShowExitModal(false);
-              if (user) signOut();
+              try { if (user) await signOut(); } catch {}
+              // En web: recargar para volver al estado inicial (feedback visible)
+              try { window.location.href = '/'; } catch {}
             }}
             streak={streakData.currentStreak}
           />
