@@ -20,6 +20,7 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
 
   const priceReady = isPriceReady('mega_pack_inicial');
   const price = getPrice('mega_pack_inicial', '€2,99');
+  const odId = user?.id || 'guest';
 
   useEffect(() => {
     // Mostrar solo justo tras completar nivel 3.
