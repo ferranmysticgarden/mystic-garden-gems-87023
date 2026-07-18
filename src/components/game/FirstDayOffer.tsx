@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePayment } from '@/hooks/usePayment';
 import { lockPostVictoryOffers } from '@/utils/postVictoryOfferLock';
 import { trackEvent } from '@/lib/trackEvent';
+import { SocialProofBadge, getStableBuyersCount } from '@/components/offers/SocialProofBadge';
 
 interface FirstDayOfferProps {
   levelJustCompleted?: number;
@@ -15,10 +16,10 @@ export const FirstDayOffer = ({ levelJustCompleted, onPurchaseSuccess }: FirstDa
   const [show, setShow] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900);
   const { user } = useAuth();
-  const { createPayment, loading, getPrice } = usePayment();
+  const { createPayment, loading, getPrice, isPriceReady, isAndroid } = usePayment();
 
-  const price = getPrice('mega_pack_inicial', '€0.99');
-  const odId = user?.id || 'guest';
+  const priceReady = isPriceReady('mega_pack_inicial');
+  const price = getPrice('mega_pack_inicial', '€2,99');
 
   useEffect(() => {
     // Mostrar solo justo tras completar nivel 3.
