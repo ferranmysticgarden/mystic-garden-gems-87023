@@ -32,6 +32,7 @@ const getProductFallbackPrice = (productId: string, fallbackPrice?: string): str
  */
 export const usePayment = () => {
   const [loadingProduct, setLoadingProduct] = useState<string | null>(activePaymentProduct);
+  const [priceWaitElapsed, setPriceWaitElapsed] = useState(false);
   const googlePlayBilling = useGooglePlayBilling();
 
   const isAndroid = Capacitor.getPlatform() === 'android';
@@ -45,6 +46,20 @@ export const usePayment = () => {
       paymentLoadingSubscribers.delete(setLoadingProduct);
     };
   }, []);
+
+  // Failsafe: never block the buy button forever if Google Play catalog
+  // never resolves (unavailable service, slow network, unpublished SKU…).
+  // After 6s, unlock the button and let the UI show fallback price.
+  useEffect(() => {
+    if (!isAndroid) return;
+    const t = setTimeout(() => {
+      setPriceWaitElapsed(true);
+      try {
+        trackEvent('price_ready_timeout', { platform: 'android' });
+      } catch {}
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [isAndroid]);
 
   const createPayment = async (productId: string, source?: string): Promise<boolean> => {
     if (activePaymentProduct) {
@@ -189,8 +204,10 @@ export const usePayment = () => {
    */
   const isPriceReady = (productId: string): boolean => {
     if (!isAndroid) return true;
-    if (!googlePlayBilling.isAvailable) return false;
-    return Boolean(googlePlayBilling.getProductPrice(productId));
+    if (Boolean(googlePlayBilling.getProductPrice(productId))) return true;
+    // Failsafe unlock after timeout — never leave the button dead.
+    if (priceWaitElapsed) return true;
+    return false;
   };
 
   return {
