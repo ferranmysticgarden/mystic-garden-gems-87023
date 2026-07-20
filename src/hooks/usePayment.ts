@@ -204,8 +204,10 @@ export const usePayment = () => {
    */
   const isPriceReady = (productId: string): boolean => {
     if (!isAndroid) return true;
-    if (!googlePlayBilling.isAvailable) return false;
-    return Boolean(googlePlayBilling.getProductPrice(productId));
+    if (Boolean(googlePlayBilling.getProductPrice(productId))) return true;
+    // Failsafe unlock after timeout — never leave the button dead.
+    if (priceWaitElapsed) return true;
+    return false;
   };
 
   return {
