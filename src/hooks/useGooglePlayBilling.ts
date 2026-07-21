@@ -735,7 +735,8 @@ export const useGooglePlayBilling = () => {
           return false;
         }
 
-        reportPurchaseCancelled(productId, errorMsg, 'purchase_call');
+        // Dedup: native 'purchaseCancelled' listener already emits 'purchase_cancelled_native'.
+        // Skipping the extra 'purchase_cancelled' event here to avoid double counting on Android.
         toast.info('Compra cancelada');
       } else {
         console.error('Purchase error:', error);
