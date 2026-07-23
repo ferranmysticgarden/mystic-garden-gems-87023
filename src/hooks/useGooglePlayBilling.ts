@@ -766,6 +766,77 @@ export const useGooglePlayBilling = () => {
     return products[resolvedProductId]?.price || null;
   }, [products]);
 
+  // Reconcile orphan purchases when the app returns to foreground.
+  // Handles the "Caso 1" scenario: user opens native billing dialog, Android
+  // kills the process (or user completes payment offline), listener never fires,
+  // token never verified. On resume we query Google Play for unacknowledged
+  // purchases and push each one through the same verifyAndProcessPurchase path
+  // that the live listener uses — so the user gets what they paid for.
+  useEffect(() => {
+    if (!isAndroid) return;
+
+    let cancelled = false;
+    let removeResumeListener: (() => void) | null = null;
+
+    const reconcile = async (trigger: string) => {
+      if (cancelled) return;
+      try {
+        const ready = sharedBillingState.isReady;
+        if (!ready) return;
+        const restored = await GooglePlayBilling.restorePurchases();
+        const entries = Object.values(restored ?? {}) as PurchaseResult[];
+        if (entries.length === 0) return;
+        trackEvent('purchase_reconcile_found', {
+          platform: 'android',
+          trigger,
+          count: entries.length,
+        });
+        for (const p of entries) {
+          if (!p?.purchaseToken || !p?.productId) continue;
+          if (verificationTasks.has(p.purchaseToken)) continue;
+          trackEvent('purchase_reconcile_verify_start', {
+            platform: 'android',
+            trigger,
+            product: p.productId,
+            orderId: p.orderId,
+          });
+          // verifyAndProcessPurchase handles verify + consume + reward + dedup
+          void verifyAndProcessPurchase(p);
+        }
+      } catch (e) {
+        trackEvent('purchase_reconcile_error', {
+          platform: 'android',
+          trigger,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    };
+
+    // Run once shortly after mount to catch purchases that landed while the
+    // app was closed (before any resume event ever fires this session).
+    const initialTimer = window.setTimeout(() => reconcile('mount'), 1500);
+
+    // And every time the app returns to foreground.
+    import('@capacitor/app')
+      .then(({ App }) => App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) void reconcile('resume');
+      }))
+      .then((handle) => {
+        if (cancelled) {
+          handle.remove();
+        } else {
+          removeResumeListener = () => handle.remove();
+        }
+      })
+      .catch(() => { /* @capacitor/app not available — ignore */ });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(initialTimer);
+      if (removeResumeListener) removeResumeListener();
+    };
+  }, [isAndroid, verifyAndProcessPurchase]);
+
   return {
     isAvailable: isAndroid && isReady && hasLoadedProducts,
     isAndroid,
