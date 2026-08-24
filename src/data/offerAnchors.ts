@@ -16,7 +16,7 @@ export interface OfferAnchor {
 }
 
 export const OFFER_ANCHORS: Record<string, OfferAnchor> = {
-  starter_gems: { originalPrice: '€9,99', discountLabel: '-80% DTO' },
+  starter_gems: { originalPrice: '€9,99', discountLabel: '-75% DTO' },
   gems_100: { originalPrice: '€12,99', discountLabel: '-77% DTO' },
   gems_300: { originalPrice: '€19,99', discountLabel: '-75% DTO' },
   flash_offer: { originalPrice: '€4,99', discountLabel: '-80% DTO' },

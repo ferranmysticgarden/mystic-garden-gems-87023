@@ -29,7 +29,7 @@ export const StarterPack = ({ levelJustCompleted, onClose, onPurchaseSuccess }: 
   const { createPayment, loading, getPrice, isPriceReady, isAndroid } = usePayment();
 
   const priceReady = isPriceReady('starter_gems');
-  const price = getPrice('starter_gems', '€0,50');
+  const price = getPrice('starter_gems', '€2,49');
 
   const alreadyBoughtStarter = hasPurchasedStarterGems();
 
