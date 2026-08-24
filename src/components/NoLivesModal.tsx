@@ -26,7 +26,7 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
   const timeRemainingRef = useRef(TIMER_SECONDS);
   const [autoClosed, setAutoClosed] = useState(false);
 
-  const starterPrice = getPrice('starter_gems', '€0.50');
+  const starterPrice = getPrice('starter_gems', '€2.49');
   const gems100Price = getPrice('gems_100', '€0.99');
   const canAffordGems = gems >= 35;
   const alreadyBoughtStarter = hasPurchasedStarterGems();

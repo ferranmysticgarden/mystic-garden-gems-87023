@@ -144,7 +144,7 @@ export const Shop = ({ onClose, onPurchase, isNewUser = false, hasPurchasedOnce 
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5 mr-2" />
-                        {getPrice('starter_gems', '€0.50')}
+                        {getPrice('starter_gems', '€2.49')}
                       </>
                     )}
                   </Button>
