@@ -5,7 +5,7 @@ param(
   [Parameter(Mandatory = $true)] [int] $VersionCode,
   [Parameter(Mandatory = $true)] [string] $VersionName,
   [Parameter(Mandatory = $false)] [int] $MinSdk = 24,
-  [Parameter(Mandatory = $false)] [int] $TargetSdk = 35
+  [Parameter(Mandatory = $false)] [int] $TargetSdk = 36
 )
 
 try {
