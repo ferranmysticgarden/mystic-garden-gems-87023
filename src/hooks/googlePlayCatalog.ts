@@ -6,6 +6,7 @@ const GOOGLE_PLAY_CORE_QUERY_SKUS: string[] = [
   'pack_racha_infinita',
   'unlimited_lives_30min',
   'extra_moves',
+  'giro_extra',
   'theme_racing_unlock_b6gi8nmipn',
   'theme_pirates_unlock_b6gi8nmipn',
   'theme_unicorns_unlock_b6gi8nmipn',
@@ -49,7 +50,7 @@ const GOOGLE_PLAY_PURCHASE_OVERRIDES: Record<string, string[]> = {
   reward_doubler: ['extra_moves'],
   lifesaver_pack: ['extra_moves'],
   streak_protection: ['extra_moves'],
-  extra_spin: ['extra_moves'],
+  extra_spin: ['giro_extra', 'extra_moves'],
 };
 
 const normalizeId = (id: string) => id.toLowerCase().replace(/[_-]/g, '');
