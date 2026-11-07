@@ -84,6 +84,7 @@ import { ReferralModal } from "@/components/game/ReferralModal";
 import { useReferral } from "@/hooks/useReferral";
 import { capturePendingReferralFromUrl } from "@/utils/referralDeepLink";
 import { toast } from "sonner";
+import { isRewardedAdAvailable, initRewardedAds, showRewardedAd, canWatchAdForLife, recordAdLife, getAdLivesUsedToday, MAX_AD_LIVES_PER_DAY } from "@/lib/rewardedAds";
 import { Play, Grid3x3, ShoppingBag, User, Crown, Flame, DoorOpen, Gift, Target, Palette, HelpCircle, Settings as SettingsIcon } from "lucide-react";
 import { LevelMap } from "@/components/menu/LevelMap";
 import { SideIconsColumn } from "@/components/menu/SideIconsColumn";
@@ -185,6 +186,12 @@ const Index = () => {
 
   // Capture ?ref= from URL on mount (before auth)
   useEffect(() => { capturePendingReferralFromUrl(); }, []);
+  // AdMob: inicializar + aviso de privacidad, diferido para no afectar al arranque.
+  useEffect(() => {
+    if (!isRewardedAdAvailable()) return;
+    const t = setTimeout(() => { initRewardedAds(); }, 4000);
+    return () => clearTimeout(t);
+  }, []);
 
   // ===== T5/T7/T9: Piggy Bank, Season Pass, Win Streak =====
   const piggyBank = usePiggyBank(user?.id ?? null);
@@ -965,6 +972,21 @@ const Index = () => {
       toast.error("No tienes suficientes gemas");
     }
   };
+  const handleWatchAdForLife = async () => {
+    if (!canWatchAdForLife()) {
+      toast.info(`Has llegado al máximo de ${MAX_AD_LIVES_PER_DAY} vidas por vídeo hoy`);
+      return;
+    }
+    const result = await showRewardedAd('no_lives');
+    if (result === 'rewarded') {
+      recordAdLife();
+      addLives(1);
+      toast.success("¡+1 vida! ❤️");
+      setShowNoLivesModal(false);
+    } else if (result === 'unavailable') {
+      toast.info("Vídeo no disponible ahora. Inténtalo más tarde.");
+    }
+  };
   const handleRewardedAdEarned = (gems: number) => {
     toast.success(`¡Ganaste ${gems} gemas! 💎`);
   };
@@ -1316,6 +1338,8 @@ const Index = () => {
             setShowNoLivesModal(false);
           }}
           onQuickLifePurchased={handleQuickLifePurchased}
+          onWatchAdForLife={isRewardedAdAvailable() && canWatchAdForLife() ? handleWatchAdForLife : undefined}
+          adLivesLeftToday={MAX_AD_LIVES_PER_DAY - getAdLivesUsedToday()}
           onShowStarterOffer={() => {
             if (!canShowStarterGems()) return;
             trackEvent('offer_shown', { offer: 'starter_gems', productId: 'starter_gems', product: 'starter_gems', trigger: 'no_lives', source: 'no_lives_no_gems' });

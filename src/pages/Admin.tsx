@@ -6,6 +6,36 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { isAdsTestMode, setAdsTestMode } from '@/lib/rewardedAds';
+
+/** Activa anuncios de PRUEBA de Google solo en este dispositivo (para no generar tráfico inválido). */
+const AdsTestModeToggle = () => {
+  const [on, setOn] = useState(isAdsTestMode());
+  return (
+    <div className="px-4 pt-3">
+      <Card className="p-3 flex items-center justify-between gap-3">
+        <div className="text-sm">
+          <p className="font-semibold">Anuncios de prueba en este móvil</p>
+          <p className="text-muted-foreground text-xs">
+            {on ? 'ACTIVADO: verás anuncios de prueba de Google.' : 'Desactivado: verías anuncios reales. No los toques.'}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant={on ? 'default' : 'outline'}
+          onClick={() => {
+            const next = !on;
+            setAdsTestMode(next);
+            setOn(next);
+            alert('Cierra la app del todo y vuelve a abrirla para aplicar el cambio.');
+          }}
+        >
+          {on ? 'Desactivar' : 'Activar'}
+        </Button>
+      </Card>
+    </div>
+  );
+};
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -110,7 +140,12 @@ const Admin = () => {
     );
   }
 
-  return <AdminDashboard onBack={() => navigate('/')} />;
+  return (
+    <>
+      <AdsTestModeToggle />
+      <AdminDashboard onBack={() => navigate('/')} />
+    </>
+  );
 };
 
 export default Admin;

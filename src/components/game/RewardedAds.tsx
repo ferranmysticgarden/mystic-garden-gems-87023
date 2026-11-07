@@ -4,6 +4,8 @@ import { Play, Sparkles, AlertCircle, Gem, Zap, Shield, Crown } from 'lucide-rea
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdLimit } from '@/hooks/useAdLimit';
+import { isRewardedAdAvailable, showRewardedAd } from '@/lib/rewardedAds';
+import { toast } from 'sonner';
 
 interface RewardedAdsProps {
   onRewardEarned?: (gems: number) => void;
@@ -83,8 +85,21 @@ export const RewardedAds = ({ onRewardEarned, currentLevel = 1 }: RewardedAdsPro
     }
   }, [showingAd, countdown]);
 
-  const handleWatchAd = () => {
+  const handleWatchAd = async () => {
     if (loading || !canWatchAd) return;
+    // AdMob real (solo AAB 2102+). En AABs antiguos se mantiene el flujo anterior.
+    if (isRewardedAdAvailable()) {
+      setLoading(true);
+      const result = await showRewardedAd('menu_gems');
+      if (result === 'rewarded') {
+        recordAdWatch();
+        await completeAdWatch();
+        return;
+      }
+      setLoading(false);
+      if (result === 'unavailable') toast.info('Vídeo no disponible ahora. Inténtalo más tarde.');
+      return;
+    }
     if (!recordAdWatch()) return;
     setLoading(true);
     setShowingAd(true);

@@ -37,6 +37,7 @@ import { Hammer, RefreshCcw, RotateCcw, Gem, Gift } from 'lucide-react';
 import { ChangeIconModal } from './game/ChangeIconModal';
 import type { TileType as ChangeTileType } from '@/constants/tileTypes';
 import { toast } from 'sonner';
+import { isRewardedAdAvailable, showRewardedAd } from '@/lib/rewardedAds';
 import { gemPriceForRescue, incrementRescueCount, resetRescueCount, getRescueCount } from '@/utils/rescuePriceScale';
 import { consumeWinStreakPowerup } from '@/utils/winStreakPowerup';
 import { isRetryOfLevel, markLevelEntered } from '@/utils/retryTracker';
@@ -488,6 +489,35 @@ export const GameScreen = ({
     terminalStateRef.current = null;
     // BUG 5 fix — pagó, se desactiva adaptive difficulty.
     markPaidRescue();
+  };
+
+  // 🎬 Vídeo bonificado al fallar: +5 movimientos (no cuenta como pago)
+  const adAvailable = isRewardedAdAvailable();
+  const [adUsedThisAttempt, setAdUsedThisAttempt] = useState(false);
+  const [adLoading, setAdLoading] = useState(false);
+  const handleWatchAdForMoves = async () => {
+    if (adLoading || adUsedThisAttempt) return;
+    setAdLoading(true);
+    const result = await showRewardedAd('level_failed');
+    setAdLoading(false);
+    if (result !== 'rewarded') {
+      if (result === 'unavailable') toast.info('Vídeo no disponible ahora. Inténtalo más tarde.');
+      return;
+    }
+    if (terminalStateRef.current === 'win' || won || defeatFinalizedRef.current) return;
+    setAdUsedThisAttempt(true);
+    setMoves(5);
+    setGameOver(false);
+    setWon(false);
+    setShowRescueOffer(false);
+    setShowDefeatPacksOffer(false);
+    setShowBuyMovesOffer(false);
+    setShowCloseDefeatOffer(false);
+    setShowFlashOffer(false);
+    terminalStateRef.current = null;
+    hasPlayedEndSound.current = false;
+    backgroundMusic.setScreen('game');
+    toast.success('¡+5 movimientos! 🎯');
   };
 
   // FIX vidas — finalizador único de derrota. Idempotente. Llama onLose (que en Index gasta 1 vida).
@@ -1138,6 +1168,21 @@ export const GameScreen = ({
             onContinue={() => onWin(1, level.reward, { score, moves_used: Math.max(0, (initialMoves ?? level.moves) - moves) })}
             onExit={() => onWin(1, level.reward, { score, moves_used: Math.max(0, (initialMoves ?? level.moves) - moves) })}
           />
+        )}
+
+        {/* 🎬 Vídeo bonificado: +5 movimientos, una vez por intento (solo AAB con AdMob) */}
+        {adAvailable && !adUsedThisAttempt && !won && !showLevel10Paywall &&
+          (gameOver || showRescueOffer || showDefeatPacksOffer) && (
+          <div className="fixed bottom-4 left-0 right-0 z-[70] flex justify-center px-4 pointer-events-none">
+            <Button
+              onClick={handleWatchAdForMoves}
+              disabled={adLoading}
+              className="pointer-events-auto w-full max-w-sm py-5 text-base font-bold gradient-gold shadow-gold"
+              id="watch-ad-for-moves"
+            >
+              {adLoading ? 'Cargando vídeo...' : '▶️ Ver vídeo: +5 movimientos'}
+            </Button>
+          </div>
         )}
 
         {/* Defeat Overlay */}

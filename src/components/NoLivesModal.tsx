@@ -19,10 +19,14 @@ interface NoLivesModalProps {
   onUnlimitedLivesPurchased?: () => void;
   onQuickLifePurchased?: (rewards: { lives: number; gems: number }) => void;
   onShowStarterOffer?: () => void;
+  /** Vídeo bonificado +1 vida. Solo se pasa si AdMob está disponible y queda cupo diario. */
+  onWatchAdForLife?: () => Promise<void>;
+  adLivesLeftToday?: number;
 }
 
-export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchased, onQuickLifePurchased, onShowStarterOffer }: NoLivesModalProps) => {
+export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchased, onQuickLifePurchased, onShowStarterOffer, onWatchAdForLife, adLivesLeftToday }: NoLivesModalProps) => {
   const { createPayment, getPrice, loading } = usePayment();
+  const [adLoading, setAdLoading] = useState(false);
   const timeRemainingRef = useRef(TIMER_SECONDS);
   const [autoClosed, setAutoClosed] = useState(false);
 
@@ -147,6 +151,23 @@ export const NoLivesModal = ({ gems, onUseGems, onClose, onUnlimitedLivesPurchas
               <Heart className="w-4 h-4 mr-2 text-red-400" />
               <Gem className="w-4 h-4 mr-2" />
               {`+1 Vida por 35 Gemas (tienes ${gems}💎)`}
+            </Button>
+          )}
+
+          {onWatchAdForLife && (
+            <Button
+              onClick={async () => {
+                if (adLoading) return;
+                setAdLoading(true);
+                try { await onWatchAdForLife(); } finally { setAdLoading(false); }
+              }}
+              disabled={adLoading}
+              variant="outline"
+              className="w-full text-sm py-4"
+              id="watch-ad-for-life"
+            >
+              {adLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <span className="mr-2">▶️</span>}
+              {adLoading ? 'Cargando vídeo...' : `Ver vídeo: +1 Vida${typeof adLivesLeftToday === 'number' ? ` (quedan ${adLivesLeftToday} hoy)` : ''}`}
             </Button>
           )}
 
