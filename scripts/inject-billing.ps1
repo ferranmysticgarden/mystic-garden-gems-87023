@@ -138,8 +138,8 @@ try {
   # ============================================
   # STEP 2: Inject billing library into build.gradle
   # ============================================
-  $billingDep = "implementation 'com.android.billingclient:billing:7.1.1'"
-  $billingDepKts = 'implementation("com.android.billingclient:billing:7.1.1")'
+  $billingDep = "implementation 'com.android.billingclient:billing:8.0.0'"
+  $billingDepKts = 'implementation("com.android.billingclient:billing:8.0.0")'
 
   # Determine which file to use
   $useKts = Test-Path -LiteralPath $gradleKtsPath

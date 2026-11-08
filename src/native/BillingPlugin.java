@@ -19,6 +19,7 @@ import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.QueryPurchasesParams;
 
 import com.getcapacitor.JSObject;
@@ -158,7 +159,9 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener {
 
         billingClient.queryProductDetailsAsync(params, new ProductDetailsResponseListener() {
             @Override
-            public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull List<ProductDetails> list) {
+            public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull QueryProductDetailsResult queryProductDetailsResult) {
+                // PBL 8: la lista de productos viene dentro de QueryProductDetailsResult
+                List<ProductDetails> list = queryProductDetailsResult.getProductDetailsList();
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     Log.d(TAG, "✅ Products found: " + list.size() + " of " + productIds.size() + " requested");
                     JSObject ret = new JSObject();
